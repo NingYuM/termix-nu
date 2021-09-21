@@ -1,7 +1,7 @@
 # Author: hustcer
 # Created: 2021/09/15 11:39:56
 
-# t dir-batch-exec 'pwd; echo $"(char newline)"; ncu'
+# t dir-batch-exec 'pwd; echo $"(char nl)"; ncu'
 # repos $ t dir-batch-exec 'pwd; ^echo ':'; git remote -v; git push o master; git push o --tags'
 # 在指定目录下的所有子目录里执行指定命令
 def 'dir-batch-exec' [

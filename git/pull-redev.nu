@@ -10,7 +10,7 @@ def 'git pull-redev' [
   # 所有二开仓库存放临时路径
   let repoPath = ($actionConf | get redevRepoPath);
   let tagRepository = ($actionConf | get tagRepository);
-  echo $'Pull remote redevelop repos in directory (ansi g)($repoPath)(ansi reset):(char newline)';
+  echo $'Pull remote redevelop repos in directory (ansi g)($repoPath)(ansi reset):(char nl)';
 
   $tagRepository | each {
     let idx = ($it | str index-of '@');
@@ -27,11 +27,11 @@ def 'git pull-redev' [
       cd $repoPath; git clone $url;
     }
     echo '─────────────────────────────────────────────────────────────────────────────────>';
-    echo $'(char newline)Pull repo (ansi gb)($repoName)(ansi reset): (char newline)';
+    echo $'(char nl)Pull repo (ansi gb)($repoName)(ansi reset): (char nl)';
     cd $destRepoPath; git co master; git pull;
     # 强制更新远程的Tag到本地
     git fetch origin --tags --force;
-    echo $'(char newline)Last commit of (ansi gb)($repoName)(ansi reset): (char newline)';
+    echo $'(char nl)Last commit of (ansi gb)($repoName)(ansi reset): (char nl)';
     git show --abbrev-commit --no-patch;
 
     let prevTagName = ($actionConf | get redevPrevTag);
@@ -39,11 +39,11 @@ def 'git pull-redev' [
     let parse = (git rev-parse -q --verify $'refs/tags/($prevTagName)');
     if ($parse | empty?) {
       # 使用原生 echo 命令
-      ^echo $'(char newline) (ansi r)Tag: ($prevTagName) does not exist in repo: ($repoName) (ansi reset)(char newline)';
+      ^echo $'(char nl) (ansi r)Tag: ($prevTagName) does not exist in repo: ($repoName) (ansi reset)(char nl)';
     } {
       if $show-diff == 'true' {
         let diff = (git --no-pager diff $prevTagName master --name-only);
-        echo $'========Update since latest tag========:(char newline)';
+        echo $'========Update since latest tag========:(char nl)';
         ^echo $diff;
       } {}
     };
