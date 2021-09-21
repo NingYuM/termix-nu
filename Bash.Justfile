@@ -30,7 +30,7 @@ PREV_MALL_TAG := 'v2.2.0.9-2021.09.10'
 JUST_FILE := justfile()
 JUST_DIR := justfile_directory()
 INVOCATION_DIRECTORY := invocation_directory()
-IWORK_DIR := '/Users/hustcer/github/terminus/iwork'
+TERMIX_DIR := '/Users/hustcer/github/terminus/termix-nu'
 
 # Spaces around ':=' here are allowed
 export HEAD_ENV_VAR := '1'
@@ -48,7 +48,7 @@ default:
 # Listing the branches of a git repo and the day of the last commit
 git-age:
   @let-env JUST_INVOKE_DIR = {{invocation_directory()}}; \
-    nu "$IWORK_DIR/git/age.nu";
+    nu "$TERMIX_DIR/git/age.nu";
 
 # Use arg1=('xyz') to set default $1
 # Set default ENV_MALL_TAG here, can not shadow previous defined
@@ -91,4 +91,4 @@ sh-cmd arg1=('xyz') ENV_MALL_TAG='v0.0.0.0.0.1':
   echo "Justfile: {{justfile()}}"
   echo "Justfile Directory: {{justfile_directory()}}"
   echo "INVOCATION_DIRECTORY: $INVOCATION_DIRECTORY"
-  sh "$IWORK_DIR/sh-cmd.sh"
+  sh "$TERMIX_DIR/sh-cmd.sh"

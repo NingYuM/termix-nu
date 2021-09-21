@@ -24,7 +24,7 @@ set positional-arguments := true
 # Use `just --evaluate` to show env vars
 
 JUST_INVOKE_DIR := invocation_directory()
-IWORK_DIR := '/Users/hustcer/github/terminus/iwork'
+TERMIX_DIR := '/Users/hustcer/github/terminus/termix-nu'
 
 # Just commands aliases
 # alias ag := git-age
@@ -46,11 +46,11 @@ default:
 git-age:
     # The following two statement must be written in one line
     @let-env JUST_INVOKE_DIRECTORY = {{ invocation_directory() }}; \
-      nu "$IWORK_DIR/git/age.nu";
+      nu "$TERMIX_DIR/git/age.nu";
 
 # Pull all local branches from remote repo
 pull-all:
-    @nu "$IWORK_DIR/git/pull-all.nu";
+    @nu "$TERMIX_DIR/git/pull-all.nu";
 
 # Listing the remote branches of a git repo and the day of the last commit
 git-remote-age remote=('origin'):
@@ -58,11 +58,11 @@ git-remote-age remote=('origin'):
     set -euo pipefail;
 
     export REMOTE_ALIAS="$remote";
-    nu "$IWORK_DIR/git/remote-age.nu";
+    nu "$TERMIX_DIR/git/remote-age.nu";
 
 # 列出远程二开仓库 Tags
 ls-remote-tags:
-    @nu "$IWORK_DIR/git/ls-remote-tag.nu";
+    @nu "$TERMIX_DIR/git/ls-remote-tag.nu";
 
 # t pull-redev true
 # 更新远程二开仓库代码到本地
@@ -71,7 +71,7 @@ pull-redev diff=('false'):
     set -euo pipefail;
 
     export SHOW_REDEV_DIFF="$diff";
-    nu "$IWORK_DIR/git/pull-redev.nu";
+    nu "$TERMIX_DIR/git/pull-redev.nu";
 
 # Use tag=('v2.0.2') to set default $1
 # delete: 是否删除当前日期对应的二开标签，且不重新打标, 只有为true的时候才删除，其他情况会重新打标
@@ -86,7 +86,7 @@ tag-redev tag=('') delete=('false'):
 
     export CURRENT_BE_TAG="$tag";
     export TAG_DELETE_MODE="$delete";
-    nu "$IWORK_DIR/git/tag-redev.nu";
+    nu "$TERMIX_DIR/git/tag-redev.nu";
 
 # 在指定git分支上执行指定命令, cmd为待执行命令字符串
 git-batch-exec cmd +branches=(''):
@@ -95,7 +95,7 @@ git-batch-exec cmd +branches=(''):
 
     export BATCH_EXEC_CMD="$cmd";
     export BATCH_EXEC_BRANCHES="$branches";
-    nu "$IWORK_DIR/git/git-batch-exec.nu";
+    nu "$TERMIX_DIR/git/git-batch-exec.nu";
 
 # 将指定Git分支硬回滚N个commit
 git-batch-reset n +branches=(''):
@@ -104,7 +104,7 @@ git-batch-reset n +branches=(''):
 
     export BATCH_RESET_COUNT="$n";
     export BATCH_RESET_BRANCHES="$branches";
-    nu "$IWORK_DIR/git/git-batch-reset.nu";
+    nu "$TERMIX_DIR/git/git-batch-reset.nu";
 
 # 在指定目录下的所有子目录里执行指定命令, cmd为待执行命令字符串
 dir-batch-exec cmd +DIRS=(''):
@@ -113,4 +113,4 @@ dir-batch-exec cmd +DIRS=(''):
 
     export BATCH_EXEC_CMD="$cmd";
     export BATCH_EXEC_DIRS="$DIRS";
-    nu "$IWORK_DIR/actions/dir-batch-exec.nu";
+    nu "$TERMIX_DIR/actions/dir-batch-exec.nu";

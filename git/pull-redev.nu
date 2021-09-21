@@ -6,7 +6,7 @@ def 'git pull-redev' [
   --show-diff(-d): string   # Set to 'true' if you want to see the files changed since prev tag
 ] {
 
-  let actionConf = (open $'($nu.env.IWORK_DIR)/actions.toml');
+  let actionConf = (open $'($nu.env.TERMIX_DIR)/actions.toml');
   # 所有二开仓库存放临时路径
   let repoPath = ($actionConf | get redevRepoPath);
   let tagRepository = ($actionConf | get tagRepository);

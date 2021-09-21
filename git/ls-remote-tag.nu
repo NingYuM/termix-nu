@@ -3,7 +3,7 @@
 
 # 列出远程二开仓库 Tags
 def 'git ls-remote-tags' [] {
-  let actionConf = (open $'($nu.env.IWORK_DIR)/actions.toml');
+  let actionConf = (open $'($nu.env.TERMIX_DIR)/actions.toml');
   # 所有二开仓库存放临时路径
   let repoPath = ($actionConf | get redevRepoPath);
   let tagRepository = ($actionConf | get tagRepository);
