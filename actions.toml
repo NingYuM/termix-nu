@@ -1,0 +1,48 @@
+# TOML Reference: https://toml.io/en/v1.0.0
+
+# 注意事项：
+#   1. 尽量使用内联表，除非导致文本行宽度过宽，此时可采用标准表;
+#   2. JSON -> TOML: brew install yj && cat package.json | yj -jt;
+#      TOML -> JSON: cat redevelop.b2c.toml | yj -tj -i;
+#   3. VS Code 插件推荐: Even Better TOML;
+
+# 临时二开仓库存放目录
+redevRepoPath = '/Users/hustcer/redev-repos'
+
+# 当前要打的后端版本号标签
+redevCurrentTag = 'v2.2.x'
+
+# 待比较差异的前一个标签完整名称
+redevPrevTag = 'v2.2.0.9-2021.09.10'
+
+# 新增的二开标签备注
+redevTagComment = 'This is a release tag'
+
+
+# 远程二开仓库地址
+tagRepository = [
+  # https://erda.cloud/terminus/dop/projects/385/apps/6898/repo/tags
+  'b2b-mall-all@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-b2b-redev',
+  # https://erda.cloud/terminus/dop/projects/385/apps/6899/repo/tags
+  'b2b-mall-origin@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-b2b-redev-origin',
+  # https://erda.cloud/terminus/dop/projects/385/apps/6896/repo/tags
+  'b2c-mall-all@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-b2c-redev',
+  # https://erda.cloud/terminus/dop/projects/385/apps/6897/repo/tags
+  'b2c-mall-origin@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-b2c-redev-origin',
+  # https://erda.cloud/terminus/dop/projects/385/apps/6857/repo/tags
+  'b2c-mobile-all@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-b2c-redev',
+  # https://erda.cloud/terminus/dop/projects/385/apps/6871/repo/tags
+  'b2c-mobile-origin@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-b2c-redev-origin',
+  # https://erda.cloud/terminus/dop/projects/385/apps/6994/repo/tags
+  'sea-mall-all@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-sea-redev',
+  # https://erda.cloud/terminus/dop/projects/385/apps/6995/repo/tags
+  'sea-mall-origin@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-sea-redev-origin',
+  # https://erda.cloud/terminus/dop/projects/385/apps/6992/repo/tags
+  'sea-mobile-all@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-sea-redev',
+  # https://erda.cloud/terminus/dop/projects/385/apps/6993/repo/tags
+  'sea-mobile-origin@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-sea-redev-origin',
+  # https://erda.cloud/terminus/dop/projects/385/apps/7422/repo/tags
+  'gaia-picker-all@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-picker-redev',
+  # https://erda.cloud/terminus/dop/projects/385/apps/7423/repo/tags
+  'gaia-picker-origin@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-picker-redev-origin',
+]

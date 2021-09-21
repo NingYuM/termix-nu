@@ -1,0 +1,51 @@
+# Author: hustcer
+# Created: 2021/09/15 11:39:56
+
+# https://github.com/nushell/nushell/pull/3611
+# https://github.com/nushell/nushell/issues/3433
+# git reset --hard HEAD~3
+# git show --abbrev-commit --no-patch;
+# t git-batch-exec 'git reset --hard HEAD~3;'
+# t git-batch-exec 'git show --abbrev-commit --no-patch;'
+# 在候选分支上批量执行特定操作
+def 'git batch-exec' [
+  cmd: string       # The command to execute for specified branches
+  branches: string  # The branches to have command be executed, default all local branches
+] {
+  # echo $cmd; echo $branches; exit --now;
+  let dest = ($branches | str trim | split row ' ' | compact);
+  # fix: 'fatal: not a git repository (or any of the parent directories): .git'
+  cd $nu.env.JUST_INVOKE_DIR;
+  let current = (git branch --show-current);
+
+  # 如果有远程分支不存在会出错
+  # let available = (git for-each-ref --format='%(refname:short)' refs/heads | lines);
+  # Fix `^^^^^ requires string input issue at 'lines'`
+  let available = (git branch | into string | lines | str substring (2,));
+  let candidates = (if ($branches | empty?) { $available } { $dest });
+
+  echo $'(char nl)Start to run (ansi r)“($cmd)”(ansi reset) on branches: (char nl)';
+  echo $candidates;
+
+  echo $"(char nl)Current branch: ($current)";
+  let statusCheck = (git status --porcelain);
+  if ($statusCheck | empty?) {} {
+    git stash save 'Stash before running git-batch-exec';
+  }
+
+  echo $candidates | each {
+    echo $"--------------------> (char nl)";
+    # ignore errors as the block runs
+    let parse = (git rev-parse --verify $it);
+    # Or $parse == ''
+    if ($parse | empty?) {
+      echo $'Branch (ansi r)($it) (ansi reset)not available...(char nl)'
+    } {
+      git checkout $it; nu -c $cmd;
+    }
+  }
+  git checkout $current;
+  if ($statusCheck | empty?) {} { git stash pop; }
+}
+
+git batch-exec $nu.env.BATCH_EXEC_CMD $nu.env.BATCH_EXEC_BRANCHES
