@@ -1,5 +1,7 @@
 # Author: hustcer
 # Created: 2021/09/11 22:57:20
+# Usage:
+#   t git-age
 
 # Creates a table listing the branches of a git repository and the day of the last commit
 def 'git age' [

@@ -1,5 +1,7 @@
 # Author: hustcer
 # Created: 2021/09/11 23:33:05
+# Usage:
+#   t ls-remote-tags
 
 # 列出远程二开仓库 Tags
 def 'git ls-remote-tags' [] {

@@ -1,9 +1,10 @@
 # Author: hustcer
 # Created: 2021/09/18 18:52:19
+# Usage:
+#   t git-batch-reset 3
+#   t git-batch-reset 3 develop master
 
 # git reset --hard HEAD~3
-# t git-batch-reset 3
-# t git-batch-reset 3 develop master
 # 将指定Git分支硬回滚N个commit
 def 'git batch-reset' [
   count: int        # The commit count to reset for specified branches
@@ -42,7 +43,7 @@ def 'git batch-reset' [
     if ($parse | empty?) {
       echo $'Branch (ansi r)($it) (ansi reset)not available...(char nl)'
     } {
-      git checkout $it; nu -c $'git reset --hard HEAD~($count)';
+      git checkout $it; bash -c $'git reset --hard HEAD~($count)';
     }
   }
   git checkout $current;

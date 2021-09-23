@@ -1,12 +1,13 @@
 # Author: hustcer
 # Created: 2021/09/15 11:39:56
+# Usage:
+#   t git-batch-exec 'git reset --hard HEAD~3;'
+#   t git-batch-exec 'git show --abbrev-commit --no-patch;'
 
 # https://github.com/nushell/nushell/pull/3611
 # https://github.com/nushell/nushell/issues/3433
 # git reset --hard HEAD~3
 # git show --abbrev-commit --no-patch;
-# t git-batch-exec 'git reset --hard HEAD~3;'
-# t git-batch-exec 'git show --abbrev-commit --no-patch;'
 # 在候选分支上批量执行特定操作
 def 'git batch-exec' [
   cmd: string       # The command to execute for specified branches
@@ -41,7 +42,7 @@ def 'git batch-exec' [
     if ($parse | empty?) {
       echo $'Branch (ansi r)($it) (ansi reset)not available...(char nl)'
     } {
-      git checkout $it; nu -c $cmd;
+      git checkout $it; bash -c $cmd;
     }
   }
   git checkout $current;

@@ -1,5 +1,8 @@
 # Author: hustcer
 # Created: 2021/09/13 18:39:15
+# Usage:
+#   t tag-redev v2.2.0.9
+#   t tag-redev v2.2.0.9 true
 
 # 给远程二开仓库批量打 Tag
 def 'git tag-redev' [

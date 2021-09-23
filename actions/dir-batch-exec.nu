@@ -1,8 +1,9 @@
 # Author: hustcer
 # Created: 2021/09/15 11:39:56
+# Usage:
+#   t dir-batch-exec 'pwd && echo "--------> " && ncu'
+#   t dir-batch-exec 'pwd; git remote -v; git push origin master; git push origin --tags'
 
-# t dir-batch-exec 'pwd; echo $"(char nl)"; ncu'
-# repos $ t dir-batch-exec 'pwd; ^echo ':'; git remote -v; git push o master; git push o --tags'
 # 在指定目录下的所有子目录里执行指定命令
 def 'dir-batch-exec' [
   cmd: string  # The command to execute in directories
@@ -17,7 +18,7 @@ def 'dir-batch-exec' [
 
     $destDirs | each {
       if ($it | path exists) {
-        cd $it; nu -c $cmd;
+        cd $it; bash -c $cmd;
       } {}
     }
 }

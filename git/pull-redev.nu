@@ -1,5 +1,8 @@
 # Author: hustcer
 # Created: 2021/09/11 23:33:03
+# Usage:
+#   t pull-redev
+#   t pull-redev true
 
 # 列出远程二开仓库 Tags
 def 'git pull-redev' [

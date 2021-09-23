@@ -1,5 +1,8 @@
 # Author: hustcer
 # Created: 2021/09/11 23:33:03
+# Usage:
+#   t git-remote-age
+#   t git-remote-age origin
 
 # Creates a table listing the remote branches of
 # a git repository and the day of the last commit
