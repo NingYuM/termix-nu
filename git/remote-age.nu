@@ -27,7 +27,7 @@ def 'git remote-age' [
     insert last_commit {
       get name |
       each {
-        git show $"remotes/($alias)/($it)" --no-patch --format=%as | str to-datetime
+        git show $"remotes/($alias)/($it)" --no-patch --format=%ai | str to-datetime
       };
     } |
     sort-by last_commit;
