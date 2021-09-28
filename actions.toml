@@ -13,7 +13,7 @@ redevRepoPath = '/Users/hustcer/redev-repos'
 redevCurrentTag = 'v2.2.x'
 
 # 待比较差异的前一个标签完整名称
-redevPrevTag = 'v2.2.0.9-2021.09.10'
+redevPrevTag = 'v2.2.0.9-2021.09.23'
 
 # 新增的二开标签备注
 redevTagComment = 'This is a release tag'

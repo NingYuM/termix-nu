@@ -45,9 +45,8 @@ def 'git pull-redev' [
       ^echo $'(char nl) (ansi r)Tag: ($prevTagName) does not exist in repo: ($repoName) (ansi reset)(char nl)';
     } {
       if $show-diff == 'true' {
-        let diff = (git --no-pager diff $prevTagName master --name-only);
         echo $'========Update since latest tag========:(char nl)';
-        ^echo $diff;
+        git --no-pager diff $prevTagName master --name-only;
       } {}
     };
   };
