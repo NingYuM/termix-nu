@@ -66,17 +66,18 @@ ls-remote-tags:
 
 # t pull-redev true
 # 更新远程二开仓库代码到本地
-pull-redev diff=('false'):
+pull-redev branch=('master') diff=('false'):
     #!/usr/bin/env bash
     set -euo pipefail;
 
     export SHOW_REDEV_DIFF="$diff";
+    export DEST_REDEV_BRANCH="$branch";
     nu "$TERMIX_DIR/git/pull-redev.nu";
 
 # Use tag=('v2.0.2') to set default $1
 # delete: 是否删除当前日期对应的二开标签，且不重新打标, 只有为true的时候才删除，其他情况会重新打标
 # 给远程二开仓库批量打 Tag
-tag-redev tag=('') delete=('false'):
+tag-redev tag=('') branch=('master') delete=('false'):
     #!/usr/bin/env bash
     # set -e makes bash exit if a command fails.
     # set -u makes bash exit if a variable is undefined.
@@ -86,6 +87,7 @@ tag-redev tag=('') delete=('false'):
 
     export CURRENT_BE_TAG="$tag";
     export TAG_DELETE_MODE="$delete";
+    export DEST_REDEV_BRANCH="$branch";
     nu "$TERMIX_DIR/git/tag-redev.nu";
 
 # 在指定git分支上执行指定命令, cmd为待执行命令字符串

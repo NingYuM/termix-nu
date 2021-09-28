@@ -2,10 +2,12 @@
 # Created: 2021/09/11 23:33:03
 # Usage:
 #   t pull-redev
-#   t pull-redev true
+#   t pull-redev develop
+#   t pull-redev master true
 
 # 列出远程二开仓库 Tags
 def 'git pull-redev' [
+  branch: string            # Specify the branch to pull
   --show-diff(-d): string   # Set to 'true' if you want to see the files changed since prev tag
 ] {
 
@@ -31,7 +33,10 @@ def 'git pull-redev' [
     }
     echo '─────────────────────────────────────────────────────────────────────────────────>';
     echo $'(char nl)Pull repo (ansi gb)($repoName)(ansi reset): (char nl)';
-    cd $destRepoPath; git co master; git pull;
+
+    let dest = (git rev-parse -q --verify $branch);
+    if ($dest | empty?) { echo $'Dest branch: ($branch) does not exist, bye...(char nl)'; exit --now; } {}
+    cd $destRepoPath; git checkout $branch; git pull;
     # 强制更新远程的Tag到本地
     git fetch origin --tags --force;
     echo $'(char nl)Last commit of (ansi gb)($repoName)(ansi reset): (char nl)';
@@ -46,10 +51,10 @@ def 'git pull-redev' [
     } {
       if $show-diff == 'true' {
         echo $'========Update since latest tag========:(char nl)';
-        git --no-pager diff $prevTagName master --name-only;
+        git --no-pager diff $prevTagName $branch --name-only;
       } {}
     };
   };
 }
 
-git pull-redev --show-diff=$nu.env.SHOW_REDEV_DIFF
+git pull-redev $nu.env.DEST_REDEV_BRANCH --show-diff=$nu.env.SHOW_REDEV_DIFF

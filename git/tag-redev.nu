@@ -2,11 +2,12 @@
 # Created: 2021/09/13 18:39:15
 # Usage:
 #   t tag-redev v2.2.0.9
-#   t tag-redev v2.2.0.9 true
+#   t tag-redev v2.2.0.9 master true
 
 # 给远程二开仓库批量打 Tag
 def 'git tag-redev' [
   tag: string               # Specify the tag you want to create
+  branch: string            # Specify the branch to create a tag from
   --delete-tag(-d): string  # Set to 'true' if you want to delete the specified tag
 ] {
 
@@ -41,11 +42,11 @@ def 'git tag-redev' [
     let destRepoPath = $'($repoPath)/($repoName)';
     # 仓库存在则更新，不存在则 clone
     if ($destRepoPath | path exists) {
-      cd $destRepoPath; git pull;
+      cd $destRepoPath; git checkout $branch; git pull;
     } {
       cd $repoPath; git clone $url;
+      cd $destRepoPath; git checkout $branch;
     }
-    cd $destRepoPath;
     # Delete tags that not exist in remote repo
     git fetch origin --prune '+refs/tags/*:refs/tags/*';
     # Check the tag status, if exists just recrete it.
@@ -54,10 +55,10 @@ def 'git tag-redev' [
 
     if $delete {} {
       # Add a tag and push it to the remote repo
-      git tag $tagName -am $TAG_COMMENT; git push origin --tags;
+      git checkout $branch; git tag $tagName -am $TAG_COMMENT; git push origin --tags;
     }
   };
   cd $currentDir; ls $repoPath;
 }
 
-git tag-redev $nu.env.CURRENT_BE_TAG -d $nu.env.TAG_DELETE_MODE;
+git tag-redev $nu.env.CURRENT_BE_TAG $nu.env.DEST_REDEV_BRANCH -d $nu.env.TAG_DELETE_MODE;
