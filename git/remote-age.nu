@@ -15,6 +15,7 @@ def 'git remote-age' [
   let remoteUrl = (git remote get-url $alias);
   let nameIdx = (echo $remoteUrl | str index-of -e '/');
   let repoName = (echo $remoteUrl | str substring $'($nameIdx + 1),' | str trim);
+  git fetch $alias -p;
   echo $'(char nl)Branches of (ansi gb)($repoName)(ansi reset) for remote ($alias)(char nl)';
 
   git ls-remote --heads --refs $alias |
