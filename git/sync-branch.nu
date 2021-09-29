@@ -18,9 +18,9 @@ def 'git sync-branch' [
   # Boolean value can not be reused later
   # let matchBranch = ($pushConf | get branches | pivot | rename branch dest | any? branch == $current);
   let syncDests = ($pushConf | get branches | pivot | rename branch dest | where branch == $current);
-  if (($syncDests | length) >= 0) {
+  if ($syncDests | empty?) { exit --now; } {
     echo $'(char nl)Found the following matched dests:(char nl)';
-  } { exit --now; }
+  }
 
   # 获取待同步目的仓库及目的分支映射
   let dests = ($syncDests | pivot | rename c0 c1 | where c0 == 'dest' | get c1);
