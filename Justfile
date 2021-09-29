@@ -91,12 +91,13 @@ tag-redev tag=('') branch=('master') delete=('false'):
     nu "$TERMIX_DIR/git/tag-redev.nu";
 
 # 批量同步本地分支到远程指定分支
-git-sync-branch localRef localOid:
+git-sync-branch localRef localOid remoteRef:
     #!/usr/bin/env bash
     set -euo pipefail;
 
     export PUSH_LOCAL_REF="$localRef";
     export PUSH_LOCAL_OID="$localOid";
+    export PUSH_REMOTE_REF="$remoteRef";
     nu "$TERMIX_DIR/git/sync-branch.nu";
 
 # 在指定git分支上执行指定命令, cmd为待执行命令字符串
