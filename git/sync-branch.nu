@@ -1,19 +1,18 @@
 # Author: hustcer
 # Created: 2021/09/28 19:50:20
 # Usage:
-#   t git-sync-branch
-#   t git-sync-branch develop master
+#   This is a git push hook, don't call it manually
 
 # Sync local branches to remote according to .pushrc config file
 def 'git sync-branch' [
-  repo: path        # The repo path to get the branches synced
-  branches: string  # Local branches to be synced
+  localRef: string   # Local git push ref
+  localOid: string   # Local git commit object id
 ] {
 
-  cd $repo;
+  cd $nu.env.JUST_INVOKE_DIR;
   # 一定要 trim 啊，否则后面可能匹配不到，哎呦……
-  let current = (git branch --show-current | str trim);
-  let pushConf = (open .pushrc | from json);
+  let current = ($localRef | str find-replace 'refs/heads/' '');
+  let pushConf = (open .pushrc | from toml);
   # The following line not work: ^^^ Expected column path, found string
   # let matchBranch = ($pushConf | get branches | default $current '' | select $current | compact | length);
   # Boolean value can not be reused later
@@ -36,7 +35,8 @@ def 'git sync-branch' [
     ^echo '';
   }
   char nl;
+  exit --now;
 }
 
 # $nu.env | pivot;
-git sync-branch $nu.env.JUST_INVOKE_DIR $nu.env.BATCH_SYNC_BRANCHES;
+git sync-branch $nu.env.PUSH_LOCAL_REF $nu.env.PUSH_LOCAL_OID;

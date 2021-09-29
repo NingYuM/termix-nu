@@ -6,7 +6,6 @@
 # Creates a table listing the branches of a git repository and the day of the last commit
 def 'git age' [
   repo: path # The repo path to show git age
-  branch: string
 ] {
 
   cd $repo;
