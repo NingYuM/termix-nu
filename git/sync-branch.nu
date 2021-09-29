@@ -31,11 +31,11 @@ def 'git sync-branch' [
     # FIXME: match works but where not work?
     let url = ($repos | match repo $'^($it.repo)$' | get url);
     ^echo $'Sync from local (ansi g)($current)(ansi reset) to remote (ansi p)($it.dest) of repo ($it.repo)(ansi reset) -->(char nl)'
-    git push $url $'($current):($it.dest)';
+    # You MUST use '--no-verify' to prevent infinit loops!!!
+    git push --no-verify $url $'($current):($it.dest)';
     ^echo '';
   }
   char nl;
-  exit --now;
 }
 
 # $nu.env | pivot;
