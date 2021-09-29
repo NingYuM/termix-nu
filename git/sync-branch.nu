@@ -1,19 +1,19 @@
 # Author: hustcer
 # Created: 2021/09/28 19:50:20
 # Usage:
-#   This is a git push hook, don't call it manually
+#   This's a git push hook, don't call it manually
 
 # Sync local branches to remote according to .pushrc config file
 def 'git sync-branch' [
-  localRef: string   # Local git push ref
+  localRef: string   # Local git branch/ref to push
   localOid: string   # Local git commit object id
-  remoteRef: string  # Remote git push ref
+  remoteRef: string  # Remote git branch/ref to push to
 ] {
 
   cd $nu.env.JUST_INVOKE_DIR;
   # 一定要 trim 啊，否则后面可能匹配不到，哎呦……
   let zero = (git hash-object --stdin < /dev/null | tr '[0-9a-f]' '0' | str trim);
-  let useRef = (if ($localOid == $zero) { $remoteRef } { $localRef });
+  let useRef = (if $localOid == $zero { $remoteRef } { $localRef });
   let current = ($useRef | str find-replace 'refs/heads/' '');
   let pushConf = (open .pushrc | from toml);
   # The following line not work: ^^^ Expected column path, found string
@@ -21,6 +21,7 @@ def 'git sync-branch' [
   # Boolean value can not be reused later
   # let matchBranch = ($pushConf | get branches | pivot | rename branch dest | any? branch == $current);
   let syncDests = ($pushConf | get branches | pivot | rename branch dest | where branch == $current);
+  # 如果没有找到对应分支的 push hook 配置则直接退出
   if ($syncDests | empty?) { exit --now; } {
     echo $'(char nl)Found the following matched dests:(char nl)';
   }
@@ -33,7 +34,7 @@ def 'git sync-branch' [
   echo $dests | each {
     # FIXME: match works but where not work?
     let url = ($repos | match repo $'^($it.repo)$' | get url);
-    if ($localOid == $zero) {
+    if $localOid == $zero {
       ^echo $'Remove remote branch (ansi p)($it.dest) of repo ($it.repo)(ansi reset) -->(char nl)';
       # You MUST use '--no-verify' to prevent infinit loops!!!
       git push --no-verify $url $':($it.dest)';

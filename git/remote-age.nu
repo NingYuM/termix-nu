@@ -5,7 +5,7 @@
 #   t git-remote-age origin
 
 # Creates a table listing the remote branches of
-# a git repository and the day of the last commit
+# a git repository and the time of the last commit
 def 'git remote-age' [
   repo: string  # The git repo to display branch ages
   alias: string # The remote url alias for git repo

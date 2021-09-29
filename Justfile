@@ -42,7 +42,7 @@ TERMIX_DIR := '/Users/hustcer/github/terminus/termix-nu'
 default:
     @just --list --list-prefix '··· '
 
-# Listing the branches of a git repo and the day of the last commit
+# Listing the branches of a git repo and the time of the last commit
 git-age:
     # The following two statement must be written in one line
     @let-env JUST_INVOKE_DIRECTORY = {{ invocation_directory() }}; \
@@ -90,7 +90,7 @@ tag-redev tag=('') branch=('master') delete=('false'):
     export DEST_REDEV_BRANCH="$branch";
     nu "$TERMIX_DIR/git/tag-redev.nu";
 
-# 批量同步本地分支到远程指定分支
+# 批量同步本地分支到远程指定分支,git pre-push hooks调用,请勿手工触发
 git-sync-branch localRef localOid remoteRef:
     #!/usr/bin/env bash
     set -euo pipefail;
@@ -100,7 +100,7 @@ git-sync-branch localRef localOid remoteRef:
     export PUSH_REMOTE_REF="$remoteRef";
     nu "$TERMIX_DIR/git/sync-branch.nu";
 
-# 在指定git分支上执行指定命令, cmd为待执行命令字符串
+# 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用空格分隔
 git-batch-exec cmd +branches=(''):
     #!/usr/bin/env bash
     set -euo pipefail;
@@ -118,7 +118,7 @@ git-batch-reset n +branches=(''):
     export BATCH_RESET_BRANCHES="$branches";
     nu "$TERMIX_DIR/git/git-batch-reset.nu";
 
-# 在指定目录下的所有子目录里执行指定命令, cmd为待执行命令字符串
+# 在指定目录或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
 dir-batch-exec cmd +DIRS=(''):
     #!/usr/bin/env bash
     set -euo pipefail;
