@@ -27,7 +27,8 @@ def 'git ls-redev-tags' [] {
     }
     echo $'(char nl)Tags of repo (ansi gb)($repoName)(ansi reset): (char nl)';
     # git ls-remote --tags $url | grep -v '{}';
-    cd $destRepoPath; git tag --format='%(refname:strip=2)%09%(creatordate:iso)';
+    cd $destRepoPath;
+    git tag --format='%(refname:strip=2)%09%(creatordate:iso)' --sort='-creatordate';
   };
   char nl;
 }
