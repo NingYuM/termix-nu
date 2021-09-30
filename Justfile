@@ -32,7 +32,7 @@ TERMIX_DIR := '/Users/hustcer/github/terminus/termix-nu'
 # alias rt := tag-redev
 # alias pr := pull-redev
 # alias ra := git-remote-age
-# alias lt := ls-remote-tags
+# alias lt := ls-redev-tags
 
 # To pass arguments to a dependency, put the dependency
 # in parentheses along with the arguments, just like:
@@ -61,8 +61,8 @@ git-remote-age remote=('origin'):
     nu "$TERMIX_DIR/git/remote-age.nu";
 
 # 列出远程二开仓库 Tags
-ls-remote-tags:
-    @nu "$TERMIX_DIR/git/ls-remote-tag.nu";
+ls-redev-tags:
+    @nu "$TERMIX_DIR/git/ls-redev-tag.nu";
 
 # t pull-redev true
 # 更新远程二开仓库代码到本地

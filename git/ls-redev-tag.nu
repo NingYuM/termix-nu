@@ -1,10 +1,10 @@
 # Author: hustcer
 # Created: 2021/09/11 23:33:05
 # Usage:
-#   t ls-remote-tags
+#   t ls-redev-tags
 
 # 列出远程二开仓库 Tags
-def 'git ls-remote-tags' [] {
+def 'git ls-redev-tags' [] {
   let actionConf = (open $'($nu.env.TERMIX_DIR)/actions.toml');
   # 所有二开仓库存放临时路径
   let repoPath = ($actionConf | get redevRepoPath);
@@ -32,4 +32,4 @@ def 'git ls-remote-tags' [] {
   char nl;
 }
 
-git ls-remote-tags
+git ls-redev-tags
