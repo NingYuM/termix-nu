@@ -15,25 +15,19 @@ def 'git sync-branch' [
   let zero = (git hash-object --stdin < /dev/null | tr '[0-9a-f]' '0' | str trim);
   let useRef = (if $localOid == $zero { $remoteRef } { $localRef });
   let current = ($useRef | str find-replace 'refs/heads/' '');
-  let pushConf = (open .pushrc | from toml);
+  let pushConf = (open .pushrc | from toml | to json);
   # The following line not work: ^^^ Expected column path, found string
   # let matchBranch = ($pushConf | get branches | default $current '' | select $current | compact | length);
-  # Boolean value can not be reused later
-  # let matchBranch = ($pushConf | get branches | pivot | rename branch dest | any? branch == $current);
-  let syncDests = ($pushConf | get branches | pivot | rename branch dest | where branch == $current);
-  # 如果没有找到对应分支的 push hook 配置则直接退出
-  if ($syncDests | empty?) { exit --now; } {
-    echo $'(char nl)Found the following matched dests:(char nl)';
-  }
-
   # 获取待同步目的仓库及目的分支映射
-  let dests = ($syncDests | pivot | rename c0 c1 | where c0 == 'dest' | get c1);
-  echo $dests;
-  let repos = ($pushConf | get repos | pivot | rename repo url);
+  let syncDests = ($pushConf | query json $'branches.($current)');
+  # 如果没有找到对应分支的 push hook 配置则直接退出
+  if (($syncDests | length) > 0) {
+    echo $'(char nl)Found the following matched dests:(char nl)';
+    echo $syncDests;
+  } { exit --now; }
 
-  echo $dests | each {
-    # FIXME: match works but where not work?
-    let url = ($repos | match repo $'^($it.repo)$' | get url);
+  echo $syncDests | each {
+    let url = ($pushConf | query json $'repos.($it.repo)');
     if $localOid == $zero {
       ^echo $'Remove remote branch (ansi p)($it.dest) of repo ($it.repo)(ansi reset) -->(char nl)';
       # You MUST use '--no-verify' to prevent infinit loops!!!
