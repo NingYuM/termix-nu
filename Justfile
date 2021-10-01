@@ -27,16 +27,16 @@ set positional-arguments := true
 _termix := env_var('TERMIX_DIR')
 JUST_INVOKE_DIR := invocation_directory()
 _s := if os_family() == "windows" { '\' } else { '/' }
-ageScript :=  join(_termix, 'git' + _s + 'age.nu')
-pullAllScript :=  join(_termix, 'git' + _s + 'pull-all.nu')
-tagRedevScript :=  join(_termix, 'git' + _s + 'tag-redev.nu')
-pullRedevScript :=  join(_termix, 'git' + _s + 'pull-redev.nu')
-remoteAgeScript :=  join(_termix, 'git' + _s + 'remote-age.nu')
-syncBranchScript :=  join(_termix, 'git' + _s + 'sync-branch.nu')
-lsRedevTagScript :=  join(_termix, 'git' + _s + 'ls-redev-tag.nu')
-gitBatchExecScript :=  join(_termix, 'git' + _s + 'git-batch-exec.nu')
-gitBatchResetScript :=  join(_termix, 'git' + _s + 'git-batch-reset.nu')
-dirBatchExecScript :=  join(_termix, 'actions' + _s + 'dir-batch-exec.nu')
+AGE_SCRIPT :=  join(_termix, 'git' + _s + 'age.nu')
+PULL_ALL_SCRIPT :=  join(_termix, 'git' + _s + 'pull-all.nu')
+TAG_REDEV_SCRIPT :=  join(_termix, 'git' + _s + 'tag-redev.nu')
+PULL_REDEV_SCRIPT :=  join(_termix, 'git' + _s + 'pull-redev.nu')
+REMOTE_AGE_SCRIPT :=  join(_termix, 'git' + _s + 'remote-age.nu')
+SYNC_BRANCH_SCRIPT :=  join(_termix, 'git' + _s + 'sync-branch.nu')
+LS_REDEV_TAG_SCRIPT :=  join(_termix, 'git' + _s + 'ls-redev-tag.nu')
+GIT_BATCH_EXEC_SCRIPT :=  join(_termix, 'git' + _s + 'git-batch-exec.nu')
+GIT_BATCH_RESET_SCRIPT :=  join(_termix, 'git' + _s + 'git-batch-reset.nu')
+DIR_BATCH_EXEC_SCRIPT :=  join(_termix, 'actions' + _s + 'dir-batch-exec.nu')
 
 # Just commands aliases
 # alias ag := git-age
@@ -58,11 +58,11 @@ default:
 git-age:
     # The following two statement must be written in one line
     @let-env JUST_INVOKE_DIRECTORY = {{ invocation_directory() }}; \
-      nu {{ageScript}};
+      nu {{AGE_SCRIPT}};
 
 # Pull all local branches from remote repo
 pull-all:
-    @nu {{pullAllScript}};
+    @nu {{PULL_ALL_SCRIPT}};
 
 # Listing the remote branches of a git repo and the day of the last commit
 git-remote-age remote=('origin'):
@@ -70,11 +70,11 @@ git-remote-age remote=('origin'):
     set -euo pipefail;
 
     export REMOTE_ALIAS="$remote";
-    nu {{remoteAgeScript}};
+    nu {{REMOTE_AGE_SCRIPT}};
 
 # 列出远程二开仓库 Tags
 ls-redev-tags:
-    @nu {{lsRedevTagScript}};
+    @nu {{LS_REDEV_TAG_SCRIPT}};
 
 # t pull-redev true
 # 更新远程二开仓库代码到本地
@@ -84,7 +84,7 @@ pull-redev branch=('master') diff=('false'):
 
     export SHOW_REDEV_DIFF="$diff";
     export DEST_REDEV_BRANCH="$branch";
-    nu {{pullRedevScript}};
+    nu {{PULL_REDEV_SCRIPT}};
 
 # Use tag=('v2.0.2') to set default $1
 # delete: 是否删除当前日期对应的二开标签，且不重新打标, 只有为true的时候才删除，其他情况会重新打标
@@ -100,7 +100,7 @@ tag-redev tag=('') branch=('master') delete=('false'):
     export CURRENT_BE_TAG="$tag";
     export TAG_DELETE_MODE="$delete";
     export DEST_REDEV_BRANCH="$branch";
-    nu {{tagRedevScript}};
+    nu {{TAG_REDEV_SCRIPT}};
 
 # 批量同步本地分支到远程指定分支,git pre-push hooks调用,请勿手工触发
 git-sync-branch localRef localOid remoteRef:
@@ -110,7 +110,7 @@ git-sync-branch localRef localOid remoteRef:
     export PUSH_LOCAL_REF="$localRef";
     export PUSH_LOCAL_OID="$localOid";
     export PUSH_REMOTE_REF="$remoteRef";
-    nu {{syncBranchScript}};
+    nu {{SYNC_BRANCH_SCRIPT}};
 
 # 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用空格分隔
 git-batch-exec cmd +branches=(''):
@@ -119,7 +119,7 @@ git-batch-exec cmd +branches=(''):
 
     export BATCH_EXEC_CMD="$cmd";
     export BATCH_EXEC_BRANCHES="$branches";
-    nu {{gitBatchExecScript}};
+    nu {{GIT_BATCH_EXEC_SCRIPT}};
 
 # 将指定Git分支硬回滚N个commit
 git-batch-reset n +branches=(''):
@@ -128,7 +128,7 @@ git-batch-reset n +branches=(''):
 
     export BATCH_RESET_COUNT="$n";
     export BATCH_RESET_BRANCHES="$branches";
-    nu {{gitBatchResetScript}};
+    nu {{GIT_BATCH_RESET_SCRIPT}};
 
 # 在指定目录或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
 dir-batch-exec cmd +DIRS=(''):
@@ -137,4 +137,4 @@ dir-batch-exec cmd +DIRS=(''):
 
     export BATCH_EXEC_CMD="$cmd";
     export BATCH_EXEC_DIRS="$DIRS";
-    nu {{dirBatchExecScript}};
+    nu {{DIR_BATCH_EXEC_SCRIPT}};
