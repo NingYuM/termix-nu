@@ -25,7 +25,7 @@ set positional-arguments := true
 # Use `just --evaluate` to show env vars
 
 _termix := env_var('TERMIX_DIR')
-JUST_INVOKE_DIR := invocation_directory()
+# Used to handle the path seperator issue
 _s := if os_family() == "windows" { '\' } else { '/' }
 AGE_SCRIPT :=  join(_termix, 'git' + _s + 'age.nu')
 PULL_ALL_SCRIPT :=  join(_termix, 'git' + _s + 'pull-all.nu')
@@ -37,6 +37,8 @@ LS_REDEV_TAG_SCRIPT :=  join(_termix, 'git' + _s + 'ls-redev-tag.nu')
 GIT_BATCH_EXEC_SCRIPT :=  join(_termix, 'git' + _s + 'git-batch-exec.nu')
 GIT_BATCH_RESET_SCRIPT :=  join(_termix, 'git' + _s + 'git-batch-reset.nu')
 DIR_BATCH_EXEC_SCRIPT :=  join(_termix, 'actions' + _s + 'dir-batch-exec.nu')
+# FIXME: A just bug: invalid directory path by invoking invocation_directory
+JUST_INVOKE_DIR := replace(replace(invocation_directory(), '/', _s), '\d\', 'D:\')
 
 # Just commands aliases
 # alias ag := git-age
@@ -57,7 +59,7 @@ default:
 # Listing the branches of a git repo and the time of the last commit
 git-age:
     # The following two statement must be written in one line
-    @let-env JUST_INVOKE_DIRECTORY = {{ invocation_directory() }}; \
+    @let-env JUST_INVOKE_DIRECTORY = {{JUST_INVOKE_DIR}}; \
       nu {{AGE_SCRIPT}};
 
 # Pull all local branches from remote repo
