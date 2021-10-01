@@ -24,15 +24,15 @@ set positional-arguments := true
 
 # Use `just --evaluate` to show env vars
 
+_termix := env_var('TERMIX_DIR')
 JUST_INVOKE_DIR := invocation_directory()
 _s := if os_family() == "windows" { '\' } else { '/' }
-_termix := env_var('TERMIX_DIR')
 ageScript :=  join(_termix, 'git' + _s + 'age.nu')
 pullAllScript :=  join(_termix, 'git' + _s + 'pull-all.nu')
 tagRedevScript :=  join(_termix, 'git' + _s + 'tag-redev.nu')
 pullRedevScript :=  join(_termix, 'git' + _s + 'pull-redev.nu')
-syncBranchScript :=  join(_termix, 'git' + _s + 'sync-branch.nu')
 remoteAgeScript :=  join(_termix, 'git' + _s + 'remote-age.nu')
+syncBranchScript :=  join(_termix, 'git' + _s + 'sync-branch.nu')
 lsRedevTagScript :=  join(_termix, 'git' + _s + 'ls-redev-tag.nu')
 gitBatchExecScript :=  join(_termix, 'git' + _s + 'git-batch-exec.nu')
 gitBatchResetScript :=  join(_termix, 'git' + _s + 'git-batch-reset.nu')
