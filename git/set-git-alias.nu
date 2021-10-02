@@ -13,7 +13,6 @@ git config --global alias.co checkout;
 git config --global alias.pl 'pull --rebase';
 git config --global alias.mg "merge --no-ff";
 git config --global alias.rv "revert --soft HEAD^";
-git config --global alias.dis 'reset --hard HEAD^';
 git config --global alias.today 'diff --shortstat "@{1 day ago}"';
 git config --global alias.lg "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'";
 
