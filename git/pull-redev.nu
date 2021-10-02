@@ -18,6 +18,8 @@ def 'git pull-redev' [
   echo $'Pull remote redevelop repos in directory (ansi g)($repoPath)(ansi reset):(char nl)';
 
   # 此处迭代变量不要采用默认的 `$it`, 否则会出错，坑爹啊……
+  # It's better to have a named param on blocks because $it can be consumed and lost.
+  # Ref: https://github.com/nushell/nushell/issues/4060
   $redevRepos | each { |repo|
     let repoNameIdx = (($repo.url | str index-of -e '/') + 1);
     let repoName = ($repo.url | str substring $'($repoNameIdx),');
