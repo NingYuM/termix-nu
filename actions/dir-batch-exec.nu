@@ -6,8 +6,8 @@
 
 # 在指定目录或者当前目录的所有子目录里执行指定命令,多个目录用空格分隔
 def 'dir-batch-exec' [
-  cmd: string  # The command to execute in directories
-  dirs: string # The directoies to execute the command
+  cmd: string   # The command to execute in directories
+  dirs: string  # The directoies to execute the command
   --parent(-p): string # If no dirs specified, run the command in all subdirs of specified parent dir
 ] {
 
