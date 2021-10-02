@@ -18,31 +18,30 @@ redevPrevTag = 'v2.2.0.9-2021.09.23'
 # 新增的二开标签备注
 redevTagComment = 'This is a release tag'
 
-
 # 远程二开仓库地址
-tagRepository = [
+redevRepos = [
   # https://erda.cloud/terminus/dop/projects/385/apps/6898/repo/tags
-  'b2b-mall-all@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-b2b-redev',
+  { name = 'b2b-mall-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-b2b-redev' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6899/repo/tags
-  'b2b-mall-origin@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-b2b-redev-origin',
+  { name = 'b2b-mall-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-b2b-redev-origin' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6896/repo/tags
-  'b2c-mall-all@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-b2c-redev',
+  { name = 'b2c-mall-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-b2c-redev' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6897/repo/tags
-  'b2c-mall-origin@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-b2c-redev-origin',
+  { name = 'b2c-mall-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-b2c-redev-origin' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6857/repo/tags
-  'b2c-mobile-all@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-b2c-redev',
+  { name = 'b2c-mobile-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-b2c-redev' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6871/repo/tags
-  'b2c-mobile-origin@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-b2c-redev-origin',
+  { name = 'b2c-mobile-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-b2c-redev-origin' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6994/repo/tags
-  'sea-mall-all@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-sea-redev',
+  { name = 'sea-mall-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-sea-redev' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6995/repo/tags
-  'sea-mall-origin@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-sea-redev-origin',
+  { name = 'sea-mall-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-sea-redev-origin' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6992/repo/tags
-  'sea-mobile-all@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-sea-redev',
+  { name = 'sea-mobile-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-sea-redev' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6993/repo/tags
-  'sea-mobile-origin@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-sea-redev-origin',
+  { name = 'sea-mobile-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-sea-redev-origin' },
   # https://erda.cloud/terminus/dop/projects/385/apps/7422/repo/tags
-  'gaia-picker-all@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-picker-redev',
+  { name = 'gaia-picker-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-picker-redev' },
   # https://erda.cloud/terminus/dop/projects/385/apps/7423/repo/tags
-  'gaia-picker-origin@https://erda.cloud/terminus/dop/gaia-app-redev/gaia-picker-redev-origin',
+  { name = 'gaia-picker-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-picker-redev-origin' },
 ]

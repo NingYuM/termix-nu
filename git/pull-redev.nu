@@ -14,22 +14,20 @@ def 'git pull-redev' [
   let actionConf = (open $'($nu.env.TERMIX_DIR)/actions.toml');
   # 所有二开仓库存放临时路径
   let repoPath = ($actionConf | get redevRepoPath);
-  let tagRepository = ($actionConf | get tagRepository);
+  let redevRepos = ($actionConf | get redevRepos);
   echo $'Pull remote redevelop repos in directory (ansi g)($repoPath)(ansi reset):(char nl)';
 
-  $tagRepository | each {
-    let idx = ($it | str index-of '@');
-    # 取得 git 仓库地址
-    let url = ($it | str substring $'($idx + 1),');
-    let repoNameIdx = (($it | str index-of -e '/') + 1);
-    let repoName = ($it | str substring $'($repoNameIdx),');
+  # 此处迭代变量不要采用默认的 `$it`, 否则会出错，坑爹啊……
+  $redevRepos | each { |repo|
+    let repoNameIdx = (($repo.url | str index-of -e '/') + 1);
+    let repoName = ($repo.url | str substring $'($repoNameIdx),');
     # 单一二开仓库完整路径
     let destRepoPath = $'($repoPath)/($repoName)';
     # 仓库存在则更新，不存在则 clone
     if ($destRepoPath | path exists) {
       cd $destRepoPath; git pull;
     } {
-      cd $repoPath; git clone $url;
+      cd $repoPath; git clone $repo.url;
     }
     echo '─────────────────────────────────────────────────────────────────────────────────>';
     echo $'(char nl)Pull repo (ansi gb)($repoName)(ansi reset): (char nl)';

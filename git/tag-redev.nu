@@ -25,26 +25,23 @@ def 'git tag-redev' [
 
   # 所有二开仓库存放临时路径
   let repoPath = ($actionConf | get redevRepoPath);
-  let tagRepository = ($actionConf | get tagRepository);
+  let redevRepos = ($actionConf | get redevRepos);
   let exists = ($repoPath | path exists);
   # 不存在则创建临时路径
   if $exists {} { mkdir $repoPath; }
   # 保存当前路径方便后期跳回
   let currentDir = (pwd);
 
-  $tagRepository | each {
-    let idx = ($it | str index-of '@');
-    # 取得 git 仓库地址
-    let url = ($it | str substring $'($idx + 1),');
-    let repoNameIdx = (($it | str index-of -e '/') + 1);
-    let repoName = ($it | str substring $'($repoNameIdx),');
+  $redevRepos | each { |repo|
+    let repoNameIdx = (($repo.url | str index-of -e '/') + 1);
+    let repoName = ($repo.url | str substring $'($repoNameIdx),');
     # 单一二开仓库完整路径
     let destRepoPath = $'($repoPath)/($repoName)';
     # 仓库存在则更新，不存在则 clone
     if ($destRepoPath | path exists) {
       cd $destRepoPath; git checkout $branch; git pull;
     } {
-      cd $repoPath; git clone $url;
+      cd $repoPath; git clone $repo.url;
       cd $destRepoPath; git checkout $branch;
     }
     # Delete tags that not exist in remote repo

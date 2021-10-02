@@ -8,15 +8,13 @@ def 'git ls-redev-tags' [] {
   let actionConf = (open $'($nu.env.TERMIX_DIR)/actions.toml');
   # 所有二开仓库存放临时路径
   let repoPath = ($actionConf | get redevRepoPath);
-  let tagRepository = ($actionConf | get tagRepository);
+  let redevRepos = ($actionConf | get redevRepos);
   echo $'List remote tags:(char nl)';
 
-  $tagRepository | each {
-    let idx = ($it | str index-of '@');
-    # 取得 git 仓库地址
-    let url = ($it | str substring $'($idx + 1),');
-    let repoNameIdx = (($it | str index-of -e '/') + 1);
-    let repoName = ($it | str substring $'($repoNameIdx),');
+  $redevRepos | each {
+    let url = (echo $it | get url);
+    let repoNameIdx = (($url | str index-of -e '/') + 1);
+    let repoName = ($url | str substring $'($repoNameIdx),');
     # 单一二开仓库完整路径
     let destRepoPath = $'($repoPath)/($repoName)';
     # 仓库存在则更新，不存在则 clone
