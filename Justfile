@@ -33,8 +33,8 @@ JUST_INVOKE_DIR := replace(replace(invocation_directory(), '/', _s), '\d\', 'D:\
 _compose_cmd := join(_termix, join('utils', 'compose-cmd.nu'))
 _git_batch_exec := join(_termix, join('git', 'git-batch-exec.nu'))
 _dir_batch_exec := join(_termix, join('actions', 'dir-batch-exec.nu'))
-_git_batch_exec_all := join(_termix, join('git', '.batch-exec-compose.nu'))
-_dir_batch_exec_all := join(_termix, join('actions', '.batch-exec-compose.nu'))
+_git_batch_exec_all := join(_termix, join('run', '.git-batch-exec-compose.nu'))
+_dir_batch_exec_all := join(_termix, join('run', '.dir-batch-exec-compose.nu'))
 
 # Just commands aliases
 # alias ag := git-age
@@ -98,7 +98,7 @@ git-sync-branch localRef localOid remoteRef:
 git-batch-exec cmd +branches=(''):
     @let-env BATCH_EXEC_CMD = {{cmd}}; \
       let-env BATCH_EXEC_BRANCHES = {{branches}}; \
-      cat {{_git_batch_exec}} {{_compose_cmd}} > {{_git_batch_exec_all}}; \
+      bat {{_git_batch_exec}} {{_compose_cmd}} > {{_git_batch_exec_all}}; \
       nu {{ _git_batch_exec_all }}
 
 # 将指定Git分支硬回滚N个commit
@@ -110,5 +110,5 @@ git-batch-reset n +branches=(''):
 # 在指定目录或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
 dir-batch-exec cmd +DIRS=(''):
     @load-env [[name, value]; ['BATCH_EXEC_CMD', '{{cmd}}'] ['BATCH_EXEC_DIRS', {{DIRS}}]]; \
-      cat {{_dir_batch_exec}} {{_compose_cmd}} > {{_dir_batch_exec_all}}; \
+      bat {{_dir_batch_exec}} {{_compose_cmd}} > {{_dir_batch_exec_all}}; \
       nu {{ _dir_batch_exec_all }}
