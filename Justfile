@@ -135,4 +135,5 @@ dir-batch-exec cmd +DIRS=(''):
 
     export BATCH_EXEC_CMD="$cmd";
     export BATCH_EXEC_DIRS="$DIRS";
-    nu {{ join(_termix, join('actions', 'dir-batch-exec.nu')) }};
+    cat {{_dir_batch_exec}} {{_compose_cmd}} > {{_dir_batch_exec_all}}
+    nu {{ _dir_batch_exec_all }};

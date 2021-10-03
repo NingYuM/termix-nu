@@ -14,12 +14,14 @@ def 'dir-batch-exec' [
     let dest = ($dirs | str trim | split row ' '| compact | each { [$parent $it] | path join })
     let children = (ls $parent | where type == Dir | get name)
     let destDirs = (if ($dirs | empty?) { $children } { $dest })
+    let cmdToExec = (compose-cmd $cmd)
     # $dest
     # exit --now
 
     $destDirs | each {
       if ($it | path exists) {
-        cd $it; bash -c $cmd
+        $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi reset) in dir ($it): (char nl)'
+        cd $it; nu -c $cmdToExec
       } {}
     }
 }
