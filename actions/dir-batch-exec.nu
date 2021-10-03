@@ -11,17 +11,18 @@ def 'dir-batch-exec' [
   --parent(-p): string # If no dirs specified, run the command in all subdirs of specified parent dir
 ] {
 
-    let dest = ($dirs | str trim | split row ' '| compact | each { [$parent $it] | path join });
-    let children = (ls $parent | where type == Dir | get name);
-    let destDirs = (if ($dirs | empty?) { $children } { $dest });
-    # echo $dest; exit --now;
+    let dest = ($dirs | str trim | split row ' '| compact | each { [$parent $it] | path join })
+    let children = (ls $parent | where type == Dir | get name)
+    let destDirs = (if ($dirs | empty?) { $children } { $dest })
+    # $dest
+    # exit --now
 
     $destDirs | each {
       if ($it | path exists) {
-        cd $it; bash -c $cmd;
+        cd $it; bash -c $cmd
       } {}
     }
 }
 
-# $nu.env | pivot;
-dir-batch-exec $nu.env.BATCH_EXEC_CMD $nu.env.BATCH_EXEC_DIRS --parent=$nu.env.JUST_INVOKE_DIR;
+# $nu.env | pivot
+dir-batch-exec $nu.env.BATCH_EXEC_CMD $nu.env.BATCH_EXEC_DIRS --parent=$nu.env.JUST_INVOKE_DIR

@@ -10,37 +10,37 @@ def 'git sync-branch' [
   remoteRef: string  # Remote git branch/ref to push to
 ] {
 
-  cd $nu.env.JUST_INVOKE_DIR;
+  cd $nu.env.JUST_INVOKE_DIR
   # 一定要 trim 啊，否则后面可能匹配不到，哎呦……
-  let zero = (git hash-object --stdin < /dev/null | tr '[0-9a-f]' '0' | str trim);
-  let useRef = (if $localOid == $zero { $remoteRef } { $localRef });
-  let current = ($useRef | str find-replace 'refs/heads/' '');
-  let pushConf = (open .pushrc | from toml | to json);
+  let zero = (git hash-object --stdin < /dev/null | tr '[0-9a-f]' '0' | str trim)
+  let useRef = (if $localOid == $zero { $remoteRef } { $localRef })
+  let current = ($useRef | str find-replace 'refs/heads/' '')
+  let pushConf = (open .pushrc | from toml | to json)
   # The following line not work: ^^^ Expected column path, found string
-  # let matchBranch = ($pushConf | get branches | default $current '' | select $current | compact | length);
+  # let matchBranch = ($pushConf | get branches | default $current '' | select $current | compact | length)
   # 获取待同步目的仓库及目的分支映射
-  let syncDests = ($pushConf | query json $'branches.($current)');
+  let syncDests = ($pushConf | query json $'branches.($current)')
   # 如果没有找到对应分支的 push hook 配置则直接退出
   if (($syncDests | length) > 0) {
-    echo $'(char nl)Found the following matched dests:(char nl)';
-    echo $syncDests;
-  } { exit --now; }
+    $'(char nl)Found the following matched dests:(char nl)'
+    echo $syncDests
+  } { exit --now }
 
   echo $syncDests | each {
-    let url = ($pushConf | query json $'repos.($it.repo)');
+    let url = ($pushConf | query json $'repos.($it.repo)')
     if $localOid == $zero {
-      ^echo $'Remove remote branch (ansi p)($it.dest) of repo ($it.repo)(ansi reset) -->(char nl)';
+      ^echo $'Remove remote branch (ansi p)($it.dest) of repo ($it.repo)(ansi reset) -->(char nl)'
       # You MUST use '--no-verify' to prevent infinit loops!!!
-      git push --no-verify $url $':($it.dest)';
+      git push --no-verify $url $':($it.dest)'
     } {
-      ^echo $'Sync from local (ansi g)($current)(ansi reset) to remote (ansi p)($it.dest) of repo ($it.repo)(ansi reset) -->(char nl)';
+      ^echo $'Sync from local (ansi g)($current)(ansi reset) to remote (ansi p)($it.dest) of repo ($it.repo)(ansi reset) -->(char nl)'
       # You MUST use '--no-verify' to prevent infinit loops!!!
-      git push --no-verify $url $'($current):($it.dest)';
+      git push --no-verify $url $'($current):($it.dest)'
     }
-    ^echo '';
+    ^echo ''
   }
-  char nl;
+  char nl
 }
 
-# $nu.env | pivot;
-git sync-branch $nu.env.PUSH_LOCAL_REF $nu.env.PUSH_LOCAL_OID $nu.env.PUSH_REMOTE_REF;
+# $nu.env | pivot
+git sync-branch $nu.env.PUSH_LOCAL_REF $nu.env.PUSH_LOCAL_OID $nu.env.PUSH_REMOTE_REF

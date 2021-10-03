@@ -9,31 +9,31 @@ def 'git pull-all' [
   alias: string     # The remote url alias for git repo
 ] {
 
-  cd $repoDir;
-  let startMark = $'[($alias)/';
-  let behindMark = ': behind';
-  let currentBranch = (git branch --show-current);
+  cd $repoDir
+  let startMark = $'[($alias)/'
+  let behindMark = ': behind'
+  let currentBranch = (git branch --show-current)
   # Save changes before switch to other branches
-  let statusCheck = (git status --porcelain);
+  let statusCheck = (git status --porcelain)
   if ($statusCheck | empty?) {} {
-    git stash save 'Stash before running pull-all action';
+    git stash save 'Stash before running pull-all action'
   }
   git branch -vv |
     lines |
     each {
-      let isBehind = ($it | str contains $behindMark);
+      let isBehind = ($it | str contains $behindMark)
       if $isBehind {
-        let endIdx = ($it | str index-of $behindMark);
-        let startIdx = (($it | str index-of $startMark) + ($startMark | str length));
-        let branchName = ($it | str substring $'($startIdx),($endIdx)');
-        echo $it;
-        echo $'(char nl)  (ansi gb)--> Start to update branch: ($branchName)(ansi reset)(char nl)';
-        git checkout $branchName; git pull;
+        let endIdx = ($it | str index-of $behindMark)
+        let startIdx = (($it | str index-of $startMark) + ($startMark | str length))
+        let branchName = ($it | str substring $'($startIdx),($endIdx)')
+        echo $it
+        $'(char nl)  (ansi gb)--> Start to update branch: ($branchName)(ansi reset)(char nl)'
+        git checkout $branchName; git pull
       } {}
-    };
-  git checkout $currentBranch;
-  if ($statusCheck | empty?) {} { git stash pop; }
+    }
+  git checkout $currentBranch
+  if ($statusCheck | empty?) {} { git stash pop }
 }
 
-# $nu.env | pivot;
+# $nu.env | pivot
 git pull-all $nu.env.JUST_INVOKE_DIR 'origin'
