@@ -8,7 +8,7 @@ def 'git age' [
   repo: path    # The repo path to show git age
 ] {
 
-  cd $repo;
+  cd $repo
   git branch |
     lines |
     str substring 2, |
