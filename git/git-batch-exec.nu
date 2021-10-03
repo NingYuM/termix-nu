@@ -1,52 +1,80 @@
 # Author: hustcer
 # Created: 2021/09/15 11:39:56
 # Usage:
-#   t git-batch-exec 'git reset --hard HEAD~3;'
-#   t git-batch-exec 'git show --abbrev-commit --no-patch;'
+#   t git-batch-exec 'git reset --hard HEAD~3'
+#   t git-batch-exec 'git show --abbrev-commit --no-patch'
 
 # https://github.com/nushell/nushell/pull/3611
 # https://github.com/nushell/nushell/issues/3433
 # git reset --hard HEAD~3
-# git show --abbrev-commit --no-patch;
+# git show --abbrev-commit --no-patch
 # 在候选分支上批量执行特定操作,多个分支用空格分隔
 def 'git batch-exec' [
   cmd: string       # The command to execute for specified branches
   branches: string  # The branches to have command be executed, default all local branches
 ] {
-  # echo $cmd; echo $branches; exit --now;
-  let dest = ($branches | str trim | split row ' ' | compact);
+  # echo $cmd; echo $branches; exit --now
+  let dest = ($branches | str trim | split row ' ' | compact)
   # fix: 'fatal: not a git repository (or any of the parent directories): .git'
-  cd $nu.env.JUST_INVOKE_DIR;
-  let current = (git branch --show-current);
+  cd $nu.env.JUST_INVOKE_DIR
+  let current = (git branch --show-current)
+  let cmdToExec = (compose-cmd $cmd)
 
   # 如果有远程分支不存在会出错
-  # let available = (git for-each-ref --format='%(refname:short)' refs/heads | lines);
+  # let available = (git for-each-ref --format='%(refname:short)' refs/heads | lines)
   # Fix `^^^^^ requires string input issue at 'lines'`
-  let available = (git branch | into string | lines | str substring (2,));
-  let candidates = (if ($branches | empty?) { $available } { $dest });
+  let available = (git branch | into string | lines | str substring (2,))
+  let candidates = (if ($branches | empty?) { $available } { $dest })
 
-  echo $'(char nl)Start to run (ansi r)“($cmd)”(ansi reset) on branches: (char nl)';
-  echo $candidates;
+  $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi reset) on branches: (char nl)'
+  echo $candidates
 
-  echo $"(char nl)Current branch: ($current)";
-  let statusCheck = (git status --porcelain);
+  $"(char nl)Current branch: ($current)"
+  let statusCheck = (git status --porcelain)
   if ($statusCheck | empty?) {} {
-    git stash save 'Stash before running git-batch-exec';
+    git stash save 'Stash before running git-batch-exec'
   }
 
-  echo $candidates | each {
-    echo $"--------------------> (char nl)";
+  $candidates | each { |branch|
+    $"--------------------------------------------------(char nl)"
     # ignore errors as the block runs
-    let parse = (git rev-parse --verify $it);
+    let parse = (git rev-parse --verify $branch)
     # Or $parse == ''
     if ($parse | empty?) {
-      echo $'Branch (ansi r)($it) (ansi reset)not available...(char nl)'
+      $'Branch (ansi r)($branch) (ansi reset)not available...(char nl)'
     } {
-      git checkout $it; bash -c $cmd;
+      ^git checkout $branch
+      $'--------------------------------------------------(char nl)'
+      # Execute cmd here
+      nu -c $cmdToExec
     }
   }
-  git checkout $current;
-  if ($statusCheck | empty?) {} { git stash pop; }
+  char nl; git checkout $current
+  if ($statusCheck | empty?) {} { git stash pop }
+}
+
+def 'compose-cmd' [
+  cmd: string       # The command to execute
+] {
+  let actionConf = (open $'($nu.env.TERMIX_DIR)/actions.toml' | to json)
+  # 先从环境变量里面查找用于执行命令的 shell 及其相关配置
+  let selectedShellOfEnv = ($nu.env | pivot key value | match key SHELL_TO_RUN_CMD | get value)
+  let shellOption = ($actionConf | query json $'shellToRunCmd.($selectedShellOfEnv)')
+  # '------------------ Before ------------------'; char nl
+  # 'Selected shell from .env: '; echo $selectedShellOfEnv; char nl
+  # $'Shell options: ($shellOption)'; char nl
+  if ($selectedShellOfEnv != '' && $shellOption != '') {
+    # $'Run command with ($selectedShellOfEnv) from .env conf:(char nl)'
+    # Output / return composed command
+    echo $"($selectedShellOfEnv) ($shellOption) '($cmd)'"
+  } {
+    # 如果环境变量里面没有找到则从 actions.toml 里面查找 shell 及其参数
+    let selectedShell = ($actionConf | query json 'shellToRunCmd.currentSelected')
+    # echo $'Run command with ($selectedShell) from actions.toml conf:(char nl)'
+    let shellOption = ($actionConf | query json $'shellToRunCmd.($selectedShell)')
+    echo $"($selectedShell) ($shellOption) '($cmd)'"
+  }
+  # char nl; '------------------ After ------------------'
 }
 
 git batch-exec $nu.env.BATCH_EXEC_CMD $nu.env.BATCH_EXEC_BRANCHES

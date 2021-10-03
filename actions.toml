@@ -18,6 +18,16 @@ redevPrevTag = 'v2.2.0.9-2021.09.23'
 # 新增的二开标签备注
 redevTagComment = 'This is a release tag'
 
+# Set currentSelected to change the shell to execute the command
+# 'SHELL_TO_RUN_CMD' var in .env has higher priority
+[shellToRunCmd]
+nu = '-c'
+sh = '-cu'
+cmd = '/c'
+bash = '-c'
+powershell = '-c'
+currentSelected = 'bash'
+
 # 远程二开仓库地址
 redevRepos = [
   # https://erda.cloud/terminus/dop/projects/385/apps/6898/repo/tags
