@@ -11,51 +11,51 @@ def 'git tag-redev' [
   --delete-tag(-d): string  # Set to 'true' if you want to delete the specified tag
 ] {
 
-  let currentBeTag = $tag;
-  let DATE_FMT = '%Y.%m.%d';
-  let actionConf = (open $'($nu.env.TERMIX_DIR)/actions.toml');
+  let currentBeTag = $tag
+  let DATE_FMT = '%Y.%m.%d'
+  let actionConf = (open $'($nu.env.TERMIX_DIR)/actions.toml')
 
-  let delete = (if $delete-tag == 'true' { $true } { $false });
-  let TAG_COMMENT = ($actionConf | get redevTagComment);
+  let delete = (if $delete-tag == 'true' { $true } { $false })
+  let TAG_COMMENT = ($actionConf | get redevTagComment)
   # 这个条件赋值表达式真复杂啊: 如果调用命令的时候传参了则覆盖配置文件里面的标签
-  let TAG = (if ($currentBeTag | empty?) { ($actionConf | get redevCurrentTag) } { $currentBeTag });
-  # let tagName = 'v1.0.0-2021.08.09';
-  let tagName = $'($TAG)-(date now | date format $DATE_FMT)';
-  echo $'Delete tag ($tagName) ---> ($delete)(char nl)(char nl)';
+  let TAG = (if ($currentBeTag | empty?) { ($actionConf | get redevCurrentTag) } { $currentBeTag })
+  # let tagName = 'v1.0.0-2021.08.09'
+  let tagName = $'($TAG)-(date now | date format $DATE_FMT)'
+  $'Delete tag ($tagName) ---> ($delete)(char nl)(char nl)'
 
   # 所有二开仓库存放临时路径
-  let repoPath = ($actionConf | get redevRepoPath);
-  let redevRepos = ($actionConf | get redevRepos);
-  let exists = ($repoPath | path exists);
+  let repoPath = ($actionConf | get redevRepoPath)
+  let redevRepos = ($actionConf | get redevRepos)
+  let exists = ($repoPath | path exists)
   # 不存在则创建临时路径
-  if $exists {} { mkdir $repoPath; }
+  if $exists {} { mkdir $repoPath }
   # 保存当前路径方便后期跳回
-  let currentDir = (pwd);
+  let currentDir = (pwd)
 
   $redevRepos | each { |repo|
-    let repoNameIdx = (($repo.url | str index-of -e '/') + 1);
-    let repoName = ($repo.url | str substring $'($repoNameIdx),');
+    let repoNameIdx = (($repo.url | str index-of -e '/') + 1)
+    let repoName = ($repo.url | str substring $'($repoNameIdx),')
     # 单一二开仓库完整路径
-    let destRepoPath = $'($repoPath)/($repoName)';
+    let destRepoPath = $'($repoPath)/($repoName)'
     # 仓库存在则更新，不存在则 clone
     if ($destRepoPath | path exists) {
-      cd $destRepoPath; git checkout $branch; git pull;
+      cd $destRepoPath; git checkout $branch; git pull
     } {
-      cd $repoPath; git clone $repo.url;
-      cd $destRepoPath; git checkout $branch;
+      cd $repoPath; git clone $repo.url
+      cd $destRepoPath; git checkout $branch
     }
     # Delete tags that not exist in remote repo
-    git fetch origin --prune '+refs/tags/*:refs/tags/*';
+    git fetch origin --prune '+refs/tags/*:refs/tags/*'
     # Check the tag status, if exists just recrete it.
-    let parse = (git rev-parse -q --verify $'refs/tags/($tagName)');
-    if ($parse | empty?) {} { git tag -d $tagName; git push origin --delete $tagName; };
+    let parse = (git rev-parse -q --verify $'refs/tags/($tagName)')
+    if ($parse | empty?) {} { git tag -d $tagName; git push origin --delete $tagName }
 
     if $delete {} {
       # Add a tag and push it to the remote repo
-      git checkout $branch; git tag $tagName -am $TAG_COMMENT; git push origin --tags;
+      git checkout $branch; git tag $tagName -am $TAG_COMMENT; git push origin --tags
     }
-  };
-  cd $currentDir; ls $repoPath;
+  }
+  cd $currentDir; ls $repoPath
 }
 
-git tag-redev $nu.env.CURRENT_BE_TAG $nu.env.DEST_REDEV_BRANCH -d $nu.env.TAG_DELETE_MODE;
+git tag-redev $nu.env.CURRENT_BE_TAG $nu.env.DEST_REDEV_BRANCH -d $nu.env.TAG_DELETE_MODE

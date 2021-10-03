@@ -16,14 +16,14 @@
 #   npm run locale:clean b2c
 
 def check-termix [] {
-  let check = (which termix | length);
+  let check = (which termix | length)
   if $check == 0 {
-    echo "Command 'termix' could not be found, Please install it by 'npm i -g @terminus/termix@latest', and try again!";
-    exit 1;
+    echo "Command 'termix' could not be found, Please install it by 'npm i -g @terminus/termix@latest', and try again!"
+    exit 1
   } {
-    let termixVer = (termix --version);
-    echo "Current termix version: " $termixVer | str collect;
+    let termixVer = (termix --version)
+    echo "Current termix version: " $termixVer | str collect
   }
 }
 
-check-termix;
+check-termix
