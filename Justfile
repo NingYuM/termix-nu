@@ -82,7 +82,7 @@ pull-redev branch=('master') diff=('false'):
 # delete: 是否删除当前日期对应的二开标签，且不重新打标, 只有为true的时候才删除，其他情况会重新打标
 # 给远程二开仓库批量打 Tag
 tag-redev tag=('') branch=('master') delete=('false'):
-    @let-env CURRENT_BE_TAG = {{tag}}; \
+    @let-env CURRENT_BE_TAG = '{{tag}}'; \
       let-env TAG_DELETE_MODE = {{delete}}; \
       let-env DEST_REDEV_BRANCH = {{branch}}; \
       nu {{ join(_termix, join('git', 'tag-redev.nu')) }}
@@ -96,15 +96,15 @@ git-sync-branch localRef localOid remoteRef:
 
 # 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用空格分隔
 git-batch-exec cmd +branches=(''):
-    @let-env BATCH_EXEC_CMD = {{cmd}}; \
-      let-env BATCH_EXEC_BRANCHES = {{branches}}; \
+    @let-env BATCH_EXEC_CMD = '{{cmd}}'; \
+      let-env BATCH_EXEC_BRANCHES = '{{branches}}'; \
       [(open {{_git_batch_exec}}) $'(char nl)' (open {{_compose_cmd}})] | str collect | save {{_git_batch_exec_all}}; \
       nu {{ _git_batch_exec_all }}
 
 # 将指定Git分支硬回滚N个commit
 git-batch-reset n +branches=(''):
     @let-env BATCH_RESET_COUNT = {{n}}; \
-      let-env BATCH_RESET_BRANCHES = {{branches}}; \
+      let-env BATCH_RESET_BRANCHES = '{{branches}}'; \
       nu {{ join(_termix, join('git', 'git-batch-reset.nu')) }}
 
 # 在指定目录或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
