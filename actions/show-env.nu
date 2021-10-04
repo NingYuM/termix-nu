@@ -5,11 +5,11 @@
 
 # Show locally installed cli app's version and env infomation
 def 'show-env' [] {
-  let npmVer = (npm --version)
-  let yarnVer = (yarn --version)
-  let termixVer = (termix --version)
+  let npmVer = (if ((which npm) == '') { 'N/A' } { npm --version })
+  let yarnVer = (if ((which yarn) == '') { 'N/A' } { yarn --version})
+  let termixVer = (if ((which termix) == '') { 'N/A' } { termix --version })
   let env = ($nu.env | pivot key value)
-  let nodeVer = (node --version | str substring '1,')
+  let nodeVer = (if ((which node) == '') { 'N/A' } { (node --version | str substring '1,') })
   let justVer = (just --version | str find-replace 'just ' '' | first)
   let gitVer = (git --version | str find-replace 'git version' '' | str trim)
   let time = (date now | date format -t '%Y/%m/%d %H:%M:%S')
