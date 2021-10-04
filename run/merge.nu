@@ -1,4 +1,4 @@
 # Concate nate file by nu.
-[(open ./git/git-batch-exec.nu) $'(char nl)' (open ./utils/compose-cmd.nu)] |
+[(open --raw ./git/git-batch-exec.nu) $'(char nl)' (open --raw ./utils/compose-cmd.nu)] |
     str collect |
-    save run/.git-batch-exec-compose.nu
+    save --raw run/.git-batch-exec-compose.nu
