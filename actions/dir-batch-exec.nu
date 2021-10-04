@@ -15,8 +15,6 @@ def 'dir-batch-exec' [
     let children = (ls $parent | where type == Dir | get name)
     let destDirs = (if ($dirs | empty?) { $children } { $dest })
     let cmdToExec = (compose-cmd $cmd)
-    # $dest
-    # exit --now
 
     $destDirs | each {
       if ($it | path exists) {

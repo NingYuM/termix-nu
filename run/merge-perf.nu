@@ -4,7 +4,7 @@
 # Benchmark #1: cat ./git/git-batch-exec.nu ./utils/compose-cmd.nu > run/.git-batch-exec-compose.nu
 #   Time (mean ± σ):       2.5 ms ±   0.5 ms    [User: 0.7 ms, System: 1.5 ms]
 #   Range (min … max):     1.9 ms …   7.4 ms    454 runs#
-
+#
 # Benchmark #1: nu run/merge.nu
 #   Time (mean ± σ):      77.7 ms ±   8.5 ms    [User: 79.6 ms, System: 49.4 ms]
 #   Range (min … max):    69.9 ms … 123.0 ms    36 runs
