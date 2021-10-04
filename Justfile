@@ -94,6 +94,7 @@ git-sync-branch localRef localOid remoteRef:
       let-env PUSH_REMOTE_REF = {{remoteRef}}; \
       nu {{ join(_termix, join('git', 'sync-branch.nu')) }}
 
+# 复用 utils 里面定义的公用方法: nu 不支持动态 source 只能拼接下了
 # 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用空格分隔
 git-batch-exec cmd +branches=(''):
     @let-env BATCH_EXEC_CMD = '{{cmd}}'; \
@@ -107,6 +108,7 @@ git-batch-reset n +branches=(''):
       let-env BATCH_RESET_BRANCHES = '{{branches}}'; \
       nu {{ join(_termix, join('git', 'git-batch-reset.nu')) }}
 
+# 拼接复用 utils 里面定义的公用方法: https://github.com/nushell/nushell/issues/2990
 # 在指定目录或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
 dir-batch-exec cmd +DIRS=(''):
     @load-env [[name, value]; ['BATCH_EXEC_CMD', '{{cmd}}'] ['BATCH_EXEC_DIRS', '{{DIRS}}']]; \
