@@ -35,12 +35,13 @@ def 'git pull-redev' [
     $'─────────────────────────────────────────────────────────────────────────────────>'
     $'(char nl)Pull repo (ansi gb)($repoName)(ansi reset): (char nl)'
 
+    cd $destRepoPath;
     let dest = (git rev-parse -q --verify $branch)
     if ($dest | empty?) {
       $'Dest branch: ($branch) does not exist, bye...(char nl)'
       exit --now
     } {}
-    cd $destRepoPath; git checkout $branch; git pull
+    git checkout $branch; git pull
     # 强制更新远程的Tag到本地
     git fetch origin --tags --force
     $'(char nl)Last commit of (ansi gb)($repoName)(ansi reset): (char nl)'
