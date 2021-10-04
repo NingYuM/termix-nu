@@ -44,7 +44,7 @@ def 'get-env' [
   key: string   # The key to get it's env value
 ] {
   let val = ($env | match key $key | get value)
-  if ($val | empty?) { '' } { $val }
+  if ($val | empty?) { '(empty)' } { $val }
 }
 
 # Check if a CLI App was installed, if true get the installed version, otherwise return 'N/A'
