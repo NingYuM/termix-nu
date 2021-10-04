@@ -11,17 +11,16 @@ def 'dir-batch-exec' [
   --parent(-p): string  # If no dirs specified, run the command in all subdirs of specified parent dir
 ] {
 
-    let dest = ($dirs | str trim | split row ' '| compact | each { [$parent $it] | path join })
-    let children = (ls $parent | where type == Dir | get name)
-    let destDirs = (if ($dirs | empty?) { $children } { $dest })
-    let cmdToExec = (compose-cmd $cmd)
-
-    $destDirs | each {
-      if ($it | path exists) {
-        $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi reset) in dir ($it): (char nl)'
-        cd $it; nu -c $cmdToExec
-      } {}
-    }
+  let dest = ($dirs | str trim | split row ' '| compact | each { [$parent $it] | path join })
+  let children = (ls $parent | where type == Dir | get name)
+  let destDirs = (if ($dirs | empty?) { $children } { $dest })
+  let cmdToExec = (compose-cmd $cmd)
+  $destDirs | each {
+    if ($it | path exists) {
+      $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi reset) in dir ($it): (char nl)'
+      cd $it; nu -c $cmdToExec
+    } {}
+  }
 }
 
 # $nu.env | pivot

@@ -29,10 +29,10 @@ def 'git ls-redev-tags' [] {
     # git ls-remote --tags $url | grep -v '{}'
     cd $destRepoPath
     if ($os =~ 'windows') {
-      # Git of Windows version does't support sort field?
-      git tag --format='%(refname:strip=2)%09%(creatordate:iso)' --sort=-v:refname # reverse
+      # Git for Windows does't support sort by `creatordate` field?
+      git tag --format='%(refname:strip=2)%09%(creatordate:iso)' --sort=-v:refname   # Reverse
     } {
-      git tag --format='%(refname:strip=2)%09%(creatordate:iso)' --sort='-creatordate'
+      git tag --format='%(refname:strip=2)%09%(creatordate:iso)' --sort=-creatordate # Reverse sort
     }
   }
   char nl
