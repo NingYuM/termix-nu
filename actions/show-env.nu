@@ -5,19 +5,18 @@
 
 # Show locally installed cli app's version and env infomation
 def 'show-env' [] {
-  let npmVer = (if ((which npm) == '') { 'N/A' } { npm --version })
-  let yarnVer = (if ((which yarn) == '') { 'N/A' } { yarn --version})
-  let termixVer = (if ((which termix) == '') { 'N/A' } { termix --version })
-  let env = ($nu.env | pivot key value)
-  let nodeVer = (if ((which node) == '') { 'N/A' } { (node --version | str substring '1,') })
-  let justVer = (just --version | str find-replace 'just ' '' | first)
-  let gitVer = (git --version | str find-replace 'git version' '' | str trim)
+  let termixDir = (get-env TERMIX_DIR)
+  let shell = (get-env SHELL_TO_RUN_CMD)
+  let justFile = (get-env JUST_FILE_PATH)
+  let redevPath = (get-env REDEV_REPO_PATH)
+  let justInvokeDir = (get-env JUST_INVOKE_DIR)
+  let npmVer = (get-ver npm 'npm --version')
+  let yarnVer = (get-ver yarn 'yarn --version')
+  let termixVer = (get-ver termix 'termix --version')
+  let nodeVer = (get-ver node '(node --version | str substring "1,")')
+  let justVer = (get-ver just "just --version | str find-replace 'just ' '' | first")
+  let gitVer = (get-ver git "git --version | str find-replace 'git version' '' | str trim")
   let time = (date now | date format -t '%Y/%m/%d %H:%M:%S')
-  let termixDir = ($env | match key TERMIX_DIR | get value)
-  let shell = ($env | match key SHELL_TO_RUN_CMD | get value)
-  let redevPath = ($env | match key REDEV_REPO_PATH | get value)
-  let justInvokeDir = ($env | match key JUST_INVOKE_DIR | get value)
-  let justFile = ($env | match key JUST_FILE_PATH | get value)
 
   # echo $env
   echo (nu -c 'version | pivot | rename nu-ver value')
@@ -36,6 +35,23 @@ def 'show-env' [] {
       ['JUST_INVOKE_DIR', $justInvokeDir]
       ['Time', $time]
     ]
+}
+
+let env = ($nu.env | pivot key value)
+
+def 'get-env' [
+  key: string
+] {
+  let val = ($env | match key $key | get value)
+  if ($val | empty?) { '' } { $val }
+}
+
+def 'get-ver' [
+  app: string
+  verCmd: string
+] {
+  let installed = ((which $app | length) > 0)
+  echo (if $installed { nu -c $verCmd }  { 'N/A' })
 }
 
 show-env
