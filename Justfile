@@ -71,6 +71,10 @@ git-remote-age remote=('origin'):
 ls-redev-tags:
     @nu {{ join(_termix, join('git', 'ls-redev-tag.nu')) }}
 
+# 显示本机安装应用版本及环境变量相关信息
+show-env:
+    @nu {{ join(_termix, join('actions', 'show-env.nu')) }}
+
 # t pull-redev true
 # 更新远程二开仓库代码到本地
 pull-redev branch=('master') diff=('false'):
