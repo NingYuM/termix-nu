@@ -18,6 +18,7 @@ def 'git ls-redev-tags' [] {
     let repoName = ($url | str substring $'($repoNameIdx),')
     # 单一二开仓库完整路径
     let destRepoPath = $'($repoPath)/($repoName)'
+    let os = (version | pivot name value | match name build_os | get value)
     # 仓库存在则更新，不存在则 clone
     if ($destRepoPath | path exists) {
       cd $destRepoPath; git pull
@@ -27,7 +28,12 @@ def 'git ls-redev-tags' [] {
     $'(char nl)Tags of repo (ansi gb)($repoName)(ansi reset): (char nl)'
     # git ls-remote --tags $url | grep -v '{}'
     cd $destRepoPath
-    git tag --format='%(refname:strip=2)%09%(creatordate:iso)' --sort='-creatordate'
+    if ($os =~ 'windows') {
+      # Git of Windows version does't support sort field?
+      git tag --format='%(refname:strip=2)%09%(creatordate:iso)'
+    } {
+      git tag --format='%(refname:strip=2)%09%(creatordate:iso)' --sort='-creatordate'
+    }
   }
   char nl
 }
