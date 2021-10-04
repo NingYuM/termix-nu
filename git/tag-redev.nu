@@ -55,6 +55,7 @@ def 'git tag-redev' [
       # Add a tag and push it to the remote repo
       git checkout $branch; git tag $tagName -am $TAG_COMMENT; git push origin --tags
     }
+    ^echo $'(ansi g)──────────────────────────────────────────────────────────────────────>(ansi reset)'
   }
   cd $currentDir; ls $repoPath
 }
