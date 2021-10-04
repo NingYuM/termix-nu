@@ -30,7 +30,7 @@ def 'git ls-redev-tags' [] {
     cd $destRepoPath
     if ($os =~ 'windows') {
       # Git of Windows version does't support sort field?
-      git tag --format='%(refname:strip=2)%09%(creatordate:iso)'
+      git tag --format='%(refname:strip=2)%09%(creatordate:iso)' --sort=-v:refname # reverse
     } {
       git tag --format='%(refname:strip=2)%09%(creatordate:iso)' --sort='-creatordate'
     }
