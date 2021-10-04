@@ -98,7 +98,7 @@ git-sync-branch localRef localOid remoteRef:
 git-batch-exec cmd +branches=(''):
     @let-env BATCH_EXEC_CMD = {{cmd}}; \
       let-env BATCH_EXEC_BRANCHES = {{branches}}; \
-      bat {{_git_batch_exec}} {{_compose_cmd}} > {{_git_batch_exec_all}}; \
+      [(open {{_git_batch_exec}}) $'(char nl)' (open {{_compose_cmd}})] | str collect | save {{_git_batch_exec_all}}; \
       nu {{ _git_batch_exec_all }}
 
 # 将指定Git分支硬回滚N个commit
@@ -110,5 +110,5 @@ git-batch-reset n +branches=(''):
 # 在指定目录或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
 dir-batch-exec cmd +DIRS=(''):
     @load-env [[name, value]; ['BATCH_EXEC_CMD', '{{cmd}}'] ['BATCH_EXEC_DIRS', {{DIRS}}]]; \
-      bat {{_dir_batch_exec}} {{_compose_cmd}} > {{_dir_batch_exec_all}}; \
+      [(open {{_dir_batch_exec}}) $'(char nl)' (open {{_compose_cmd}})] | str collect | save {{_dir_batch_exec_all}}; \
       nu {{ _dir_batch_exec_all }}
