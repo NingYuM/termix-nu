@@ -55,3 +55,101 @@ cmd = '/c'
 bash = '-c'
 powershell = '-c'
 currentSelected = 'bash'
+
+[macCliApps]
+
+[macCliApps.aria2]
+bin = 'aria2c'
+url = 'https://aria2.github.io/'
+
+[macCliApps.bat]
+url = 'https://github.com/sharkdp/bat'
+
+[macCliApps.curl]
+url = 'https://curl.se/'
+
+[macCliApps.dua-cli]
+bin = 'dua'
+url = 'https://github.com/Byron/dua-cli'
+
+[macCliApps.esbuild]
+url = 'https://esbuild.github.io/'
+
+[macCliApps.exa]
+url = 'https://the.exa.website'
+
+[macCliApps.fd]
+url = 'https://github.com/sharkdp/fd'
+
+[macCliApps.fnm]
+url = 'https://fnm.vercel.app'
+
+[macCliApps.fzf]
+url = 'https://github.com/junegunn/fzf'
+
+[macCliApps.git]
+url = 'https://git-scm.com'
+
+[macCliApps.git-extras]
+url = 'https://github.com/tj/git-extras'
+
+[macCliApps.glances]
+url = 'https://nicolargo.github.io/glances/'
+
+[macCliApps.go]
+url = 'https://github.com/golang/go'
+
+[macCliApps.hyperfine]
+url = 'https://github.com/sharkdp/hyperfine'
+
+[macCliApps.just]
+url = 'https://github.com/casey/just'
+
+[macCliApps.loc]
+url = 'https://github.com/cgag/loc'
+
+[macCliApps.mcfly]
+url = 'https://github.com/cantino/mcfly'
+
+[macCliApps.mysql]
+url = 'https://dev.mysql.com/doc/refman/8.0/en/'
+
+[macCliApps.neovim]
+bin = 'nvim'
+url = 'https://neovim.io/'
+
+[macCliApps.nginx]
+url = 'https://nginx.org/'
+
+[macCliApps.node]
+url = 'https://nodejs.org/en/'
+
+[macCliApps.redis]
+bin = 'redis-cli'
+url = 'https://redis.io/'
+
+[macCliApps.ripgrep]
+bin = 'rg'
+url = 'https://github.com/BurntSushi/ripgrep'
+
+[macCliApps.rust]
+bin = 'rustc'
+url = 'https://github.com/rust-lang/rust'
+
+[macCliApps.sd]
+url = 'https://github.com/chmln/sd'
+
+[macCliApps.siege]
+url = 'https://www.joedog.org/siege-home/'
+
+[macCliApps.starship]
+url = 'https://starship.rs'
+
+[macCliApps.tree]
+url = 'http://mama.indstate.edu/users/ice/tree/'
+
+[macCliApps.wget]
+url = 'https://www.gnu.org/software/wget/'
+
+[macCliApps.zoxide]
+url = 'https://github.com/ajeetdsouza/zoxide'

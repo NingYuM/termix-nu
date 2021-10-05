@@ -11,7 +11,7 @@ def 'git pull-redev' [
   --show-diff(-d): string   # Set to 'true' if you want to see the files changed since prev tag
 ] {
 
-  let actionConf = (open $'($nu.env.TERMIX_DIR)/actions.toml')
+  let actionConf = (open $'($nu.env.TERMIX_DIR)/termix.toml')
   # 先从环境变量里面查找所有二开仓库存放临时路径
   let localRepoDir = ($nu.env | pivot key value | match key REDEV_REPO_PATH | get value)
   let repoPath = (if ($localRepoDir | empty?) { ($actionConf | get redevRepoPath) } { $localRepoDir })
