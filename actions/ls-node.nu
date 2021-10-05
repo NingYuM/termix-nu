@@ -15,20 +15,20 @@ def 'ls-node-remote' [
         exit --now
     }
 
-    let vers = (fnm ls-remote | lines | str trim | wrap ver)
+    let vers = (fnm ls-remote | lines | str trim | wrap Version)
     let vRow = (
         $vers | insert NO { |node| (
-                $node.ver |
+                $node.Version |
                 split row ' ' |
                 first |
                 split row '.' |
                 first |
-                str substring '1,' |
+                str substring (1,) |
                 into int
             )
         }
     )
-    echo ($vRow | where NO >= $minVersion | select ver)
+    echo ($vRow | where NO >= $minVersion | select Version)
 }
 
 ls-node-remote $nu.env.NODE_MIN_VER
