@@ -75,6 +75,11 @@ ls-redev-tags:
 show-env:
     @nu {{ join(_termix, join('actions', 'show-env.nu')) }}
 
+# 查询已发布Node版本，支持指定最低版本号
+ls-node minVer=('12'):
+    @let-env NODE_MIN_VER = {{minVer}}; \
+      nu {{ join(_termix, join('actions', 'ls-node.nu')) }}
+
 # t pull-redev true
 # 更新远程二开仓库代码到本地
 pull-redev branch=('master') diff=('false'):
