@@ -8,16 +8,18 @@ let termixConf = (open 'termix.toml' | to json)
 
 def 'setup-mac' [] {
     if (is-installed brew) {
-        echo $'Prepare to use `brew` to install CLI apps...(char nl)(char nl)'
+        $'Prepare to use `brew` to install CLI apps...(char nl)(char nl)'
     } {
-        echo $'You should install `brew` and try again..., bye!(char nl)'
+        $'You should install `brew` and try again..., bye!(char nl)'
         exit --now
     }
 
     # brew update
-    minst aria2,bat,curl,dua-cli,esbuild,exa,fd,fnm,fzf,git,git-extras
-    minst glances,go,hyperfine,just,loc,mcfly,mysql,neovim,nginx,node
-    minst redis,ripgrep,rust,sd,siege,starship,tree,wget,zoxide,yj
+    echo [
+        (minst aria2,bat,curl,dua-cli,esbuild,exa,fd,fnm,fzf,git,git-extras)
+        (minst glances,go,hyperfine,just,loc,mcfly,mysql,neovim,nginx,node)
+        (minst redis,ripgrep,rust,sd,siege,starship,tree,wget,zoxide,yj)
+    ] | flatten
 }
 
 # Check if a CLI App was installed, return $true if installed, otherwise return $false
