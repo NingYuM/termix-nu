@@ -31,9 +31,7 @@ JUST_FILE_PATH := justfile()
 # FIXME: A just bug: invalid directory path by invoking invocation_directory
 JUST_INVOKE_DIR := replace(replace(invocation_directory(), '/', _s), '\d\', 'D:\')
 _compose_cmd := join(_termix, join('utils', 'compose-cmd.nu'))
-_git_batch_exec := join(_termix, join('git', 'git-batch-exec.nu'))
 _dir_batch_exec := join(_termix, join('actions', 'dir-batch-exec.nu'))
-_git_batch_exec_all := join(_termix, join('run', '.git-batch-exec-compose.nu'))
 _dir_batch_exec_all := join(_termix, join('run', '.dir-batch-exec-compose.nu'))
 
 # Just commands aliases
@@ -102,10 +100,9 @@ git-sync-branch localRef localOid remoteRef:
 # 复用 utils 里面定义的公用方法: nu 不支持动态 source 只能拼接下了
 # 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用空格分隔
 git-batch-exec cmd +branches=(''):
-    @let-env BATCH_EXEC_CMD = '{{cmd}}'; \
-      let-env BATCH_EXEC_BRANCHES = '{{branches}}'; \
-      [(open {{_git_batch_exec}}) $'(char nl)' (open {{_compose_cmd}})] | str collect | save {{_git_batch_exec_all}}; \
-      nu {{ _git_batch_exec_all }}
+    @source {{ _compose_cmd }}; \
+      source {{ join(_termix, join('git', 'git-batch-exec.nu')) }}; \
+      git batch-exec '{{cmd}}' '{{branches}}'
 
 # 将指定Git分支硬回滚N个commit
 git-batch-reset n +branches=(''):

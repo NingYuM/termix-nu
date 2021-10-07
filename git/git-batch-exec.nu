@@ -52,5 +52,3 @@ def 'git batch-exec' [
   char nl; git checkout $current
   if ($statusCheck | empty?) {} { git stash pop }
 }
-
-git batch-exec $nu.env.BATCH_EXEC_CMD $nu.env.BATCH_EXEC_BRANCHES
