@@ -21,6 +21,3 @@ def 'git age' [
     } |
     sort-by last_commit
 }
-
-# $nu.env | pivot
-git age $nu.env.JUST_INVOKE_DIRECTORY

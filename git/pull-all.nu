@@ -34,6 +34,3 @@ def 'git pull-all' [
   git checkout $currentBranch
   if ($statusCheck | empty?) {} { git stash pop }
 }
-
-# $nu.env | pivot
-git pull-all $nu.env.JUST_INVOKE_DIR 'origin'

@@ -1,6 +1,8 @@
 # Author: hustcer
 # Created: 2021/10/05 12:06:56
 # Description: List remote node version, min version supported
+# [ ] List All LTS versions?
+# Ref: https://nodejs.org/dist/index.json
 # Usage:
 #   t ls-node
 #   t ls-node v15

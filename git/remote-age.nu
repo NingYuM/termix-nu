@@ -35,4 +35,4 @@ def 'git remote-age' [
 }
 
 # $nu.env | pivot
-git remote-age $nu.env.JUST_INVOKE_DIR $nu.env.REMOTE_ALIAS
+# git remote-age $nu.env.JUST_INVOKE_DIR $nu.env.REMOTE_ALIAS

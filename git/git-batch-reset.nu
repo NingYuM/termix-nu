@@ -50,5 +50,3 @@ def 'git batch-reset' [
   git checkout $current
   if ($statusCheck | empty?) {} { git stash pop }
 }
-
-git batch-reset $nu.env.BATCH_RESET_COUNT $nu.env.BATCH_RESET_BRANCHES

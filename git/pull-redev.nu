@@ -61,5 +61,3 @@ def 'git pull-redev' [
     }
   }
 }
-
-git pull-redev $nu.env.DEST_REDEV_BRANCH --show-diff=$nu.env.SHOW_REDEV_DIFF

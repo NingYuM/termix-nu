@@ -54,18 +54,19 @@ default:
 
 # Listing the branches of a git repo and the time of the last commit
 git-age:
-    # The following two statement must be written in one line
-    @let-env JUST_INVOKE_DIRECTORY = {{JUST_INVOKE_DIR}}; \
-      nu {{ join(_termix, join('git', 'age.nu')) }}
+    @# The following two statement must be written in one line
+    @source {{ join(_termix, join('git', 'age.nu')) }}; \
+      git age {{JUST_INVOKE_DIR}}
 
 # Pull all local branches from remote repo
 pull-all:
-    @nu {{ join(_termix, join('git', 'pull-all.nu')) }}
+    @source {{ join(_termix, join('git', 'pull-all.nu')) }}; \
+      git pull-all {{JUST_INVOKE_DIR}} 'origin'
 
 # Listing the remote branches of a git repo and the day of the last commit
 git-remote-age remote=('origin'):
-    @let-env REMOTE_ALIAS = {{remote}}; \
-      nu {{ join(_termix, join('git', 'remote-age.nu')) }}
+    @source {{ join(_termix, join('git', 'remote-age.nu')) }}; \
+      git remote-age {{JUST_INVOKE_DIR}} {{remote}}
 
 # 列出远程二开仓库 Tags
 ls-redev-tags:
@@ -83,18 +84,15 @@ ls-node minVer=('12'):
 # t pull-redev true
 # 更新远程二开仓库代码到本地
 pull-redev branch=('master') diff=('false'):
-    @let-env SHOW_REDEV_DIFF = {{diff}}; \
-      let-env DEST_REDEV_BRANCH = {{branch}}; \
-      nu {{ join(_termix, join('git', 'pull-redev.nu')) }}
+    @source {{ join(_termix, join('git', 'pull-redev.nu')) }}; \
+      git pull-redev {{branch}} --show-diff={{diff}}
 
 # Use tag=('v2.0.2') to set default $1
 # delete: 是否删除当前日期对应的二开标签，且不重新打标, 只有为true的时候才删除，其他情况会重新打标
 # 给远程二开仓库批量打 Tag
 tag-redev tag=('') branch=('master') delete=('false'):
-    @let-env CURRENT_BE_TAG = '{{tag}}'; \
-      let-env TAG_DELETE_MODE = {{delete}}; \
-      let-env DEST_REDEV_BRANCH = {{branch}}; \
-      nu {{ join(_termix, join('git', 'tag-redev.nu')) }}
+    @source {{ join(_termix, join('git', 'tag-redev.nu')) }}; \
+      git tag-redev '{{tag}}' {{branch}} --delete-tag {{delete}}
 
 # 批量同步本地分支到远程指定分支,git pre-push hooks调用,请勿手工触发
 git-sync-branch localRef localOid remoteRef:
@@ -113,9 +111,8 @@ git-batch-exec cmd +branches=(''):
 
 # 将指定Git分支硬回滚N个commit
 git-batch-reset n +branches=(''):
-    @let-env BATCH_RESET_COUNT = {{n}}; \
-      let-env BATCH_RESET_BRANCHES = '{{branches}}'; \
-      nu {{ join(_termix, join('git', 'git-batch-reset.nu')) }}
+    @source {{ join(_termix, join('git', 'git-batch-reset.nu')) }}; \
+      git batch-reset {{n}} '{{branches}}'
 
 # 拼接复用 utils 里面定义的公用方法: https://github.com/nushell/nushell/issues/2990
 # 在指定目录或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串

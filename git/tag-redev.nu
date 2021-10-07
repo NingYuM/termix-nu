@@ -59,5 +59,3 @@ def 'git tag-redev' [
   }
   cd $currentDir; ls $repoPath
 }
-
-git tag-redev $nu.env.CURRENT_BE_TAG $nu.env.DEST_REDEV_BRANCH -d $nu.env.TAG_DELETE_MODE
