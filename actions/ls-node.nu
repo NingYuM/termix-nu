@@ -32,5 +32,3 @@ def 'ls-node-remote' [
     )
     echo ($vRow | where NO >= $minVersion | select Version)
 }
-
-ls-node-remote $nu.env.NODE_MIN_VER

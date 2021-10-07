@@ -41,6 +41,3 @@ def 'git sync-branch' [
   }
   char nl
 }
-
-# $nu.env | pivot
-git sync-branch $nu.env.PUSH_LOCAL_REF $nu.env.PUSH_LOCAL_OID $nu.env.PUSH_REMOTE_REF

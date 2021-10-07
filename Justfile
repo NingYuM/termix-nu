@@ -78,8 +78,8 @@ show-env:
 
 # 查询已发布Node版本，支持指定最低版本号
 ls-node minVer=('12'):
-    @let-env NODE_MIN_VER = {{minVer}}; \
-      nu {{ join(_termix, join('actions', 'ls-node.nu')) }}
+    @source {{ join(_termix, join('actions', 'ls-node.nu')) }}; \
+      ls-node-remote {{minVer}}
 
 # t pull-redev true
 # 更新远程二开仓库代码到本地
@@ -96,10 +96,8 @@ tag-redev tag=('') branch=('master') delete=('false'):
 
 # 批量同步本地分支到远程指定分支,git pre-push hooks调用,请勿手工触发
 git-sync-branch localRef localOid remoteRef:
-    @let-env PUSH_LOCAL_REF = {{localRef}}; \
-      let-env PUSH_LOCAL_OID = {{localOid}}; \
-      let-env PUSH_REMOTE_REF = {{remoteRef}}; \
-      nu {{ join(_termix, join('git', 'sync-branch.nu')) }}
+    @source {{ join(_termix, join('git', 'sync-branch.nu')) }}; \
+      git sync-branch {{localRef}} {{localOid}} {{remoteRef}}
 
 # 复用 utils 里面定义的公用方法: nu 不支持动态 source 只能拼接下了
 # 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用空格分隔
