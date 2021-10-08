@@ -16,9 +16,9 @@ def 'setup-mac' [] {
 
     # brew update
     echo [
-        (minst aria2,bat,curl,dua-cli,esbuild,exa,fd,fnm,fzf,git,git-extras)
-        (minst glances,go,hyperfine,just,loc,mcfly,mysql,neovim,nginx,node)
-        (minst redis,ripgrep,rust,sd,siege,starship,tree,wget,zoxide,yj)
+        (brew-inst aria2,bat,curl,dua-cli,esbuild,exa,fd,fnm,fzf,git,git-extras)
+        (brew-inst glances,go,hyperfine,just,loc,mcfly,mysql,neovim,nginx,node)
+        (brew-inst redis,ripgrep,rust,sd,siege,starship,tree,wget,zoxide,yj)
     ] | flatten
 }
 
@@ -32,7 +32,7 @@ def 'is-installed' [
   echo $installed
 }
 
-def 'minst' [
+def 'brew-inst' [
     apps: string    # The cli apps to install, seperated by ','
 ] {
     $apps | split row ',' | each {|app|
