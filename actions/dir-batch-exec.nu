@@ -24,4 +24,4 @@ def 'dir-batch-exec' [
 }
 
 # $nu.env | pivot
-dir-batch-exec $nu.env.BATCH_EXEC_CMD $nu.env.BATCH_EXEC_DIRS --parent=$nu.env.JUST_INVOKE_DIR
+# dir-batch-exec $nu.env.BATCH_EXEC_CMD $nu.env.BATCH_EXEC_DIRS --parent=$nu.env.JUST_INVOKE_DIR
