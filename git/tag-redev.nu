@@ -13,18 +13,21 @@ def 'git tag-redev' [
 
   let currentBeTag = $tag
   let DATE_FMT = '%Y.%m.%d'
+  let envConf = ($nu.env | pivot key value)
   let actionConf = (open $'($nu.env.TERMIX_DIR)/termix.toml')
 
   let delete = (if $delete-tag == 'true' { $true } { $false })
   let TAG_COMMENT = ($actionConf | get redevTagComment)
-  # 这个条件赋值表达式真复杂啊: 如果调用命令的时候传参了则覆盖配置文件里面的标签
-  let TAG = (if ($currentBeTag | empty?) { ($actionConf | get redevCurrentTag) } { $currentBeTag })
+  # 先从环境变量里面查找待创建的新标签的前缀
+  let redevCurrentTag = ($envConf | match key REDEV_CURRENT_TAG | get value)
+  # 这个条件赋值表达式真复杂啊: 如果调用命令的时候传参了则覆盖.env文件里面的标签
+  let TAG = (if ($currentBeTag | empty?) { $redevCurrentTag } { $currentBeTag })
   # let tagName = 'v1.0.0-2021.08.09'
   let tagName = $'($TAG)-(date now | date format $DATE_FMT)'
   $'Delete tag ($tagName) ---> ($delete)(char nl)(char nl)'
 
   # 先从环境变量里面查找所有二开仓库存放临时路径
-  let localRepoDir = ($nu.env | pivot key value | match key REDEV_REPO_PATH | get value)
+  let localRepoDir = ($envConf | match key REDEV_REPO_PATH | get value)
   let repoPath = (if ($localRepoDir | empty?) { ($actionConf | get redevRepoPath) } { $localRepoDir })
   let redevRepos = ($actionConf | get redevRepos)
   let exists = ($repoPath | path exists)
