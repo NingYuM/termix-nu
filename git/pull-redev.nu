@@ -33,7 +33,7 @@ def 'git pull-redev' [
     } {
       cd $repoPath; git clone $repo.url
     }
-    $'─────────────────────────────────────────────────────────────────────────────────>'
+    $'(ansi reset)─────────────────────────────────────────────────────────────────────────────────>'
     $'(char nl)Pull repo (ansi gb)($repoName)(ansi reset): (char nl)'
 
     cd $destRepoPath;
@@ -56,8 +56,8 @@ def 'git pull-redev' [
       # 使用原生 echo 命令
       ^echo $'(char nl) (ansi r)Tag: ($prevTagName) does not exist in repo: ($repoName) (ansi reset)(char nl)'
     } {
-      if $show-diff == 'true' {
-        $'========Update since latest tag========:(char nl)'
+      if $show-diff == 'true' && (git --no-pager diff $prevTagName $branch --name-only | lines | length) > 0 {
+        $'---------> Update since latest tag <---------:(char nl)(ansi y)'
         git --no-pager diff $prevTagName $branch --name-only
       } {}
     }
