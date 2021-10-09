@@ -44,9 +44,13 @@ redevRepos = [
 # 'SHELL_TO_RUN_CMD' var in .env has higher priority
 [shellToRunCmd]
 nu = '-c'
-sh = '-cu'
+sh = '-c'
 cmd = '/c'
-bash = '-c'
+zsh = '-uc'
+fish = '-c'
+node = '-e'
+bash = '-uc'
+python3 = '-c'
 powershell = '-c'
 currentSelected = 'bash'
 
