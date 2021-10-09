@@ -1,5 +1,6 @@
 # Author: hustcer
 # Created: 2021/09/15 11:39:56
+# [√] 目录名称支持通配符比如 mall-*
 # Usage:
 #   t dir-batch-exec 'pwd && echo "--------> " && ncu'
 #   t dir-batch-exec 'pwd; git remote -v; git push origin master; git push origin --tags'

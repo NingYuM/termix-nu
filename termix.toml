@@ -12,6 +12,9 @@ redevRepoPath = '/Users/hustcer/redev-repos'
 # 新增的二开标签备注
 redevTagComment = 'This is a release tag'
 
+# [ ] 支持仓库分组？
+# [ ] 添加 enable 字段?
+# [ ] REDEV_GIT_PREFIX = https://erda.cloud/terminus/dop/gaia-app-redev/
 # 远程二开仓库地址
 redevRepos = [
   # https://erda.cloud/terminus/dop/projects/385/apps/6898/repo/tags

@@ -45,7 +45,7 @@ def 'git tag-redev' [
     if ($destRepoPath | path exists) {
       cd $destRepoPath; git checkout $branch; git pull
     } {
-      cd $repoPath; git clone $repo.url
+      cd $repoPath; git clone -b $branch $repo.url
       cd $destRepoPath; git checkout $branch
     }
     # Delete tags that not exist in remote repo

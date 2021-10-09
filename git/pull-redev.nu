@@ -28,10 +28,8 @@ def 'git pull-redev' [
     # 单一二开仓库完整路径
     let destRepoPath = $'($repoPath)/($repoName)'
     # 仓库存在则更新，不存在则 clone
-    if ($destRepoPath | path exists) {
-      cd $destRepoPath; git pull
-    } {
-      cd $repoPath; git clone $repo.url
+    if ($destRepoPath | path exists) {} {
+      cd $repoPath; git clone -b $branch $repo.url
     }
     $'(ansi reset)─────────────────────────────────────────────────────────────────────────────────>'
     $'(char nl)Pull repo (ansi gb)($repoName)(ansi reset): (char nl)'

@@ -107,7 +107,7 @@ git-batch-reset n +branches=(''):
       git batch-reset {{n}} '{{branches}}'
 
 # 拼接复用 utils 里面定义的公用方法: https://github.com/nushell/nushell/issues/2990
-# 在指定目录或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
+# 在指定目录(支持'*'通配符)或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
 dir-batch-exec cmd +DIRS=(''):
     @# load-env [[name, value]; ['BATCH_EXEC_CMD', '{{cmd}}'] ['BATCH_EXEC_DIRS', '{{DIRS}}']]
     @source {{ join(_termix, join('utils', 'compose-cmd.nu')) }}; \
