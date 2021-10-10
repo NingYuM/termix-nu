@@ -48,7 +48,7 @@ default:
   @just --list --list-prefix '··· '
 
 # Display current version number
-version:
+termix-ver:
   @^echo (open $'($nu.env.TERMIX_DIR)/termix.toml' | get version)
 
 # Listing the branches of a git repo and the time of the last commit
