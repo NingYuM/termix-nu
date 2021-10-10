@@ -6,6 +6,9 @@
 #      TOML -> JSON: cat redevelop.b2c.toml | yj -tj -i;
 #   3. VS Code 插件推荐: Even Better TOML;
 
+# Termix-nu version
+version = 'v1.0.0'
+
 # 临时二开仓库存放目录, .env 里面 REDEV_REPO_PATH 具有更高优先级
 redevRepoPath = '/Users/hustcer/redev-repos'
 
