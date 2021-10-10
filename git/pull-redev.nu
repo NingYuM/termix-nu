@@ -11,10 +11,9 @@ def 'git pull-redev' [
   --show-diff(-d): string   # Set to 'true' if you want to see the files changed since prev tag
 ] {
 
-  let envConf = ($nu.env | pivot key value)
   let actionConf = (open $'($nu.env.TERMIX_DIR)/termix.toml')
   # 先从环境变量里面查找所有二开仓库存放临时路径
-  let localRepoDir = ($envConf | match key REDEV_REPO_PATH | get value)
+  let localRepoDir = (get-env REDEV_REPO_PATH)
   let repoPath = (if ($localRepoDir | empty?) { ($actionConf | get redevRepoPath) } { $localRepoDir })
   let redevRepos = ($actionConf | get redevRepos)
   $'Pull remote redevelop repos in directory (ansi g)($repoPath)(ansi reset):(char nl)'
@@ -47,7 +46,7 @@ def 'git pull-redev' [
     git show --abbrev-commit --no-patch
 
     # 先从环境变量里面查找待比较的上一个标签的完整名称
-    let prevTagName = ($envConf | match key REDEV_PREV_TAG | get value)
+    let prevTagName = (get-env REDEV_PREV_TAG)
     # Check the tag status, if exists just recrete it.
     let parse = (git rev-parse -q --verify $'refs/tags/($prevTagName)')
     if ($parse | empty?) {

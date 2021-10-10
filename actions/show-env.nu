@@ -3,13 +3,15 @@
 # Usage:
 #   t show-env
 
+source utils/common.nu
+
 # Show locally installed cli app's version and env infomation
 def 'show-env' [] {
-  let termixDir = (get-env TERMIX_DIR)
-  let shell = (get-env SHELL_TO_RUN_CMD)
-  let justFile = (get-env JUST_FILE_PATH)
-  let redevPath = (get-env REDEV_REPO_PATH)
-  let justInvokeDir = (get-env JUST_INVOKE_DIR)
+  let termixDir = (get-env TERMIX_DIR '(empty)')
+  let shell = (get-env SHELL_TO_RUN_CMD '(empty)')
+  let justFile = (get-env JUST_FILE_PATH '(empty)')
+  let redevPath = (get-env REDEV_REPO_PATH '(empty)')
+  let justInvokeDir = (get-env JUST_INVOKE_DIR '(empty)')
   let npmVer = (get-ver npm 'npm --version')
   let yarnVer = (get-ver yarn 'yarn --version')
   let herdVer = (get-ver herd 'herd --version')
@@ -21,7 +23,8 @@ def 'show-env' [] {
   let time = (date now | date format -t '%Y/%m/%d %H:%M:%S')
 
   # echo $env
-  echo (nu -c 'version | pivot | rename nu-ver value')
+  ^echo (nu -c 'version | pivot | rename nu-ver value')
+
   echo [
       [name, value];
       ['Git', $gitVer]
@@ -40,25 +43,6 @@ def 'show-env' [] {
       ['JUST_INVOKE_DIR', $justInvokeDir]
       ['Current Time', $time]
     ]
-}
-
-let env = ($nu.env | pivot key value)
-
-# Get the specified env key's value or ''
-def 'get-env' [
-  key: string   # The key to get it's env value
-] {
-  let val = ($env | match key $key | get value)
-  if ($val | empty?) { '(empty)' } { $val }
-}
-
-# Check if a CLI App was installed, if true get the installed version, otherwise return 'N/A'
-def 'get-ver' [
-  app: string     # The CLI App to check
-  verCmd: string  # The Nushell command to get it's version number
-] {
-  let installed = ((which $app | length) > 0)
-  echo (if $installed { nu -c $verCmd }  { 'N/A' })
 }
 
 show-env

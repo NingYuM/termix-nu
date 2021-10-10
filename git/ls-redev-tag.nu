@@ -7,7 +7,7 @@
 def 'git ls-redev-tags' [] {
   let actionConf = (open $'($nu.env.TERMIX_DIR)/termix.toml')
   # 先从环境变量里面查找所有二开仓库存放临时路径
-  let localRepoDir = ($nu.env | pivot key value | match key REDEV_REPO_PATH | get value)
+  let localRepoDir = (get-env REDEV_REPO_PATH)
   let repoPath = (if ($localRepoDir | empty?) { ($actionConf | get redevRepoPath) } { $localRepoDir })
   let redevRepos = ($actionConf | get redevRepos)
   $'List remote tags:(char nl)'
@@ -37,5 +37,3 @@ def 'git ls-redev-tags' [] {
   }
   char nl
 }
-
-git ls-redev-tags
