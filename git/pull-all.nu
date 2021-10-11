@@ -18,7 +18,8 @@ def 'git pull-all' [
   if ($statusCheck | empty?) {} {
     git stash save 'Stash before running pull-all action'
   }
-  git branch -vv |
+  # `LANG=en_US git` 强制 git 输出语言切换为英文
+  LANG=en_US git branch -vv |
     lines |
     each {
       let isBehind = ($it | str contains $behindMark)
