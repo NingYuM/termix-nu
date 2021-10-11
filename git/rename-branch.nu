@@ -1,6 +1,12 @@
 # Author: hustcer
 # Created: 2021/10/11 19:57:20
 # Ref: https://linuxize.com/post/how-to-rename-local-and-remote-git-branch/
+# [√] 本地未提交变更需要 Stash 下，重命名结束 Pop;
+# [ ] 旧分支本地远程都不存在给予提示;
+# [√] 本地分支不存在则远程拉取;
+# [√] 新分支名称本地已存在则给予提示;
+# [√] 新分支名称本地不存在但远程存在也应该给予提示;
+# [√] 重命名完毕后远程删除旧分支;
 # Usage:
 #   t rename-branch old-name new-name
 
@@ -11,13 +17,19 @@ def 'git rename-br' [
   remote?: string   # Remote alias name, 'origin' by default
 ] {
   let remoteAlias = (if ($remote | empty?) { 'origin' } { $remote })
+  git fetch $remoteAlias -p
   let statusCheck = (git status --porcelain)
   let parse = (git rev-parse --verify $from)
-  # Check and warn user if the dest branch exists
+  # Check and warn user if the dest branch exists in local
   let destExists = (git rev-parse --verify $to)
-  # TODO, check if remote dest already exists.
+  let destRemoteExists = (git rev-parse --verify $'($remoteAlias)/($to)')
+  # Check if remote dest already exists.
+  if ($destRemoteExists | empty?) {} {
+    $'Dest branch (ansi r)($remote)/($to)(ansi reset) already exists in the remote, please use another new name...(char nl)'
+    exit --now
+  }
   if ($destExists | empty?) {} {
-    $'Dest branch (ansi r)($to)(ansi reset) already exists, please use another new name...(char nl)'
+    $'Dest branch (ansi r)($to)(ansi reset) already exists in local, please use another new name...(char nl)'
     exit --now
   }
 
