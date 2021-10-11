@@ -62,6 +62,11 @@ pull-all:
   @source {{ join(_termix, join('git', 'pull-all.nu')) }}; \
     git pull-all {{JUST_INVOKE_DIR}} 'origin'
 
+# Rename remote branch, and delete old branch after rename
+rename-branch from=('') to=('') remote=('origin'):
+  @source {{ join(_termix, join('git', 'rename-branch.nu')) }}; \
+    git rename-br {{from}} {{to}} {{remote}}
+
 # Listing the remote branches of a git repo and the day of the last commit
 git-remote-age remote=('origin'):
   @source {{ join(_termix, join('git', 'remote-age.nu')) }}; \
