@@ -64,7 +64,8 @@ pull-all:
 
 # Rename remote branch, and delete old branch after rename
 rename-branch from=('') to=('') remote=('origin'):
-  @source {{ join(_termix, join('git', 'rename-branch.nu')) }}; \
+  @source {{ join(_termix, join('utils', 'common.nu')) }}; \
+    source {{ join(_termix, join('git', 'rename-branch.nu')) }}; \
     git rename-br {{from}} {{to}} {{remote}}
 
 # Listing the remote branches of a git repo and the day of the last commit
@@ -117,7 +118,8 @@ git-batch-exec cmd +branches=(''):
 
 # 将指定Git分支硬回滚N个commit
 git-batch-reset n +branches=(''):
-  @source {{ join(_termix, join('git', 'git-batch-reset.nu')) }}; \
+  @source {{ join(_termix, join('utils', 'common.nu')) }}; \
+    source {{ join(_termix, join('git', 'git-batch-reset.nu')) }}; \
     git batch-reset {{n}} '{{branches}}'
 
 # 拼接复用 utils 里面定义的公用方法: https://github.com/nushell/nushell/issues/2990

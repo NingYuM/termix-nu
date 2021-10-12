@@ -35,16 +35,13 @@ def 'git batch-reset' [
     git stash save 'Stash before running git-batch-reset'
   }
 
-  echo $candidates | each {
+  echo $candidates | each { |br|
     echo $"--------------------> (char nl)"
-    # ignore errors as the block runs
-    let parse = (git rev-parse --verify -q $it)
-    # Or $parse == ''
-    if ($parse | empty?) {
-      echo $'Branch (ansi r)($it) (ansi reset)not available...(char nl)'
-    } {
-      git checkout $it
+    if (has-ref $br) {
+      git checkout $br
       bash -c $'git reset --hard HEAD~($count)'
+    } {
+      echo $'Branch (ansi r)($br) (ansi reset)not available...(char nl)'
     }
   }
   git checkout $current

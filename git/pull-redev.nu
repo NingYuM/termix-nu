@@ -34,11 +34,10 @@ def 'git pull-redev' [
     $'(char nl)Pull repo (ansi gb)($repoName)(ansi reset): (char nl)'
 
     cd $destRepoPath;
-    let dest = (git rev-parse -q --verify $branch)
-    if ($dest | empty?) {
+    if (has-ref $branch) {} {
       $'Dest branch: ($branch) does not exist, bye...(char nl)'
       exit --now
-    } {}
+    }
     git checkout $branch; git pull
     # 强制更新远程的Tag到本地
     git fetch origin --tags --force
@@ -48,15 +47,14 @@ def 'git pull-redev' [
     # 先从环境变量里面查找待比较的上一个标签的完整名称
     let prevTagName = (get-env REDEV_PREV_TAG)
     # Check the tag status, if exists just recrete it.
-    let parse = (git rev-parse -q --verify $'refs/tags/($prevTagName)')
-    if ($parse | empty?) {
-      # 使用原生 echo 命令
-      ^echo $'(char nl) (ansi r)Tag: ($prevTagName) does not exist in repo: ($repoName) (ansi reset)(char nl)'
-    } {
+    if (has-ref $'refs/tags/($prevTagName)') {
       if $show-diff == 'true' && (git --no-pager diff $prevTagName $branch --name-only | lines | length) > 0 {
         $'---------> Update since latest tag <---------:(char nl)(ansi y)'
         git --no-pager diff $prevTagName $branch --name-only
       } {}
+    } {
+      # 使用原生 echo 命令
+      ^echo $'(char nl) (ansi r)Tag: ($prevTagName) does not exist in repo: ($repoName) (ansi reset)(char nl)'
     }
   }
 }

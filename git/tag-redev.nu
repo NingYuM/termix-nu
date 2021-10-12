@@ -50,8 +50,7 @@ def 'git tag-redev' [
     # Delete tags that not exist in remote repo
     git fetch origin --prune '+refs/tags/*:refs/tags/*'
     # Check the tag status, if exists just recrete it.
-    let parse = (git rev-parse -q --verify $'refs/tags/($tagName)')
-    if ($parse | empty?) {} { git tag -d $tagName; git push origin --delete $tagName }
+    if (has-ref $'refs/tags/($tagName)') { git tag -d $tagName; git push origin --delete $tagName } {}
 
     if $delete {} {
       # Add a tag and push it to the remote repo

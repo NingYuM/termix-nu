@@ -22,3 +22,11 @@ def 'get-ver' [
   let installed = ((which $app | length) > 0)
   echo (if $installed { nu -c $verCmd }  { 'N/A' })
 }
+
+# Check if a git repo has the specified ref: could be a branch or tag, etc.
+def 'has-ref' [
+  ref: string   # The git ref to check
+] {
+  let parse = (git rev-parse --verify -q $ref)
+  if ($parse | empty?) { $false } { $true }
+}

@@ -37,16 +37,13 @@ def 'git batch-exec' [
 
   $candidates | each { |branch|
     $"--------------------------------------------------(char nl)"
-    # ignore errors as the block runs
-    let parse = (git rev-parse --verify -q $branch)
-    # Or $parse == ''
-    if ($parse | empty?) {
-      $'Branch (ansi r)($branch) (ansi reset)not available...(char nl)'
-    } {
+    if (has-ref $branch) {
       ^git checkout $branch
       $'--------------------------------------------------(char nl)'
       # Execute cmd here
       nu -c $cmdToExec
+    } {
+      $'Branch (ansi r)($branch) (ansi reset)not available...(char nl)'
     }
   }
   char nl; git checkout $current

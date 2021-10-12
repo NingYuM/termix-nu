@@ -21,24 +21,24 @@ def 'git rename-br' [
   let remoteAlias = (if ($remote | empty?) { 'origin' } { $remote })
   git fetch $remoteAlias -p
 
-  let parseSrc = (git rev-parse --verify -q $from)
-  let parseRemoteSrc = (git rev-parse --verify -q $'($remoteAlias)/($from)')
+  let localSrcExists = (has-ref $from)
+  let remoteSrcExists = (has-ref $'($remoteAlias)/($from)')
   # Check and warn user if the dest branch exists in local
-  let parseDest = (git rev-parse --verify -q $to)
-  let parseRemoteDest = (git rev-parse --verify -q $'($remoteAlias)/($to)')
+  let localDestExists = (has-ref $to)
+  let remoteDestExists = (has-ref $'($remoteAlias)/($to)')
   # Check if remote dest already exists.
-  if ($parseRemoteDest | empty?) {} {
+  if ($remoteDestExists) {
     $'Dest branch (ansi r)($remote)/($to)(ansi reset) already exists in the remote, please use another new name...(char nl)'
     exit --now
-  }
-  if ($parseDest | empty?) {} {
+  } {}
+  if ($localDestExists) {
     $'Dest branch (ansi r)($to)(ansi reset) already exists in local, please use another new name...(char nl)'
     exit --now
-  }
-  if ($parseRemoteSrc | empty?) && ($parseSrc | empty?) {
+  } {}
+  if ($remoteSrcExists && $localSrcExists) {} {
     $'Branch (ansi r)($from) (ansi reset)does not exist in both remote and local, bye...(char nl)'
     exit --now
-  } {}
+  }
 
   let statusCheck = (git status --porcelain)
   # Stash here, if needed
@@ -47,16 +47,16 @@ def 'git rename-br' [
   }
 
   # Pull the branch to local if not exist
-  if ($parseSrc | empty?) {
+  if ($localSrcExists) {
+    git checkout $from
+  } {
     $'Branch (ansi r)($from) (ansi reset)not exist in local, will pull from remote...(char nl)'
     git checkout $'($remoteAlias)/($from)' -b $from
-  } {
-    git checkout $from
   }
 
   # Rename, push to remote and ...
   git branch -m $to; git push $remoteAlias -u $to;
   # Delete remote old branch if exists
-  if ($parseRemoteSrc | empty?) {} { git push $remoteAlias $':($from)' }
+  if ($remoteSrcExists) { git push $remoteAlias $':($from)' } {}
   if ($statusCheck | empty?) {} { git stash pop }
 }
