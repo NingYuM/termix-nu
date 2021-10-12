@@ -3,7 +3,7 @@
 # Ref: https://linuxize.com/post/how-to-rename-local-and-remote-git-branch/
 # [√] 本地未提交变更需要 Stash 下，重命名结束 Pop;
 # [√] 旧分支本地远程都不存在给予提示;
-# [ ] 旧分支只有本地存在远程不存在;
+# [√] 旧分支只有本地存在远程不存在;
 # [√] fatal: Needed a single revision
 # [√] 本地分支不存在则远程拉取;
 # [√] 新分支名称本地已存在则给予提示;
@@ -54,7 +54,9 @@ def 'git rename-br' [
     git checkout $from
   }
 
-  # Rename, push to remote and delete remote old branch
-  git branch -m $to; git push $remoteAlias -u $to; git push $remoteAlias $':($from)'
+  # Rename, push to remote and ...
+  git branch -m $to; git push $remoteAlias -u $to;
+  # Delete remote old branch if exists
+  if ($parseRemoteSrc | empty?) {} { git push $remoteAlias $':($from)' }
   if ($statusCheck | empty?) {} { git stash pop }
 }
