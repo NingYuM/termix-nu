@@ -18,16 +18,17 @@ def 'git pull-all' [
   if ($statusCheck | empty?) {} {
     git stash save 'Stash before running pull-all action'
   }
+
+  git fetch $alias -p
   # `LANG=en_US git` 强制 git 输出语言切换为英文
-  LANG=en_US git branch -vv |
+  echo (LANG=en_US git branch -vv) |
     lines |
-    each {
-      let isBehind = ($it | str contains $behindMark)
+    each { |br|
+      let isBehind = ($br | str contains $behindMark)
       if $isBehind {
-        let endIdx = ($it | str index-of $behindMark)
-        let startIdx = (($it | str index-of $startMark) + ($startMark | str length))
-        let branchName = ($it | str substring $'($startIdx),($endIdx)')
-        echo $it
+        let endIdx = ($br | str index-of $behindMark)
+        let startIdx = (($br | str index-of $startMark) + ($startMark | str length))
+        let branchName = ($br | str substring $'($startIdx),($endIdx)')
         $'(char nl)  (ansi gb)--> Start to update branch: ($branchName)(ansi reset)(char nl)'
         git checkout $branchName; git pull
       } {}
