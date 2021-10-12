@@ -38,7 +38,7 @@ def 'git batch-reset' [
   echo $candidates | each {
     echo $"--------------------> (char nl)"
     # ignore errors as the block runs
-    let parse = (git rev-parse --verify $it)
+    let parse = (git rev-parse --verify -q $it)
     # Or $parse == ''
     if ($parse | empty?) {
       echo $'Branch (ansi r)($it) (ansi reset)not available...(char nl)'

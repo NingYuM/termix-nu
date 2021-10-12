@@ -38,7 +38,7 @@ def 'git batch-exec' [
   $candidates | each { |branch|
     $"--------------------------------------------------(char nl)"
     # ignore errors as the block runs
-    let parse = (git rev-parse --verify $branch)
+    let parse = (git rev-parse --verify -q $branch)
     # Or $parse == ''
     if ($parse | empty?) {
       $'Branch (ansi r)($branch) (ansi reset)not available...(char nl)'
