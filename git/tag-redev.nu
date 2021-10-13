@@ -23,7 +23,7 @@ def 'git tag-redev' [
   let TAG = (if ($currentBeTag | empty?) { $redevCurrentTag } { $currentBeTag })
   # let tagName = 'v1.0.0-2021.08.09'
   let tagName = $'($TAG)-(date now | date format $DATE_FMT)'
-  $'Delete tag ($tagName) ---> ($delete)(char nl)(char nl)'
+  $'Delete tag ($tagName) ---> (ansi r)($delete)(ansi reset)(char nl)(char nl)'
 
   # 先从环境变量里面查找所有二开仓库存放临时路径
   let localRepoDir = (get-env REDEV_REPO_PATH)
