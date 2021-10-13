@@ -47,8 +47,8 @@ JUST_INVOKE_DIR := replace(replace(invocation_directory(), '/', _s), '\d\', 'D:\
 default:
   @just --list --list-prefix '··· '
 
-# Display current version number
-termix-ver:
+# Display termix current version number
+ver:
   @^echo (open $'($nu.env.TERMIX_DIR)/termix.toml' | get version)
 
 # Listing the branches of a git repo and the time of the last commit
