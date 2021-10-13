@@ -13,7 +13,7 @@
 #   t rename-branch old-name new-name
 
 # Rename remote branch, and delete old branch after rename
-def 'git rename-br' [
+def 'git branch-rename' [
   from: string      # The old branch name to be renamed
   to: string        # The new branch name to rename to
   remote?: string   # Remote alias name, 'origin' by default

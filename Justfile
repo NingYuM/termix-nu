@@ -66,7 +66,7 @@ pull-all:
 rename-branch from=('') to=('') remote=('origin'):
   @source {{ join(_termix, join('utils', 'common.nu')) }}; \
     source {{ join(_termix, join('git', 'rename-branch.nu')) }}; \
-    git rename-br {{from}} {{to}} {{remote}}
+    git branch-rename {{from}} {{to}} {{remote}}
 
 # Listing the remote branches of a git repo and the day of the last commit
 git-remote-age remote=('origin')  showTag=('false'):
