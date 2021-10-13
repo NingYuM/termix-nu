@@ -3,12 +3,14 @@
 # Usage:
 #   t git-remote-age
 #   t git-remote-age origin
+#   t git-remote-age origin true
 
 # Creates a table listing the remote branches of
 # a git repository and the time of the last commit
 def 'git remote-age' [
   repo: string  # The git repo to display branch ages
   alias: string # The remote url alias for git repo
+  --show-tag(-t): string  # Set to 'true' if you want to show all the tags
 ] {
 
   cd $repo
@@ -32,6 +34,19 @@ def 'git remote-age' [
       }
     } |
     sort-by last_commit
+
+  if $show-tag == 'false' { exit --now } {}
+  $'Tags of (ansi gb)($repoName)(ansi reset) for remote ($alias)(char nl)'
+  $'(ansi g)───────────────────────────────────────────────────────────────────────>(ansi reset)(char nl)'
+  # git ls-remote --tags origin
+  let os = (version | pivot name value | match name build_os | get value)
+  let tagFormat = '%(align:1,20)%(color:green)%(refname:strip=2)%(end)%09%09%(color:yellow)%(creatordate:iso)'
+  if ($os =~ 'windows') {
+    # Git for Windows does't support sort by `creatordate` field?
+    git tag $'--format=($tagFormat)' --sort=-v:refname   # Reverse
+  } {
+    git tag $'--format=($tagFormat)' --sort=-creatordate # Reverse sort
+  }
 }
 
 # $nu.env | pivot

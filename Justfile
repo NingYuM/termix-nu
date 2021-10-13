@@ -69,9 +69,9 @@ rename-branch from=('') to=('') remote=('origin'):
     git rename-br {{from}} {{to}} {{remote}}
 
 # Listing the remote branches of a git repo and the day of the last commit
-git-remote-age remote=('origin'):
+git-remote-age remote=('origin')  showTag=('false'):
   @source {{ join(_termix, join('git', 'remote-age.nu')) }}; \
-    git remote-age {{JUST_INVOKE_DIR}} {{remote}}
+    git remote-age {{JUST_INVOKE_DIR}} {{remote}} --show-tag={{showTag}}
 
 # 列出远程二开仓库 Tags
 ls-redev-tags:
@@ -101,7 +101,7 @@ pull-redev branch=('master') diff=('false'):
 tag-redev tag=('') branch=('master') delete=('false'):
   @source {{ join(_termix, join('utils', 'common.nu')) }}; \
     source {{ join(_termix, join('git', 'tag-redev.nu')) }}; \
-    git tag-redev '{{tag}}' {{branch}} --delete-tag {{delete}}
+    git tag-redev '{{tag}}' {{branch}} --delete-tag={{delete}}
 
 # 批量同步本地分支到远程指定分支,git pre-push hooks调用,请勿手工触发
 git-sync-branch localRef localOid remoteRef:
