@@ -72,7 +72,8 @@ rename-branch from=('') to=('') remote=('origin'): _nu-ver-check
 
 # Listing the remote branches of a git repo and the day of the last commit
 git-remote-age remote=('origin')  showTag=('false'): _nu-ver-check
-  @source {{ join(_termix, join('git', 'remote-age.nu')) }}; \
+  @source {{ join(_termix, join('utils', 'common.nu')) }}; \
+    source {{ join(_termix, join('git', 'remote-age.nu')) }}; \
     git-check --is-repo=1; git remote-age {{JUST_INVOKE_DIR}} {{remote}} --show-tag={{showTag}}
 
 # 列出远程二开仓库 Tags
