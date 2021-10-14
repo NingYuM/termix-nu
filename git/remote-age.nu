@@ -27,13 +27,13 @@ def 'git remote-age' [
     insert author {
       get name | each { git show $"remotes/($alias)/($it)" -s --format='%an' }
     } |
-    insert last_commit {
+    insert last-commit {
       get name |
       each {
-        git show $"remotes/($alias)/($it)" --no-patch --format=%ai | str to-datetime
+        git show $"remotes/($alias)/($it)" --no-patch --format=%ci | str to-datetime
       }
     } |
-    sort-by last_commit
+    sort-by last-commit
 
   if $show-tag == 'false' { exit --now } {}
   $'Tags of (ansi gb)($repoName)(ansi reset) for remote ($alias)(char nl)'

@@ -13,11 +13,11 @@ def 'git age' [
     lines |
     str substring 2, |
     wrap name |
-    insert last_commit {
+    insert last-commit {
       get name |
       each {
-        git show $it --no-patch --format=%ai | str to-datetime
+        git show $it --no-patch --format=%ci | str to-datetime
       }
     } |
-    sort-by last_commit
+    sort-by last-commit
 }
