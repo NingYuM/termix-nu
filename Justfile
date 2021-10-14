@@ -56,31 +56,31 @@ git-age: _nu-ver-check
   @# The following two statement must be written in one line
   @source {{ join(_termix, join('utils', 'common.nu')) }}; \
     source {{ join(_termix, join('git', 'age.nu')) }}; \
-    git-check --is-repo=1; git age {{JUST_INVOKE_DIR}}
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git age {{JUST_INVOKE_DIR}}
 
 # Pull all local branches from remote repo
 pull-all: _nu-ver-check
   @source {{ join(_termix, join('utils', 'common.nu')) }}; \
     source {{ join(_termix, join('git', 'pull-all.nu')) }}; \
-    git-check --is-repo=1; git pull-all {{JUST_INVOKE_DIR}} 'origin'
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git pull-all {{JUST_INVOKE_DIR}} 'origin'
 
 # Rename remote branch, and delete old branch after rename
 rename-branch from=('') to=('') remote=('origin'): _nu-ver-check
   @source {{ join(_termix, join('utils', 'common.nu')) }}; \
     source {{ join(_termix, join('git', 'rename-branch.nu')) }}; \
-    git-check --is-repo=1; git branch-rename {{from}} {{to}} {{remote}}
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git branch-rename {{from}} {{to}} {{remote}}
 
 # Listing the remote branches of a git repo and the day of the last commit
 git-remote-age remote=('origin')  showTag=('false'): _nu-ver-check
   @source {{ join(_termix, join('utils', 'common.nu')) }}; \
     source {{ join(_termix, join('git', 'remote-age.nu')) }}; \
-    git-check --is-repo=1; git remote-age {{JUST_INVOKE_DIR}} {{remote}} --show-tag={{showTag}}
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git remote-age {{JUST_INVOKE_DIR}} {{remote}} --show-tag={{showTag}}
 
 # 列出远程二开仓库 Tags
 ls-redev-tags: _nu-ver-check
   @source {{ join(_termix, join('utils', 'common.nu')) }}; \
     source {{ join(_termix, join('git', 'ls-redev-tag.nu')) }}; \
-    git-check --is-repo=0; git ls-redev-tags
+    git-check --check-repo=0 {{JUST_INVOKE_DIR}}; git ls-redev-tags
 
 # 显示本机安装应用版本及环境变量相关信息
 show-env: _nu-ver-check
@@ -96,7 +96,7 @@ ls-node minVer=('12'): _nu-ver-check
 pull-redev branch=('master') diff=('false'): _nu-ver-check
   @source {{ join(_termix, join('utils', 'common.nu')) }}; \
     source {{ join(_termix, join('git', 'pull-redev.nu')) }}; \
-    git-check --is-repo=0; git pull-redev {{branch}} --show-diff={{diff}}
+    git-check --check-repo=0 {{JUST_INVOKE_DIR}}; git pull-redev {{branch}} --show-diff={{diff}}
 
 # Use tag=('v2.0.2') to set default $1
 # delete: 是否删除当前日期对应的二开标签，且不重新打标, 只有为true的时候才删除，其他情况会重新打标
@@ -104,7 +104,7 @@ pull-redev branch=('master') diff=('false'): _nu-ver-check
 tag-redev tag=('') branch=('master') delete=('false'): _nu-ver-check
   @source {{ join(_termix, join('utils', 'common.nu')) }}; \
     source {{ join(_termix, join('git', 'tag-redev.nu')) }}; \
-    git-check --is-repo=0; git tag-redev '{{tag}}' {{branch}} --delete-tag={{delete}}
+    git-check --check-repo=0 {{JUST_INVOKE_DIR}}; git tag-redev '{{tag}}' {{branch}} --delete-tag={{delete}}
 
 # 批量同步本地分支到远程指定分支,git pre-push hooks调用,请勿手工触发
 git-sync-branch localRef localOid remoteRef: _nu-ver-check
@@ -117,13 +117,13 @@ git-batch-exec cmd +branches=(''): _nu-ver-check
   @source {{ join(_termix, join('utils', 'common.nu')) }}; \
     source {{ join(_termix, join('utils', 'compose-cmd.nu')) }}; \
     source {{ join(_termix, join('git', 'git-batch-exec.nu')) }}; \
-    git-check --is-repo=1; git batch-exec '{{cmd}}' '{{branches}}'
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git batch-exec '{{cmd}}' '{{branches}}'
 
 # 将指定Git分支硬回滚N个commit
 git-batch-reset n +branches=(''): _nu-ver-check
   @source {{ join(_termix, join('utils', 'common.nu')) }}; \
     source {{ join(_termix, join('git', 'git-batch-reset.nu')) }}; \
-    git-check --is-repo=1; git batch-reset {{n}} '{{branches}}'
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git batch-reset {{n}} '{{branches}}'
 
 # 拼接复用 utils 里面定义的公用方法: https://github.com/nushell/nushell/issues/2990
 # 在指定目录(支持'*'通配符)或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
