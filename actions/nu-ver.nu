@@ -10,11 +10,11 @@ def 'nu-ver' [] {
     let m = ($minVer | split row '.' | each { $it | into int })
     let c = ($currentVer | split row '.' | each { $it | into int })
     if (($c.0 < $m.0) || ($c.1 < $m.1) || ($c.2 < $m.2)) {
-        $'(ansi g)───────────────────────────────────────────────────────────────────────>(ansi reset)(char nl)'
-        $'Min required nu ver: (ansi r)($minVer)(ansi reset), current nu ver: ($currentVer)(char nl)'
-        $'------------> Your nushell is (ansi r)OUTDATED(ansi reset) <------------ (char nl)'
-        $'Please run (ansi g)`brew upgrade nushell`(ansi reset) to upgrade to the latest.(char nl)'
-        $'(ansi g)───────────────────────────────────────────────────────────────────────>(ansi reset)(char nl)'
+        $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+        $'  Min required nu ver: (ansi r)($minVer)(ansi reset), current nu ver: ($currentVer)(char nl)'
+        $'  ------------> Your nushell is (ansi r)OUTDATED(ansi reset) <------------ (char nl)'
+        $'  Please run (ansi g)`brew upgrade nushell`(ansi reset) to upgrade to the latest.(char nl)'
+        $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
         exit --now
     } {}
 }

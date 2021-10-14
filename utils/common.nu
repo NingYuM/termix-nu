@@ -30,3 +30,25 @@ def 'has-ref' [
   let parse = (git rev-parse --verify -q $ref)
   if ($parse | empty?) { $false } { $true }
 }
+
+# Check if git was installed and if current directory is a git repo
+def 'git-check' [
+    --is-repo: int # Check if current directory is a git repo
+] {
+    let isGitInstalled = ((which git | length) > 0)
+    if $isGitInstalled {} {
+        $'You should (ansi r)INSTALL git(ansi reset) first to run this command, bye...'
+        exit --now
+    }
+    # If we don't need repo check just quit now
+    if ($is-repo == 0) {} {
+
+      do -i {
+          let isGitRepo = (bash -c 'git rev-parse --is-inside-work-tree 2>/dev/null' | str trim)
+          if ($isGitRepo == 'true') {} {
+              $'Current directory is (ansi r)NOT(ansi reset) a git repo, bye...(char nl)'
+              exit --now
+          }
+      }
+    }
+}
