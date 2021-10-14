@@ -52,45 +52,45 @@ ver:
   @^echo (open $'($nu.env.TERMIX_DIR)/termix.toml' | get version)
 
 # Listing the branches of a git repo and the time of the last commit
-git-age:
+git-age: _nu-ver-check
   @# The following two statement must be written in one line
   @source {{ join(_termix, join('git', 'age.nu')) }}; \
     git age {{JUST_INVOKE_DIR}}
 
 # Pull all local branches from remote repo
-pull-all:
+pull-all: _nu-ver-check
   @source {{ join(_termix, join('git', 'pull-all.nu')) }}; \
     git pull-all {{JUST_INVOKE_DIR}} 'origin'
 
 # Rename remote branch, and delete old branch after rename
-rename-branch from=('') to=('') remote=('origin'):
+rename-branch from=('') to=('') remote=('origin'): _nu-ver-check
   @source {{ join(_termix, join('utils', 'common.nu')) }}; \
     source {{ join(_termix, join('git', 'rename-branch.nu')) }}; \
     git branch-rename {{from}} {{to}} {{remote}}
 
 # Listing the remote branches of a git repo and the day of the last commit
-git-remote-age remote=('origin')  showTag=('false'):
+git-remote-age remote=('origin')  showTag=('false'): _nu-ver-check
   @source {{ join(_termix, join('git', 'remote-age.nu')) }}; \
     git remote-age {{JUST_INVOKE_DIR}} {{remote}} --show-tag={{showTag}}
 
 # 列出远程二开仓库 Tags
-ls-redev-tags:
+ls-redev-tags: _nu-ver-check
   @source {{ join(_termix, join('utils', 'common.nu')) }}; \
     source {{ join(_termix, join('git', 'ls-redev-tag.nu')) }}; \
     git ls-redev-tags
 
 # 显示本机安装应用版本及环境变量相关信息
-show-env:
+show-env: _nu-ver-check
   @nu {{ join(_termix, join('actions', 'show-env.nu')) }}
 
 # 查询已发布Node版本，支持指定最低版本号
-ls-node minVer=('12'):
+ls-node minVer=('12'): _nu-ver-check
   @source {{ join(_termix, join('actions', 'ls-node.nu')) }}; \
     ls-node-remote {{minVer}}
 
 # t pull-redev true
 # 更新远程二开仓库代码到本地
-pull-redev branch=('master') diff=('false'):
+pull-redev branch=('master') diff=('false'): _nu-ver-check
   @source {{ join(_termix, join('utils', 'common.nu')) }}; \
     source {{ join(_termix, join('git', 'pull-redev.nu')) }}; \
     git pull-redev {{branch}} --show-diff={{diff}}
@@ -98,35 +98,38 @@ pull-redev branch=('master') diff=('false'):
 # Use tag=('v2.0.2') to set default $1
 # delete: 是否删除当前日期对应的二开标签，且不重新打标, 只有为true的时候才删除，其他情况会重新打标
 # 给远程二开仓库批量打 Tag
-tag-redev tag=('') branch=('master') delete=('false'):
+tag-redev tag=('') branch=('master') delete=('false'): _nu-ver-check
   @source {{ join(_termix, join('utils', 'common.nu')) }}; \
     source {{ join(_termix, join('git', 'tag-redev.nu')) }}; \
     git tag-redev '{{tag}}' {{branch}} --delete-tag={{delete}}
 
 # 批量同步本地分支到远程指定分支,git pre-push hooks调用,请勿手工触发
-git-sync-branch localRef localOid remoteRef:
+git-sync-branch localRef localOid remoteRef: _nu-ver-check
   @source {{ join(_termix, join('git', 'sync-branch.nu')) }}; \
     git sync-branch {{localRef}} {{localOid}} {{remoteRef}}
 
 # 复用 utils 里面定义的公用方法: nu 不支持动态 source 只能拼接下了
 # 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用空格分隔
-git-batch-exec cmd +branches=(''):
+git-batch-exec cmd +branches=(''): _nu-ver-check
   @source {{ join(_termix, join('utils', 'common.nu')) }}; \
     source {{ join(_termix, join('utils', 'compose-cmd.nu')) }}; \
     source {{ join(_termix, join('git', 'git-batch-exec.nu')) }}; \
     git batch-exec '{{cmd}}' '{{branches}}'
 
 # 将指定Git分支硬回滚N个commit
-git-batch-reset n +branches=(''):
+git-batch-reset n +branches=(''): _nu-ver-check
   @source {{ join(_termix, join('utils', 'common.nu')) }}; \
     source {{ join(_termix, join('git', 'git-batch-reset.nu')) }}; \
     git batch-reset {{n}} '{{branches}}'
 
 # 拼接复用 utils 里面定义的公用方法: https://github.com/nushell/nushell/issues/2990
 # 在指定目录(支持'*'通配符)或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
-dir-batch-exec cmd +DIRS=(''):
+dir-batch-exec cmd +DIRS=(''): _nu-ver-check
   @# load-env [[name, value]; ['BATCH_EXEC_CMD', '{{cmd}}'] ['BATCH_EXEC_DIRS', '{{DIRS}}']]
   @source {{ join(_termix, join('utils', 'common.nu')) }}; \
     source {{ join(_termix, join('utils', 'compose-cmd.nu')) }}; \
     source {{ join(_termix, join('actions', 'dir-batch-exec.nu')) }}; \
     dir-batch-exec '{{cmd}}' '{{DIRS}}' --parent={{JUST_INVOKE_DIR}}
+
+_nu-ver-check:
+  @nu {{ join(_termix, join('actions', 'nu-ver.nu')) }}
