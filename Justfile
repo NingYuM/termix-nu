@@ -76,11 +76,12 @@ git-remote-age remote=('origin')  showTag=('false'): _nu-ver-check
     source {{ join(_termix, join('git', 'remote-age.nu')) }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git remote-age {{JUST_INVOKE_DIR}} {{remote}} --show-tag={{showTag}}
 
-# 列出远程二开仓库 Tags
-ls-redev-tags: _nu-ver-check
+# Show Branches and Tags of redevelop related repos
+ls-redev-refs showBranch=('false'): _nu-ver-check
   @source {{ join(_termix, join('utils', 'common.nu')) }}; \
-    source {{ join(_termix, join('git', 'ls-redev-tag.nu')) }}; \
-    git-check --check-repo=0 {{JUST_INVOKE_DIR}}; git ls-redev-tags
+    source {{ join(_termix, join('git', 'age.nu')) }}; \
+    source {{ join(_termix, join('git', 'ls-redev-refs.nu')) }}; \
+    git-check --check-repo=0 {{JUST_INVOKE_DIR}}; git ls-redev-refs --show-branches={{showBranch}}
 
 # 显示本机安装应用版本及环境变量相关信息
 show-env: _nu-ver-check
