@@ -13,7 +13,7 @@ def 'git ls-redev-refs' [
   let localRepoDir = (get-env REDEV_REPO_PATH)
   let repoPath = (if ($localRepoDir | empty?) { ($actionConf | get redevRepoPath) } { $localRepoDir })
   let redevRepos = ($actionConf | get redevRepos)
-  $'List remote tags:(char nl)'
+  $'(ansi p)---------------> List remote refs <--------------- (char nl)(ansi reset)'
 
   $redevRepos | each {
     let url = (echo $it | get url)
@@ -30,7 +30,7 @@ def 'git ls-redev-refs' [
     }
 
     if ($show-branches == 'true') {
-      $'(char nl)Branches of repo (ansi gb)($repoName)(ansi reset): (char nl)'
+      $'(char nl)Branches of repo (ansi gb)($repoName)(ansi reset): (char nl)(char nl)'
       git age $destRepoPath
     } {}
 
