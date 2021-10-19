@@ -100,33 +100,188 @@ cargo install nu --features=extra
     # After source the profile you have edit, you can use `t` now
    ```
 
+## 目录结构说明
+
+```bash
+.
+├── Justfile      # `Just` 配置文件
+├── README.md
+├── actions       # 非 Git 相关脚本，通过 `just` 管理
+├── git           # Git 仓库相关脚本，通过 `just` 管理
+├── mall          # 电商标品里面的脚本，目前还在建设中...
+├── run           # 不在 `just` 管理范围内的临时测试脚本
+├── termix.toml   # termix-nu 的全局配置文件，toml格式, 参考: https://toml.io/
+├── .env          # termix-nu 的全局环境变量，如果一个配置在termix.toml和.env里面都有，通常.env里面的优先级更高
+├── .env-example  # .env 配置样本文件，可以由此拷贝到 .env 并根据个人需要进行修改
+└── utils         # 通用脚本函数
+```
+
 ## 使用说明
 
-### 查询本地 `termix-nu` 的版本号
+### 1. 查询本地 `termix-nu` 的版本号
 
-### 指定目录批量执行特定命令
+可以通过 `just ver` 命令查看本地 `termix-nu` 的版本号;
 
-### 查询已发布Node版本，支持指定最低版本号
+### 2. 指定目录批量执行特定命令
 
-### 显示本机安装应用版本及环境变量相关信息
+**功能描述**：在指定目录里面执行特定命令，如果没有指定目录则会在当前目录的所有子目录内执行对应命令
+**命令格式**: `just dir-batch-exec cmd +DIRS=('')`
+**参数说明**：
+- `cmd`: 待执行的命令，如果有空格需要用引号包裹，`cmd`参数对应命令默认通过`bash`执行(默认值在 `termix.toml` 的 `shellToRunCmd.currentSelected`里面指定)，如果你需要更改命令解释、执行器可以修改`.env`里面的`SHELL_TO_RUN_CMD`环境变量;
+- `DIRS`: 需要执行上述命令的目录，目录可以指定一个或者多个，多个目录中间用空格隔开，也可以为空，为空则会在当前目录的所有子目录内执行对应命令：
 
-### [Git] 查看本地Git仓库的分支及其最后提交时间
+**使用举例**:
+```bash
+# 更新gaia-mall gaia-mobile gaia-picker这三个仓库的develop分支到本地
+just dir-batch-exec 'git co develop; git pull' gaia-mall gaia-mobile gaia-picker
+# 在 mall-base/packages 目录下通过 `npm-check-updates` 检查所有 lerna 管理的包的依赖是否有新版本:
+cd ./mall-base/packages;
+just dir-batch-exec 'pwd;ncu'
+```
 
-### [Git] 在Git指定分支上批量执行特定命令
+### 3. 查询已发布Node版本，支持指定最低版本号
 
-### [Git] 将指定Git分支硬回滚N个commit
+**功能描述**：通过[`fnm`](https://github.com/Schniz/fnm)查询已发布Node版本，支持指定最低版本号, 虽然目前依赖`fnm`, 但是若想去除该依赖是很容易的，以后有需求再说吧。
+**命令格式**: `just ls-node minVer=('12')`
+**参数说明**：
+-  `minVer`: 目前只有这一个参数，指定查询`Node.js`的最小起始版本号，可以为空，默认值为 12, 版本号前面可以加`v`也可以不加；
 
-### [Git] 显示Git仓库远程地址所有的分支及其最后提交信息
+**使用举例**:
+```bash
+# 查询`12`以后的已经发布的Node版本号
+just ls-node
+# 查询`16`以后的已经发布的Node版本号
+just ls-node 16
+# OR
+just ls-node v16
+```
 
-### [Git] Git Push Hook自动将代码同步到多个目标仓库
+### 4. 显示本机安装应用版本及环境变量相关信息
 
-### [Git] 从远程更新本地所有分支代码到最新的提交
+**功能描述**：显示本机安装应用版本及环境变量相关信息, 这个主要方便排查问题
+**命令格式**: `just show-env`
+**参数说明**：N/A
+**使用举例**: Run `just show-env`
+**输出样例**:
+```bash
+➜  termix-nu git:(docs) ✗ just show-env
+  #         nu-ver                                value
+─────────────────────────────────────────────────────────────────────────────────
+  0   version              0.38.0
+  1   build_os             macos-x86_64
+  2   rust_version         rustc 1.55.0 (c8dfcfe04 2021-09-06)
+  3   rust_channel         stable-x86_64-apple-darwin (default)
+  4   cargo_version        cargo 1.55.0 (32da73ab1 2021-08-23)
+  5   pkg_version          0.38.0
+  6   build_time           2021-10-06 07:12:31 +08:00
+  7   build_rust_channel   release
+  8   features             clipboard-cli, ctrlc, dataframe, default, rustyline,
+                           term, trash, uuid, which, zip
+  9   installed_plugins    binaryview, chart bar, chart line, fetch, from bson,
+                           from sqlite, inc, match, post, ps, query json, s3,
+                           selector, start, sys, textview, to bson, to sqlite,
+                           tree, xpath
 
-### [Git] Git 远程分支重命名
+  #          name                               value
+─────────────────────────────────────────────────────────────────────────────
+   0   Git                2.33.1
+   1   Fnm                1.27.0
+   2   Just               0.10.2
+   3   Herd               1.1.11
+   4   Node               16.11.1
+   5   Npm                8.0.0
+   6   Yarn               1.22.11
+   7   Termix             2.2.1
+   8   -------            --------
+   9   SHELL_TO_RUN_CMD   bash
+  10   JUST_FILE          /Users/abc/termix-nu/Justfile
+  11   REDEV_REPO_PATH    /Users/abc/redev-repos
+  12   TERMIX_DIR         /Users/abc/termix-nu
+  13   JUST_INVOKE_DIR    /Users/abc/termix-nu
+  14   Current Time       2021/10/19 19:53:27
+```
 
-### [二开] 显示标品二开仓库的远程分支及Tag信息
+### 5. [Git] 查看本地Git仓库的分支及其最后提交时间
 
-### [二开] 更新远程二开仓库代码到本地
+**功能描述**：查看本地Git仓库的分支及其最后提交时间
+**命令格式**: `just git-age`
+**参数说明**：N/A
+**使用举例**: Run `just git-age` in a git repo.
+**输出样例**:
+```bash
+  #    name      last-commit
+───────────────────────────────
+  0   develop   4 hours ago
+  1   master    4 hours ago
+  2   docs      2 minutes ago
+```
 
-### [二开] 给远程二开仓库批量打 Tag
+### 6. [Git] 在Git指定分支上批量执行特定命令
 
+**功能描述**：
+**命令格式**: `just `
+**参数说明**：
+**使用举例**:
+
+### 7. [Git] 将指定Git分支硬回滚N个commit
+
+**功能描述**：
+**命令格式**: `just `
+**参数说明**：
+**使用举例**:
+
+### 8. [Git] 显示Git仓库远程地址所有的分支及其最后提交信息
+
+**功能描述**：
+**命令格式**: `just `
+**参数说明**：
+**使用举例**:
+
+### 9. [Git] Git Push Hook自动将代码同步到多个目标仓库
+
+**功能描述**：
+**命令格式**: `just `
+**参数说明**：
+**使用举例**:
+
+### 10. [Git] 从远程更新本地所有分支代码到最新的Commit
+
+**功能描述**：从远程更新本地所有分支代码到最新的Commit, 如果执行命令前本地仓库有变更会自动执行 `stash` 操作;
+**命令格式**: `just pull-all`
+**参数说明**：N/A
+**使用举例**: Try `just pull-all` in your git repo.
+
+### 11. [Git] Git 远程分支重命名
+
+**功能描述**：
+**命令格式**: `just `
+**参数说明**：
+**使用举例**:
+
+### 12. [二开] 显示标品二开仓库的远程分支及Tag信息
+
+**功能描述**：
+**命令格式**: `just `
+**参数说明**：
+**使用举例**:
+
+### 13. [二开] 更新远程二开仓库代码到本地
+
+**功能描述**：
+**命令格式**: `just `
+**参数说明**：
+**使用举例**:
+
+### 14. [二开] 给远程二开仓库批量打 Tag
+
+**功能描述**：
+**命令格式**: `just `
+**参数说明**：
+**使用举例**:
+
+## TODO
+
+[] `ls-node` 去除对 `fnm` 的依赖;
+[] `ls-node` 支持对所有 LTS 版本 Node 的查询：`just ls-node v12 true` 查询**12**以后的所有**LTS**版本Node;
+[] 电商里面的`bash`脚本转成基于`nushell`的;
+[] 常用应用安装脚本? 帮助新mac快速配置开发环境;
