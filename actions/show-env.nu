@@ -3,8 +3,6 @@
 # Usage:
 #   t show-env
 
-source utils/common.nu
-
 # Show locally installed cli app's version and env infomation
 def 'show-env' [] {
   let termixDir = (get-env TERMIX_DIR '(empty)')
@@ -44,5 +42,3 @@ def 'show-env' [] {
       ['Current Time', $time]
     ]
 }
-
-show-env

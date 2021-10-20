@@ -85,7 +85,9 @@ ls-redev-refs showBranch=('false'): _nu-ver-check
 
 # 显示本机安装应用版本及环境变量相关信息
 show-env: _nu-ver-check
-  @nu {{ join(_termix, join('actions', 'show-env.nu')) }}
+  @source {{ join(_termix, join('utils', 'common.nu')) }}; \
+    source {{ join(_termix, join('actions', 'show-env.nu')) }}; \
+    show-env
 
 # 查询已发布Node版本，支持指定最低版本号
 ls-node minVer=('12'): _nu-ver-check
