@@ -1,0 +1,15 @@
+#!/bin/bash
+
+curl 'https://gateway.app.terminus.io/compass/emp/emp-project/api/trantor/data-source' \
+    -H 'X-CSRF-Token: csrf-token' \
+    -H 'Content-Type: application/json' \
+    -H 'Accept: application/json' \
+    -H 'x-trantor-app: emp_emp_emp' \
+    -H 'Origin: https://emp.app.terminus.io' \
+    -H 'Sec-Fetch-Site: same-site' \
+    -H 'Sec-Fetch-Mode: cors' \
+    -H 'Sec-Fetch-Dest: empty' \
+    -H 'Referer: https://emp.app.terminus.io/' \
+    -H 'Cookie: taid=453dd030-187a-42c3-92af-b0d04a3b5a66; OPENAPISESSION=36d52894-bccc-471a-9e5f-892d103fc176; pdscn=334023; pdscn.sig=mPpQewo4uCI-ibUQpwTDj5ZXkzs; lng=zh-CN; Hm_lvt_210739f1f314f3bf914d4ecf7cfa151b=1633534985; Hm_lpvt_210739f1f314f3bf914d4ecf7cfa151b=1633534992; ucid=NTM2MmM4NTAtOTdkZS00MGRiLTgwZjItZDkxMDgwMDZlMGQy; OPENAPISESSION=bb8a9376-5693-4f08-9520-26f95cae8d5f; guestId=f1d3426e-3af1-469b-8fc4-da4a153986f4; guestId.sig=I1HT5Kay64sgz-m675aUF4tWQSE; gaia_identify_token_app_test=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJsb2dpbiIsInBhdGgiOiIvIiwidG9rZW5LZXkiOiJjZTA1MWU2OGE1Yjg5ZTYyZmZiMmJkZGNhZDNhZmMxNDU4ZWVkMjVlMmRkZDU5ZDI4M2NmZGUwY2QyMGIxMWNlIiwibmJmIjoxNjM0NjE3OTkyLCJkb21haW4iOiJ0ZXJtaW51cy5pbyIsImlzcyI6ImRyYWNvIiwidGVuYW50SWQiOjEsImV4cGlyZV90aW1lIjoyNTkyMDAwLCJleHAiOjE2MzcyMDk5OTIsImlhdCI6MTYzNDYxNzk5Mn0.lVh2PE2BCzVbsjnLBcyYFZ64EcQuToFP4k2cF6ap8UI; emp_u_c_local=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJsb2dpbiIsInBhdGgiOiIvIiwidG9rZW5LZXkiOiI1ZmQ2OGNmYWZjOWM0ZmNhYzhmMTNhYzVlNmE0YjRiZDFiNWJlOGJkYjc3MjMxMzM3ZTBmNTliY2E2NjY0NGE2IiwibmJmIjoxNjM0ODg4NTgzLCJkb21haW4iOiJhcHAudGVybWludXMuaW8iLCJpc3MiOiJkcmFjbyIsInRlbmFudElkIjoxLCJleHBpcmVfdGltZSI6NjA0ODAwLCJleHAiOjE2MzU0OTMzODMsImlhdCI6MTYzNDg4ODU4M30.AyIZ_FP-k361gy5OWhpiFAQKBNKx6UbxbK22g5CoA3Y' \
+    --data-raw '{"frontendContext":{},"singleResult":false,"targetModel":"emp_project_WeekWorkTime","sourceModel":"emp_staff_Department","queryValues":{"deptManager":{"type":"One","value":"马俊"},"updatedBy":{"type":"One","value":{}},"totalPerson":{"type":"One","value":24},"createdAt":{"type":"One","value":1604894494000},"path":{"type":"One","value":"420597347,554439530,463595088,463289117,1"},"depth":{"type":"One","value":5},"isDeleted":{"type":"One","value":false},"createdBy":{"type":"One","value":{}},"name":{"type":"One","value":"前端"},"outerId":{"type":"One","value":420597347},"outerParentId":{"type":"One","value":554439530},"id":{"type":"One","value":114},"deptManagers":{"type":"Collection","values":[368]},"status":{"type":"One","value":"RUN"},"updatedAt":{"type":"One","value":1634886448000},"order":{"type":"One","value":4},"year":{"type":"One","value":2021},"week":{"type":"One","value":42}},"dataSource":{"actionKey":"emp_project_WeekWorkTime_departmentWorkTimeList"},"result":{"fields":[{"fieldName":"id"},{"fieldName":"staff","fields":[{"fieldName":"id"},{"fieldName":"name"}]},{"fieldName":"theoryTotalPercentage"},{"fieldName":"actualTotalPercentage"},{"fieldName":"leavePercentage"},{"fieldName":"vacatePercentage"}]}}' \
+    --compressed

@@ -118,6 +118,9 @@ cargo install nu --features=extra
 
 ## 使用说明
 
+直接在`termix-nu`目录执行`just`命令即可列出所有可用命令及其参数。命令支持`tab`键自动补全，所以不用全部输完的哈。
+`just`本身也支持定义**alias**, 不过考虑到alias记起来比较麻烦，而且由于已经支持自动补全了，对于alias的需求就没那么迫切了，所以把alias注释掉了，需要的可以自己改下。
+
 ### 1. 查询本地 `termix-nu` 的版本号
 
 可以通过 `just ver` 命令查看本地 `termix-nu` 的版本号;
@@ -127,8 +130,8 @@ cargo install nu --features=extra
 **功能描述**：在指定目录里面执行特定命令，如果没有指定目录则会在当前目录的所有子目录内执行对应命令
 **命令格式**: `just dir-batch-exec cmd +DIRS=('')`
 **参数说明**：
-- `cmd`: 待执行的命令，如果有空格需要用引号包裹，`cmd`参数对应命令默认通过`bash`执行(默认值在 `termix.toml` 的 `shellToRunCmd.currentSelected`里面指定)，如果你需要更改命令解释、执行器可以修改`.env`里面的`SHELL_TO_RUN_CMD`环境变量;
-- `DIRS`: 需要执行上述命令的目录，目录可以指定一个或者多个，多个目录中间用空格隔开，也可以为空，为空则会在当前目录的所有子目录内执行对应命令：
+- `cmd`: 必填，待执行的命令，如果有空格需要用引号包裹，`cmd`参数对应命令默认通过`bash`执行(默认值在 `termix.toml` 的 `shellToRunCmd.currentSelected`里面指定)，如果你需要更改命令解释、执行器可以修改`.env`里面的`SHELL_TO_RUN_CMD`环境变量;
+- `DIRS`: 可选，需要执行上述命令的目录，目录可以指定一个或者多个，多个目录中间用空格隔开，也可以为空，为空则会在当前目录的所有子目录内执行对应命令;
 
 **使用举例**:
 ```bash
@@ -144,7 +147,7 @@ just dir-batch-exec 'pwd;ncu'
 **功能描述**：通过[`fnm`](https://github.com/Schniz/fnm)查询已发布Node版本，支持指定最低版本号, 虽然目前依赖`fnm`, 但是若想去除该依赖是很容易的，以后有需求再说吧。
 **命令格式**: `just ls-node minVer=('12')`
 **参数说明**：
--  `minVer`: 目前只有这一个参数，指定查询`Node.js`的最小起始版本号，可以为空，默认值为 12, 版本号前面可以加`v`也可以不加；
+-  `minVer`: 可选，目前只有这一个参数，指定查询`Node.js`的最小起始版本号，可以为空，默认值为 12, 版本号前面可以加`v`也可以不加；
 
 **使用举例**:
 ```bash
@@ -203,7 +206,7 @@ just ls-node v16
 
 ### 5. [Git] 查看本地Git仓库的分支及其最后提交时间
 
-**功能描述**：查看本地Git仓库的分支及其最后提交时间
+**功能描述**：查看本地Git仓库的分支及其最后提交时间, 按最后提交时间升序排序
 **命令格式**: `just git-age`
 **参数说明**：N/A
 **使用举例**: Run `just git-age` in a git repo.
@@ -218,17 +221,31 @@ just ls-node v16
 
 ### 6. [Git] 在Git指定分支上批量执行特定命令
 
-**功能描述**：
-**命令格式**: `just `
+**功能描述**：在指定Git分支上执行指定命令
+**命令格式**: `just git-batch-exec cmd +branches=('')`
 **参数说明**：
+- `cmd`: 必填，待执行的命令，如果有空格需要用引号包裹，`cmd`参数对应命令默认通过`bash`执行(默认值在 `termix.toml` 的 `shellToRunCmd.currentSelected`里面指定)，如果你需要更改命令解释、执行器可以修改`.env`里面的`SHELL_TO_RUN_CMD`环境变量;
+- `branches`: 必填，需要执行上述命令的分支，分支可以指定一个或者多个，多个分支中间用空格隔开；
+
 **使用举例**:
+```bash
+# 在 develop feature/latest 这两个分支上 cherry-pick 特定的 commit并推送到远程
+just git-batch-exec 'git cherry-pick abcxyzuvw; git push' develop feature/latest
+```
 
 ### 7. [Git] 将指定Git分支硬回滚N个commit
 
-**功能描述**：
-**命令格式**: `just `
+**功能描述**：将指定Git分支硬回滚N个Commit, 这个命令的使用场景可能不是很多，当时是为了测试后面的 `just pull-all` 用的前置命令
+**命令格式**: `just git-batch-reset n +branches=('')`
 **参数说明**：
+- `n`: 必填，整数，需要回滚的Commit数目;
+- `branches`: 必填，需要回滚代码的分支，分支可以指定一个或者多个，多个分支中间用空格隔开；
+
 **使用举例**:
+```bash
+# 将 develop feature/latest 两个分支上的代码硬回滚2个commit
+just git-batch-reset 2 develop feature/latest
+```
 
 ### 8. [Git] 显示Git仓库远程地址所有的分支及其最后提交信息
 

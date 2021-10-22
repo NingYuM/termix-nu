@@ -1,0 +1,30 @@
+# Author: hustcer
+# Created: 2021/10/22 15:36:56
+# Description: Check working hours filling status
+# Usage:
+#   working-hours
+
+def 'working-hours' [] {
+    let hoursScript = (open --raw utils/hours.sh)
+    let hours = (bash -c $hoursScript | str collect)
+    let data = ($hours | query json 'res.data')
+    # echo ($data | reject id isDeleted week year createdAt updatedAt updatedBy createdBy)
+    $'(char nl)-----------------------> 电商前端本周工时填报 <-----------------------(char nl)(char nl)'
+    $data |
+      select staff.name mondayWorkTime tuesdayWorkTime wednesdayWorkTime thursdayWorkTime fridayWorkTime week leavePercentage |
+      rename Name Mon Tue Wen Thu Fri WeekNO. Leave |
+      default Mon 0 | update Mon { |it| $it.Mon * 8 | into int } |
+      default Tue 0 | update Tue { |it| $it.Tue * 8 | into int } |
+      default Wen 0 | update Wen { |it| $it.Wen * 8 | into int } |
+      default Thu 0 | update Thu { |it| $it.Thu * 8 | into int } |
+      default Fri 0 | update Fri { |it| $it.Fri * 8 | into int } |
+      update Leave { |it| $it.Leave * 8 | into int } |
+      where Mon < 8 || Tue < 8 || Wen < 8 || Thu < 8 || Fri < 8 |
+      insert Warn { |it|
+        if ( $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < 40) {
+            $'(ansi r)('*' | str lpad -l 5 -c $'(char sp)')(ansi reset)'
+        } {}
+      }
+}
+
+working-hours
