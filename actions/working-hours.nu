@@ -3,13 +3,17 @@
 # Description: Check working hours filling status
 # Usage:
 #   working-hours
+# Data Source
+#   https://gateway.app.terminus.io/compass/emp/emp-project/api/trantor/data-source
 
 def 'working-hours' [] {
-    let hoursScript = (open --raw utils/hours.sh)
-    let hours = (bash -c $hoursScript | str collect)
+    let emp = (open $'($nu.env.TERMIX_DIR)/termix.toml' | get empWorkingHour)
+    let hours = (curl $emp.url -H $emp.type -H $emp.cookie -s --data-raw $emp.payload | str collect)
     let data = ($hours | query json 'res.data')
     # echo ($data | reject id isDeleted week year createdAt updatedAt updatedBy createdBy)
-    $'(char nl)-----------------------> 电商前端本周工时填报 <-----------------------(char nl)(char nl)'
+    $'(char nl)  (ansi p)'
+    $'-------------------------> 电商前端本周工时填报 <-------------------------'
+    $'(ansi reset)(char nl)(char nl)'
     $data |
       select staff.name mondayWorkTime tuesdayWorkTime wednesdayWorkTime thursdayWorkTime fridayWorkTime week leavePercentage |
       rename Name Mon Tue Wen Thu Fri WeekNO. Leave |
@@ -22,9 +26,7 @@ def 'working-hours' [] {
       where Mon < 8 || Tue < 8 || Wen < 8 || Thu < 8 || Fri < 8 |
       insert Warn { |it|
         if ( $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < 40) {
-            $'(ansi r)('*' | str lpad -l 5 -c $'(char sp)')(ansi reset)'
+            $'(ansi r)('*' | str lpad -l 6 -c $'(char sp)')(ansi reset)'
         } {}
       }
 }
-
-working-hours

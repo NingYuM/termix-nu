@@ -94,6 +94,11 @@ ls-node minVer=('12'): _nu-ver-check
   @source {{ join(_termix, join('actions', 'ls-node.nu')) }}; \
     ls-node-remote {{minVer}}
 
+# 查询电商前端团队本周工时填报情况
+emp: _nu-ver-check
+  @source {{ join(_termix, join('actions', 'working-hours.nu')) }}; \
+    working-hours
+
 # t pull-redev true
 # 更新远程二开仓库代码到本地
 pull-redev branch=('master') diff=('false'): _nu-ver-check
