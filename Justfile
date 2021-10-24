@@ -90,9 +90,9 @@ show-env: _nu-ver-check
     show-env
 
 # 查询已发布Node版本，支持指定最低版本号
-ls-node minVer=('12'): _nu-ver-check
+ls-node minVer=('12') isLts=('false'): _nu-ver-check
   @source {{ join(_termix, join('actions', 'ls-node.nu')) }}; \
-    ls-node-remote {{minVer}}
+    ls-node-remote {{minVer}} {{isLts}}
 
 # 查询电商前端团队本周工时填报情况
 emp: _nu-ver-check
