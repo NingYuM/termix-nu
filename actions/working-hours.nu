@@ -11,7 +11,12 @@ def 'working-hours' [] {
     # 先从环境变量里面查找用户在 emp Cookie 里面的登陆信息
     let empUserCookie = (get-env EMP_UC_COOKIE)
     let userCookie = ($emp.cookie | str find-replace '_EMP_UC_COOKIE_' $empUserCookie)
+    # 当前是一年中的第几周
     let weekNo = ([(date now)] | dataframe to-df | dataframe get-week).0
+    # 此刻是一周中的第几天，周一为第 0 天
+    let weekDay = ([(date now)] | dataframe to-df | dataframe get-weekday).0
+    # 正常情况下一周工作 5 天
+    let total = (if $weekDay > 5 { 5 } { $weekDay + 1 })
     let payload = ($emp.payload | str find-replace '_week_no_' $'($weekNo)')
     # Week No of now: [(date now)] | dataframe to-df | dataframe get-week
     let hours = (curl $emp.url -H $emp.type -H $userCookie -s --data-raw $payload | str collect)
@@ -30,9 +35,9 @@ def 'working-hours' [] {
       default Fri 0 | update Fri { |it| $it.Fri * 8 | into int } |
       update Leave { |it| $it.Leave * 8 | into int } |
       where Mon < 8 || Tue < 8 || Wen < 8 || Thu < 8 || Fri < 8 |
-      insert Warn { |it|
-        if ( $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < 40) {
+      insert WARN { |it|
+        if ( $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8) {
             $'(ansi r)('*' | str lpad -l 6 -c $'(char sp)')(ansi reset)'
         } {}
-      }
+      } | sort-by WARN Name
 }
