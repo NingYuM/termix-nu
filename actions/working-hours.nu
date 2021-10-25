@@ -8,6 +8,7 @@
 
 def 'working-hours' [] {
     let emp = (open $'($nu.env.TERMIX_DIR)/termix.toml' | get empWorkingHour)
+    # Week No of now: [(date now)] | dataframe to-df | dataframe get-week
     let hours = (curl $emp.url -H $emp.type -H $emp.cookie -s --data-raw $emp.payload | str collect)
     let data = ($hours | query json 'res.data')
     # echo ($data | reject id isDeleted week year createdAt updatedAt updatedBy createdBy)
