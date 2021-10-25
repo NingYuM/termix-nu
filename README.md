@@ -5,8 +5,8 @@
 
 :::tip
 既然可以用JS写为什么还要采用 `Nushell`？
-1. 用JS写的脚本在使用前需要安装`node_modules`依赖, 使用上稍有不便，`termix-nu`里面的脚本希望单独把脚本文件发给其他人的时候对方可以直接执行(前提是本机安装过`Nushell`)，另一方面本仓库里面的脚本主要用于日常开发的时候完成一些“微不足道”的小功能：这些能力看似可有可无，比较杂，且不设限，不适合也没有放到`@terminus/termix`里面的必要;
-2. 没有选择`Bash`脚本是因为`Bash`是一种比较糟糕的脚本语言：阅读维护都不太方便、而且不适合处理结构化的数据，比如JSON、TOML、CSV等等，更重要的是不能跨平台(或者比较有限)；
+1. 用JS写的脚本在使用前需要安装`node_modules`依赖, 使用上稍有不便，`termix-nu`里面的脚本希望单独把脚本文件发给其他人的时候对方可以直接执行(前提是本机安装过`Nushell`)，另一方面本仓库里面的脚本主要用于日常开发的时候完成一些“微不足道”的小功能: 这些能力看似可有可无，比较杂，且不设限，不适合也没有放到`@terminus/termix`里面的必要;
+2. 没有选择`Bash`脚本是因为`Bash`是一种比较糟糕的脚本语言: 阅读维护都不太方便、而且不适合处理结构化的数据，比如JSON、TOML、CSV等等，更重要的是不能跨平台(或者比较有限)；
 3. 选用 `Nushell`则是因为其更加现代、强大、语法更优雅，代码可读性和可维护性有质的提升，天生支持结构化数据、支持多平台，等等；
 :::
 
@@ -34,7 +34,7 @@ winget install Nushell.Nushell
 
 ### Install latest version of nu
 
-如果`brew`里面的 `Nushell` 版本没有及时更新可以自己通过 `cargo` 安装最新版：
+如果`brew`里面的 `Nushell` 版本没有及时更新可以自己通过 `cargo` 安装最新版:
 
 ```bash
 # Change the version number to the latest one
@@ -54,7 +54,7 @@ cargo install nu --features=extra
    cp .env-example .env     # 然后根据自己的情况修改 .env 里面的环境变量
    ```
 
-3. 在`termix-nu` 目录下执行 `just` 即可查看当前提供的所有命令或者工具，如下所示：
+3. 在`termix-nu` 目录下执行 `just` 即可查看当前提供的所有命令或者工具，如下所示:
 
    ```bash
     ➜  $ just
@@ -76,7 +76,7 @@ cargo install nu --features=extra
     ··· ver                           # Display termix current version number
    ```
 
-5. 如果你希望在本机任意位置都可以使用`termix-nu`提供的功能，需要建立软连接：
+5. 如果你希望在本机任意位置都可以使用`termix-nu`提供的功能，需要建立软连接:
 
    ```bash
     # Mac or Linux
@@ -127,9 +127,9 @@ cargo install nu --features=extra
 
 ### 2. 指定目录批量执行特定命令
 
-**功能描述**：在指定目录里面执行特定命令，如果没有指定目录则会在当前目录的所有子目录内执行对应命令
+**功能描述**: 在指定目录里面执行特定命令，如果没有指定目录则会在当前目录的所有子目录内执行对应命令
 **命令格式**: `just dir-batch-exec cmd +DIRS=('')`
-**参数说明**：
+**参数说明**:
 - `cmd`: 必填，待执行的命令，如果有空格需要用引号包裹，`cmd`参数对应命令默认通过`bash`执行(默认值在 `termix.toml` 的 `shellToRunCmd.currentSelected`里面指定)，如果你需要更改命令解释、执行器可以修改`.env`里面的`SHELL_TO_RUN_CMD`环境变量;
 - `DIRS`: 可选，需要执行上述命令的目录，目录可以指定一个或者多个，多个目录中间用空格隔开，也可以为空，为空则会在当前目录的所有子目录内执行对应命令;
 
@@ -144,9 +144,9 @@ just dir-batch-exec 'pwd;ncu'
 
 ### 3. 查询已发布Node版本，支持指定最低版本号
 
-**功能描述**：通过[`fnm`](https://github.com/Schniz/fnm)查询已发布Node版本，支持指定最低版本号, 虽然目前依赖`fnm`, 但是若想去除该依赖是很容易的，以后有需求再说吧。
+**功能描述**: 通过[`fnm`](https://github.com/Schniz/fnm)查询已发布Node版本，支持指定最低版本号, 虽然目前依赖`fnm`, 但是若想去除该依赖是很容易的，以后有需求再说吧。
 **命令格式**: `just ls-node minVer=('12') isLts=('false')`
-**参数说明**：
+**参数说明**:
 -  `minVer`: 可选，指定查询`Node.js`的最小起始版本号，可以为空，默认值为 12, 版本号前面可以加`v`也可以不加;
 -  `isLts`: 可选，是否值查询`LTS`版本，可以为空，默认值为`false`;
 
@@ -164,9 +164,9 @@ just ls-node 12 true
 
 ### 4. 显示本机安装应用版本及环境变量相关信息
 
-**功能描述**：显示本机安装应用版本及环境变量相关信息, 这个主要方便排查问题
+**功能描述**: 显示本机安装应用版本及环境变量相关信息, 这个主要方便排查问题
 **命令格式**: `just show-env`
-**参数说明**：N/A
+**参数说明**: N/A
 **使用举例**: Run `just show-env`
 **输出样例**:
 ```bash
@@ -209,9 +209,9 @@ just ls-node 12 true
 
 ### 5. [Git] 查看本地Git仓库的分支及其最后提交时间
 
-**功能描述**：查看本地Git仓库的分支及其最后提交时间, 按最后提交时间升序排序
+**功能描述**: 查看本地Git仓库的分支及其最后提交时间, 按最后提交时间升序排序
 **命令格式**: `just git-age`
-**参数说明**：N/A
+**参数说明**: N/A
 **使用举例**: Run `just git-age` in a git repo.
 **输出样例**:
 ```bash
@@ -224,9 +224,9 @@ just ls-node 12 true
 
 ### 6. [Git] 在Git指定分支上批量执行特定命令
 
-**功能描述**：在指定Git分支上执行指定命令
+**功能描述**: 在指定Git分支上执行指定命令
 **命令格式**: `just git-batch-exec cmd +branches=('')`
-**参数说明**：
+**参数说明**:
 - `cmd`: 必填，待执行的命令，如果有空格需要用引号包裹，`cmd`参数对应命令默认通过`bash`执行(默认值在 `termix.toml` 的 `shellToRunCmd.currentSelected`里面指定)，如果你需要更改命令解释、执行器可以修改`.env`里面的`SHELL_TO_RUN_CMD`环境变量;
 - `branches`: 必填，需要执行上述命令的分支，分支可以指定一个或者多个，多个分支中间用空格隔开；
 
@@ -238,9 +238,9 @@ just git-batch-exec 'git cherry-pick abcxyzuvw; git push' develop feature/latest
 
 ### 7. [Git] 将指定Git分支硬回滚N个commit
 
-**功能描述**：将指定Git分支硬回滚N个Commit, 这个命令的使用场景可能不是很多，当时是为了测试后面的 `just pull-all` 用的前置命令
+**功能描述**: 将指定Git分支硬回滚N个Commit, 这个命令的使用场景可能不是很多，当时是为了测试后面的 `just pull-all` 用的前置命令
 **命令格式**: `just git-batch-reset n +branches=('')`
-**参数说明**：
+**参数说明**:
 - `n`: 必填，整数，需要回滚的Commit数目;
 - `branches`: 必填，需要回滚代码的分支，分支可以指定一个或者多个，多个分支中间用空格隔开；
 
@@ -252,9 +252,9 @@ just git-batch-reset 2 develop feature/latest
 
 ### 8. [Git] 显示Git仓库远程地址所有的分支及其最后提交信息
 
-**功能描述**：显示当前Git仓库远程地址所有的分支及其最后提交信息
+**功能描述**: 显示当前Git仓库远程地址所有的分支及其最后提交信息
 **命令格式**: `just git-remote-age remote=('origin') showTag=('false')`
-**参数说明**：
+**参数说明**:
 - `remote`: 可选，远程仓库地址对应的 alias 名称，默认值 `origin`;
 - `showTag`: 可选，是否需要显示仓库已有标签信息，默认值`false`;
 
@@ -268,23 +268,23 @@ just git-remote-age origin true
 
 ### 9. [Git] Git Push Hook自动将代码同步到多个目标仓库
 
-**功能描述**：
+**功能描述**:
 **命令格式**: `just `
-**参数说明**：
+**参数说明**:
 **使用举例**:
 
 ### 10. [Git] 从远程更新本地所有分支代码到最新的Commit
 
-**功能描述**：从远程更新本地所有分支代码到最新的Commit, 如果执行命令前本地仓库有变更会自动执行 `stash` 操作;
+**功能描述**: 从远程更新本地所有分支代码到最新的Commit, 如果执行命令前本地仓库有变更会自动执行 `stash` 操作;
 **命令格式**: `just pull-all`
-**参数说明**：N/A
+**参数说明**: N/A
 **使用举例**: Try `just pull-all` in your git repo.
 
 ### 11. [Git] Git 远程分支重命名
 
-**功能描述**：Git 远程分支重命名, 重命名成功之后会删除旧的分支
+**功能描述**: Git 远程分支重命名, 重命名成功之后会删除旧的分支
 **命令格式**: `just rename-branch from=('') to=('') remote=('origin')`
-**参数说明**：
+**参数说明**:
 - `from`: 必填，待重命名的分支名，旧分支名所对应分支应该存在于本地或者远程;
 - `to`: 必填，重命名之后新的分支名称, 新分支名所对应分支应该是本地和远程都不存在的;
 - `remote`: 可选，远程仓库地址对应的 alias 名称，默认值 `origin`;
@@ -296,12 +296,12 @@ just rename-branch feature/old feature/new
 
 ### 12. [二开] 显示标品二开仓库的远程分支及Tag信息
 
-**功能描述**：
+**功能描述**:
 
 显示标品二开仓库的所有Tag及其对应创建时间，也可以额外显示分支及其最后提交时间，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `REDEV_REPO_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `redevRepoPath` 配置;
 
 **命令格式**: `just ls-redev-refs showBranch=('false')`
-**参数说明**：
+**参数说明**:
 - `showBranch`: 可选，是否显示远程分支信息，默认值 `false`;
 
 **使用举例**:
@@ -314,21 +314,21 @@ just ls-redev-refs true
 
 ### 13. [二开] 更新远程二开仓库代码到本地
 
-**功能描述**：
+**功能描述**:
 **命令格式**: `just `
-**参数说明**：
+**参数说明**:
 **使用举例**:
 
 ### 14. [二开] 给远程二开仓库批量打 Tag
 
-**功能描述**：
+**功能描述**:
 **命令格式**: `just `
-**参数说明**：
+**参数说明**:
 **使用举例**:
 
 ## TODO
 
 [] `ls-node` 去除对 `fnm` 的依赖;
-[] `ls-node` 支持对所有 LTS 版本 Node 的查询：`just ls-node v12 true` 查询**12**以后的所有**LTS**版本Node;
+[] `ls-node` 支持对所有 LTS 版本 Node 的查询: `just ls-node v12 true` 查询**12**以后的所有**LTS**版本Node;
 [] 电商里面的`bash`脚本转成基于`nushell`的;
 [] 常用应用安装脚本? 帮助新mac快速配置开发环境;
