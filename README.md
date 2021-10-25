@@ -145,18 +145,21 @@ just dir-batch-exec 'pwd;ncu'
 ### 3. 查询已发布Node版本，支持指定最低版本号
 
 **功能描述**：通过[`fnm`](https://github.com/Schniz/fnm)查询已发布Node版本，支持指定最低版本号, 虽然目前依赖`fnm`, 但是若想去除该依赖是很容易的，以后有需求再说吧。
-**命令格式**: `just ls-node minVer=('12')`
+**命令格式**: `just ls-node minVer=('12') isLts=('false')`
 **参数说明**：
--  `minVer`: 可选，目前只有这一个参数，指定查询`Node.js`的最小起始版本号，可以为空，默认值为 12, 版本号前面可以加`v`也可以不加；
+-  `minVer`: 可选，指定查询`Node.js`的最小起始版本号，可以为空，默认值为 12, 版本号前面可以加`v`也可以不加;
+-  `isLts`: 可选，是否值查询`LTS`版本，可以为空，默认值为`false`;
 
 **使用举例**:
 ```bash
-# 查询`12`以后的已经发布的Node版本号
+# 查询`12`及以后的已经发布的Node版本号
 just ls-node
-# 查询`16`以后的已经发布的Node版本号
+# 查询`16`及以后的已经发布的Node版本号
 just ls-node 16
 # OR
 just ls-node v16
+# 查询`12`及以后已经发布的Node LTS 版本号
+just ls-node 12 true
 ```
 
 ### 4. 显示本机安装应用版本及环境变量相关信息
@@ -249,10 +252,19 @@ just git-batch-reset 2 develop feature/latest
 
 ### 8. [Git] 显示Git仓库远程地址所有的分支及其最后提交信息
 
-**功能描述**：
-**命令格式**: `just `
+**功能描述**：显示当前Git仓库远程地址所有的分支及其最后提交信息
+**命令格式**: `just git-remote-age remote=('origin') showTag=('false')`
 **参数说明**：
+- `remote`: 可选，远程仓库地址对应的 alias 名称，默认值 `origin`;
+- `showTag`: 可选，是否需要显示仓库已有标签信息，默认值`false`;
+
 **使用举例**:
+```bash
+# 执行该命令前先切换到一个Git仓库
+just git-remote-age
+# 显示远程分支及分支最后提交时间，同时显示已有Tag及其创建时间
+just git-remote-age origin true
+```
 
 ### 9. [Git] Git Push Hook自动将代码同步到多个目标仓库
 
@@ -270,17 +282,35 @@ just git-batch-reset 2 develop feature/latest
 
 ### 11. [Git] Git 远程分支重命名
 
-**功能描述**：
-**命令格式**: `just `
+**功能描述**：Git 远程分支重命名, 重命名成功之后会删除旧的分支
+**命令格式**: `just rename-branch from=('') to=('') remote=('origin')`
 **参数说明**：
+- `from`: 必填，待重命名的分支名，旧分支名所对应分支应该存在于本地或者远程;
+- `to`: 必填，重命名之后新的分支名称, 新分支名所对应分支应该是本地和远程都不存在的;
+- `remote`: 可选，远程仓库地址对应的 alias 名称，默认值 `origin`;
+
 **使用举例**:
+```bash
+just rename-branch feature/old feature/new
+```
 
 ### 12. [二开] 显示标品二开仓库的远程分支及Tag信息
 
 **功能描述**：
-**命令格式**: `just `
+
+显示标品二开仓库的所有Tag及其对应创建时间，也可以额外显示分支及其最后提交时间，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `REDEV_REPO_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `redevRepoPath` 配置;
+
+**命令格式**: `just ls-redev-refs showBranch=('false')`
 **参数说明**：
+- `showBranch`: 可选，是否显示远程分支信息，默认值 `false`;
+
 **使用举例**:
+```bash
+# 仅显示所有Tag及其对应创建时间信息
+just ls-redev-refs
+# 同时显示二开仓库Tag及分支信息
+just ls-redev-refs true
+```
 
 ### 13. [二开] 更新远程二开仓库代码到本地
 
