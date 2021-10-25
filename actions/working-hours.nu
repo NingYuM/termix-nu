@@ -8,8 +8,13 @@
 
 def 'working-hours' [] {
     let emp = (open $'($nu.env.TERMIX_DIR)/termix.toml' | get empWorkingHour)
+    # 先从环境变量里面查找用户在 emp Cookie 里面的登陆信息
+    let empUserCookie = (get-env EMP_UC_COOKIE)
+    let userCookie = ($emp.cookie | str find-replace '_EMP_UC_COOKIE_' $empUserCookie)
+    let weekNo = ([(date now)] | dataframe to-df | dataframe get-week).0
+    let payload = ($emp.payload | str find-replace '_week_no_' $'($weekNo)')
     # Week No of now: [(date now)] | dataframe to-df | dataframe get-week
-    let hours = (curl $emp.url -H $emp.type -H $emp.cookie -s --data-raw $emp.payload | str collect)
+    let hours = (curl $emp.url -H $emp.type -H $userCookie -s --data-raw $payload | str collect)
     let data = ($hours | query json 'res.data')
     # echo ($data | reject id isDeleted week year createdAt updatedAt updatedBy createdBy)
     $'(char nl)  (ansi p)'

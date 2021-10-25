@@ -96,7 +96,8 @@ ls-node minVer=('12') isLts=('false'): _nu-ver-check
 
 # 查询电商前端团队本周工时填报情况
 emp: _nu-ver-check
-  @source {{ join(_termix, join('actions', 'working-hours.nu')) }}; \
+  @source {{ join(_termix, join('utils', 'common.nu')) }}; \
+    source {{ join(_termix, join('actions', 'working-hours.nu')) }}; \
     working-hours
 
 # t pull-redev true
