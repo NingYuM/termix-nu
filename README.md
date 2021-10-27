@@ -268,9 +268,8 @@ just git-remote-age origin true
 
 ### 9. [Git] Git Push Hook自动将代码同步到多个目标仓库
 
-**功能描述**:
-**命令格式**: `just `
-**参数说明**:
+**功能描述**: 通过Git Pre Push Hook在将指定分支Push到远程的时候自动将对应分支同步到多个目标仓库，该命令应该通过 Git Hook 自动调用，不建议手工调用；
+**命令格式**: `just git-sync-branch localRef localOid remoteRef`
 **使用举例**:
 
 ### 10. [Git] 从远程更新本地所有分支代码到最新的Commit
@@ -314,15 +313,43 @@ just ls-redev-refs true
 
 ### 13. [二开] 更新远程二开仓库代码到本地
 
-**功能描述**:
-**命令格式**: `just `
+**功能描述**: 更新远程二开仓库代码到本地，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `REDEV_REPO_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `redevRepoPath` 配置;
+**命令格式**: `just pull-redev branch=('master') diff=('false')`
 **参数说明**:
+- `branch`: 可选，需要更新代码的二开分支，默认值 `master`；
+- `diff`: 可选，是否显示与指定Tag相比变化的文件，默认值 `false`，待比较的Tag可以在 .env 环境变量里面通过`REDEV_PREV_TAG`变量指定;
+
 **使用举例**:
+```bash
+# 更新二开master分支代码到本地，不显示变化的文件列表
+just pull-redev
+# 更新二开develop分支代码到本地，并显示变化的文件名列表
+just pull-redev develop true
+```
 
 ### 14. [二开] 给远程二开仓库批量打 Tag
 
-**功能描述**:
-**命令格式**: `just `
+**功能描述**: 给远程二开仓库指定分支批量打 Tag, 也可以用于删除指定Tag
+**命令格式**: `just tag-redev tag=('') branch=('master') delete=('false')`
+**参数说明**:
+- `tag`: 必填，需要新增的Tag前缀，创建Tag的时候默认会加上日期信息，比如当指定Tag为`v2.2.0`的时候实际生成的可能为`v2.2.0-2021.10.27`；
+- `branch`: 可选，需要打Tag的二开分支，默认值 `master`；
+- `delete`: 可选，`true`表示删除指定Tag且不重新添加对应Tag，默认值 `false` 表示Tag不存在则新增Tag，存在则先删除再新增;
+
+**使用举例**:
+```bash
+# 从二开仓库master分支创建新的Tag，比如 `v2.2.0-2021.10.27`
+just tag-redev v2.2.0
+# 删除`v2.2.0`对应的当天的Tag
+just tag-redev v2.2.0 master true
+# 从二开仓库develop分支创建新的Tag `v2.5.0`
+just tag-redev v2.5.0 develop
+```
+
+### 15. 查看团队成员当前EMP工时填报情况
+
+**功能描述**: 查看团队成员当前EMP工时填报情况
+**命令格式**: `just emp`
 **参数说明**:
 **使用举例**:
 
