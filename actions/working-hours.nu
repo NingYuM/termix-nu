@@ -24,7 +24,8 @@ def 'working-hours' [] {
     let weekDay = ([(date now)] | dataframe to-df | dataframe get-weekday).0
     # 正常情况下一周工作 5 天
     let total = (if $weekDay > 5 { 5 } { $weekDay + 1 })
-    let payload = ($emp.payload | str find-replace '_week_no_' $'($weekNo)' | str find-replace '_current_year_' $'($year)')
+    let payload = ($emp.payload | str find-replace '_week_no_' $'($weekNo)' |
+        str find-replace '_outer_id_' $'($outerId)' | str find-replace '_current_year_' $'($year)' )
     # Week No of now: [(date now)] | dataframe to-df | dataframe get-week
     let hours = (curl $emp.url -H $emp.type -H $userCookie -s --data-raw $payload | str collect)
     let data = ($hours | query json 'res.data')

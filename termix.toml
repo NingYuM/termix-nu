@@ -53,7 +53,7 @@ redevRepos = [
 url = 'https://gateway.app.terminus.io/compass/emp/emp-project/api/trantor/data-source'
 type = 'Content-Type: application/json'
 cookie = 'Cookie: emp_u_c_local=_EMP_UC_COOKIE_'
-payload = '{"targetModel":"emp_project_WeekWorkTime","queryValues":{"outerId":{"type":"One","value":420597347},"year":{"type":"One","value":_current_year_},"week":{"type":"One","value":_week_no_}},"dataSource":{"actionKey":"emp_project_WeekWorkTime_departmentWorkTimeList"}}'
+payload = '{"targetModel":"emp_project_WeekWorkTime","queryValues":{"outerId":{"type":"One","value":_outer_id_},"year":{"type":"One","value":_current_year_},"week":{"type":"One","value":_week_no_}},"dataSource":{"actionKey":"emp_project_WeekWorkTime_departmentWorkTimeList"}}'
 
 # Set currentSelected to change the shell to execute the command
 # 'SHELL_TO_RUN_CMD' var in .env has higher priority
