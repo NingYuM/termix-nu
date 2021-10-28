@@ -2,6 +2,7 @@
 # Created: 2021/10/05 12:06:56
 # Description: List remote node version, min version supported
 # [√] List All LTS versions
+# [√] List All node versions that greater or equal to minVer
 # Ref: https://nodejs.org/dist/index.json
 # Usage:
 #   t ls-node
@@ -12,6 +13,7 @@ def 'ls-node-remote' [
     minVer?: string  # The node version you want to query
     isLts: string    # Filter the node versions that are LTS
 ] {
+    # brew install fnm to install it, see: https://github.com/Schniz/fnm
     let installed = ((which fnm | length) > 0)
     let minVersion = (if ($minVer | empty?) { 10 } { ($minVer | str find-replace 'v' '' | into int) })
     if $installed {}  {
