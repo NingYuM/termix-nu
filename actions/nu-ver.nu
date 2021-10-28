@@ -5,6 +5,7 @@
 #   nu-ver
 
 def 'nu-ver' [] {
+
     let currentVer = ((version).version)
     let minVer = (open $'($nu.env.TERMIX_DIR)/termix.toml' | get minNuVer)
     let m = ($minVer | split row '.' | each { $it | into int })

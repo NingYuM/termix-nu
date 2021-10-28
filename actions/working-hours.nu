@@ -7,6 +7,7 @@
 #   https://gateway.app.terminus.io/compass/emp/emp-project/api/trantor/data-source
 
 def 'working-hours' [] {
+
     let emp = (open $'($nu.env.TERMIX_DIR)/termix.toml' | get empWorkingHour)
     let outerId = (get-env EMP_OUTER_ID '')
     # 先从环境变量里面查找用户在 emp Cookie 里面的登陆信息

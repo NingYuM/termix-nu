@@ -17,6 +17,7 @@ def 'git branch-rename' [
   to: string        # The new branch name to rename to
   remote?: string   # Remote alias name, 'origin' by default
 ] {
+
   let remoteAlias = (if ($remote | empty?) { 'origin' } { $remote })
   git fetch $remoteAlias -p
 

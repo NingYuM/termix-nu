@@ -10,6 +10,7 @@ def 'git batch-reset' [
   count: int        # The commit count to reset for specified branches
   branches: string  # The branches to do reset, default all local branches
 ] {
+
   let dest = ($branches | str trim | split row ' ' | compact)
   if ($branches | str trim | empty?) {
     $'You did not specify any branches to do reset, bye...(char nl)'
