@@ -8,17 +8,23 @@
 
 def 'working-hours' [] {
     let emp = (open $'($nu.env.TERMIX_DIR)/termix.toml' | get empWorkingHour)
+    let outerId = (get-env EMP_OUTER_ID '')
     # 先从环境变量里面查找用户在 emp Cookie 里面的登陆信息
-    let empUserCookie = (get-env EMP_UC_COOKIE)
+    let empUserCookie = (get-env EMP_UC_COOKIE '')
+    if ($outerId == '' || $empUserCookie == '') {
+      $'(ansi r)Not enough parameters, make sure you have set the EMP_UC_COOKIE and EMP_OUTER_ID var in .env file, bye...(char nl)(ansi reset)'
+      exit --now
+    } {}
     let title = (get-env EMP_WORKING_HOUR_TITLE '本周工时填报')
     let userCookie = ($emp.cookie | str find-replace '_EMP_UC_COOKIE_' $empUserCookie)
+    let year = (date to-table).year
     # 当前是一年中的第几周
     let weekNo = ([(date now)] | dataframe to-df | dataframe get-week).0
     # 此刻是一周中的第几天，周一为第 0 天
     let weekDay = ([(date now)] | dataframe to-df | dataframe get-weekday).0
     # 正常情况下一周工作 5 天
     let total = (if $weekDay > 5 { 5 } { $weekDay + 1 })
-    let payload = ($emp.payload | str find-replace '_week_no_' $'($weekNo)')
+    let payload = ($emp.payload | str find-replace '_week_no_' $'($weekNo)' | str find-replace '_current_year_' $'($year)')
     # Week No of now: [(date now)] | dataframe to-df | dataframe get-week
     let hours = (curl $emp.url -H $emp.type -H $userCookie -s --data-raw $payload | str collect)
     let data = ($hours | query json 'res.data')
