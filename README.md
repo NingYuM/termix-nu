@@ -39,7 +39,7 @@ winget install Nushell.Nushell
 ```bash
 # Change the version number to the latest one
 cargo +stable install nu --all-features --version 0.38.0
-# Simplified version
+# Or use this Simplified version
 cargo install nu --features=extra
 ```
 
@@ -311,7 +311,7 @@ just tag-redev v2.5.0 develop
 
 **功能描述**: 查看团队成员当前EMP工时填报情况
 **命令格式**: `just emp`
-**参数说明**:
+**配置说明**:
 **使用举例**:
 
 ## TODO

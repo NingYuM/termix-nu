@@ -10,6 +10,7 @@ def 'working-hours' [] {
     let emp = (open $'($nu.env.TERMIX_DIR)/termix.toml' | get empWorkingHour)
     # 先从环境变量里面查找用户在 emp Cookie 里面的登陆信息
     let empUserCookie = (get-env EMP_UC_COOKIE)
+    let title = (get-env EMP_WORKING_HOUR_TITLE '本周工时填报')
     let userCookie = ($emp.cookie | str find-replace '_EMP_UC_COOKIE_' $empUserCookie)
     # 当前是一年中的第几周
     let weekNo = ([(date now)] | dataframe to-df | dataframe get-week).0
@@ -23,7 +24,7 @@ def 'working-hours' [] {
     let data = ($hours | query json 'res.data')
     # echo ($data | reject id isDeleted week year createdAt updatedAt updatedBy createdBy)
     $'(char nl)  (ansi p)'
-    $'-------------------------> 电商前端本周工时填报 <-------------------------'
+    $'-------------------------> ($title) <-------------------------'
     $'(ansi reset)(char nl)(char nl)'
     $data |
       select staff.name mondayWorkTime tuesdayWorkTime wednesdayWorkTime thursdayWorkTime fridayWorkTime week leavePercentage |
