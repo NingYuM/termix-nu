@@ -169,43 +169,7 @@ just ls-node 12 true
 **参数说明**: N/A
 **使用举例**: Run `just show-env`
 **输出样例**:
-```bash
-➜  termix-nu git:(docs) ✗ just show-env
-  #         nu-ver                                value
-─────────────────────────────────────────────────────────────────────────────────
-  0   version              0.38.0
-  1   build_os             macos-x86_64
-  2   rust_version         rustc 1.55.0 (c8dfcfe04 2021-09-06)
-  3   rust_channel         stable-x86_64-apple-darwin (default)
-  4   cargo_version        cargo 1.55.0 (32da73ab1 2021-08-23)
-  5   pkg_version          0.38.0
-  6   build_time           2021-10-06 07:12:31 +08:00
-  7   build_rust_channel   release
-  8   features             clipboard-cli, ctrlc, dataframe, default, rustyline,
-                           term, trash, uuid, which, zip
-  9   installed_plugins    binaryview, chart bar, chart line, fetch, from bson,
-                           from sqlite, inc, match, post, ps, query json, s3,
-                           selector, start, sys, textview, to bson, to sqlite,
-                           tree, xpath
-
-  #          name                               value
-─────────────────────────────────────────────────────────────────────────────
-   0   Git                2.33.1
-   1   Fnm                1.27.0
-   2   Just               0.10.2
-   3   Herd               1.1.11
-   4   Node               16.11.1
-   5   Npm                8.0.0
-   6   Yarn               1.22.11
-   7   Termix             2.2.1
-   8   -------            --------
-   9   SHELL_TO_RUN_CMD   bash
-  10   JUST_FILE          /Users/abc/termix-nu/Justfile
-  11   REDEV_REPO_PATH    /Users/abc/redev-repos
-  12   TERMIX_DIR         /Users/abc/termix-nu
-  13   JUST_INVOKE_DIR    /Users/abc/termix-nu
-  14   Current Time       2021/10/19 19:53:27
-```
+![Show-Env Output](https://img.alicdn.com/imgextra/i2/O1CN01fOhVIk1vNKTl9ubIz_!!6000000006160-2-tps-902-944.png)
 
 ### 5. [Git] 查看本地Git仓库的分支及其最后提交时间
 
@@ -214,13 +178,7 @@ just ls-node 12 true
 **参数说明**: N/A
 **使用举例**: Run `just git-age` in a git repo.
 **输出样例**:
-```bash
-  #    name      last-commit
-───────────────────────────────
-  0   develop   4 hours ago
-  1   master    4 hours ago
-  2   docs      2 minutes ago
-```
+![Git-Age Output](https://img.alicdn.com/imgextra/i1/O1CN01TSmh2F1ImH2PuFvU0_!!6000000000935-2-tps-476-190.png)
 
 ### 6. [Git] 在Git指定分支上批量执行特定命令
 
@@ -249,6 +207,9 @@ just git-batch-exec 'git cherry-pick abcxyzuvw; git push' develop feature/latest
 # 将 develop feature/latest 两个分支上的代码硬回滚2个commit
 just git-batch-reset 2 develop feature/latest
 ```
+
+**输出样例**:
+![Git-Remote-Age Output](https://img.alicdn.com/imgextra/i3/O1CN01Nif5F31Bun5nC7Fpl_!!6000000000006-2-tps-561-249.png)
 
 ### 8. [Git] 显示Git仓库远程地址所有的分支及其最后提交信息
 
