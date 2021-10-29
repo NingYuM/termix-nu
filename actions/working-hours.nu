@@ -31,6 +31,7 @@ def 'working-hours' [
         str find-replace '_outer_id_' $'($outerId)' | str find-replace '_current_year_' $'($year)' )
     # Week No of now: [(date now)] | dataframe to-df | dataframe get-week
     let hours = (curl $emp.url -H $emp.type -H $userCookie -s --data-raw $payload | str collect)
+    # FIXME: 未登录或者Cookie过期提示
     let data = ($hours | query json 'res.data')
     # echo ($data | reject id isDeleted week year createdAt updatedAt updatedBy createdBy)
     $'(char nl)  (ansi p)'
@@ -53,5 +54,5 @@ def 'working-hours' [
       if ( $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8) {
           $'(ansi r)('*' | str lpad -l 6 -c $'(char sp)')(ansi reset)'
       } {}
-    } | sort-by WARN Name
+    } | sort-by -r WARN Name
 }
