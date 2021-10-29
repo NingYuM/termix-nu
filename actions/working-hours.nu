@@ -48,10 +48,11 @@ def 'working-hours' [
       update Leave { |it| $it.Leave * 8 | into int })
 
     let result = (if ($show-all == 'true') { $allMembers } {
-      ($allMembers | where Mon < 8 || Tue < 8 || Wen < 8 || Thu < 8 || Fri < 8)
+      # ($allMembers | where Mon < 8 || Tue < 8 || Wen < 8 || Thu < 8 || Fri < 8)
+      ($allMembers | where { |it| $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8 })
     })
     $result | insert WARN { |it|
-      if ( $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8) {
+      if ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8) {
           $'(ansi r)('*' | str lpad -l 6 -c $'(char sp)')(ansi reset)'
       } {}
     } | sort-by -r WARN Name
