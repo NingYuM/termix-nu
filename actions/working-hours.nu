@@ -53,7 +53,7 @@ def 'working-hours' [
     })
 
     do -i { # Ignore `error: Coercion error`
-      if ($result == $nothing) { $'(ansi g)  Bravo! all filled! Bye...(ansi reset)'; exit --now } {}
+      if ($result == $nothing) { $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; exit --now } {}
     }
 
     $result | insert WARN { |it|
