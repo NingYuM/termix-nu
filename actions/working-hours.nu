@@ -6,7 +6,9 @@
 # Data Source
 #   https://gateway.app.terminus.io/compass/emp/emp-project/api/trantor/data-source
 
-def 'working-hours' [] {
+def 'working-hours' [
+  --show-all: string   # Set true to show all members even if the working hours filled correctly
+] {
 
     let emp = (open $'($nu.env.TERMIX_DIR)/termix.toml' | get empWorkingHour)
     let outerId = (get-env EMP_OUTER_ID '')
@@ -34,7 +36,7 @@ def 'working-hours' [] {
     $'(char nl)  (ansi p)'
     $'-------------------------> ($title) <-------------------------'
     $'(ansi reset)(char nl)(char nl)'
-    $data |
+    let allMembers = ($data |
       select staff.name mondayWorkTime tuesdayWorkTime wednesdayWorkTime thursdayWorkTime fridayWorkTime week leavePercentage |
       rename Name Mon Tue Wen Thu Fri WeekNO. Leave |
       default Mon 0 | update Mon { |it| $it.Mon * 8 | into int } |
@@ -42,11 +44,14 @@ def 'working-hours' [] {
       default Wen 0 | update Wen { |it| $it.Wen * 8 | into int } |
       default Thu 0 | update Thu { |it| $it.Thu * 8 | into int } |
       default Fri 0 | update Fri { |it| $it.Fri * 8 | into int } |
-      update Leave { |it| $it.Leave * 8 | into int } |
-      where Mon < 8 || Tue < 8 || Wen < 8 || Thu < 8 || Fri < 8 |
-      insert WARN { |it|
-        if ( $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8) {
-            $'(ansi r)('*' | str lpad -l 6 -c $'(char sp)')(ansi reset)'
-        } {}
-      } | sort-by WARN Name
+      update Leave { |it| $it.Leave * 8 | into int })
+
+    let result = (if ($show-all == 'true') { $allMembers } {
+      ($allMembers | where Mon < 8 || Tue < 8 || Wen < 8 || Thu < 8 || Fri < 8)
+    })
+    $result | insert WARN { |it|
+      if ( $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8) {
+          $'(ansi r)('*' | str lpad -l 6 -c $'(char sp)')(ansi reset)'
+      } {}
+    } | sort-by WARN Name
 }

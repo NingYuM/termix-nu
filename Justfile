@@ -95,10 +95,10 @@ ls-node minVer=('12') isLts=('false'): _nu-ver-check
     ls-node-remote {{minVer}} {{isLts}}
 
 # 查询电商前端团队本周工时填报情况
-emp: _nu-ver-check
+emp showAll=('false'): _nu-ver-check
   @source {{ join(_termix, join('utils', 'common.nu')) }}; \
     source {{ join(_termix, join('actions', 'working-hours.nu')) }}; \
-    working-hours
+    working-hours --show-all={{showAll}}
 
 # t pull-redev true
 # 更新远程二开仓库代码到本地
