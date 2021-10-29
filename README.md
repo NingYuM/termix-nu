@@ -5,9 +5,9 @@
 
 :::tip
 既然可以用JS写为什么还要采用 `Nushell`？
-1. 用JS写的脚本在使用前需要安装`node_modules`依赖, 使用上稍有不便，`termix-nu`里面的脚本希望单独把脚本文件发给其他人的时候对方可以直接执行(前提是本机安装过`Nushell`)，另一方面本仓库里面的脚本主要用于日常开发的时候完成一些“微不足道”的小功能: 这些能力看似可有可无，比较杂，且不设限，不适合也没有放到`@terminus/termix`里面的必要;
+1. 用JS写的脚本在使用前需要安装`node_modules`依赖, 使用上稍有不便，`termix-nu`里面的脚本希望单独把脚本文件发给其他人的时候对方可以直接执行(前提是本机安装过`Nushell`)，另一方面本仓库里面的脚本主要用于日常开发的时候完成一些“微不足道”的小功能: 这些能力看似可有可无，比较杂，且不设限，不适合也没有放到`@terminus/termix`里面的必要，它的定位就是**"尽可能地通过脚本化的方式消灭日常开发过程中一切低效、重复的工作"**;
 2. 没有选择`Bash`脚本是因为`Bash`是一种比较糟糕的脚本语言: 阅读维护都不太方便、而且不适合处理结构化的数据，比如JSON、TOML、CSV等等，更重要的是不能跨平台(或者比较有限)；
-3. 选用 `Nushell`则是因为其更加现代、强大、语法更优雅，代码可读性和可维护性有质的提升，天生支持结构化数据、支持多平台，等等；
+3. 选用 `Nushell`则是因为其更加现代、强大、语法更优雅，代码可读性和可维护性有质的提升，天生支持结构化数据、支持多平台等等，至少相比`bash`而言`nushell`是个更好的选择。更多详情可以查看其官网文档: https://www.nushell.sh/ ；
 :::
 
 ## 安装
@@ -37,10 +37,10 @@ winget install Nushell.Nushell
 如果`brew`里面的 `Nushell` 版本没有及时更新可以自己通过 `cargo` 安装最新版:
 
 ```bash
-# Change the version number to the latest one
-cargo +stable install nu --all-features --version 0.38.0
-# Or use this Simplified version
+# Install the latest version of nushell, extra features included.
 cargo install nu --features=extra
+# Install nushell of the specified version
+cargo +stable install nu --all-features --version 0.39.0
 ```
 
 ## 配置
@@ -94,6 +94,8 @@ cargo install nu --features=extra
 
 6. 简化命令行输入
 
+   可以像下面这样建一个alias，这样以后就直接输入`t`就可以了(Task)的简称：
+
    ```bash
     # Edit ~/.zshrc or ~/.bashrc and add:
     alias t="just --justfile ~/.justfile --working-directory ."
@@ -105,7 +107,7 @@ cargo install nu --features=extra
 ```bash
 .
 ├── Justfile      # `Just` 配置文件
-├── README.md
+├── README.md     # 本文件
 ├── actions       # 非 Git 相关脚本，通过 `just` 管理
 ├── git           # Git 仓库相关脚本，通过 `just` 管理
 ├── mall          # 电商标品里面的脚本，目前还在建设中...
@@ -119,7 +121,7 @@ cargo install nu --features=extra
 ## 使用说明
 
 直接在`termix-nu`目录执行`just`命令即可列出所有可用命令及其参数。命令支持`tab`键自动补全，所以不用全部输完的哈。
-`just`本身也支持定义**alias**, 不过考虑到alias记起来比较麻烦，而且由于已经支持自动补全了，对于alias的需求就没那么迫切了，所以把alias注释掉了，需要的可以自己改下。
+`just`本身也支持定义**alias**, 不过考虑到alias记起来比较麻烦，而且由于已经支持自动补全了，对于alias的需求就没那么迫切了，所以把alias注释掉了，需要的可以在`Justfile`里面自己改下。
 
 ### 1. 查询本地 `termix-nu` 的版本号
 
@@ -130,7 +132,7 @@ cargo install nu --features=extra
 **功能描述**: 在指定目录里面执行特定命令，如果没有指定目录则会在当前目录的所有子目录内执行对应命令
 **命令格式**: `just dir-batch-exec cmd +DIRS=('')`
 **参数说明**:
-- `cmd`: 必填，待执行的命令，如果有空格需要用引号包裹，`cmd`参数对应命令默认通过`bash`执行(默认值在 `termix.toml` 的 `shellToRunCmd.currentSelected`里面指定)，如果你需要更改命令解释、执行器可以修改`.env`里面的`SHELL_TO_RUN_CMD`环境变量;
+- `cmd`: 必填，待执行的命令，如果有空格需要用引号包裹，`cmd`参数对应命令默认通过`bash`执行(默认值在 `termix.toml` 的 `shellToRunCmd.currentSelected`里面指定)，如果你需要更改命令解释、执行器可以修改`.env`里面的`SHELL_TO_RUN_CMD`环境变量，可选值：`nu`/`sh`/`cmd`/`zsh`/`fish`/`node`/`bash`/`python3`/`powershell`等;
 - `DIRS`: 可选，需要执行上述命令的目录，目录可以指定一个或者多个，多个目录中间用空格隔开，也可以为空，为空则会在当前目录的所有子目录内执行对应命令;
 
 **使用举例**:
@@ -148,7 +150,7 @@ just dir-batch-exec 'pwd;ncu'
 **命令格式**: `just ls-node minVer=('12') isLts=('false')`
 **参数说明**:
 -  `minVer`: 可选，指定查询`Node.js`的最小起始版本号，可以为空，默认值为 12, 版本号前面可以加`v`也可以不加;
--  `isLts`: 可选，是否值查询`LTS`版本，可以为空，默认值为`false`;
+-  `isLts`: 可选，是否只查询`LTS`版本，可以为空，默认值为`false`;
 
 **使用举例**:
 ```bash
@@ -185,7 +187,7 @@ just ls-node 12 true
 **功能描述**: 在指定Git分支上执行指定命令
 **命令格式**: `just git-batch-exec cmd +branches=('')`
 **参数说明**:
-- `cmd`: 必填，待执行的命令，如果有空格需要用引号包裹，`cmd`参数对应命令默认通过`bash`执行(默认值在 `termix.toml` 的 `shellToRunCmd.currentSelected`里面指定)，如果你需要更改命令解释、执行器可以修改`.env`里面的`SHELL_TO_RUN_CMD`环境变量;
+- `cmd`: 必填，待执行的命令，如果有空格需要用引号包裹，`cmd`参数对应命令默认通过`bash`执行(默认值在 `termix.toml` 的 `shellToRunCmd.currentSelected`里面指定)，如果你需要更改命令解释、执行器可以修改`.env`里面的`SHELL_TO_RUN_CMD`环境变量，可选值：`nu`/`sh`/`cmd`/`zsh`/`fish`/`node`/`bash`/`python3`/`powershell`等;
 - `branches`: 必填，需要执行上述命令的分支，分支可以指定一个或者多个，多个分支中间用空格隔开；
 
 **使用举例**:
@@ -208,9 +210,6 @@ just git-batch-exec 'git cherry-pick abcxyzuvw; git push' develop feature/latest
 just git-batch-reset 2 develop feature/latest
 ```
 
-**输出样例**:
-![Git-Remote-Age Output](https://img.alicdn.com/imgextra/i3/O1CN01Nif5F31Bun5nC7Fpl_!!6000000000006-2-tps-561-249.png)
-
 ### 8. [Git] 显示Git仓库远程地址所有的分支及其最后提交信息
 
 **功能描述**: 显示当前Git仓库远程地址所有的分支及其最后提交信息
@@ -226,12 +225,16 @@ just git-remote-age
 # 显示远程分支及分支最后提交时间，同时显示已有Tag及其创建时间
 just git-remote-age origin true
 ```
+**输出样例**:
+![Git-Remote-Age Output](https://img.alicdn.com/imgextra/i3/O1CN01Nif5F31Bun5nC7Fpl_!!6000000000006-2-tps-561-249.png)
 
 ### 9. [Git] Git Push Hook自动将代码同步到多个目标仓库
 
 **功能描述**: 通过Git Pre Push Hook在将指定分支Push到远程的时候自动将对应分支同步到多个目标仓库，该命令应该通过 Git Hook 自动调用，不建议手工调用；
 **命令格式**: `just git-sync-branch localRef localOid remoteRef`
-**使用举例**:
+**使用场景**:
+由于前端代码需要部署多个环境，比如PC端可能需要部署Mix、BBC、CE等环境，而且PC端的业务包括国内和海外，移动端也类似，在这种情况下如果要求开发在提交代码后手工推到各个仓库就太麻烦了，而且也很容易遗漏。当前是通过Erda的Pipeline进行代码自动同步的，这个已经不需要手工去操作了，但是发现个问题：如果要同步的目标仓库很多的话一方面耗时比较大、另一方面经常会因为服务器资源紧张而导致同步失败，即便可以成功这个同步耗时普遍也要3分钟以上，所以可以通过**Git Pre Push Hook**当开发将代码推到源码仓库的时候会自动根据配置文件顺便把代码推送到其他目的仓库，这样代码同步时间就可以缩短到秒级，而开发的代码推送关注点仍然只有一个。
+**配置步骤**:
 
 ### 10. [Git] 从远程更新本地所有分支代码到最新的Commit
 
@@ -317,6 +320,5 @@ just tag-redev v2.5.0 develop
 ## TODO
 
 [] `ls-node` 去除对 `fnm` 的依赖;
-[] `ls-node` 支持对所有 LTS 版本 Node 的查询: `just ls-node v12 true` 查询**12**以后的所有**LTS**版本Node;
 [] 电商里面的`bash`脚本转成基于`nushell`的;
 [] 常用应用安装脚本? 帮助新mac快速配置开发环境;
