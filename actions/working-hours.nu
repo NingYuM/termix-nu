@@ -51,7 +51,11 @@ def 'working-hours' [
       # ($allMembers | where Mon < 8 || Tue < 8 || Wen < 8 || Thu < 8 || Fri < 8)
       ($allMembers | where { |it| $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8 })
     })
-    if ($result | empty?) { $'(ansi g)  Bravo! all filled! Bye...(ansi reset)'; exit --now } {}
+
+    do -i { # Ignore `error: Coercion error`
+      if ($result == $nothing) { $'(ansi g)  Bravo! all filled! Bye...(ansi reset)'; exit --now } {}
+    }
+
     $result | insert WARN { |it|
       if ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8) {
           $'(ansi r)('*' | str lpad -l 6 -c $'(char sp)')(ansi reset)'
