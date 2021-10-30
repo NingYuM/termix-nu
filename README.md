@@ -127,6 +127,10 @@ cargo +stable install nu --all-features --version 0.39.0
 
 可以通过 `just ver` 命令查看本地 `termix-nu` 的版本号;
 
+### 1. 更新 `termix-nu` 到最新版本
+
+可以通过 `just upgrade` 命令更新 `termix-nu` 到最新版本;
+
 ### 2. 指定目录批量执行特定命令
 
 **功能描述**: 在指定目录里面执行特定命令，如果没有指定目录则会在当前目录的所有子目录内执行对应命令

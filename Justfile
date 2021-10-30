@@ -51,6 +51,10 @@ default:
 ver:
   @^echo (open $'($nu.env.TERMIX_DIR)/termix.toml' | get version)
 
+# Upgrade termix-nu repo to the latest version
+upgrade:
+  @cd {{_termix}}; git checkout master; git pull;
+
 # Listing the branches of a git repo and the time of the last commit
 git-age: _nu-ver-check
   @# The following two statement must be written in one line
