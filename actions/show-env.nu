@@ -24,21 +24,21 @@ def 'show-env' [] {
   ^echo (nu -c 'version | pivot | rename nu-ver value')
 
   echo [
-      [name, value];
-      ['Git', $gitVer]
-      ['Fnm', $fnmVer]
-      ['Just', $justVer]
-      ['Herd', $herdVer]
-      ['Node', $nodeVer]
-      ['Npm', $npmVer]
-      ['Yarn', $yarnVer]
-      ['Termix', $termixVer]
-      ['-------', '--------']
-      ['SHELL_TO_RUN_CMD', $shell]
-      ['JUST_FILE', $justFile]
-      ['REDEV_REPO_PATH', $redevPath]
-      ['TERMIX_DIR', $termixDir]
-      ['JUST_INVOKE_DIR', $justInvokeDir]
-      ['Current Time', $time]
-    ]
+    [name, value];
+    ['Git', $gitVer]
+    ['Fnm', $fnmVer]
+    ['Just', $justVer]
+    ['Herd', $herdVer]
+    ['Node', $nodeVer]
+    ['Npm', $npmVer]
+    ['Yarn', $yarnVer]
+    ['Termix', $termixVer]
+    ['-------', '--------']
+    ['SHELL_TO_RUN_CMD', $shell]
+    ['JUST_FILE', $justFile]
+    ['REDEV_REPO_PATH', $redevPath]
+    ['TERMIX_DIR', $termixDir]
+    ['JUST_INVOKE_DIR', $justInvokeDir]
+    ['Current Time', $time]
+  ]
 }
