@@ -44,15 +44,15 @@ JUST_INVOKE_DIR := replace(replace(invocation_directory(), '/', _s), '\d\', 'D:\
 # default: (sh-cmd "main")
 
 # List available commands by default
-default:
+default: _nu-ver-check
   @just --list --list-prefix '··· '
 
 # Display termix current version number
-ver:
+ver: _nu-ver-check
   @^echo (open $'($nu.env.TERMIX_DIR)/termix.toml' | get version)
 
 # Upgrade termix-nu repo to the latest version
-upgrade:
+upgrade: _nu-ver-check
   @cd {{_termix}}; git checkout master; git pull;
 
 # Listing the branches of a git repo and the time of the last commit
