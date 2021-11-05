@@ -76,7 +76,7 @@ cargo +stable install nu --all-features --version 0.39.0
     ··· ver                           # Display termix current version number
    ```
 
-5. 如果你希望在本机任意位置都可以使用`termix-nu`提供的功能，需要建立软连接:
+4. 如果你希望在本机任意位置都可以使用`termix-nu`提供的功能，需要建立软连接:
 
    ```bash
     # Mac or Linux
@@ -92,7 +92,7 @@ cargo +stable install nu --all-features --version 0.39.0
     gsudo New-Item -ItemType SymbolicLink -Path "D:\.justfile" -Target "D:\Data\iWork\termix-nu\Justfile"
    ```
 
-6. 简化命令行输入
+5. 简化命令行输入
 
    可以像下面这样建一个alias，这样以后就直接输入`t`就可以了(Task)的简称：
 
@@ -127,11 +127,11 @@ cargo +stable install nu --all-features --version 0.39.0
 
 可以通过 `just ver` 命令查看本地 `termix-nu` 的版本号;
 
-### 1. 更新 `termix-nu` 到最新版本
+### 2. 更新 `termix-nu` 到最新版本
 
 可以通过 `just upgrade` 命令更新 `termix-nu` 到最新版本;
 
-### 2. 指定目录批量执行特定命令
+### 3. 指定目录批量执行特定命令
 
 **功能描述**: 在指定目录里面执行特定命令，如果没有指定目录则会在当前目录的所有子目录内执行对应命令
 **命令格式**: `just dir-batch-exec cmd +DIRS=('')`
@@ -148,7 +148,7 @@ cd ./mall-base/packages;
 just dir-batch-exec 'pwd;ncu'
 ```
 
-### 3. 查询已发布Node版本，支持指定最低版本号
+### 4. 查询已发布Node版本，支持指定最低版本号
 
 **功能描述**: 通过[`fnm`](https://github.com/Schniz/fnm)查询已发布Node版本，支持指定最低版本号, 虽然目前依赖`fnm`, 但是若想去除该依赖是很容易的，以后有需求再说吧。
 **命令格式**: `just ls-node minVer=('12') isLts=('false')`
@@ -168,7 +168,7 @@ just ls-node v16
 just ls-node 12 true
 ```
 
-### 4. 显示本机安装应用版本及环境变量相关信息
+### 5. 显示本机安装应用版本及环境变量相关信息
 
 **功能描述**: 显示本机安装应用版本及环境变量相关信息, 这个主要方便排查问题
 **命令格式**: `just show-env`
@@ -177,7 +177,7 @@ just ls-node 12 true
 **输出样例**:
 ![Show-Env Output](https://img.alicdn.com/imgextra/i2/O1CN01fOhVIk1vNKTl9ubIz_!!6000000006160-2-tps-902-944.png)
 
-### 5. [Git] 查看本地Git仓库的分支及其最后提交时间
+### 6. [Git] 查看本地Git仓库的分支及其最后提交时间
 
 **功能描述**: 查看本地Git仓库的分支及其最后提交时间, 按最后提交时间升序排序
 **命令格式**: `just git-age`
@@ -186,7 +186,7 @@ just ls-node 12 true
 **输出样例**:
 ![Git-Age Output](https://img.alicdn.com/imgextra/i1/O1CN01TSmh2F1ImH2PuFvU0_!!6000000000935-2-tps-476-190.png)
 
-### 6. [Git] 在Git指定分支上批量执行特定命令
+### 7. [Git] 在Git指定分支上批量执行特定命令
 
 **功能描述**: 在指定Git分支上执行指定命令
 **命令格式**: `just git-batch-exec cmd +branches=('')`
@@ -200,7 +200,7 @@ just ls-node 12 true
 just git-batch-exec 'git cherry-pick abcxyzuvw; git push' develop feature/latest
 ```
 
-### 7. [Git] 将指定Git分支硬回滚N个commit
+### 8. [Git] 将指定Git分支硬回滚N个commit
 
 **功能描述**: 将指定Git分支硬回滚N个Commit, 这个命令的使用场景可能不是很多，当时是为了测试后面的 `just pull-all` 用的前置命令
 **命令格式**: `just git-batch-reset n +branches=('')`
@@ -214,7 +214,7 @@ just git-batch-exec 'git cherry-pick abcxyzuvw; git push' develop feature/latest
 just git-batch-reset 2 develop feature/latest
 ```
 
-### 8. [Git] 显示Git仓库远程地址所有的分支及其最后提交信息
+### 9. [Git] 显示Git仓库远程地址所有的分支及其最后提交信息
 
 **功能描述**: 显示当前Git仓库远程地址所有的分支及其最后提交信息
 **命令格式**: `just git-remote-age remote=('origin') showTag=('false')`
@@ -232,7 +232,7 @@ just git-remote-age origin true
 **输出样例**:
 ![Git-Remote-Age Output](https://img.alicdn.com/imgextra/i3/O1CN01Nif5F31Bun5nC7Fpl_!!6000000000006-2-tps-561-249.png)
 
-### 9. [Git] Git Push Hook自动将代码同步到多个目标仓库
+### 10. [Git] Git Push Hook自动将代码同步到多个目标仓库
 
 **功能描述**: 通过Git Pre Push Hook在将指定分支Push到远程的时候自动将对应分支同步到多个目标仓库，该命令应该通过 Git Hook 自动调用，不建议手工调用；
 **命令格式**: `just git-sync-branch localRef localOid remoteRef`
@@ -240,14 +240,14 @@ just git-remote-age origin true
 由于前端代码需要部署多个环境，比如PC端可能需要部署Mix、BBC、CE等环境，而且PC端的业务包括国内和海外，移动端也类似，在这种情况下如果要求开发在提交代码后手工推到各个仓库就太麻烦了，而且也很容易遗漏。当前是通过Erda的Pipeline进行代码自动同步的，这个已经不需要手工去操作了，但是发现个问题：如果要同步的目标仓库很多的话一方面耗时比较大、另一方面经常会因为服务器资源紧张而导致同步失败，即便可以成功这个同步耗时普遍也要3分钟以上，所以可以通过**Git Pre Push Hook**当开发将代码推到源码仓库的时候会自动根据配置文件顺便把代码推送到其他目的仓库，这样代码同步时间就可以缩短到秒级，而开发的代码推送关注点仍然只有一个。
 **配置步骤**:
 
-### 10. [Git] 从远程更新本地所有分支代码到最新的Commit
+### 11. [Git] 从远程更新本地所有分支代码到最新的Commit
 
 **功能描述**: 从远程更新本地所有分支代码到最新的Commit, 如果执行命令前本地仓库有变更会自动执行 `stash` 操作;
 **命令格式**: `just pull-all`
 **参数说明**: N/A
 **使用举例**: Try `just pull-all` in your git repo.
 
-### 11. [Git] Git 远程分支重命名
+### 12. [Git] Git 远程分支重命名
 
 **功能描述**: Git 远程分支重命名, 重命名成功之后会删除旧的分支
 **命令格式**: `just rename-branch from=('') to=('') remote=('origin')`
@@ -261,7 +261,7 @@ just git-remote-age origin true
 just rename-branch feature/old feature/new
 ```
 
-### 12. [Git] 查看Git分支描述信息
+### 13. [Git] 查看Git分支描述信息
 
 **功能描述**: 查看Git分支描述信息
 **使用背景**:
@@ -290,7 +290,7 @@ just desc
 just desc develop true
 ```
 
-### 12. [二开] 显示标品二开仓库的远程分支及Tag信息
+### 14. [二开] 显示标品二开仓库的远程分支及Tag信息
 
 **功能描述**:
 
@@ -308,7 +308,7 @@ just ls-redev-refs
 just ls-redev-refs true
 ```
 
-### 13. [二开] 更新远程二开仓库代码到本地
+### 15. [二开] 更新远程二开仓库代码到本地
 
 **功能描述**: 更新远程二开仓库代码到本地，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `REDEV_REPO_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `redevRepoPath` 配置;
 **命令格式**: `just pull-redev branch=('master') diff=('false')`
@@ -324,7 +324,7 @@ just pull-redev
 just pull-redev develop true
 ```
 
-### 14. [二开] 给远程二开仓库批量打 Tag
+### 16. [二开] 给远程二开仓库批量打 Tag
 
 **功能描述**: 给远程二开仓库指定分支批量打 Tag, 也可以用于删除指定Tag
 **命令格式**: `just tag-redev tag=('') branch=('master') delete=('false')`
@@ -343,7 +343,7 @@ just tag-redev v2.2.0 master true
 just tag-redev v2.5.0 develop
 ```
 
-### 15. 查看团队成员当前EMP工时填报情况
+### 17. 查看团队成员当前EMP工时填报情况
 
 **功能描述**: 查看团队成员当前EMP工时填报情况
 **命令格式**: `just emp`
