@@ -31,7 +31,15 @@ def 'working-hours' [
       str find-replace '_outer_id_' $'($outerId)' | str find-replace '_current_year_' $'($year)' )
   # Week No of now: [(date now)] | dataframe to-df | dataframe get-week
   let hours = (curl $emp.url -H $emp.type -H $userCookie -s --data-raw $payload | str collect)
-  # FIXME: 未登录或者Cookie过期提示
+
+  # 未登录或者Cookie过期提示, use `do -i` to ignore 'error: Coercion error'
+  do -i {
+    if (($hours | query json 'status') == 401) {
+      $'(ansi r)Your login COOKIE info is outdated or empty，Please update it and try again!(char nl)(ansi reset)'
+      exit --now
+    } {}
+  }
+
   let data = ($hours | query json 'res.data')
   # echo ($data | reject id isDeleted week year createdAt updatedAt updatedBy createdBy)
   $'(char nl)  (ansi p)'
