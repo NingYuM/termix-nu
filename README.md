@@ -261,6 +261,35 @@ just git-remote-age origin true
 just rename-branch feature/old feature/new
 ```
 
+### 12. [Git] 查看Git分支描述信息
+
+**功能描述**: 查看Git分支描述信息
+**使用背景**:
+
+由于标品仓库分支动辄20~30个甚至更多，为方便分支管理和识别特拟此规范:
+- 新增`i` 分支(information)是唯一可以不用遵循分支命名规范的分支;
+- `i` 分支只有一个文件 d, d 为 description 简称, 这两个名字起得简单主要为了后续操作方便;
+- 初次创建 i 分支: `git checkout --orphan i`, 并在其中添加 d 文件用于对其他分支进行描述;
+- 每一个生命周期超过**5**天的分支都应在 i 分支的唯一文件 d 里面添加该分支的说明，并推送远程;
+- 如果分支被删除或者分支用途发生变更也应该同步更新 i 分支里面的 d 文件;
+- 其他同学可以通过 `git fetch origin i:i` 命令在不改变当前分支的情况下更新 i 分支;
+- 更新完毕后可以在该仓库任意分支任意位置通过此命令查看分支说明: `git show i:d`;
+- 如果不想把 i 分支拉到本地可以在执行`git fetch origin i`后通过`git show origin/i:d`查看;
+- 以上通过`git show`查看分支描述显示的是整个描述文件，找起来还是不方便所以可以通过本工具定向查询
+
+**命令格式**: `just desc branch=(`git branch --show-current`) showNotes=('false')`
+**参数说明**:
+- `branch`: 选填，待查看描述信息的分支名，默认`git branch --show-current`输出的当前分支;
+- `showNotes`: 选填，是否显示分支描述说明文档, `true` 则显示, 默认 `false`;
+
+**使用举例**:
+```bash
+# 查看当前分支描述信息
+just desc
+# 查看 develop 分支描述信息以及分支描述说明文档
+just desc develop true
+```
+
 ### 12. [二开] 显示标品二开仓库的远程分支及Tag信息
 
 **功能描述**:

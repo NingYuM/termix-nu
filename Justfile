@@ -62,6 +62,12 @@ git-age: _nu-ver-check
     source {{ join(_termix, 'git', 'age.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git age {{JUST_INVOKE_DIR}}
 
+# Show branch description from branch description file `d` of `i` branch
+desc branch=(`git branch --show-current`)  showNotes=('false'): _nu-ver-check
+  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+    source {{ join(_termix, 'git', 'branch-desc.nu') }}; \
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; branch-desc {{branch}} --show-notes={{showNotes}}
+
 # Pull all local branches from remote repo
 pull-all: _nu-ver-check
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
