@@ -329,7 +329,7 @@ just pull-redev develop true
 **功能描述**: 给远程二开仓库指定分支批量打 Tag, 也可以用于删除指定Tag
 **命令格式**: `just tag-redev tag=('') branch=('master') delete=('false')`
 **参数说明**:
-- `tag`: 必填，需要新增的Tag前缀，创建Tag的时候默认会加上日期信息，比如当指定Tag为`v2.2.0`的时候实际生成的可能为`v2.2.0-2021.10.27`；
+- `tag`: 必填，需要新增的Tag前缀，创建Tag的时候默认会加上日期信息，比如当指定Tag为`v2.2.0`的时候实际生成的可能为`v2.2.0-2021.10.27`, 也可以自己指定时间戳，如果指定了时间戳则以指定时间戳为准，不再添加默认时间戳；
 - `branch`: 可选，需要打Tag的二开分支，默认值 `master`；
 - `delete`: 可选，`true`表示删除指定Tag且不重新添加对应Tag，默认值 `false` 表示Tag不存在则新增Tag，存在则先删除再新增;
 
@@ -341,6 +341,8 @@ just tag-redev v2.2.0
 just tag-redev v2.2.0 master true
 # 从二开仓库develop分支创建新的Tag `v2.5.0`
 just tag-redev v2.5.0 develop
+# 创建Tag时以给定完整的包含时间戳的Tag名称为准，取代默认添加的时间戳
+just tag-redev v2.2.0.21-2021.11.09 master
 ```
 
 ### 17. 查看团队成员当前EMP工时填报情况
