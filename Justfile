@@ -55,6 +55,11 @@ ver: _nu-ver-check
 upgrade: _nu-ver-check
   @cd {{_termix}}; git checkout master; git pull;
 
+# Quickly open the matched nav url in default browser, for mac only
+go nav=('list'): _nu-ver-check
+  @source {{ join(_termix, 'actions', 'quick-nav.nu') }}; \
+    go {{nav}}
+
 # Listing the branches of a git repo and the time of the last commit
 git-age: _nu-ver-check
   @# The following two statement must be written in one line

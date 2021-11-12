@@ -55,6 +55,26 @@ type = 'Content-Type: application/json'
 cookie = 'Cookie: emp_u_c_local=_EMP_UC_COOKIE_'
 payload = '{"targetModel":"emp_project_WeekWorkTime","queryValues":{"outerId":{"type":"One","value":_outer_id_},"year":{"type":"One","value":_current_year_},"week":{"type":"One","value":_week_no_}},"dataSource":{"actionKey":"emp_project_WeekWorkTime_departmentWorkTimeList"}}'
 
+# 快捷导航
+[quickNavs]
+base = 'https://erda.cloud/terminus/dop/projects/213/apps/4280/repo'
+docs = 'https://erda.cloud/terminus/dop/projects/213/apps/7542/repo'
+nusi-mobile = 'https://erda.cloud/terminus/dop/projects/170/apps/4419/repo'
+src-mall = 'https://erda.cloud/terminus/dop/projects/385/apps/6123/repo'
+src-mobile = 'https://erda.cloud/terminus/dop/projects/385/apps/6125/repo'
+src-picker = 'https://erda.cloud/terminus/dop/projects/385/apps/6388/repo'
+mix-sea = 'https://erda.cloud/terminus/dop/projects/420/apps/7190/repo'
+mix-mall = 'https://erda.cloud/terminus/dop/projects/420/apps/6701/repo'
+mix-mobile = 'https://erda.cloud/terminus/dop/projects/420/apps/6699/repo'
+mix-m-sea = 'https://erda.cloud/terminus/dop/projects/420/apps/7400/repo'
+mix-m-point = 'https://erda.cloud/terminus/dop/projects/420/apps/7807/repo'
+bbc-mall = 'https://erda.cloud/terminus/dop/projects/394/apps/6124/repo'
+bbc-sea = 'https://erda.cloud/terminus/dop/projects/394/apps/6674/repo'
+bbc-mobile = 'https://erda.cloud/terminus/dop/projects/394/apps/6113/repo'
+bbc-m-sea = 'https://erda.cloud/terminus/dop/projects/394/apps/6675/repo'
+bbc-picker = 'https://erda.cloud/terminus/dop/projects/394/apps/6387/repo'
+mix-picker = 'https://erda.cloud/terminus/dop/projects/420/apps/7403/repo'
+
 # Set currentSelected to change the shell to execute the command
 # 'SHELL_TO_RUN_CMD' var in .env has higher priority
 [shellToRunCmd]
