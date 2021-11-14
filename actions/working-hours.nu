@@ -35,7 +35,11 @@ def 'working-hours' [
   # 未登录或者Cookie过期提示, use `do -i` to ignore 'error: Coercion error'
   do -i {
     if (($hours | query json 'status') == 401) {
-      $'(ansi r)Your login COOKIE info is outdated or empty，Please update it and try again!(char nl)(ansi reset)'
+      $'(ansi r)Your login COOKIE info is outdated or empty，please update it and try again!(char nl)(ansi reset)'
+      exit --now
+    } {}
+    if (($hours | query json 'status') == 500) {
+      $'(ansi r)Backend internal server error，please try again later!(char nl)(ansi reset)'
       exit --now
     } {}
   }

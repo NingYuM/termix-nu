@@ -14,6 +14,7 @@ def 'go' [
         $quickNavs | pivot | rename key url
         exit --now
     } {}
+    # FIXME: find from keys only
     let matchs = ($quickNavs | pivot | rename nav url | find $nav-key)
     # Found no match item
     do -i {
