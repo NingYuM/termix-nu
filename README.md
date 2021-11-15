@@ -404,12 +404,24 @@ just tag-redev v2.2.0.21-2021.11.09 master
 ### 17. 查看团队成员当前EMP工时填报情况
 
 **功能描述**: 查看团队成员当前EMP工时填报情况
-**命令格式**: `just emp`
+**命令格式**: `just emp showAll=('false')`
 **配置说明**:
+- `showAll`: 可选参数，是否显示所有成员的填报情况，默认值为`false`，表示只显示当前未填满的成员；
+- `EMP_UC_COOKIE`: 必填, `.env`里面环境变量配置项, EMP `emp_u_c_local` 对应的 Cookie Value, 貌似每周需要更新一次；
+- `EMP_OUTER_ID`: 必填, `.env`里面环境变量配置项, 可以在 emp 查看团队成员工时页面的`/api/trantor/data-source`请求的Request Payload里面找到；
+- `EMP_WORKING_HOUR_TITLE`: 必填, `.env`里面环境变量配置项，控制台输出内容的标题，默认值为"本周工时填报"可以自己按需修改；
+
 **使用举例**:
+```bash
+# 查看本周团队成员当前工时填报情况，只显示截止到当前未全部填报的成员
+just emp
+# 查看当前所有团队成员的工时填报情况，无论是否填满都显示
+just emp true
+```
 
 ## TODO
 
+[] `just emp` 支持团队群接入，自动@工时未填满的团队成员；
 [] `ls-node` 去除对 `fnm` 的依赖;
 [] 电商里面的`bash`脚本转成基于`nushell`的;
 [] 常用应用安装脚本? 帮助新mac快速配置开发环境;
