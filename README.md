@@ -240,6 +240,62 @@ just git-remote-age origin true
 由于前端代码需要部署多个环境，比如PC端可能需要部署Mix、BBC、CE等环境，而且PC端的业务包括国内和海外，移动端也类似，在这种情况下如果要求开发在提交代码后手工推到各个仓库就太麻烦了，而且也很容易遗漏。当前是通过Erda的Pipeline进行代码自动同步的，这个已经不需要手工去操作了，但是发现个问题：如果要同步的目标仓库很多的话一方面耗时比较大、另一方面经常会因为服务器资源紧张而导致同步失败，即便可以成功这个同步耗时普遍也要3分钟以上，所以可以通过**Git Pre Push Hook**当开发将代码推到源码仓库的时候会自动根据配置文件顺便把代码推送到其他目的仓库，这样代码同步时间就可以缩短到秒级，而开发的代码推送关注点仍然只有一个。
 **配置步骤**:
 
+1. 如果项目里面没有配置过[Husky](https://typicode.github.io/husky/#/)需要初始化配置：
+   ```bash
+   # Install husky
+   npm install husky --save-dev
+   # Enable Git hooks
+   npx husky install
+   # To automatically have Git hooks enabled after install, edit package.json
+   # And add `"prepare": "husky install"` to `scripts`
+   ```
+2. 如果项目里面之前正确配置过Husky只需要执行 `npm install`即可
+3. 配置 `pre-push` Hook(只需配置一次，一个人配置完毕后其他成员更新仓库即可), 内容如下:
+   ```bash
+   #!/bin/sh
+   # Git pre push hooks, need just/nu and related nu scripts to run.
+
+   . "$(dirname "$0")/_/husky.sh"
+
+   while read local_ref local_oid remote_ref remote_oid
+   do
+      just git-sync-branch $local_ref $local_oid $remote_ref;
+      # Break is important here, to stop another loop
+      break;
+   done
+
+   exit 0
+   ```
+4. 修改仓库同步配置:
+   在仓库根目录里面创建`.termixrc`文件，该文件为 [`toml`](https://toml.io/en/v1.0.0) 格式内容大致如下:
+   ```toml
+   # 远程仓库地址清单, 列出所有要同步到的目的仓库地址
+   [repos]
+   mix = "https://erda.cloud/terminus/dop/gaia-app-mix/gaia-picker"
+   bbc = "https://erda.cloud/terminus/dop/gaia-app-bbc/gaia-picker"
+
+   [branches]
+   # 本地 develop 分支push操作发生后自动将本地 develop 分支推送到远程对应仓库的对应分支
+   "develop" = [
+      { repo = "mix", dest = "develop" },
+      { repo = "bbc", dest = "develop" },
+   ]
+
+   # 本地 feature/hooks 分支 push 操作发生后自动将本地 feature/hooks 分支
+   # push 到 mix 的 feature/hooks 分支以及 bbc 仓库的 feature/hooks-sync 分支
+   "feature/hooks" = [
+      { repo = "mix", dest = "feature/hooks" },
+      { repo = "bbc", dest = "feature/hooks-sync" },
+   ]
+   ```
+
+**其他说明**:
+相比原来利用 Erda Pipeline 进行代码同步的方式，该同步方式具有以下优点：
+1. 同步更迅速：原来利用流水线同步需要3~8分钟不等，而且经常失败，对服务器资源也有一定要求，新的方式可以在秒级完成；
+2. 更轻量、灵活：原来的同步方式每增加一个同步dest需要在默认Pipeline里面增加一个 `custom-script`节点，新的方式只需要改1~2行配置就可以了，而且可读性更好；
+3. 这次是“真”同步，同步后目的分支和源分支的内容完全一样，提交记录完全一样，原来Erda同步时为了避免“递归同步”需要对目的仓库的默认Pipeline做修改；
+4. 不仅支持分支创建、更新同步还**支持分支同步删除**，原来用Erda同步的时候源分支删除后目的分支并未被删除；
+
 ### 11. [Git] 从远程更新本地所有分支代码到最新的Commit
 
 **功能描述**: 从远程更新本地所有分支代码到最新的Commit, 如果执行命令前本地仓库有变更会自动执行 `stash` 操作;
