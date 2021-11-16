@@ -4,25 +4,19 @@
 # Usage:
 #   just go
 
+let quickNavs = (open $'($nu.env.TERMIX_DIR)/termix.toml' | get quickNavs)
+
 def 'go' [
     nav-key?: string  # The nav key to go from `quickNavs` config in termix.toml
 ] {
 
-    let quickNavs = (open $'($nu.env.TERMIX_DIR)/termix.toml' | get quickNavs)
-    if ($nav-key == '' || $nav-key == 'list') {
-        $'(ansi pb)(char nl)Available Nav Items:(char nl)(char nl)(ansi reset)'
-        $quickNavs | pivot | rename key url
-        exit --now
-    } {}
+    # If the key of `just go` is blank or list, then show all the nav items
+    if ($nav-key == '' || $nav-key == 'list') { show-navs } {}
     # Find match from nav keys only
     let matchs = ($quickNavs | pivot | rename nav url | select nav | find $nav-key)
-    # Found no match item
+    # If no match item was found then show all the nav items
     do -i {
-        if ($matchs == $nothing) {
-            $'(ansi pb)(char nl)Available Nav Items:(char nl)(char nl)(ansi reset)'
-            $quickNavs | pivot | rename key url
-            exit --now
-        } {}
+        if ($matchs == $nothing) { show-navs } {}
     }
 
     # Found match item
@@ -34,5 +28,11 @@ def 'go' [
     } {
         $'(ansi r)Invalid nav url, bye...(char nl)(ansi reset)'
     }
+}
+
+def 'show-navs' [] {
+    $'(ansi pb)(char nl)Available Nav Items:(char nl)(char nl)(ansi reset)'
+    $quickNavs | pivot | rename key url
+    exit --now
 }
 
