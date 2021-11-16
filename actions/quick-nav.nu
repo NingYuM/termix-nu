@@ -5,6 +5,15 @@
 #   just go
 
 let quickNavs = (open $'($nu.env.TERMIX_DIR)/termix.toml' | get quickNavs)
+enter $nu.env.JUST_INVOKE_DIR
+let confExists = ('.termixrc' | path exists)
+let specialNavs = (if $confExists { (open .termixrc | from toml | to json | query json 'quickNavs') } { ([[]; []]) })
+let allNavs = (if (($specialNavs | compact | length) == 0) { $quickNavs } {
+    let navs = ($quickNavs | pivot key url)
+    let special = ($specialNavs | pivot key url)
+    # Concat tables, and special will override navs if they have the same key
+    (echo $navs $special | pivot -r)
+})
 
 def 'go' [
     nav-key?: string  # The nav key to go from `quickNavs` config in termix.toml
@@ -13,15 +22,15 @@ def 'go' [
     # If the key of `just go` is blank or list, then show all the nav items
     if ($nav-key == '' || $nav-key == 'list') { show-navs } {}
     # Find match from nav keys only
-    let matchs = ($quickNavs | pivot | rename nav url | select nav | find $nav-key)
+    let matchs = ($allNavs | pivot | rename key url | select key | find $nav-key)
     # If no match item was found then show all the nav items
     do -i {
         if ($matchs == $nothing) { show-navs } {}
     }
 
     # Found match item
-    let navKey = ($matchs | nth 0).nav
-    let url = ($quickNavs | get ($navKey | into column_path))
+    let navKey = ($matchs | nth 0).key
+    let url = ($allNavs | get ($navKey | into column_path))
     if ($url | str starts-with 'http') {
         $'Going to open matched url: (ansi g)($url)(ansi reset) in default browser...(char nl)'
         ^open $url
@@ -32,7 +41,7 @@ def 'go' [
 
 def 'show-navs' [] {
     $'(ansi pb)(char nl)Available Nav Items:(char nl)(char nl)(ansi reset)'
-    $quickNavs | pivot | rename key url
+    $allNavs | pivot | rename key url
     exit --now
 }
 
