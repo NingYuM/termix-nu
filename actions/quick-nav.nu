@@ -14,8 +14,8 @@ def 'go' [
         $quickNavs | pivot | rename key url
         exit --now
     } {}
-    # FIXME: find from keys only
-    let matchs = ($quickNavs | pivot | rename nav url | find $nav-key)
+    # Find match from nav keys only
+    let matchs = ($quickNavs | pivot | rename nav url | select nav | find $nav-key)
     # Found no match item
     do -i {
         if ($matchs == $nothing) {
@@ -26,7 +26,8 @@ def 'go' [
     }
 
     # Found match item
-    let url = ($matchs | nth 0).url
+    let navKey = ($matchs | nth 0).nav
+    let url = ($quickNavs | get ($navKey | into column_path))
     if ($url | str starts-with 'http') {
         $'Going to open matched url: (ansi g)($url)(ansi reset) in default browser...(char nl)'
         ^open $url
