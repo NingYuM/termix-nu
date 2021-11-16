@@ -1,6 +1,6 @@
 # Author: hustcer
 # Created: 2021/11/12 15:06:56
-# Description: Quickly open the nav url in default browser, for mac only
+# Description: Quickly open the nav url in default browser, for mac and windows
 # Usage:
 #   just go
 
@@ -33,7 +33,9 @@ def 'go' [
     let url = ($allNavs | get ($navKey | into column_path))
     if ($url | str starts-with 'http') {
         $'Going to open matched url: (ansi g)($url)(ansi reset) in default browser...(char nl)'
-        ^open $url
+        let os = (version | pivot name value | match name build_os | get value)
+        # Use powershell command to open url in default browser for Windows
+        if ($os =~ 'windows') { ^powershell -c $'Start-Process ($url)' } { ^open $url }
     } {
         $'(ansi r)Invalid nav url, bye...(char nl)(ansi reset)'
     }
