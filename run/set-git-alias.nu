@@ -22,3 +22,5 @@ git config --global alias.lg "log --color --graph --pretty=format:'%Cred%h%Crese
 git config --global push.default matching;
 # git config --global user.name $GIT_USER_NAME;
 # git config --global user.email $GIT_USER_EMAIL;
+# Get the upstream branch name
+upstream-branch = !git for-each-ref --format='%(upstream:short)' $(git symbolic-ref -q HEAD)

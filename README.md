@@ -363,7 +363,19 @@ just desc
 just desc develop true
 ```
 
-### 15. [二开] 显示标品二开仓库的远程分支及Tag信息
+### 15. [Git] Git分支描述检查
+
+**功能描述**: 基于前面一条的分支描述规则，检查哪些Git分支没有描述信息
+**命令格式**: `just check-desc`
+**使用举例**:
+```bash
+# 查看当前仓库哪些分支没有对应描述信息
+just check-desc
+```
+**输出样例**:
+![Just Check Desc Output](https://img.alicdn.com/imgextra/i3/O1CN01wxKoPt1il40LSxtzu_!!6000000004452-2-tps-675-275.png)
+
+### 16. [二开] 显示标品二开仓库的远程分支及Tag信息
 
 **功能描述**:
 
@@ -381,7 +393,7 @@ just ls-redev-refs
 just ls-redev-refs true
 ```
 
-### 16. [二开] 更新远程二开仓库代码到本地
+### 17. [二开] 更新远程二开仓库代码到本地
 
 **功能描述**: 更新远程二开仓库代码到本地，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `REDEV_REPO_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `redevRepoPath` 配置;
 **命令格式**: `just pull-redev branch=('master') diff=('false')`
@@ -397,7 +409,7 @@ just pull-redev
 just pull-redev develop true
 ```
 
-### 17. [二开] 给远程二开仓库批量打 Tag
+### 18. [二开] 给远程二开仓库批量打 Tag
 
 **功能描述**: 给远程二开仓库指定分支批量打 Tag, 也可以用于删除指定Tag
 **命令格式**: `just tag-redev tag=('') branch=('master') delete=('false')`
@@ -418,7 +430,7 @@ just tag-redev v2.5.0 develop
 just tag-redev v2.2.0.21-2021.11.09 master
 ```
 
-### 18. 查看团队成员当前EMP工时填报情况
+### 19. 查看团队成员当前EMP工时填报情况
 
 **功能描述**: 查看团队成员当前EMP工时填报情况
 **命令格式**: `just emp showAll=('false')`
