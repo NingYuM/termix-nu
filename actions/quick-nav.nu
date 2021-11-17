@@ -7,48 +7,48 @@
 let allNavs = (merge-navs)
 
 def 'go' [
-    nav-key?: string  # The nav key to go from `quickNavs` config in termix.toml
+	nav-key?: string  # The nav key to go from `quickNavs` config in termix.toml
 ] {
 
-    # If the key of `just go` is blank or list, then show all the nav items
-    if ($nav-key == '' || $nav-key == 'list') { show-navs } {}
-    # Find match from nav keys only
-    let matchs = ($allNavs | pivot | rename key url | select key | find $nav-key)
-    # If no match item was found then show all the nav items
-    do -i {
-        if ($matchs == $nothing) { show-navs } {}
-    }
+	# If the key of `just go` is blank or list, then show all the nav items
+	if ($nav-key == '' || $nav-key == 'list') { show-navs } {}
+	# Find match from nav keys only
+	let matchs = ($allNavs | pivot | rename key url | select key | find $nav-key)
+	# If no match item was found then show all the nav items
+	do -i {
+		if ($matchs == $nothing) { show-navs } {}
+	}
 
-    # Found match item
-    let navKey = ($matchs | nth 0).key
-    let url = ($allNavs | get ($navKey | into column_path))
-    if ($url | str starts-with 'http') {
-        $'Going to open matched url: (ansi g)($url)(ansi reset) in default browser...(char nl)'
-        let os = (version | pivot name value | match name build_os | get value)
-        # Use powershell command to open url in default browser for Windows
-        if ($os =~ 'windows') { ^powershell -c $'Start-Process ($url)' } { ^open $url }
-    } {
-        $'(ansi r)Invalid nav url, bye...(char nl)(ansi reset)'
-    }
+	# Found match item
+	let navKey = ($matchs | nth 0).key
+	let url = ($allNavs | get ($navKey | into column_path))
+	if ($url | str starts-with 'http') {
+		$'Going to open matched url: (ansi g)($url)(ansi reset) in default browser...(char nl)'
+		let os = (version | pivot name value | match name build_os | get value)
+		# Use powershell command to open url in default browser for Windows
+		if ($os =~ 'windows') { ^powershell -c $'Start-Process ($url)' } { ^open $url }
+	} {
+		$'(ansi r)Invalid nav url, bye...(char nl)(ansi reset)'
+	}
 }
 
 def 'show-navs' [] {
-    $'(ansi pb)(char nl)Available Nav Items:(char nl)(char nl)(ansi reset)'
-    $allNavs | pivot | rename key url
-    exit --now
+	$'(ansi pb)(char nl)Available Nav Items:(char nl)(char nl)(ansi reset)'
+	$allNavs | pivot | rename key url
+	exit --now
 }
 
 # Merge all nav items from termix.toml and .termixrc
 def 'merge-navs' [] {
-    let quickNavs = (open $'($nu.env.TERMIX_DIR)/termix.toml' | get quickNavs)
-    enter $nu.env.JUST_INVOKE_DIR
-    let confExists = ('.termixrc' | path exists)
-    let specialNavs = (if $confExists { (open .termixrc | from toml | to json | query json 'quickNavs') } { ([[]; []]) })
-    let allNavs = (if (($specialNavs | compact | length) == 0) { $quickNavs } {
-        let navs = ($quickNavs | pivot key url)
-        let special = ($specialNavs | pivot key url)
-        # Concat tables, and special will override navs if they have the same key
-        echo (echo $navs $special | pivot -r)
-    })
-    echo $allNavs
+	let quickNavs = (open $'($nu.env.TERMIX_DIR)/termix.toml' | get quickNavs)
+	enter $nu.env.JUST_INVOKE_DIR
+	let confExists = ('.termixrc' | path exists)
+	let specialNavs = (if $confExists { (open .termixrc | from toml | to json | query json 'quickNavs') } { ([[]; []]) })
+	let allNavs = (if (($specialNavs | compact | length) == 0) { $quickNavs } {
+		let navs = ($quickNavs | pivot key url)
+		let special = ($specialNavs | pivot key url)
+		# Concat tables, and special will override navs if they have the same key
+		echo (echo $navs $special | pivot -r)
+	})
+	echo $allNavs
 }

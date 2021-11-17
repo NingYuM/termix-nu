@@ -28,9 +28,9 @@ def 'no-desc' [
   descriptions: any
   branch: string
 ] {
-    # 处理分支名称包含‘.’的情况: `support/release-2.4`
-    let escapedBranch = ($branch | str find-replace -a '\.' '\.')
-    # ($descriptions | select ($escapedBranch | into column_path) | compact | length) == 0
-    let noDescription = ($descriptions | query json $'descriptions.($escapedBranch)') == ''
-    echo ($noDescription && $branch != 'i')
+  # 处理分支名称包含‘.’的情况: `support/release-2.4`
+  let escapedBranch = ($branch | str find-replace -a '\.' '\.')
+  # ($descriptions | select ($escapedBranch | into column_path) | compact | length) == 0
+  let noDescription = ($descriptions | query json $'descriptions.($escapedBranch)') == ''
+  echo ($noDescription && $branch != 'i')
 }
