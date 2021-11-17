@@ -4,16 +4,7 @@
 # Usage:
 #   just go
 
-let quickNavs = (open $'($nu.env.TERMIX_DIR)/termix.toml' | get quickNavs)
-enter $nu.env.JUST_INVOKE_DIR
-let confExists = ('.termixrc' | path exists)
-let specialNavs = (if $confExists { (open .termixrc | from toml | to json | query json 'quickNavs') } { ([[]; []]) })
-let allNavs = (if (($specialNavs | compact | length) == 0) { $quickNavs } {
-    let navs = ($quickNavs | pivot key url)
-    let special = ($specialNavs | pivot key url)
-    # Concat tables, and special will override navs if they have the same key
-    (echo $navs $special | pivot -r)
-})
+let allNavs = (merge-navs)
 
 def 'go' [
     nav-key?: string  # The nav key to go from `quickNavs` config in termix.toml
@@ -47,3 +38,17 @@ def 'show-navs' [] {
     exit --now
 }
 
+# Merge all nav items from termix.toml and .termixrc
+def 'merge-navs' [] {
+    let quickNavs = (open $'($nu.env.TERMIX_DIR)/termix.toml' | get quickNavs)
+    enter $nu.env.JUST_INVOKE_DIR
+    let confExists = ('.termixrc' | path exists)
+    let specialNavs = (if $confExists { (open .termixrc | from toml | to json | query json 'quickNavs') } { ([[]; []]) })
+    let allNavs = (if (($specialNavs | compact | length) == 0) { $quickNavs } {
+        let navs = ($quickNavs | pivot key url)
+        let special = ($specialNavs | pivot key url)
+        # Concat tables, and special will override navs if they have the same key
+        echo (echo $navs $special | pivot -r)
+    })
+    echo $allNavs
+}
