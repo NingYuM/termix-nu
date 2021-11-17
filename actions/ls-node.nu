@@ -25,15 +25,14 @@ def 'ls-node-remote' [
   let vers = (fnm ls-remote | lines | str trim | wrap Version)
   let vRow = (
     $vers | insert NO { |node| (
-        $node.Version |
-        split row ' ' |
-        first |
-        split row '.' |
-        first |
-        str substring (1,) |
-        into int
-      )
-    } | insert isLTS { |node| ($node.Version | str contains '(') }
+      $node.Version |
+      split row ' ' |
+      first |
+      split row '.' |
+      first |
+      str substring (1,) |
+      into int
+    )} | insert isLTS { |node| ($node.Version | str contains '(') }
   )
   if $isLts == 'true' {
     # ($vRow | where {|node| $node.NO >= $minVersion && $node.isLTS } | select Version)
