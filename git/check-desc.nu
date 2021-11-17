@@ -20,11 +20,17 @@ def 'check-desc' [] {
   let repo = (pwd | path basename)
 
   $'(ansi p)(char nl)  Branches that do not have a description in (ansi g)($repo)(ansi reset):(char nl)(char nl)(ansi reset)'
-  $remoteBranches | each { |branch|
+  $remoteBranches | where (no-desc $descriptions $it) | wrap BranchName
+}
+
+# Check if the specified branch has a description in `descriptions`
+def 'no-desc' [
+  descriptions: any
+  branch: string
+] {
     # 处理分支名称包含‘.’的情况: `support/release-2.4`
     let escapedBranch = ($branch | str find-replace -a '\.' '\.')
     # ($descriptions | select ($escapedBranch | into column_path) | compact | length) == 0
     let noDescription = ($descriptions | query json $'descriptions.($escapedBranch)') == ''
-    if ($noDescription && $branch != 'i') { $branch } {}
-  }
+    echo ($noDescription && $branch != 'i')
 }
