@@ -73,6 +73,12 @@ desc branch=(`git branch --show-current`)  showNotes=('false'): _nu-ver-check
     source {{ join(_termix, 'git', 'branch-desc.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; branch-desc {{branch}} --show-notes={{showNotes}}
 
+# Check whether all remote branches have related description
+check-desc: _nu-ver-check
+  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+    source {{ join(_termix, 'git', 'check-desc.nu') }}; \
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; check-desc
+
 # Pull all local branches from remote repo
 pull-all: _nu-ver-check
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
