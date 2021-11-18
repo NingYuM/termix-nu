@@ -16,6 +16,9 @@ def 'check-desc' [] {
   # 本地 i 分支优先级高于远程
   let querySource = (if ($localIExists) { 'i' } { 'origin/i' })
   let descriptions = (git show $'($querySource):($descFile)')
+  # Alternatively since nushell v0.40.0 you can use the following line, which is longer but more readable
+  # git ls-remote --heads --refs origin | detect columns -n | rename cid name |
+  #     update name { get name | str find-replace 'refs/heads/' '' } | get name
   let remoteBranches = (git ls-remote --heads --refs origin | lines | str substring '52,')
   let repo = (pwd | path basename)
 
