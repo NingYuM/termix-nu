@@ -55,6 +55,12 @@ ver: _nu-ver-check
 upgrade: _nu-ver-check
   @cd {{_termix}}; git checkout master; git pull;
 
+# Release a new version for termix-nu
+release: _nu-ver-check
+  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+    source {{ join(_termix, 'actions', 'release.nu') }}; \
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; release
+
 # Quickly open the matched nav url in default browser, for mac only
 go nav=('list'): _nu-ver-check
   @source {{ join(_termix, 'actions', 'quick-nav.nu') }}; \

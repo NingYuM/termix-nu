@@ -32,19 +32,34 @@ def 'working-hours' [
   # Week No of now: [(date now)] | dataframe to-df | dataframe get-week
   let hours = (curl $emp.url -H $emp.type -H $userCookie -s --data-raw $payload | str collect)
 
+  handle-exception $hours
+  handle-working-hours $hours
+}
+
+# 处理未登录、超时、服务器错误等
+def 'handle-exception' [
+  res: string
+] {
+
   # 未登录或者Cookie过期提示, use `do -i` to ignore 'error: Coercion error'
   do -i {
-    if (($hours | query json 'status') == 401) {
+    if (($res | query json 'status') == 401) {
       $'(ansi r)Your login COOKIE info is outdated or empty，please update it and try again!(char nl)(ansi reset)'
       exit --now
     } {}
-    if (($hours | query json 'status') == 500) {
+    if (($res | query json 'status') == 500) {
       $'(ansi r)Backend internal server error，please try again later!(char nl)(ansi reset)'
       exit --now
     } {}
   }
+}
 
-  let data = ($hours | query json 'res.data')
+# 显示工时统计信息
+def 'handle-working-hours' [
+  res: string
+] {
+
+  let data = ($res | query json 'res.data')
   # echo ($data | reject id isDeleted week year createdAt updatedAt updatedBy createdBy)
   $'(char nl)  (ansi p)'
   $'-------------------------> ($title) <-------------------------'

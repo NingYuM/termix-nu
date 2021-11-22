@@ -36,7 +36,7 @@ def 'check-desc' [] {
 
 # Check if the specified branch has a description in `descriptions`
 def 'no-desc' [
-  descriptions: any
+  descriptions: string
   branch: string
 ] {
   # 处理分支名称包含‘.’的情况: `support/release-2.4`
