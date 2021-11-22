@@ -6,7 +6,7 @@
 # [√] 确保新版本对应 Tag 不存在
 # [√] 确保没有未提交的变更
 # [√] 自动生成 Tag, 并推送远程
-# [ ] 更新 Change Log
+# [√] 更新 Change Log
 # Usage:
 # 	just release
 
@@ -30,5 +30,7 @@ def 'release' [] {
 		$'You have uncommit changes, please commit them and try `release` again!(char nl)'
 		exit --now
 	}
+  git cliff --unreleased --tag ($releaseVer | str find-replace 'v' '') --prepend CHANGELOG.md;
+  git commit CHANGELOG.md -m 'update CHANGELOG.md for ($releaseVer)'
 	git tag $releaseVer -am $'A new release for version: ($releaseVer) created by Release command of termix-nu'; git push origin --tags
 }

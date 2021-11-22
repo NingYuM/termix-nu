@@ -129,14 +129,18 @@ cargo +stable install nu --all-features --version 0.39.0
 
 ### 2. 更新 `termix-nu` 到最新版本
 
-可以通过 `just upgrade` 命令更新 `termix-nu` 到最新版本;
+可以通过 `just upgrade` 命令更新 `termix-nu` 到最新版本, 本质上是将本地脚本仓库更新到最新的 Release Tag 对应提交;
 
 ### 3. 发布 `termix-nu` 新版本
 
 可以通过 `just release` 命令发布 `termix-nu` 的最新版本，版本发布前要做的工作：
 1. 修改`termix.toml`文件里面的`version`字段到将要发布的版本号(需要确保该版本不存在，且相对于上一个版本号更大);
 2. 确保 `termix-nu` 仓库里面没有未提交的变更;
-发布新版本的过程目前只是新建了一个以版本号命名的 Tag 并推送到远程。
+
+发布新版本的过程主要做了如下操作：
+
+1. 利用[git-cliff](https://github.com/orhun/git-cliff) 根据commit 记录更新最新的`CHANGELOG.md`并提交;
+2. 新建了一个以版本号命名的 Tag 并推送到远程；
 
 ### 3. 浏览器快捷导航
 
