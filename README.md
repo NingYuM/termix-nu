@@ -59,20 +59,26 @@ cargo +stable install nu --all-features --version 0.39.0
    ```bash
     ➜  $ just
     Available recipes:
+    ··· check-desc                    # Check whether all remote branches have related description
     ··· default                       # List available commands by default
+    ··· desc branch=(`git branch --show-current`) showNotes=('false') # Show branch description from branch description file `d` of `i` branch
     ··· dir-batch-exec cmd +DIRS=('') # 在指定目录(支持'*'通配符)或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
+    ··· emp showAll=('false')         # 查询电商前端团队本周工时填报情况
     ··· git-age                       # Listing the branches of a git repo and the time of the last commit
     ··· git-batch-exec cmd +branches=('') # 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用空格分隔
     ··· git-batch-reset n +branches=('') # 将指定Git分支硬回滚N个commit
     ··· git-remote-age remote=('origin') showTag=('false') # Listing the remote branches of a git repo and the day of the last commit
     ··· git-sync-branch localRef localOid remoteRef # 批量同步本地分支到远程指定分支,git pre-push hooks调用,请勿手工触发
-    ··· ls-node minVer=('12')         # 查询已发布Node版本，支持指定最低版本号
+    ··· go nav=('list')               # Quickly open the matched nav url in default browser, for mac only
+    ··· ls-node minVer=('12') isLts=('false') # 查询已发布Node版本，支持指定最低版本号
     ··· ls-redev-refs showBranch=('false') # Show Branches and Tags of redevelop related repos
     ··· pull-all                      # Pull all local branches from remote repo
     ··· pull-redev branch=('master') diff=('false') # 更新远程二开仓库代码到本地
+    ··· release updateLog=('false')   # Release a new version for termix-nu
     ··· rename-branch from=('') to=('') remote=('origin') # Rename remote branch, and delete old branch after rename
     ··· show-env                      # 显示本机安装应用版本及环境变量相关信息
     ··· tag-redev tag=('') branch=('master') delete=('false') # 给远程二开仓库批量打 Tag
+    ··· upgrade                       # Upgrade termix-nu repo to the latest version
     ··· ver                           # Display termix current version number
    ```
 
