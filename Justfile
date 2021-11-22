@@ -53,7 +53,7 @@ ver: _nu-ver-check
 
 # Upgrade termix-nu repo to the latest version
 upgrade: _nu-ver-check
-  @cd {{_termix}}; git checkout master; git pull;
+  @cd {{_termix}}; git checkout master; git pull origin (git tag -l --sort=-v:refname | lines | nth 0) --ff-only;
 
 # Release a new version for termix-nu
 release: _nu-ver-check
