@@ -139,8 +139,20 @@ cargo +stable install nu --all-features --version 0.39.0
 
 发布新版本的过程主要做了如下操作：
 
-1. 利用[git-cliff](https://github.com/orhun/git-cliff) 根据commit 记录更新最新的`CHANGELOG.md`并提交;
+1. 利用[git-cliff](https://github.com/orhun/git-cliff) 根据commit 记录更新最新的`CHANGELOG.md`并提交, 如果`updateLog=('true')`;
 2. 新建了一个以版本号命名的 Tag 并推送到远程；
+
+**命令格式**: `just release updateLog=('false')`
+**参数说明**:
+- `updateLog`: 选填，是否需要通过提交记录生成最新的`CHANGELOG.md`并提交，默认`false`(需要自己手工生成并检查、更正)；
+
+**使用举例**:
+```bash
+# 根据`termix.toml`文件里面的`version`配置生成对应版本的Release Tag并推送至远程，但不自动更新`CHANGELOG.md`
+just release
+# 自动更新`CHANGELOG.md`，然后根据`termix.toml`文件里面的`version`配置生成对应版本的Release Tag并推送至远程
+just release true
+```
 
 ### 3. 浏览器快捷导航
 

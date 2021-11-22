@@ -10,7 +10,9 @@
 # Usage:
 # 	just release
 
-def 'release' [] {
+def 'release' [
+  --update-log: string  # set to `true` do enable updating CHANGELOG.md
+] {
 
 	cd $nu.env.TERMIX_DIR
 	let releaseVer = (open 'termix.toml' | get version)
@@ -30,7 +32,9 @@ def 'release' [] {
 		$'You have uncommit changes, please commit them and try `release` again!(char nl)'
 		exit --now
 	}
-  git cliff --unreleased --tag ($releaseVer | str find-replace 'v' '') --prepend CHANGELOG.md;
-  git commit CHANGELOG.md -m 'update CHANGELOG.md for ($releaseVer)'
+  if ($update-log == 'true') {
+    git cliff --unreleased --tag ($releaseVer | str find-replace 'v' '') --prepend CHANGELOG.md;
+    git commit CHANGELOG.md -m 'update CHANGELOG.md for ($releaseVer)'
+  } {}
 	git tag $releaseVer -am $'A new release for version: ($releaseVer) created by Release command of termix-nu'; git push origin --tags
 }
