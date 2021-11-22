@@ -34,7 +34,7 @@ def 'release' [
 	}
   if ($update-log == 'true') {
     git cliff --unreleased --tag ($releaseVer | str find-replace 'v' '') --prepend CHANGELOG.md;
-    git commit CHANGELOG.md -m 'update CHANGELOG.md for ($releaseVer)'
+    git commit CHANGELOG.md -m $'update CHANGELOG.md for ($releaseVer)'
   } {}
 	git tag $releaseVer -am $'A new release for version: ($releaseVer) created by Release command of termix-nu'; git push origin --tags
 }
