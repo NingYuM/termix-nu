@@ -5,11 +5,18 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Update `upgrade` command for termix-nu
+- Fix `upgrade` command for termix-nu: use latest release tag instead of master branch as upgrading source
 
 ### Features
 
 - Bump version v1.2.2
+- Use `git cliff --output CHANGELOG.md` to generate a change log
+
+### Miscellaneous Tasks
+
+- Update CHANGELOG.md to v1.2.2
+- Add changelog create instruction
+- Update CHANGELOG.md
 
 ## [1.2.1] - 2021-11-22
 
