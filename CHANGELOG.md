@@ -15,14 +15,18 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
-- Update check-desc add more branch info
-- Add release command for termix-nu
+- Add `release` command for termix-nu
+- Update `check-desc` command: add more branch info to cmd output
 
 ### Miscellaneous Tasks
 
-- Fix some indentions
-- Update min nushell version to v0.40.0
+- Fix some code indentions
 - Update doc for release command
+- Update min nushell version from `0.39.0` to `v0.40.0`
+
+### Refactor
+
+- Refactor `working-hours` command: extract more functions
 
 ## [1.2.0] - 2021-11-17
 
