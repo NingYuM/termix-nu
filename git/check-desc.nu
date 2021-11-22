@@ -6,6 +6,7 @@
 # Check whether all remote branches have related description
 def 'check-desc' [] {
 
+  git fetch origin -p
   let descFile = 'd.toml'
   let localIExists = (has-ref i)
   let remoteIExists = (has-ref origin/i)
