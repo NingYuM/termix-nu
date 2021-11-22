@@ -2,7 +2,7 @@
 # Created: 2021/11/12 10:06:56
 # Description: Script to release termix-nu
 # TODO:
-# [√] 版本检查确保新版本版本号更大
+# [√] 版本检查确保新版本版本号更大(需要再考虑是否合理？)
 # [√] 确保新版本对应 Tag 不存在
 # [√] 确保没有未提交的变更
 # [√] 自动生成 Tag, 并推送远程
@@ -22,7 +22,7 @@ def 'release' [] {
 		exit --now
 	} {}
 	if ($releaseV <= $greatestV) {
-		$'The release version sould be greater then ($greatestVer), however, current release ver: ($releaseVer)(char nl)'
+		$'The release version sould be greater than ($greatestVer), however, current release ver: ($releaseVer)(char nl)'
 		exit --now
 	} {}
 	let statusCheck = (git status --porcelain)
