@@ -32,7 +32,6 @@ All notable changes to this project will be documented in this file.
 - Git-remote-age git check issue
 - Fix git check on windows
 - Empty check for working hours
-- Empty check for working hours
 - Fix weekday calc for working hours
 - Improve join after upgrade just to v0.10.3
 - Add invalid login info check for working hours
@@ -45,22 +44,18 @@ All notable changes to this project will be documented in this file.
 
 - Add mall related scripts
 - Add show git repo tags support
-- Add latest nushell version checkt
+- Add latest nushell version check
 - Add git command and git repo check
 - Add show redevelop branches support
-- Update readme.md
 - Update README.md docs
-- Update Readme.md and add working-hours script
+- Update Readme.md and add `working-hours` script
 - Add emp working hours script
-- Add lts support for ls-node
+- Add lts support for `ls-node`
 - Update docs
 - Update emp
-- Update docs
-- Update readme doc
-- Update doc
 - Add just upgrade feature
 - Add view git branch description command
-- Add just go command for quick navigation
+- Add `just go` command for quick navigation
 - Update readme.md add sync-branch docs
 - Update emp docs
 - Add `just check-desc` command
@@ -105,8 +100,18 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
+- Add `git-age` command to show local branch age information
+- Add `pull-all` command to update all local branches to latest commit
+- Add `git-remote-age` command to show all remote branch info
+- Add `ls-redev-tags` to show all tags for redevelop repos
+- Add `show-env` to show local environment information
+- Add `ls-node` to query node versions
+- Add `pull-redev` to pull latest commit for all redevelop repos
+- Add `tag-redev` to create tag for redevelop repos
+- Add `git-sync-branch` for git branch syncing support
+- Add `git-batch-exec` to execute custom command for specified branches
+- Add `dir-batch-exec` to execute custom command for specified dirs
 - Add branch selection for redev repo ops
-- Add branch syncing support
 - Update sync command
 - Add git alias and config script
 - Add .env example file
@@ -120,7 +125,7 @@ All notable changes to this project will be documented in this file.
 - Add query node version support
 - Add actions/setup-mac.nu script, rename actions.toml to termix.toml
 - Add soft link example for windows
-- Add version command
+- Add version command to show termix-nu version
 - Add git rename remote branch feature
 
 ### Miscellaneous Tasks
