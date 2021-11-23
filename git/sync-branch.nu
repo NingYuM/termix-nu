@@ -34,8 +34,13 @@ def 'git sync-branch' [
       git push --no-verify $url $':($it.dest)'
     } {
       ^echo $'Sync from local (ansi g)($current)(ansi reset) to remote (ansi p)($it.dest) of repo ($it.repo)(ansi reset) -->(char nl)'
-      # You MUST use '--no-verify' to prevent infinit loops!!!
-      git push --no-verify $url $'($current):($it.dest)'
+      let forcePush = (get-env FORCE_PUSH '0' | into int)
+      if ($forcePush == 1) {
+        # You MUST use '--no-verify' to prevent infinit loops!!!
+        git push --no-verify --force $url $'($current):($it.dest)'
+      } {
+        git push --no-verify $url $'($current):($it.dest)'
+      }
     }
     ^echo ''
   }

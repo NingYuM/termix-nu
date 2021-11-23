@@ -387,6 +387,12 @@ just git-remote-age origin true
    ```
 
 **其他说明**:
+
+经过上述配置当用户 push develop 或者 feature/hooks 分支的时候会自动触发同步操作，并将代码同步到 mix 和 bbc 环境。
+
+1. 如果想禁用某次 push 同步则 push 的时候加上`--no-verify`参数即可；
+2. 如果在同步的时候想采用强制推送策略需要：`FORCE_PUSH=1 git push --force ...`；
+
 相比原来利用 Erda Pipeline 进行代码同步的方式，该同步方式具有以下优点：
 
 1. 同步更迅速：原来利用流水线同步需要 3~8 分钟不等，而且经常失败，对服务器资源也有一定要求，新的方式可以在秒级完成；

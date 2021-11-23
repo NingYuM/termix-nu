@@ -144,7 +144,8 @@ tag-redev tag=('') branch=('master') delete=('false'): _nu-ver-check
 
 # 批量同步本地分支到远程指定分支,git pre-push hooks调用,请勿手工触发
 git-sync-branch localRef localOid remoteRef: _nu-ver-check
-  @source {{ join(_termix, 'git', 'sync-branch.nu') }}; \
+  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+    source {{ join(_termix, 'git', 'sync-branch.nu') }}; \
     git sync-branch {{localRef}} {{localOid}} {{remoteRef}}
 
 # 复用 utils 里面定义的公用方法: nu 不支持动态 source 只能拼接下了
