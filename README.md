@@ -209,9 +209,9 @@ cd ./mall-base/packages;
 just dir-batch-exec 'pwd;ncu'
 ```
 
-### 6. 查询已发布 Node 版本，支持指定最低版本号{#ls-node}
+### 6. 查询已发布 Node 版本{#ls-node}
 
-**功能描述**: 通过[`fnm`](https://github.com/Schniz/fnm)查询已发布 Node 版本，支持指定最低版本号, 虽然目前依赖`fnm`, 但是若想去除该依赖是很容易的，以后有需求再说吧。
+**功能描述**: 通过[`fnm`](https://github.com/Schniz/fnm)查询已发布 `Node` 版本，支持指定最低版本号, 虽然目前依赖`fnm`, 但是若想去除该依赖是很容易的，以后有需求再说吧。
 
 **命令格式**: `just ls-node minVer=('12') isLts=('false')`
 
@@ -233,7 +233,7 @@ just ls-node v16
 just ls-node 12 true
 ```
 
-### 7. 显示本机安装应用版本及环境变量相关信息{#show-env}
+### 7. 显示本机 CLI 应用版本及环境变量信息{#show-env}
 
 **功能描述**: 显示本机安装应用版本及环境变量相关信息, 这个主要方便排查问题
 
@@ -246,7 +246,7 @@ just ls-node 12 true
 **输出样例**:
 ![Show-Env Output](https://img.alicdn.com/imgextra/i2/O1CN01fOhVIk1vNKTl9ubIz_!!6000000006160-2-tps-902-944.png)
 
-### 8. [Git] 查看本地 Git 仓库的分支及其最后提交时间{#git-age}
+### 8. 查看本地 Git 仓库分支及最后提交时间{#git-age}
 
 **功能描述**: 查看本地 Git 仓库的分支及其最后提交时间, 按最后提交时间升序排序
 
@@ -260,7 +260,7 @@ just ls-node 12 true
 
 ![Git-Age Output](https://img.alicdn.com/imgextra/i1/O1CN01TSmh2F1ImH2PuFvU0_!!6000000000935-2-tps-476-190.png)
 
-### 9. [Git] 在 Git 指定分支上批量执行特定命令{#git-batch-exec}
+### 9. 在指定 Git 分支上批量执行特定命令{#git-batch-exec}
 
 **功能描述**: 在指定 Git 分支上执行指定命令
 
@@ -278,7 +278,7 @@ just ls-node 12 true
 just git-batch-exec 'git cherry-pick abcxyzuvw; git push' develop feature/latest
 ```
 
-### 10. [Git] 将指定 Git 分支硬回滚 N 个 commit{#git-batch-reset}
+### 10. 将指定 Git 分支硬回滚 N 个 commit{#git-batch-reset}
 
 **功能描述**: 将指定 Git 分支硬回滚 N 个 Commit, 这个命令的使用场景可能不是很多，当时是为了测试后面的 `just pull-all` 用的前置命令
 
@@ -296,7 +296,7 @@ just git-batch-exec 'git cherry-pick abcxyzuvw; git push' develop feature/latest
 just git-batch-reset 2 develop feature/latest
 ```
 
-### 11. [Git] 显示 Git 仓库远程地址所有的分支及其最后提交信息{#git-remote-age}
+### 11. 显示 Git 仓库远程分支及其最后提交信息{#git-remote-age}
 
 **功能描述**: 显示当前 Git 仓库远程地址所有的分支及其最后提交信息
 
@@ -320,7 +320,7 @@ just git-remote-age origin true
 
 ![Git-Remote-Age Output](https://img.alicdn.com/imgextra/i3/O1CN01Nif5F31Bun5nC7Fpl_!!6000000000006-2-tps-561-249.png)
 
-### 12. [Git] Git Push Hook 自动将代码同步到多个目标仓库{#git-sync-branch}
+### 12. Git Push 自动将代码同步到多个仓库{#git-sync-branch}
 
 **功能描述**: 通过 Git Pre Push Hook 在将指定分支 Push 到远程的时候自动将对应分支同步到多个目标仓库，该命令应该通过 Git Hook 自动调用，不建议手工调用；
 
@@ -391,7 +391,7 @@ just git-remote-age origin true
 3. 这次是“真”同步，同步后目的分支和源分支的内容完全一样，提交记录完全一样，原来 Erda 同步时为了避免“递归同步”需要对目的仓库的默认 Pipeline 做修改；
 4. 不仅支持分支创建、更新同步还**支持分支同步删除**，原来用 Erda 同步的时候源分支删除后目的分支并未被删除；
 
-### 13. [Git] 从远程更新本地所有分支代码到最新的 Commit{#pull-all}
+### 13. 从远程更新本地所有分支代码到最新{#pull-all}
 
 **功能描述**: 从远程更新本地所有分支代码到最新的 Commit, 如果执行命令前本地仓库有变更会自动执行 `stash` 操作;
 
@@ -401,7 +401,7 @@ just git-remote-age origin true
 
 **使用举例**: Try `just pull-all` in your git repo.
 
-### 14. [Git] Git 远程分支重命名{#rename-branch}
+### 14. Git 远程 & 本地分支重命名{#rename-branch}
 
 **功能描述**: Git 远程分支重命名, 重命名成功之后会删除旧的分支
 
@@ -419,7 +419,7 @@ just git-remote-age origin true
 just rename-branch feature/old feature/new
 ```
 
-### 15. [Git] 查看 Git 分支描述信息{#desc}
+### 15. 查看 Git 分支描述信息{#desc}
 
 **功能描述**: 查看 Git 分支描述信息
 
@@ -452,7 +452,7 @@ just desc
 just desc develop true
 ```
 
-### 16. [Git] Git 分支描述检查{#check-desc}
+### 16. Git 分支描述检查{#check-desc}
 
 **功能描述**: 基于前面一条的分支描述规则，检查哪些 Git 分支没有描述信息
 
@@ -469,7 +469,7 @@ just check-desc
 
 ![Just Check Desc Output](https://img.alicdn.com/imgextra/i3/O1CN01wxKoPt1il40LSxtzu_!!6000000004452-2-tps-675-275.png)
 
-### 17. [二开] 显示标品二开仓库的远程分支及 Tag 信息{#ls-redev-refs}
+### 17. 查询二开仓库的远程分支及 Tag 信息{#ls-redev-refs}
 
 **功能描述**:
 
@@ -490,7 +490,7 @@ just ls-redev-refs
 just ls-redev-refs true
 ```
 
-### 18. [二开] 更新远程二开仓库代码到本地{#pull-redev}
+### 18. 批量更新远程二开仓库代码到本地{#pull-redev}
 
 **功能描述**: 更新远程二开仓库代码到本地，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `REDEV_REPO_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `redevRepoPath` 配置;
 
@@ -510,7 +510,7 @@ just pull-redev
 just pull-redev develop true
 ```
 
-### 19. [二开] 给远程二开仓库批量打 Tag{#tag-redev}
+### 19. 给远程二开仓库批量打 Tag{#tag-redev}
 
 **功能描述**: 给远程二开仓库指定分支批量打 Tag, 也可以用于删除指定 Tag
 
