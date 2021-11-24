@@ -15,6 +15,11 @@ def 'git sync-branch' [
   let zero = (git hash-object --stdin < /dev/null | tr '[0-9a-f]' '0' | str trim)
   let useRef = (if $localOid == $zero { $remoteRef } { $localRef })
   let current = ($useRef | str find-replace 'refs/heads/' '')
+
+  if (has-ref $'origin/($current)') {} {
+    $'Branch (ansi r)($current) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
+    exit --now
+  }
   let pushConf = (git show $'origin/($current):.termixrc' | from toml | to json)
   # The following line not work: ^^^ Expected column path, found string
   # let matchBranch = ($pushConf | get branches | default $current '' | select $current | compact | length)
