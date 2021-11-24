@@ -394,6 +394,7 @@ just git-remote-age origin true
 
 1. 如果想禁用某次 push 同步则 push 的时候加上`--no-verify`参数即可；
 2. 如果在同步的时候想采用强制推送策略需要：`FORCE_PUSH=1 git push --force ...`；
+3. 代码能够同步成功的前提是你有对应目标仓库的 push 权限，如果没有可以申请权限或者在本地环境变量里面设置忽略推送，需要修改`.env`环境变量里面的`SYNC_IGNORE_ALIAS`配置项，将需要忽略推送的仓库别名加进去，多个别名之间用`,`隔开即可；
 
 :::tip
 同步配置变更后下次 push 生效！！！

@@ -21,17 +21,20 @@ def 'git sync-branch' [
     exit --now
   }
   let pushConf = (git show $'origin/($current):.termixrc' | from toml | to json)
+  let ignored = (get-env SYNC_IGNORE_ALIAS '')
   # The following line not work: ^^^ Expected column path, found string
   # let matchBranch = ($pushConf | get branches | default $current '' | select $current | compact | length)
   # 获取待同步目的仓库及目的分支映射
-  let syncDests = ($pushConf | query json $'branches.($current)')
+  let syncDests = ($pushConf | query json $'branches.($current)' | insert SYNC {
+      get repo | each { if ($',($ignored),' =~ $',($it),') { '   x' } { '   √' } }
+    } | sort-by SYNC)
   # 如果没有找到对应分支的 push hook 配置则直接退出
   if (($syncDests | length) > 0) {
     $'(char nl)Found the following matched dests:(char nl)'
     echo $syncDests
   } { exit --now }
 
-  echo $syncDests | each {
+  echo $syncDests | where SYNC == '   √' | each {
     let gitUrl = ($pushConf | query json $'repos.($it.repo).git')
     let navUrl = ($pushConf | query json $'repos.($it.repo).url')
     if $localOid == $zero {
