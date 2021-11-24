@@ -3,7 +3,7 @@
 # Usage:
 #   This's a git push hook, don't call it manually
 
-# Sync local branches to remote according to .termixrc config file
+# Sync local branches to remote according to .termixrc config file from remote repo
 def 'git sync-branch' [
   localRef: string   # Local git branch/ref to push
   localOid: string   # Local git commit object id
@@ -15,7 +15,7 @@ def 'git sync-branch' [
   let zero = (git hash-object --stdin < /dev/null | tr '[0-9a-f]' '0' | str trim)
   let useRef = (if $localOid == $zero { $remoteRef } { $localRef })
   let current = ($useRef | str find-replace 'refs/heads/' '')
-  let pushConf = (open .termixrc | from toml | to json)
+  let pushConf = (git show $'origin/($current):.termixrc' | from toml | to json)
   # The following line not work: ^^^ Expected column path, found string
   # let matchBranch = ($pushConf | get branches | default $current '' | select $current | compact | length)
   # 获取待同步目的仓库及目的分支映射

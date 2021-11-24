@@ -385,6 +385,7 @@ just git-remote-age origin true
       { repo = "bbc", dest = "feature/hooks-sync" },
    ]
    ```
+   该配置文件创建后需要提交到线上才能生效, 之所以如此设计是为了排查问题方便同时也让所有人的同步配置都保持一致。
 
 **其他说明**:
 
