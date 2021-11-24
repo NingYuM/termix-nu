@@ -27,22 +27,23 @@ def 'git sync-branch' [
   } { exit --now }
 
   echo $syncDests | each {
-    let url = ($pushConf | query json $'repos.($it.repo)')
+    let gitUrl = ($pushConf | query json $'repos.($it.repo).git')
+    let navUrl = ($pushConf | query json $'repos.($it.repo).url')
     if $localOid == $zero {
       ^echo $'Remove remote branch (ansi p)($it.dest) of repo ($it.repo)(ansi reset) -->(char nl)'
       # You MUST use '--no-verify' to prevent infinit loops!!!
-      git push --no-verify $url $':($it.dest)'
+      git push --no-verify $gitUrl $':($it.dest)'
     } {
       ^echo $'Sync from local (ansi g)($current)(ansi reset) to remote (ansi p)($it.dest) of repo ($it.repo)(ansi reset) -->(char nl)'
       let forcePush = (get-env FORCE_PUSH '0' | into int)
       if ($forcePush == 1) {
         # You MUST use '--no-verify' to prevent infinit loops!!!
-        git push --no-verify --force $url $'($current):($it.dest)'
+        git push --no-verify --force $gitUrl $'($current):($it.dest)'
       } {
-        git push --no-verify $url $'($current):($it.dest)'
+        git push --no-verify $gitUrl $'($current):($it.dest)'
       }
     }
-    ^echo ''
+    if ($navUrl != '') { ^echo $'You can check the result from: (ansi g)($navUrl)(ansi reset)\n' } { ^echo '' }
   }
   char nl
 }

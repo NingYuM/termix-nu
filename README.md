@@ -366,10 +366,10 @@ just git-remote-age origin true
    在仓库根目录里面创建`.termixrc`文件，该文件为 [`toml`](https://toml.io/en/v1.0.0) 格式内容大致如下:
 
    ```toml
-   # 远程仓库地址清单, 列出所有要同步到的目的仓库地址
+   # 远程仓库地址清单, 列出所有要同步到的目的仓库地址, git 地址为仓库地址，后面的 url 为浏览器访问地址，也会在终端中输出方便点击跳转访问
    [repos]
-   mix = "https://erda.cloud/terminus/dop/gaia-app-mix/gaia-picker"
-   bbc = "https://erda.cloud/terminus/dop/gaia-app-bbc/gaia-picker"
+   mix = { git = "https://erda.cloud/terminus/dop/gaia-app-mix/gaia-mall", url = 'https://erda.cloud/terminus/dop/projects/420/apps/6701/repo' }
+   bbc = { git = "https://erda.cloud/terminus/dop/gaia-app-bbc/gaia-mall", url = 'https://erda.cloud/terminus/dop/projects/394/apps/6124/repo' }
 
    [branches]
    # 本地 develop 分支push操作发生后自动将本地 develop 分支推送到远程对应仓库的对应分支
