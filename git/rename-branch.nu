@@ -35,7 +35,7 @@ def 'git branch-rename' [
     $'Dest branch (ansi r)($to)(ansi reset) already exists in local, please use another new name...(char nl)'
     exit --now
   } {}
-  if ($remoteSrcExists && $localSrcExists) {} {
+  if ($remoteSrcExists || $localSrcExists) {} {
     $'Branch (ansi r)($from) (ansi reset)does not exist in both remote and local, bye...(char nl)'
     exit --now
   }
