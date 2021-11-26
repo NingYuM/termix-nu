@@ -351,6 +351,15 @@ just git-remote-age origin true
 
    while read local_ref local_oid remote_ref remote_oid
    do
+      if ! command -v just &> /dev/null; then
+         echo "Command 'just' could not be found, Please install it by 'brew install just', and try again!\n"
+         break;
+      fi
+      if ! command -v nu &> /dev/null; then
+         echo "Command 'nu' could not be found, Please install it by 'brew install nushell', and try again!\n"
+         break;
+      fi
+
       # 本地分支删除的时候 local_ref="(delete)"，just 解析 `(delete)` 参数的时候有问题
       # 所以需要Hack一下：将其进行转换，反正删除时候的 `local_ref` 值对脚本用处不大
       if [[ $local_ref == '(delete)' ]]; then local_ref='_delete_'; fi
