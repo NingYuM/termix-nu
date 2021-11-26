@@ -7,7 +7,7 @@
 def 'nu-ver' [] {
 
 	let currentVer = ((version).version)
-	let minVer = (open $'($nu.env.TERMIX_DIR)/termix.toml' | get minNuVer)
+	let minVer = (get-conf minNuVer '0.40.0')
 	let m = ($minVer | split row '.' | each { $it | into int })
 	let c = ($currentVer | split row '.' | each { $it | into int })
 	if (($c.0 < $m.0) || ($c.1 < $m.1) || ($c.2 < $m.2)) {
@@ -19,5 +19,3 @@ def 'nu-ver' [] {
 		exit --now
 	} {}
 }
-
-nu-ver

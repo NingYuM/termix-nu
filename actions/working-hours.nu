@@ -10,7 +10,7 @@ def 'working-hours' [
   --show-all: string   # Set true to show all members even if the working hours filled correctly
 ] {
 
-  let emp = (open $'($nu.env.TERMIX_DIR)/termix.toml' | get empWorkingHour)
+  let emp = (get-conf empWorkingHour)
   let outerId = (get-env EMP_OUTER_ID '')
   # 先从环境变量里面查找用户在 emp Cookie 里面的登陆信息
   let empUserCookie = (get-env EMP_UC_COOKIE '')

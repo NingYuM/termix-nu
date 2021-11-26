@@ -15,7 +15,7 @@ def 'release' [
 ] {
 
 	cd $nu.env.TERMIX_DIR
-	let releaseVer = (open 'termix.toml' | get version)
+	let releaseVer = (get-conf version)
 	let greatestVer = (git tag -l --sort=-v:refname | lines | nth 0)
 	let releaseV = ($releaseVer | str find-replace -a '(v|\.)' '' | into int)
 	let greatestV = ($greatestVer | str find-replace -a '(v|\.)' '' | into int)

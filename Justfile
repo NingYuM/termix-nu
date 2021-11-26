@@ -63,7 +63,8 @@ release  updateLog=('false'): _nu-ver-check
 
 # Quickly open the matched nav url in default browser, for mac only
 go nav=('list'): _nu-ver-check
-  @source {{ join(_termix, 'actions', 'quick-nav.nu') }}; \
+  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+    source {{ join(_termix, 'actions', 'quick-nav.nu') }}; \
     go {{nav}}
 
 # Listing the branches of a git repo and the time of the last commit
@@ -172,4 +173,5 @@ dir-batch-exec cmd +DIRS=(''): _nu-ver-check
     dir-batch-exec '{{cmd}}' '{{DIRS}}' --parent={{JUST_INVOKE_DIR}}
 
 _nu-ver-check:
-  @nu {{ join(_termix, 'actions', 'nu-ver.nu') }}
+  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+    source {{ join(_termix, 'actions', 'nu-ver.nu') }}; nu-ver

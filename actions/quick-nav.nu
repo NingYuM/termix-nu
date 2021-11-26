@@ -40,7 +40,7 @@ def 'show-navs' [] {
 
 # Merge all nav items from termix.toml and .termixrc
 def 'merge-navs' [] {
-  let quickNavs = (open $'($nu.env.TERMIX_DIR)/termix.toml' | get quickNavs)
+  let quickNavs = (get-conf quickNavs)
   enter $nu.env.JUST_INVOKE_DIR
   let confExists = ('.termixrc' | path exists)
   let specialNavs = (if $confExists { (open .termixrc | from toml | to json | query json 'quickNavs') } { ([[]; []]) })

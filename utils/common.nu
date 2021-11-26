@@ -14,6 +14,15 @@ def 'get-env' [
   if ($val | empty?) { $default } { $val }
 }
 
+# Get the specified config from `termix.toml` by key
+def 'get-conf' [
+  key: string       # The key to get it's value from termix.toml
+  default?: any     # The default value for an empty conf
+] {
+  let result = (open $'($nu.env.TERMIX_DIR)/termix.toml' | get ($key | into column_path))
+  if ($result | empty?) { $default } { $result }
+}
+
 # Check if a CLI App was installed, if true get the installed version, otherwise return 'N/A'
 def 'get-ver' [
   app: string     # The CLI App to check

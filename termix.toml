@@ -18,6 +18,9 @@ redevRepoPath = '/Users/hustcer/redev-repos'
 # 新增的二开标签备注
 redevTagComment = 'This is a release tag'
 
+# .termixrc 配置从哪个分支上读取？`_current_` 代表当前所在 git 分支, `i` 表示全局 i 分支
+useConfFromBranch = 'i'
+
 # [ ] 支持仓库分组？
 # [ ] 添加 enable 字段?
 # [ ] REDEV_GIT_PREFIX = https://erda.cloud/terminus/dop/gaia-app-redev/
