@@ -1,6 +1,42 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.2.3] - 2021-11-26
+
+### Bug Fixes
+
+- Fix `check-desc` command, do fetch remote before check
+- Fix CHANGELOG.md commit message
+- Update pre push hook demo in README file, fix for remote branch deleting
+- Ignore code syncing when remote branch of origin does not exist
+- Fix `rename-branch` command source branch check
+
+### Documentation
+
+- Update recipes list for readme.md
+- Format docs by prettier
+- Update README.md
+
+### Features
+
+- Update CHANGELOG.md automatically for `release` command
+- Add a switch to update CHANGELOG.md, and update `release` command related docs
+- Change branch description file from json to toml format for `desc` related commands
+- Add url nav alias anchor for readme.md
+- Add force push support for branch syncing
+- Use remote branch syncing config instead of local
+- Add web nav url output support in terminal for branch syncing
+- Add code syncing .env config `SYNC_IGNORE_ALIAS` to ignore syncing of some repo
+- Add read conf from origin/i branch support
+
+### Miscellaneous Tasks
+
+- Remove unused termix conf of macCliApps
+
+### Refactor
+
+- Add `get-conf` common helper in utils/common.nu
+
 ## [1.2.2] - 2021-11-22
 
 ### Bug Fixes
