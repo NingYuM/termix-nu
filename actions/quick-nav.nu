@@ -42,8 +42,12 @@ def 'show-navs' [] {
 def 'merge-navs' [] {
   let quickNavs = (get-conf quickNavs)
   enter $nu.env.JUST_INVOKE_DIR
-  let confExists = ('.termixrc' | path exists)
-  let specialNavs = (if $confExists { (open .termixrc | from toml | to json | query json 'quickNavs') } { ([[]; []]) })
+  # Decide which branch to get `.termixrc` conf from ?
+  let useConfBr = (get-conf useConfFromBranch)
+  let confBr = (if $useConfBr == '_current_' { (git branch --show-current) } { 'i' })
+
+  # let specialNavs = (if $confExists { (open .termixrc | from toml | to json | query json 'quickNavs') } { ([[]; []]) })
+  let specialNavs = (git show $'origin/($confBr):.termixrc' | from toml | to json | query json 'quickNavs')
   let allNavs = (if (($specialNavs | compact | length) == 0) { $quickNavs } {
     let navs = ($quickNavs | pivot key url)
     let special = ($specialNavs | pivot key url)

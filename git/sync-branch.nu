@@ -15,12 +15,15 @@ def 'git sync-branch' [
   let zero = (git hash-object --stdin < /dev/null | tr '[0-9a-f]' '0' | str trim)
   let useRef = (if $localOid == $zero { $remoteRef } { $localRef })
   let current = ($useRef | str find-replace 'refs/heads/' '')
+  # Decide which branch to get `.termixrc` conf from ?
+  let useConfBr = (get-conf useConfFromBranch)
+  let confBr = (if $useConfBr == '_current_' { $current } { 'i' })
 
-  if (has-ref $'origin/($current)') {} {
-    $'Branch (ansi r)($current) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
+  if (has-ref $'origin/($confBr)') {} {
+    $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
     exit --now
   }
-  let pushConf = (git show $'origin/($current):.termixrc' | from toml | to json)
+  let pushConf = (git show $'origin/($confBr):.termixrc' | from toml | to json)
   let ignored = (get-env SYNC_IGNORE_ALIAS '')
   # The following line not work: ^^^ Expected column path, found string
   # let matchBranch = ($pushConf | get branches | default $current '' | select $current | compact | length)
@@ -30,7 +33,7 @@ def 'git sync-branch' [
     } | sort-by SYNC)
   # 如果没有找到对应分支的 push hook 配置则直接退出
   if (($syncDests | length) > 0) {
-    $'(char nl)Found the following matched dests:(char nl)'
+    $'(char nl)Found the following matched dests from (ansi g)`origin/($confBr):.termixrc`(ansi reset):(char nl)'
     echo $syncDests
   } { exit --now }
 
