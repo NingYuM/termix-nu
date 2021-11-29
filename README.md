@@ -192,6 +192,8 @@ docs = 'https://erda.cloud/terminus/dop/projects/213/apps/7542/repo'
 
 然后通过`just go docs`就可以在默认浏览器里面打开`docs`对应的链接了，而且`docs`不用全部输入，如果`do`只能匹配一个简称用`just go do`也可以达到同样效果, 如果找不到任何匹配项将列出所有可用链接。考虑到不同人的常用链接可能差别很大，所以允许使用者自由定制：脚本会自动将执行`just go`命令时所在目录里面的`.termixrc`文件里面的`quickNavs`配置项与`termix.toml`里面的同名配置进行合并，如果**链接简称**重复则`.termixrc`文件里面的优先级更高。
 
+另：当`termix.toml`里面的`useConfFromBranch`配置项值为`_current_`时`.termixrc`配置会从当前分支读取，当该配置的值为`i`时会从`i`分支上读取，关于`i`分支的更多说明请看后文。
+
 ### 5. 指定目录批量执行特定命令{#dir-batch-exec}
 
 **功能描述**: 在指定目录里面执行特定命令，如果没有指定目录则会在当前目录的所有子目录内执行对应命令

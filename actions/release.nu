@@ -14,27 +14,27 @@ def 'release' [
   --update-log: string  # set to `true` do enable updating CHANGELOG.md
 ] {
 
-	cd $nu.env.TERMIX_DIR
-	let releaseVer = (get-conf version)
-	let greatestVer = (git tag -l --sort=-v:refname | lines | nth 0)
-	let releaseV = ($releaseVer | str find-replace -a '(v|\.)' '' | into int)
-	let greatestV = ($greatestVer | str find-replace -a '(v|\.)' '' | into int)
-	if (has-ref $releaseVer) {
-		$'The version ($releaseVer) already exists, Please choose another version.(char nl)'
-		exit --now
-	} {}
-	if ($releaseV <= $greatestV) {
-		$'The release version sould be greater than ($greatestVer), however, current release ver: ($releaseVer)(char nl)'
-		exit --now
-	} {}
-	let statusCheck = (git status --porcelain)
-	if ($statusCheck | empty?) {} {
-		$'You have uncommit changes, please commit them and try `release` again!(char nl)'
-		exit --now
-	}
+  cd $nu.env.TERMIX_DIR
+  let releaseVer = (get-conf version)
+  let greatestVer = (git tag -l --sort=-v:refname | lines | nth 0)
+  let releaseV = ($releaseVer | str find-replace -a '(v|\.)' '' | into int)
+  let greatestV = ($greatestVer | str find-replace -a '(v|\.)' '' | into int)
+  if (has-ref $releaseVer) {
+  	$'The version ($releaseVer) already exists, Please choose another version.(char nl)'
+  	exit --now
+  } {}
+  if ($releaseV <= $greatestV) {
+  	$'The release version sould be greater than ($greatestVer), however, current release ver: ($releaseVer)(char nl)'
+  	exit --now
+  } {}
+  let statusCheck = (git status --porcelain)
+  if ($statusCheck | empty?) {} {
+  	$'You have uncommit changes, please commit them and try `release` again!(char nl)'
+  	exit --now
+  }
   if ($update-log == 'true') {
     git cliff --unreleased --tag ($releaseVer | str find-replace 'v' '') --prepend CHANGELOG.md;
     git commit CHANGELOG.md -m $'update CHANGELOG.md for ($releaseVer)'
   } {}
-	git tag $releaseVer -am $'A new release for version: ($releaseVer) created by Release command of termix-nu'; git push origin --tags
+  git tag $releaseVer -am $'A new release for version: ($releaseVer) created by Release command of termix-nu'; git push origin --tags
 }
