@@ -12,6 +12,9 @@ version = 'v1.2.3'
 # Min nushell version required to run termix-nu commands
 minNuVer = '0.40.0'
 
+# Min just version required to run termix-nu commands
+minJustVer = '0.10.4'
+
 # 临时二开仓库存放目录, .env 里面 REDEV_REPO_PATH 具有更高优先级
 redevRepoPath = '/Users/hustcer/redev-repos'
 
