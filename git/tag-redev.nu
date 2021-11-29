@@ -27,8 +27,8 @@ def 'git tag-redev' [
   $'Delete tag ($tagName) ---> (ansi r)($delete)(ansi reset)(char nl)(char nl)'
 
   # 先从环境变量里面查找所有二开仓库存放临时路径
-  let localRepoDir = (get-env REDEV_REPO_PATH)
-  let repoPath = (if ($localRepoDir | empty?) { ($actionConf | get redevRepoPath) } { $localRepoDir })
+  let localRepoDir = (get-env TERMIX_TMP_PATH)
+  let repoPath = (if ($localRepoDir | empty?) { ($actionConf | get termixTmpPath) } { $localRepoDir })
   let redevRepos = ($actionConf | get redevRepos)
   let exists = ($repoPath | path exists)
   # 不存在则创建临时路径

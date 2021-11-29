@@ -8,7 +8,7 @@ def 'show-env' [] {
   let termixDir = (get-env TERMIX_DIR '(empty)')
   let shell = (get-env SHELL_TO_RUN_CMD '(empty)')
   let justFile = (get-env JUST_FILE_PATH '(empty)')
-  let redevPath = (get-env REDEV_REPO_PATH '(empty)')
+  let termixTmp = (get-env TERMIX_TMP_PATH '(empty)')
   let justInvokeDir = (get-env JUST_INVOKE_DIR '(empty)')
   let npmVer = (get-ver npm 'npm --version')
   let yarnVer = (get-ver yarn 'yarn --version')
@@ -36,7 +36,7 @@ def 'show-env' [] {
     ['-------', '--------']
     ['SHELL_TO_RUN_CMD', $shell]
     ['JUST_FILE', $justFile]
-    ['REDEV_REPO_PATH', $redevPath]
+    ['TERMIX_TMP_PATH', $termixTmp]
     ['TERMIX_DIR', $termixDir]
     ['JUST_INVOKE_DIR', $justInvokeDir]
     ['Current Time', $time]

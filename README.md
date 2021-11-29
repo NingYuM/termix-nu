@@ -509,7 +509,7 @@ just check-desc
 
 **功能描述**:
 
-显示标品二开仓库的所有 Tag 及其对应创建时间，也可以额外显示分支及其最后提交时间，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `REDEV_REPO_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `redevRepoPath` 配置;
+显示标品二开仓库的所有 Tag 及其对应创建时间，也可以额外显示分支及其最后提交时间，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `TERMIX_TMP_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `termixTmpPath` 配置;
 
 **命令格式**: `just ls-redev-refs showBranch=('false')`
 
@@ -528,7 +528,7 @@ just ls-redev-refs true
 
 ### 18. 批量更新远程二开仓库代码到本地{#pull-redev}
 
-**功能描述**: 更新远程二开仓库代码到本地，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `REDEV_REPO_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `redevRepoPath` 配置;
+**功能描述**: 更新远程二开仓库代码到本地，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `TERMIX_TMP_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `termixTmpPath` 配置;
 
 **命令格式**: `just pull-redev branch=('master') diff=('false')`
 

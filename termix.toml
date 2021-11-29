@@ -15,8 +15,8 @@ minNuVer = '0.40.0'
 # Min just version required to run termix-nu commands
 minJustVer = '0.10.4'
 
-# 临时二开仓库存放目录, .env 里面 REDEV_REPO_PATH 具有更高优先级
-redevRepoPath = '/Users/hustcer/redev-repos'
+# 临时二开仓库存放目录, .env 里面 TERMIX_TMP_PATH 具有更高优先级
+termixTmpPath = '/Users/hustcer/.termix-nu'
 
 # 新增的二开标签备注
 redevTagComment = 'This is a release tag'
@@ -53,6 +53,14 @@ redevRepos = [
   { name = 'gaia-picker-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-picker-redev' },
   # https://erda.cloud/terminus/dop/projects/385/apps/7423/repo/tags
   { name = 'gaia-picker-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-picker-redev-origin' },
+]
+
+# 标品前端远程源码仓库配置，供标品打 Release Tag 之用
+gaiaSrcRepos = [
+  { name = 'gaia-mall', branch = 'release/redevelop', suffix = '', url = 'https://erda.cloud/terminus/dop/gaia-app/gaia-mall' },
+  { name = 'gaia-mobile', branch = 'release/sea', suffix = 'sea', url = 'https://erda.cloud/terminus/dop/gaia-app/gaia-mobile' },
+  { name = 'gaia-mobile', branch = 'release/redevelop', suffix = '', url = 'https://erda.cloud/terminus/dop/gaia-app/gaia-mobile' },
+  { name = 'gaia-picker', branch = 'release/redevelop', suffix = '', url = 'https://erda.cloud/terminus/dop/gaia-app/gaia-picker' },
 ]
 
 [empWorkingHour]
