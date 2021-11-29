@@ -571,7 +571,31 @@ just tag-redev v2.5.0 develop
 just tag-redev v2.2.0.21-2021.11.09 master
 ```
 
-### 20. 查看团队成员当前 EMP 工时填报情况{#emp}
+### 20. 给标品源码仓库批量打 Tag{#gaia-release}
+
+**功能描述**: 给标品 `gaia-mall,gaia-mobile,gaia-picker` 源码仓库指定分支批量打 Tag, 也可以用于删除指定 Tag
+
+**命令格式**: `gaia-release version=('') repos=('mall,mobile,picker') delete=('false')`
+
+**参数说明**:
+
+- `version`: 必填，需要新增的 Tag 前缀，创建 Tag 的时候默认会加上日期信息，比如当指定 Tag 为`v2.2.0`的时候实际生成的可能为`v2.2.0-2021.10.27`, 也可以自己指定时间戳，如果指定了时间戳则以指定时间戳为准，不再添加默认时间戳；
+- `repos`: 可选，需要打 Tag 的源码仓库简称：`mall/mobile/picker`，多个简称之间用 `,` 分隔 ，默认值 `mall,mobile,picker`；
+- `delete`: 可选，`true`表示删除指定 Tag 且不重新添加对应 Tag，默认值 `false` 表示 Tag 不存在则创建 Tag，存在则先删除再创建;
+- 其他说明: 创建 Tag 的时候可以指定分支及其 Tag 后缀，具体可以在`termix.toml`里面的`gaiaSrcRepos`配置项里根据需要作调整;
+
+**使用举例**:
+
+```bash
+# 给`mall/mobile/picker`三个源码仓库创建新的Tag，比如 `v2.2.0-2021.10.27`
+just gaia-release v2.2.0
+# 删除mall,mobile,picker三个仓库`v2.2.0`对应的当天的Tag
+just gaia-release v2.2.0 mall,mobile,picker true
+# 在`mall,mobile`仓库创建Tag时以给定完整的包含时间戳的Tag名称为准，取代默认添加的时间戳
+just gaia-release v2.2.0.21-2021.11.09 mall,mobile
+```
+
+### 21. 查看团队成员当前 EMP 工时填报情况{#emp}
 
 **功能描述**: 查看团队成员当前 EMP 工时填报情况
 

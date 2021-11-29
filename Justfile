@@ -128,6 +128,12 @@ emp showAll=('false'): _check-ver
     source {{ join(_termix, 'actions', 'working-hours.nu') }}; \
     working-hours --show-all={{showAll}}
 
+# 给标品源码仓库打 Release Tag
+gaia-release version=('') repos=('mall,mobile,picker') delete=('false'): _check-ver
+  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+    source {{ join(_termix, 'actions', 'gaia-release.nu') }}; \
+    gaia-release {{version}} {{repos}} --delete-tag={{delete}}
+
 # t pull-redev true
 # 更新远程二开仓库代码到本地
 pull-redev branch=('master') diff=('false'): _check-ver
