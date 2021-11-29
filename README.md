@@ -44,6 +44,10 @@ cargo install nu --features=extra
 cargo +stable install nu --all-features --version 0.39.0
 ```
 
+### `Just` & `nu` 更新提示
+
+本仓库的脚本工具执行的时候会检查本机安装的 `just` & `nu` 的版本, 如果当前安装的版本小于 `termix.toml` 里面的 `minNuVer` 或者 `minJustVer` 指定的最低版本要求，就会在终端提示您升级`just` 或者 `nu` 到最新版本，尤其是当本地 `termix-nu` 版本更新后出于兼容性考虑对`just` & `nu`的最低版本有要求，如果版本过低可能会导致工具脚本无法正常运行。
+
 ## 配置{#config}
 
 1. Clone `termix-nu` 源码:
