@@ -15,11 +15,8 @@ def 'gaia-release' [
 ] {
 
   let DATE_FMT = '%Y.%m.%d'
-  let actionConf = (open $'($nu.env.TERMIX_DIR)/termix.toml')
-  # 先从环境变量里面查找所有git仓库存放临时路径
-  let localRepoDir = (get-env TERMIX_TMP_PATH)
-  let repoPath = (if ($localRepoDir | empty?) { ($actionConf | get termixTmpPath) } { $localRepoDir })
-  let gaiaSrcRepos = ($actionConf | get gaiaSrcRepos)
+  let repoPath = (get-tmp-path)
+  let gaiaSrcRepos = (open $TERMIX_CONF | get gaiaSrcRepos)
   $'Using global repo path: (ansi p)($repoPath)(ansi reset)(char nl)(char nl)'
 
   $gaiaSrcRepos | match name ($repos | str find-replace -a ',' '|') | each { |repo|

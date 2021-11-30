@@ -11,11 +11,8 @@ def 'git pull-redev' [
   --show-diff(-d): string   # Set to 'true' if you want to see the files changed since prev tag
 ] {
 
-  let actionConf = (open $'($nu.env.TERMIX_DIR)/termix.toml')
-  # 先从环境变量里面查找所有二开仓库存放临时路径
-  let localRepoDir = (get-env TERMIX_TMP_PATH)
-  let repoPath = (if ($localRepoDir | empty?) { ($actionConf | get termixTmpPath) } { $localRepoDir })
-  let redevRepos = ($actionConf | get redevRepos)
+  let repoPath = (get-tmp-path)
+  let redevRepos = (open $TERMIX_CONF | get redevRepos)
   $'Pull remote redevelop repos in directory (ansi g)($repoPath)(ansi reset):(char nl)'
 
   # 此处迭代变量不要采用默认的 `$it`, 否则会出错，坑爹啊……

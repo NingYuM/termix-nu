@@ -23,11 +23,8 @@ def 'just-ver' [] {
 # Check latest termix-nu version and show upgrading tips if there is a new release
 def 'termix-ver' [] {
   let DATE_FMT = '%Y.%m.%d'
-  let actionConf = (open $'($nu.env.TERMIX_DIR)/termix.toml')
-  let currentVer = ($actionConf | get version)
-  # 先从环境变量里面查找临时文件路径
-  let tmpDir = (get-env TERMIX_TMP_PATH)
-  let tmpPath = (if ($tmpDir | empty?) { ($actionConf | get termixTmpPath) } { $tmpDir })
+  let tmpPath = (get-tmp-path)
+  let currentVer = (get-conf version)
   let confName = $'($tmpPath)/.termix-conf'
   let checkDate = (date now | date format $DATE_FMT)
   if ($confName | path exists) {

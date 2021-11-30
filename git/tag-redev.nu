@@ -13,7 +13,7 @@ def 'git tag-redev' [
 
   let currentBeTag = $tag
   let DATE_FMT = '%Y.%m.%d'
-  let actionConf = (open $'($nu.env.TERMIX_DIR)/termix.toml')
+  let actionConf = (open $TERMIX_CONF)
 
   let delete = (if $delete-tag == 'true' { $true } { $false })
   let TAG_COMMENT = ($actionConf | get redevTagComment)
@@ -26,9 +26,7 @@ def 'git tag-redev' [
   let tagName = (if ($TAG | str contains '-') { $TAG } { $'($TAG)-(date now | date format $DATE_FMT)' })
   $'Delete tag ($tagName) ---> (ansi r)($delete)(ansi reset)(char nl)(char nl)'
 
-  # 先从环境变量里面查找所有二开仓库存放临时路径
-  let localRepoDir = (get-env TERMIX_TMP_PATH)
-  let repoPath = (if ($localRepoDir | empty?) { ($actionConf | get termixTmpPath) } { $localRepoDir })
+  let repoPath = (get-tmp-path)
   let redevRepos = ($actionConf | get redevRepos)
   let exists = ($repoPath | path exists)
   # 不存在则创建临时路径
