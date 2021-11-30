@@ -134,6 +134,12 @@ gaia-release version=('') repos=('mall,mobile,picker') delete=('false'): _check-
     source {{ join(_termix, 'actions', 'gaia-release.nu') }}; \
     gaia-release {{version}} {{repos}} --delete-tag={{delete}}
 
+# Transfer a git repo from source to the dest
+repo-transfer from=('') to=(''): _check-ver
+  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+    source {{ join(_termix, 'git', 'repo-transfer.nu') }}; \
+    git repo-transfer {{from}} {{to}}
+
 # t pull-redev true
 # 更新远程二开仓库代码到本地
 pull-redev branch=('master') diff=('false'): _check-ver

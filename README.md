@@ -455,7 +455,24 @@ just git-remote-age origin true
 just rename-branch feature/old feature/new
 ```
 
-### 15. 查看 Git 分支描述信息{#desc}
+### 15. Git 仓库迁移{#repo-transfer}
+
+**功能描述**: 将 Git 仓库迁移到新的地址：含代码、分支、Tag 等
+
+**命令格式**: `just repo-transfer from=('') to=('')`
+
+**参数说明**:
+
+- `from`: 必填，源仓库 Git 地址;
+- `to`: 必填，目的仓库 Git 地址;
+
+**使用举例**:
+
+```bash
+just repo-transfer https://old.source-repo.url https://new.dest-repo.url
+```
+
+### 16. 查看 Git 分支描述信息{#desc}
 
 **功能描述**: 查看 Git 分支描述信息
 
@@ -488,7 +505,7 @@ just desc
 just desc develop true
 ```
 
-### 16. Git 分支描述检查{#check-desc}
+### 17. Git 分支描述检查{#check-desc}
 
 **功能描述**: 基于前面一条的分支描述规则，检查哪些 Git 分支没有描述信息
 
@@ -505,7 +522,7 @@ just check-desc
 
 ![Just Check Desc Output](https://img.alicdn.com/imgextra/i3/O1CN01wxKoPt1il40LSxtzu_!!6000000004452-2-tps-675-275.png)
 
-### 17. 查询二开仓库的远程分支及 Tag 信息{#ls-redev-refs}
+### 18. 查询二开仓库的远程分支及 Tag 信息{#ls-redev-refs}
 
 **功能描述**:
 
@@ -526,7 +543,7 @@ just ls-redev-refs
 just ls-redev-refs true
 ```
 
-### 18. 批量更新远程二开仓库代码到本地{#pull-redev}
+### 19. 批量更新远程二开仓库代码到本地{#pull-redev}
 
 **功能描述**: 更新远程二开仓库代码到本地，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `TERMIX_TMP_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `termixTmpPath` 配置;
 
@@ -546,7 +563,7 @@ just pull-redev
 just pull-redev develop true
 ```
 
-### 19. 给远程二开仓库批量打 Tag{#tag-redev}
+### 20. 给远程二开仓库批量打 Tag{#tag-redev}
 
 **功能描述**: 给远程二开仓库指定分支批量打 Tag, 也可以用于删除指定 Tag
 
@@ -571,7 +588,7 @@ just tag-redev v2.5.0 develop
 just tag-redev v2.2.0.21-2021.11.09 master
 ```
 
-### 20. 给标品源码仓库批量打 Tag{#gaia-release}
+### 21. 给标品源码仓库批量打 Tag{#gaia-release}
 
 **功能描述**: 给标品 `gaia-mall,gaia-mobile,gaia-picker` 源码仓库指定分支批量打 Tag, 也可以用于删除指定 Tag
 
@@ -595,7 +612,7 @@ just gaia-release v2.2.0 mall,mobile,picker true
 just gaia-release v2.2.0.21-2021.11.09 mall,mobile
 ```
 
-### 21. 查看团队成员当前 EMP 工时填报情况{#emp}
+### 22. 查看团队成员当前 EMP 工时填报情况{#emp}
 
 **功能描述**: 查看团队成员当前 EMP 工时填报情况
 
