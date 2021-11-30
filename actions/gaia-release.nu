@@ -16,7 +16,7 @@ def 'gaia-release' [
 
   let DATE_FMT = '%Y.%m.%d'
   let repoPath = (get-tmp-path)
-  let gaiaSrcRepos = (open $TERMIX_CONF | get gaiaSrcRepos)
+  let gaiaSrcRepos = (open $_TERMIX_CONF | get gaiaSrcRepos)
   $'Using global repo path: (ansi p)($repoPath)(ansi reset)(char nl)(char nl)'
 
   $gaiaSrcRepos | match name ($repos | str find-replace -a ',' '|') | each { |repo|

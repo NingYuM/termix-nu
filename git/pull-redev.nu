@@ -12,7 +12,7 @@ def 'git pull-redev' [
 ] {
 
   let repoPath = (get-tmp-path)
-  let redevRepos = (open $TERMIX_CONF | get redevRepos)
+  let redevRepos = (open $_TERMIX_CONF | get redevRepos)
   $'Pull remote redevelop repos in directory (ansi g)($repoPath)(ansi reset):(char nl)'
 
   # 此处迭代变量不要采用默认的 `$it`, 否则会出错，坑爹啊……

@@ -39,9 +39,8 @@ def 'git remote-age' [
   $'Tags of (ansi gb)($repoName)(ansi reset) for remote ($alias)(char nl)'
   $'(ansi g)───────────────────────────────────────────────────────────────────────>(ansi reset)(char nl)'
   # git ls-remote --tags origin
-  let os = (version | pivot name value | match name build_os | get value)
   let tagFormat = '%(align:1,30)%(color:green)%(refname:strip=2)%(end)%09%09%(color:yellow)%(creatordate:iso)'
-  if ($os =~ 'windows') {
+  if ($_OS =~ 'windows') {
     # Git for Windows does't support sort by `creatordate` field?
     git tag $'--format=($tagFormat)' --sort=-v:refname   # Reverse
   } {

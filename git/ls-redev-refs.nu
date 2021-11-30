@@ -10,7 +10,7 @@ def 'git ls-redev-refs' [
 ] {
 
   let repoPath = (get-tmp-path)
-  let redevRepos = (open $TERMIX_CONF | get redevRepos)
+  let redevRepos = (open $_TERMIX_CONF | get redevRepos)
   $'(ansi p)---------------> List remote refs <--------------- (char nl)(ansi reset)'
 
   $redevRepos | each {
@@ -19,7 +19,6 @@ def 'git ls-redev-refs' [
     let repoName = ($url | str substring $'($repoNameIdx),')
     # 单一二开仓库完整路径
     let destRepoPath = $'($repoPath)/($repoName)'
-    let os = (version | pivot name value | match name build_os | get value)
     # 仓库存在则更新，不存在则 clone
     if ($destRepoPath | path exists) {
       cd $destRepoPath; git pull
@@ -35,7 +34,7 @@ def 'git ls-redev-refs' [
     $'(char nl)Tags of repo (ansi gb)($repoName)(ansi reset): (char nl)'
     # git ls-remote --tags $url | grep -v '{}'
     cd $destRepoPath
-    if ($os =~ 'windows') {
+    if ($_OS =~ 'windows') {
       # Git for Windows does't support sort by `creatordate` field?
       git tag --format='%(refname:strip=2)%09%(creatordate:iso)' --sort=-v:refname   # Reverse
     } {

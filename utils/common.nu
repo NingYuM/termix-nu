@@ -6,7 +6,10 @@
 let __env = ($nu.env | pivot key value)
 
 # Termix.toml config file path
-let TERMIX_CONF = $'($nu.env.TERMIX_DIR)/termix.toml'
+let _TERMIX_CONF = $'($nu.env.TERMIX_DIR)/termix.toml'
+
+# Current OS: windows / macos
+let _OS = (version | pivot name value | match name build_os | get value)
 
 # Get the specified env key's value or ''
 def 'get-env' [
@@ -22,13 +25,13 @@ def 'get-conf' [
   key: string       # The key to get it's value from termix.toml
   default?: any     # The default value for an empty conf
 ] {
-  let result = (open $TERMIX_CONF | get ($key | into column_path))
+  let result = (open $_TERMIX_CONF | get ($key | into column_path))
   if ($result | empty?) { $default } { $result }
 }
 
 # Get TERMIX_TMP_PATH
 def 'get-tmp-path' [] {
-  let actionConf = (open $TERMIX_CONF)
+  let actionConf = (open $_TERMIX_CONF)
   # 先从环境变量里面查找临时文件路径
   let tmpDir = (get-env TERMIX_TMP_PATH)
   let tmpPath = (if ($tmpDir | empty?) { ($actionConf | get termixTmpPath) } { $tmpDir })

@@ -13,7 +13,7 @@ def 'git tag-redev' [
 
   let currentBeTag = $tag
   let DATE_FMT = '%Y.%m.%d'
-  let actionConf = (open $TERMIX_CONF)
+  let actionConf = (open $_TERMIX_CONF)
 
   let delete = (if $delete-tag == 'true' { $true } { $false })
   let TAG_COMMENT = ($actionConf | get redevTagComment)
