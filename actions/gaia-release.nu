@@ -21,7 +21,7 @@ def 'gaia-release' [
 
   $gaiaSrcRepos | match name ($repos | str find-replace -a ',' '|') | each { |repo|
     # 单一仓库完整路径
-    let destRepoPath = $'($repoPath)/($repo.name)'
+    let destRepoPath = ([$repoPath $repo.name] | path join)
     let dateSuffix = (date now | date format $DATE_FMT)
     let releaseTag = (if ($repo.suffix | empty?) { $'($version)-($dateSuffix)' } { $'($version)-($repo.suffix)-($dateSuffix)' })
     # let tagName = 'v1.0.0-2021.08.09'

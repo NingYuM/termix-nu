@@ -15,7 +15,7 @@ def 'git repo-transfer' [
   $'(ansi g)─────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
   let nameIndexStart = ($source | str index-of -e '/')
   let repoName = $'($source | str substring $'($nameIndexStart + 1),')-sync'
-  let exists = ($'($tmpPath)/($repoName)' | path exists)
+  let exists = ([$tmpPath $repoName] | path join | path exists)
 
   if $exists {
     cd $repoName

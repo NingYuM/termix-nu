@@ -6,7 +6,7 @@
 let __env = ($nu.env | pivot key value)
 
 # Termix.toml config file path
-let _TERMIX_CONF = $'($nu.env.TERMIX_DIR)/termix.toml'
+let _TERMIX_CONF = ([$nu.env.TERMIX_DIR 'termix.toml'] | path join)
 
 # Current OS: windows / macos
 let _OS = (version | pivot name value | match name build_os | get value)

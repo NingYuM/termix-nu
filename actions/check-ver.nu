@@ -25,7 +25,7 @@ def 'termix-ver' [] {
   let DATE_FMT = '%Y.%m.%d'
   let tmpPath = (get-tmp-path)
   let currentVer = (get-conf version)
-  let confName = $'($tmpPath)/.termix-conf'
+  let confName = ([$tmpPath '.termix-conf'] | path join)
   let checkDate = (date now | date format $DATE_FMT)
   if ($confName | path exists) {
     let conf = (open $confName -r)
