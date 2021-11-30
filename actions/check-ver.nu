@@ -20,20 +20,58 @@ def 'just-ver' [] {
   upgrade-tip just $minVer $currentVer
 }
 
+# Check latest termix-nu version and show upgrading tips if there is a new release
+def 'termix-ver' [] {
+  let DATE_FMT = '%Y.%m.%d'
+  let actionConf = (open $'($nu.env.TERMIX_DIR)/termix.toml')
+  let currentVer = ($actionConf | get version)
+  # 先从环境变量里面查找临时文件路径
+  let tmpDir = (get-env TERMIX_TMP_PATH)
+  let tmpPath = (if ($tmpDir | empty?) { ($actionConf | get termixTmpPath) } { $tmpDir })
+  let confName = $'($tmpPath)/.termix-conf'
+  let checkDate = (date now | date format $DATE_FMT)
+  if ($confName | path exists) {
+    let conf = (open $confName -r)
+    if ($conf | query json 'checkDate') == $checkDate {
+      let latestVer = ($conf | query json 'latestVer')
+      upgrade-tip termix-nu $latestVer $currentVer
+    } {
+      upgrade-tip termix-nu (query-ver $confName) $currentVer
+    }
+  } {
+    upgrade-tip termix-nu (query-ver $confName) $currentVer
+  }
+}
+
+# Query and save termix-nu version to conf file everyday
+def 'query-ver' [
+  conf: string,
+] {
+  enter $nu.env.TERMIX_DIR; git fetch origin -p
+  let latestVer = (git tag -l --sort=-v:refname | lines | nth 0)
+  [[latestVer checkDate]; [$latestVer $checkDate]]  | to json --pretty 2 | save $conf
+  echo $latestVer
+}
+
 # Compare min version with current version and show upgrading tips if required
 def 'upgrade-tip' [
   cmd: string,
   min: string,
   current: string,
 ] {
-  let m = ($min | split row '.' | each { $it | into int })
-  let c = ($current | split row '.' | each { $it | into int })
-  if (($c.0 < $m.0) || ($c.1 < $m.1) || ($c.2 < $m.2)) {
-    $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
-    $'  Min required ($cmd) ver: (ansi r)($min)(ansi reset), current ($cmd) ver: ($current)(char nl)'
-    $'  ------------> Your ($cmd) is (ansi r)OUTDATED(ansi reset) <------------ (char nl)'
-    $'  Please run (ansi g)`brew upgrade ($cmd)`(ansi reset) to upgrade to the latest.(char nl)'
-    $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
-    exit --now
+  if (is-lower-ver $current $min) {
+    if ($cmd == 'termix-nu') {
+      $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+      $' -----> Your ($cmd) is (ansi r)OUTDATED(ansi reset), latest ver: ($min) <----- (char nl)'
+      $'  Please run (ansi g)`just upgrade`(ansi reset) to upgrade to the latest version.(char nl)'
+      $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+    } {
+      $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+      $'  Min required ($cmd) ver: (ansi r)($min)(ansi reset), current ($cmd) ver: ($current)(char nl)'
+      $'  ------------> Your ($cmd) is (ansi r)OUTDATED(ansi reset) <------------ (char nl)'
+      $'  Please run (ansi g)`brew upgrade ($cmd)`(ansi reset) to upgrade to the latest.(char nl)'
+      $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+      exit --now
+    }
   } {}
 }

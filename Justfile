@@ -180,4 +180,4 @@ dir-batch-exec cmd +DIRS=(''): _check-ver
 
 _check-ver:
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
-    source {{ join(_termix, 'actions', 'check-ver.nu') }}; nu-ver; just-ver
+    source {{ join(_termix, 'actions', 'check-ver.nu') }}; termix-ver; nu-ver; just-ver

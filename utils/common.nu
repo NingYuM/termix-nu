@@ -40,6 +40,18 @@ def 'has-ref' [
   if ($parse | empty?) { $false } { $true }
 }
 
+# Compare two version number, return true if first one is lower then second one
+def 'is-lower-ver' [
+  from: string,
+  to: string,
+] {
+  let dest = ($to | str trim -c 'v' | str trim)
+  let source = ($from | str trim -c 'v' | str trim)
+  let t = ($dest | split row '.' | each { $it | into int })
+  let f = ($source | split row '.' | each { $it | into int })
+  if (($f.0 < $t.0) || ($f.1 < $t.1) || ($f.2 < $t.2)) { echo $true } { echo $false }
+}
+
 # Check if git was installed and if current directory is a git repo
 def 'git-check' [
   dest: string        # The dest dir to check
