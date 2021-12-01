@@ -8,11 +8,15 @@ def 'git age' [
   repo: path    # The repo path to show git age
 ] {
 
+  $'(ansi p)(char nl)Last commit info of local branches: (ansi reset)(char nl)(char nl)'
   cd $repo
   git branch |
     lines |
     str substring 2, |
     wrap name |
+    insert author {
+      get name | each { git show $it -s --format='%an' }
+    } |
     insert last-commit {
       get name |
       each {
