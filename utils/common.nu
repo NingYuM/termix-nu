@@ -33,7 +33,7 @@ def 'get-conf' [
 def 'get-tmp-path' [] {
   let actionConf = (open $_TERMIX_CONF)
   # 先从环境变量里面查找临时文件路径
-  let tmpDir = (get-env TERMIX_TMP_PATH)
+  let tmpDir = (get-env TERMIX_TMP_PATH '')
   let tmpPath = (if ($tmpDir | empty?) { ($actionConf | get termixTmpPath) } { $tmpDir })
   echo $tmpPath
 }

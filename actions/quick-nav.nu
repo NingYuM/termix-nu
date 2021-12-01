@@ -46,6 +46,7 @@ def 'merge-navs' [] {
   let confBr = (if $useConfBr == '_current_' { (git branch --show-current) } { 'i' })
 
   # let specialNavs = (if $confExists { (open .termixrc | from toml | to json | query json 'quickNavs') } { ([[]; []]) })
+  # FIXME: fatal: invalid object name 'origin/i'.
   let specialNavs = (git show $'origin/($confBr):.termixrc' | from toml | to json | query json 'quickNavs')
   let allNavs = (if (($specialNavs | compact | length) == 0) { $quickNavs } {
     let navs = ($quickNavs | pivot key url)

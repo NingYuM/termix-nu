@@ -42,7 +42,7 @@ def 'git pull-redev' [
     git show --abbrev-commit --no-patch
 
     # 先从环境变量里面查找待比较的上一个标签的完整名称
-    let prevTagName = (get-env REDEV_PREV_TAG)
+    let prevTagName = (get-env REDEV_PREV_TAG '')
     # Check the tag status, if exists just recrete it.
     if (has-ref $'refs/tags/($prevTagName)') {
       if $show-diff == 'true' && (git --no-pager diff $prevTagName $branch --name-only | lines | length) > 0 {

@@ -22,10 +22,10 @@ def 'git repo-transfer' [
     # Trim is required here to make it equal to $source
     let prevFetchUrl = (git remote get-url origin | str trim)
     if ($prevFetchUrl == $source) {
-      $'Repo ($repoName) already exists, just sync code from source to dest:(char nl)(char nl)'
+      $'Repo ($repoName) already exists, just sync code from source to dest.(char nl)(char nl)'
       git fetch origin -p
-      git remote set-url origin --push $dest; git push --mirror
-      $'(ansi g)Bravo! Repo transfer successfully!(ansi reset)(char nl)'
+      git remote set-url origin --push $dest
+      do-push $dest
     } {
       $'(ansi r)Path ($tmpPath)/($repoName) already exists(ansi reset), Please remove it and try again...(char nl)'
       exit --now
@@ -34,8 +34,20 @@ def 'git repo-transfer' [
     $'Cloning code to: (ansi g)($tmpPath)/($repoName)(ansi reset)(char nl)'
     git clone --mirror $source $repoName
     cd $repoName; git remote set-url origin --push $dest
-    $'(char nl)(ansi g)Push code to the remote dest:(ansi reset)(char nl)(char nl)'
-    git push --mirror
+    do-push $dest
+  }
+}
+
+def 'do-push' [
+  dest: string      # The dest repo git url
+] {
+  $'(ansi g)Push code to the remote dest:(ansi reset)(char nl)'
+  # FIXME: fatal: repository 'xxx' not found
+  let output = ((^git push --mirror 2>&1) | compact | str collect)
+  echo $output
+  if $output =~ 'not found' {
+    $'(ansi r)Error: The dest repo does not exist, please create it and try again, bye...(ansi reset)(char nl)'
+  } {
     $'(ansi g)Bravo! Repo transfer successfully!(ansi reset)(char nl)'
   }
 }
