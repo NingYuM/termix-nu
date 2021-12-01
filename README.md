@@ -5,9 +5,9 @@
 :::tip
 既然可以用 JS 写为什么还要采用 `Nushell`？
 
-1. 用 JS 写的脚本在使用前需要安装`node_modules`依赖, 使用上稍有不便，`termix-nu`里面的脚本希望单独把脚本文件发给其他人的时候对方可以直接执行(前提是本机安装过`Nushell`)，另一方面本仓库里面的脚本主要用于日常开发的时候完成一些“微不足道”的小功能: 这些能力看似可有可无，比较杂，且不设限，不适合也没有放到`@terminus/termix`里面的必要，它的定位就是**"尽可能地通过脚本化的方式消灭日常开发过程中一切低效、重复的工作"**;
+1. 用 JS 写的脚本在使用前需要安装`node_modules`依赖, 使用上稍有不便，`termix-nu`里面的脚本希望单独把脚本文件发给其他人的时候对方可以直接执行(前提是本机安装过`Nushell`)，另一方面本仓库里面的脚本主要用于日常开发的时候完成一些“微不足道”的小功能: 这些能力看似可有可无，比较杂，且不设限，不适合也没有放到`@terminus/termix`里面的必要，它的定位就是**"尽可能地通过脚本化的方式消灭日常开发过程中一切低效、重复或者人工操作起来不太方便的工作"**;
 2. 没有选择`Bash`脚本是因为`Bash`是一种比较糟糕的脚本语言: 阅读维护都不太方便、而且不适合处理结构化的数据，比如 JSON、TOML、CSV 等等，更重要的是不能跨平台(或者比较有限)；
-3. 选用 `Nushell`则是因为其更加现代、强大、语法更优雅，代码可读性和可维护性有质的提升，天生支持结构化数据、支持多平台、函数式等等，至少相比`bash`而言`nushell`是个更好的选择, 而且未来还会支持并行执行和模块化。更多详情可以查看其官网文档: https://www.nushell.sh/ ；
+3. 选用 `Nushell`则是因为其更加现代、强大、语法更优雅，代码可读性和可维护性有质的提升，天生支持结构化数据、跨平台、函数式风格等等，未来还会提供模块化、并行执行等能力，至少相比`bash`而言`nushell`是个更好的选择, 而且未来还会支持并行执行和模块化。更多详情可以查看其官网文档: https://www.nushell.sh/ ；
 
 :::
 
@@ -22,6 +22,7 @@
 brew install just
 brew install nushell
 # 如果你之前已经安装过建议升级到最新版
+brew update
 brew upgrade nushell just
 ```
 
@@ -152,7 +153,7 @@ cargo +stable install nu --all-features --version 0.39.0
 
 发布新版本的过程主要做了如下操作：
 
-1. 利用[git-cliff](https://github.com/orhun/git-cliff) 根据 commit 记录更新最新的`CHANGELOG.md`并提交, 如果`updateLog=('true')`;
+1. 如果 `updateLog=('true')`则会利用[git-cliff](https://github.com/orhun/git-cliff) 根据 commit 记录更新最新的`CHANGELOG.md`(需要大家在创建 commit 的过程中遵循[Commit 规范](https://fe-docs.app.terminus.io/docs/mall/spec/git))并提交，`updateLog`默认值为`false`;
 2. 新建了一个以版本号命名的 Tag 并推送到远程；
 
 **命令格式**: `just release updateLog=('false')`
@@ -266,43 +267,7 @@ just ls-node 12 true
 
 ![Git-Age Output](https://img.alicdn.com/imgextra/i1/O1CN01TSmh2F1ImH2PuFvU0_!!6000000000935-2-tps-476-190.png)
 
-### 9. 在指定 Git 分支上批量执行特定命令{#git-batch-exec}
-
-**功能描述**: 在指定 Git 分支上执行指定命令
-
-**命令格式**: `just git-batch-exec cmd +branches=('')`
-
-**参数说明**:
-
-- `cmd`: 必填，待执行的命令，如果有空格需要用引号包裹，`cmd`参数对应命令默认通过`bash`执行(默认值在 `termix.toml` 的 `shellToRunCmd.currentSelected`里面指定)，如果你需要更改命令解释、执行器可以修改`.env`里面的`SHELL_TO_RUN_CMD`环境变量，可选值：`nu`/`sh`/`cmd`/`zsh`/`fish`/`node`/`bash`/`python3`/`powershell`等;
-- `branches`: 必填，需要执行上述命令的分支，分支可以指定一个或者多个，多个分支中间用空格隔开；
-
-**使用举例**:
-
-```bash
-# 在 develop feature/latest 这两个分支上 cherry-pick 特定的 commit并推送到远程
-just git-batch-exec 'git cherry-pick abcxyzuvw; git push' develop feature/latest
-```
-
-### 10. 将指定 Git 分支硬回滚 N 个 commit{#git-batch-reset}
-
-**功能描述**: 将指定 Git 分支硬回滚 N 个 Commit, 这个命令的使用场景可能不是很多，当时是为了测试后面的 `just pull-all` 用的前置命令
-
-**命令格式**: `just git-batch-reset n +branches=('')`
-
-**参数说明**:
-
-- `n`: 必填，整数，需要回滚的 Commit 数目;
-- `branches`: 必填，需要回滚代码的分支，分支可以指定一个或者多个，多个分支中间用空格隔开；
-
-**使用举例**:
-
-```bash
-# 将 develop feature/latest 两个分支上的代码硬回滚2个commit
-just git-batch-reset 2 develop feature/latest
-```
-
-### 11. 显示 Git 仓库远程分支及其最后提交信息{#git-remote-age}
+### 9. 显示 Git 仓库远程分支及其最后提交信息{#git-remote-age}
 
 **功能描述**: 显示当前 Git 仓库远程地址所有的分支及其最后提交信息
 
@@ -326,7 +291,138 @@ just git-remote-age origin true
 
 ![Git-Remote-Age Output](https://img.alicdn.com/imgextra/i3/O1CN01Nif5F31Bun5nC7Fpl_!!6000000000006-2-tps-561-249.png)
 
-### 12. Git Push 自动将代码同步到多个仓库{#git-sync-branch}
+### 10. 在指定 Git 分支上批量执行特定命令{#git-batch-exec}
+
+**功能描述**: 在指定 Git 分支上执行指定命令
+
+**命令格式**: `just git-batch-exec cmd +branches=('')`
+
+**参数说明**:
+
+- `cmd`: 必填，待执行的命令，如果有空格需要用引号包裹，`cmd`参数对应命令默认通过`bash`执行(默认值在 `termix.toml` 的 `shellToRunCmd.currentSelected`里面指定)，如果你需要更改命令解释、执行器可以修改`.env`里面的`SHELL_TO_RUN_CMD`环境变量，可选值：`nu`/`sh`/`cmd`/`zsh`/`fish`/`node`/`bash`/`python3`/`powershell`等;
+- `branches`: 必填，需要执行上述命令的分支，分支可以指定一个或者多个，多个分支中间用空格隔开；
+
+**使用举例**:
+
+```bash
+# 在 develop feature/latest 这两个分支上 cherry-pick 特定的 commit并推送到远程
+just git-batch-exec 'git cherry-pick abcxyzuvw; git push' develop feature/latest
+```
+
+### 11. 将指定 Git 分支硬回滚 N 个 commit{#git-batch-reset}
+
+**功能描述**: 将指定 Git 分支硬回滚 N 个 Commit, 这个命令的使用场景可能不是很多，当时是为了测试后面的 `just pull-all` 用的前置命令
+
+**命令格式**: `just git-batch-reset n +branches=('')`
+
+**参数说明**:
+
+- `n`: 必填，整数，需要回滚的 Commit 数目;
+- `branches`: 必填，需要回滚代码的分支，分支可以指定一个或者多个，多个分支中间用空格隔开；
+
+**使用举例**:
+
+```bash
+# 将 develop feature/latest 两个分支上的代码硬回滚2个commit
+just git-batch-reset 2 develop feature/latest
+```
+
+### 12. 从远程更新本地所有分支代码到最新{#pull-all}
+
+**功能描述**: 从远程更新本地所有分支代码到最新的 Commit, 如果执行命令前本地仓库有变更会自动执行 `stash` 操作;
+
+**命令格式**: `just pull-all`
+
+**参数说明**: N/A
+
+**使用举例**: Try `just pull-all` in your git repo.
+
+### 13. Git 远程 & 本地分支重命名{#rename-branch}
+
+**功能描述**: Git 远程分支重命名, 重命名成功之后会删除旧的分支
+
+**命令格式**: `just rename-branch from=('') to=('') remote=('origin')`
+
+**参数说明**:
+
+- `from`: 必填，待重命名的分支名，旧分支名所对应分支应该存在于本地或者远程;
+- `to`: 必填，重命名之后新的分支名称, 新分支名所对应分支应该是本地和远程都不存在的;
+- `remote`: 可选，远程仓库地址对应的 alias 名称，默认值 `origin`;
+
+**使用举例**:
+
+```bash
+just rename-branch feature/old feature/new
+```
+
+### 14. Git 仓库迁移{#repo-transfer}
+
+**功能描述**: 将 Git 仓库迁移到新的地址：含代码、分支、Tag 等
+
+**命令格式**: `just repo-transfer from=('') to=('')`
+
+**参数说明**:
+
+- `from`: 必填，源仓库 Git 地址;
+- `to`: 必填，目的仓库 Git 地址;
+
+**使用举例**:
+
+```bash
+just repo-transfer https://old.source-repo.url https://new.dest-repo.url
+```
+
+### 15. 查看 Git 分支描述信息{#desc}
+
+**功能描述**: 查看 Git 分支描述信息
+
+**使用背景**:
+由于标品仓库分支动辄 10~20 个甚至更多，为方便分支管理和识别特拟此规范:
+
+- 新增`i` 分支(information)是唯一可以不用遵循分支命名规范的分支;
+- `i` 分支只有一个文件 d, d 为 description 简称, 这两个名字起得简单主要为了后续操作方便;
+- 初次创建 i 分支: `git checkout --orphan i`, 并在其中添加 d 文件用于对其他分支进行描述;
+- 每一个生命周期超过**5**天的分支都应在 i 分支的唯一文件 d 里面添加该分支的说明，并推送远程;
+- 如果分支被删除或者分支用途发生变更也应该同步更新 i 分支里面的 d 文件;
+- 其他同学可以通过 `git fetch origin i:i` 命令在不改变当前分支的情况下更新 i 分支;
+- 更新完毕后可以在该仓库任意分支任意位置通过此命令查看分支说明: `git show i:d`;
+- 如果不想把 i 分支拉到本地可以在执行`git fetch origin i`后通过`git show origin/i:d`查看;
+- 以上通过`git show`查看分支描述显示的是整个描述文件，找起来还是不方便所以可以通过本工具定向查询
+
+**命令格式**: `just desc branch=(`git branch --show-current`) showNotes=('false')`
+
+**参数说明**:
+
+- `branch`: 选填，待查看描述信息的分支名，默认`git branch --show-current`输出的当前分支;
+- `showNotes`: 选填，是否显示分支描述说明文档, `true` 则显示, 默认 `false`;
+
+**使用举例**:
+
+```bash
+# 查看当前分支描述信息
+just desc
+# 查看 develop 分支描述信息以及分支描述说明文档
+just desc develop true
+```
+
+### 16. Git 分支描述检查{#check-desc}
+
+**功能描述**: 基于前面一条的分支描述规则，检查哪些 Git 分支没有描述信息
+
+**命令格式**: `just check-desc`
+
+**使用举例**:
+
+```bash
+# 查看当前仓库哪些分支没有对应描述信息
+just check-desc
+```
+
+**输出样例**:
+
+![Just Check Desc Output](https://img.alicdn.com/imgextra/i3/O1CN01wxKoPt1il40LSxtzu_!!6000000004452-2-tps-675-275.png)
+
+### 17. Git Push 自动将代码同步到多个仓库{#git-sync-branch}
 
 **功能描述**: 通过 Git Pre Push Hook 在将指定分支 Push 到远程的时候自动将对应分支同步到多个目标仓库，该命令应该通过 Git Hook 自动调用，不建议手工调用；
 
@@ -426,101 +522,6 @@ just git-remote-age origin true
 2. 更轻量、灵活：原来的同步方式每增加一个同步 dest 需要在默认 Pipeline 里面增加一个 `custom-script`节点，新的方式只需要改 1~2 行配置就可以了，而且可读性更好；
 3. 这次是“真”同步，同步后目的分支和源分支的内容完全一样，提交记录完全一样，原来 Erda 同步时为了避免“递归同步”需要对目的仓库的默认 Pipeline 做修改；
 4. 不仅支持分支创建、更新同步还**支持分支同步删除**，原来用 Erda 同步的时候源分支删除后目的分支并未被删除；
-
-### 13. 从远程更新本地所有分支代码到最新{#pull-all}
-
-**功能描述**: 从远程更新本地所有分支代码到最新的 Commit, 如果执行命令前本地仓库有变更会自动执行 `stash` 操作;
-
-**命令格式**: `just pull-all`
-
-**参数说明**: N/A
-
-**使用举例**: Try `just pull-all` in your git repo.
-
-### 14. Git 远程 & 本地分支重命名{#rename-branch}
-
-**功能描述**: Git 远程分支重命名, 重命名成功之后会删除旧的分支
-
-**命令格式**: `just rename-branch from=('') to=('') remote=('origin')`
-
-**参数说明**:
-
-- `from`: 必填，待重命名的分支名，旧分支名所对应分支应该存在于本地或者远程;
-- `to`: 必填，重命名之后新的分支名称, 新分支名所对应分支应该是本地和远程都不存在的;
-- `remote`: 可选，远程仓库地址对应的 alias 名称，默认值 `origin`;
-
-**使用举例**:
-
-```bash
-just rename-branch feature/old feature/new
-```
-
-### 15. Git 仓库迁移{#repo-transfer}
-
-**功能描述**: 将 Git 仓库迁移到新的地址：含代码、分支、Tag 等
-
-**命令格式**: `just repo-transfer from=('') to=('')`
-
-**参数说明**:
-
-- `from`: 必填，源仓库 Git 地址;
-- `to`: 必填，目的仓库 Git 地址;
-
-**使用举例**:
-
-```bash
-just repo-transfer https://old.source-repo.url https://new.dest-repo.url
-```
-
-### 16. 查看 Git 分支描述信息{#desc}
-
-**功能描述**: 查看 Git 分支描述信息
-
-**使用背景**:
-由于标品仓库分支动辄 10~20 个甚至更多，为方便分支管理和识别特拟此规范:
-
-- 新增`i` 分支(information)是唯一可以不用遵循分支命名规范的分支;
-- `i` 分支只有一个文件 d, d 为 description 简称, 这两个名字起得简单主要为了后续操作方便;
-- 初次创建 i 分支: `git checkout --orphan i`, 并在其中添加 d 文件用于对其他分支进行描述;
-- 每一个生命周期超过**5**天的分支都应在 i 分支的唯一文件 d 里面添加该分支的说明，并推送远程;
-- 如果分支被删除或者分支用途发生变更也应该同步更新 i 分支里面的 d 文件;
-- 其他同学可以通过 `git fetch origin i:i` 命令在不改变当前分支的情况下更新 i 分支;
-- 更新完毕后可以在该仓库任意分支任意位置通过此命令查看分支说明: `git show i:d`;
-- 如果不想把 i 分支拉到本地可以在执行`git fetch origin i`后通过`git show origin/i:d`查看;
-- 以上通过`git show`查看分支描述显示的是整个描述文件，找起来还是不方便所以可以通过本工具定向查询
-
-**命令格式**: `just desc branch=(`git branch --show-current`) showNotes=('false')`
-
-**参数说明**:
-
-- `branch`: 选填，待查看描述信息的分支名，默认`git branch --show-current`输出的当前分支;
-- `showNotes`: 选填，是否显示分支描述说明文档, `true` 则显示, 默认 `false`;
-
-**使用举例**:
-
-```bash
-# 查看当前分支描述信息
-just desc
-# 查看 develop 分支描述信息以及分支描述说明文档
-just desc develop true
-```
-
-### 17. Git 分支描述检查{#check-desc}
-
-**功能描述**: 基于前面一条的分支描述规则，检查哪些 Git 分支没有描述信息
-
-**命令格式**: `just check-desc`
-
-**使用举例**:
-
-```bash
-# 查看当前仓库哪些分支没有对应描述信息
-just check-desc
-```
-
-**输出样例**:
-
-![Just Check Desc Output](https://img.alicdn.com/imgextra/i3/O1CN01wxKoPt1il40LSxtzu_!!6000000004452-2-tps-675-275.png)
 
 ### 18. 查询二开仓库的远程分支及 Tag 信息{#ls-redev-refs}
 
