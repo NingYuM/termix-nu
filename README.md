@@ -1,15 +1,17 @@
 ## 前言
 
-`termix` ，`termi` 是公司英文简称前缀，也是命令行终端 `terminal` 的前缀，`mix` 可以理解为工具箱，`termix` 就是公司内部使用的命令行工具箱了。`termix-nu` 主要为[`Nushell`](https://github.com/nushell/nushell) 版本的`termix`, 与之对应的还有个 JS 版本的[`termix`](https://fe-docs.app.terminus.io/docs/termix/termix), 为了避免重复开发两者虽然名字上有关联，但是功能原则上是不重叠的。
+`termix` ，`termi` 是公司英文简称前缀，也是命令行终端 `terminal` 的前缀，`mix` 可以理解为工具箱，`termix` 就是公司内部使用的命令行工具箱了。`termix-nu` 主要为[`Nushell`](https://github.com/nushell/nushell) 版本的`termix`, 与之对应的还有个 JS 版本的[`termix`](https://fe-docs.app.terminus.io/docs/termix/termix), 为了避免重复开发两者虽然名字上有关联，但是功能实际上是不重叠的。
 
 :::tip
 既然可以用 JS 写为什么还要采用 `Nushell`？
 
 1. 用 JS 写的脚本在使用前需要安装`node_modules`依赖, 使用上稍有不便，`termix-nu`里面的脚本希望单独把脚本文件发给其他人的时候对方可以直接执行(前提是本机安装过`Nushell`)，另一方面本仓库里面的脚本主要用于日常开发的时候完成一些“微不足道”的小功能: 这些能力看似可有可无，比较杂，且不设限，不适合也没有放到`@terminus/termix`里面的必要，它的定位就是**"尽可能地通过脚本化的方式消灭日常开发过程中一切低效、重复或者人工操作起来不太方便的工作"**;
 2. 没有选择`Bash`脚本是因为`Bash`是一种比较糟糕的脚本语言: 阅读维护都不太方便、而且不适合处理结构化的数据，比如 JSON、TOML、CSV 等等，更重要的是不能跨平台(或者比较有限)；
-3. 选用 `Nushell`则是因为其更加现代、强大、语法更优雅，代码可读性和可维护性有质的提升，天生支持结构化数据、跨平台、函数式风格等等，未来还会提供模块化、并行执行等能力，至少相比`bash`而言`nushell`是个更好的选择, 而且未来还会支持并行执行和模块化。更多详情可以查看其官网文档: https://www.nushell.sh/ ；
+3. 选用 `Nushell`则是因为其更加现代、强大、语法更优雅，代码可读性和可维护性有质的提升，天生支持结构化数据、可以跨平台、具有函数式风格等等，而且未来还会提供模块化以及并行执行等能力，至少相比`bash`而言`nushell`是个更好的选择。更多详情可以查看其官网文档: https://www.nushell.sh/ ；
 
 :::
+
+另外，不管是`nushell`、`just`还是此脚本工具集都只是标品开发辅助工具，不会侵入业务代码因而不是强依赖，也不会出现在项目二开或者实施过程中，所以不会增加客户或者合作伙伴的学习成本。
 
 ## 安装{#install}
 
@@ -142,7 +144,7 @@ cargo +stable install nu --all-features --version 0.39.0
 
 ### 2. 更新 `termix-nu` 到最新版本{#upgrade}
 
-可以通过 `just upgrade` 命令更新 `termix-nu` 到最新版本, 本质上是将本地脚本仓库更新到最新的 Release Tag 对应提交;
+此工具箱里面的脚本每天第一次执行的时候会检查远程是否有新版本，如果有可以通过 `just upgrade` 命令更新 `termix-nu` 到最新版本, 本质上是将本地脚本仓库更新到最新的 Release Tag 对应提交;
 
 ### 3. 发布 `termix-nu` 新版本{#release}
 
@@ -193,7 +195,7 @@ docs = 'https://erda.cloud/terminus/dop/projects/213/apps/7542/repo'
 
 然后通过`just go docs`就可以在默认浏览器里面打开`docs`对应的链接了，而且`docs`不用全部输入，如果`do`只能匹配一个简称用`just go do`也可以达到同样效果, 如果找不到任何匹配项将列出所有可用链接。考虑到不同人的常用链接可能差别很大，所以允许使用者自由定制：脚本会自动将执行`just go`命令时所在目录里面的`.termixrc`文件里面的`quickNavs`配置项与`termix.toml`里面的同名配置进行合并，如果**链接简称**重复则`.termixrc`文件里面的优先级更高。
 
-另：当`termix.toml`里面的`useConfFromBranch`配置项值为`_current_`时`.termixrc`配置会从当前分支读取，当该配置的值为`i`时会从`i`分支上读取，关于`i`分支的更多说明请看后文。
+另：当`termix.toml`里面的`useConfFromBranch`配置项值为`_current_`时`.termixrc`配置会从当前分支对应的远程分支读取，当该配置的值为`i`时会从`origin/i`分支上读取，关于`i`分支的更多说明请看后文。
 
 ### 5. 指定目录批量执行特定命令{#dir-batch-exec}
 
@@ -242,7 +244,7 @@ just ls-node 12 true
 
 ### 7. 显示本机 CLI 应用版本及环境变量信息{#show-env}
 
-**功能描述**: 显示本机安装应用版本及环境变量相关信息, 这个主要方便排查问题
+**功能描述**: 显示本机安装应用版本及环境变量相关信息, 这个主要为了方便排查问题
 
 **命令格式**: `just show-env`
 
@@ -329,13 +331,13 @@ just git-batch-reset 2 develop feature/latest
 
 ### 12. 从远程更新本地所有分支代码到最新{#pull-all}
 
-**功能描述**: 从远程更新本地所有分支代码到最新的 Commit, 如果执行命令前本地仓库有变更会自动执行 `stash` 操作;
+**功能描述**: 从**远程更新本地所有分支代码**到最新的 Commit, 如果执行命令前本地仓库有变更会自动执行 `stash` 操作;
 
 **命令格式**: `just pull-all`
 
 **参数说明**: N/A
 
-**使用举例**: Try `just pull-all` in your git repo.
+**使用举例**: Just Try `just pull-all` in your git repo to update them all ! 再也不用反复切换到某一个分支去挨个更新代码了。
 
 ### 13. Git 远程 & 本地分支重命名{#rename-branch}
 
@@ -357,7 +359,7 @@ just rename-branch feature/old feature/new
 
 ### 14. Git 仓库迁移{#repo-transfer}
 
-**功能描述**: 将 Git 仓库迁移到新的地址：含代码、分支、Tag 等
+**功能描述**: 将 Git 仓库迁移到新的地址：迁移内容包含代码、提交历史记录、分支、Tag 等
 
 **命令格式**: `just repo-transfer from=('') to=('')`
 
@@ -407,7 +409,7 @@ just desc develop true
 
 ### 16. Git 分支描述检查{#check-desc}
 
-**功能描述**: 基于前面一条的分支描述规则，检查哪些 Git 分支没有描述信息
+**功能描述**: 基于前面一项所述分支描述规则，检查哪些 Git 分支没有添加对应描述信息
 
 **命令格式**: `just check-desc`
 
@@ -424,12 +426,12 @@ just check-desc
 
 ### 17. Git Push 自动将代码同步到多个仓库{#git-sync-branch}
 
-**功能描述**: 通过 Git Pre Push Hook 在将指定分支 Push 到远程的时候自动将对应分支同步到多个目标仓库，该命令应该通过 Git Hook 自动调用，不建议手工调用；
+**功能描述**: 通过 Git Pre Push Hook 在将分支 Push 到远程的时候自动将该分支同步到多个目标仓库，该命令应该通过 Git Hook 自动调用，不建议手工调用；
 
 **命令格式**: `just git-sync-branch localRef localOid remoteRef`
 
 **使用场景**:
-由于前端代码需要部署多个环境，比如 PC 端可能需要部署 Mix、BBC、CE 等环境，而且 PC 端的业务包括国内和海外，移动端也类似，在这种情况下如果要求开发在提交代码后手工推到各个仓库就太麻烦了，而且也很容易遗漏。当前是通过 Erda 的 Pipeline 进行代码自动同步的，这个已经不需要手工去操作了，但是发现个问题：如果要同步的目标仓库很多的话一方面耗时比较大、另一方面经常会因为服务器资源紧张而导致同步失败，即便可以成功这个同步耗时普遍也要 3 分钟以上，所以可以通过**Git Pre Push Hook**当开发将代码推到源码仓库的时候会自动根据配置文件顺便把代码推送到其他目的仓库，这样代码同步时间就可以缩短到秒级，而开发的代码推送关注点仍然只有一个。
+由于前端代码目前是基于源码部署的，而且可能需要部署多个环境，比如 PC 端可能需要部署 Mix、BBC、CE 等环境，而且 PC 端的业务包括国内和海外，移动端也类似，在这种情况下如果要求开发在提交代码后手工推到各个环境对应仓库就太麻烦了，而且也很容易遗漏。当前是通过 Erda 的 Pipeline 进行代码自动同步的，这种情况下已经不需要手工去操作了，但是发现个问题：如果要同步的目标仓库很多的话一方面耗时比较长、另一方面经常会因为服务器资源紧张等原因导致同步失败，即便可以成功耗时普遍也要 3 分钟以上，所以可以通过**Git Pre Push Hook**当开发将代码推到源码仓库的时候，自动根据配置文件的同步规则把代码推送到其他目的仓库，这样代码同步时间就可以缩短到秒级（第一次推送是全量的耗时稍久，之后都是增量推送耗时很短），而开发的代码推送关注点仍然只有一个，即 Gaia-App-Source 源码仓库。
 
 **配置步骤**:
 
@@ -453,6 +455,7 @@ just check-desc
 
    while read local_ref local_oid remote_ref remote_oid
    do
+      # 检查 just 和 nushell 是否安装，for Mac Only
       if ! command -v just &> /dev/null; then
          echo "Command 'just' could not be found, Please install it by 'brew install just', and try again!\n"
          break;
@@ -506,24 +509,48 @@ just check-desc
 1. 如果想禁用某次 push 同步则 push 的时候加上`--no-verify`参数即可；
 2. 如果在同步的时候想采用强制推送策略需要：`FORCE_PUSH=1 git push --force ...`；
 3. 代码能够同步成功的前提是你有对应目标仓库的 push 权限，如果没有可以申请权限或者在本地环境变量里面设置忽略推送，需要修改`.env`环境变量里面的`SYNC_IGNORE_ALIAS`配置项，将需要忽略推送的仓库别名加进去，多个别名之间用`,`隔开即可；
-4. `.termixrc`配置文件可以从当前分支读取也可以从`i`分支读取，`termix.toml` 里面有个配置项 `useConfFromBranch` 该配置项可以指定`.termixrc`配置文件从哪个分支读取，当该配置项的值为 `_current_` 的时候表示从当前分支读取，否则从`i`分支读取，默认也是从`i`分支读取, 此时`i`分支相当于是一个可以存储全局数据的地方，从任何分支都可以读取该分支的数据，也避免了各分支配置数据不同步的情况，关于`i`分支后面还有更多说明；
+4. `.termixrc`配置文件可以从当前分支对应的远程分支读取也可以从远程`origin/i`分支读取，`termix.toml` 里面有个配置项 `useConfFromBranch` 该配置项可以指定`.termixrc`配置文件从哪个分支读取，当该配置项的值为 `_current_` 的时候表示从当前分支对应的**远程分支**读取，否则从`origin/i`分支读取，默认也是从`origin/i`分支读取, 此时`origin/i`分支相当于是一个可以存储全局数据的地方，所有开发成员从任何分支都可以读取该分支的数据，也避免了各成员、各分支配置数据不同步的情况，关于`i`分支[前面](#desc)已经有所说明；
 
 :::tip
 同步配置变更后下次 push 生效！！！
 
-1. 当你修改完`.termixrc`同步配置第一次 push 到`origin`对应的 remote 上的时候建议加上`--no-verify`参数，因为此时同步配置还没有更新到线上同步依然用的是老的配置，所以建议跳过同步，而之后的 push 就可以使用刚才提交的同步配置了；
-2. 同样道理：如果远程`origin`上对应的分支不存在或者被删除，在该分支存在之前即便 push 的时候没有加`--no-verify`参数也是不会执行同步操作的；
+1. 当 `useConfFromBranch` 配置为 `_current_` 时，如果开发修改了`.termixrc`同步配置并 push 到`origin`对应的 remote 上的时候建议加上`--no-verify`参数，因为此时同步配置还没有更新到线上，故而此时依然用的是老的配置，所以建议跳过同步，而之后的 push 就可以使用刚才提交的同步配置了；
+2. 同样道理：如果远程`origin`上对应的分支不存在或者被删除，在该分支存在之前即便 push 的时候没有加`--no-verify`参数也是不会执行同步操作的，因为找不到远程同步配置文件；
 
 :::
 
 相比原来利用 Erda Pipeline 进行代码同步的方式，该同步方式具有以下优点：
 
 1. 同步更迅速：原来利用流水线同步需要 3~8 分钟不等，而且经常失败，对服务器资源也有一定要求，新的方式可以在秒级完成；
-2. 更轻量、灵活：原来的同步方式每增加一个同步 dest 需要在默认 Pipeline 里面增加一个 `custom-script`节点，新的方式只需要改 1~2 行配置就可以了，而且可读性更好；
-3. 这次是“真”同步，同步后目的分支和源分支的内容完全一样，提交记录完全一样，原来 Erda 同步时为了避免“递归同步”需要对目的仓库的默认 Pipeline 做修改；
+2. 更轻量、灵活：原来的同步方式每增加一个同步目标，需要在默认 Pipeline 里面增加一个 `custom-script`节点，新的方式只需要改 1~2 行配置就可以了，而且可读性更好；
+3. 这次是“真”同步，同步后目的分支和源分支的内容完全一样，提交记录完全一样，原来 Erda 同步时为了避免“**递归同步**”需要对目的仓库的默认 Pipeline 做修改, 以免触发由自动同步导致的自动同步；
 4. 不仅支持分支创建、更新同步还**支持分支同步删除**，原来用 Erda 同步的时候源分支删除后目的分支并未被删除；
 
-### 18. 查询二开仓库的远程分支及 Tag 信息{#ls-redev-refs}
+### 18. 给标品源码仓库批量打 Tag{#gaia-release}
+
+**功能描述**: 在标品前端需要发布新版本的时候将标品 `gaia-mall,gaia-mobile,gaia-picker` 等源码仓库指定分支批量打 Release Tag, 也可以用于删除指定 Tag
+
+**命令格式**: `gaia-release version=('') repos=('mall,mobile,picker') delete=('false')`
+
+**参数说明**:
+
+- `version`: 必填，需要新增的 Tag 前缀，创建 Tag 的时候默认会加上日期信息，比如当指定 Tag 为`v2.2.0`的时候实际生成的可能为`v2.2.0-2021.10.27`, 也可以自己指定时间戳，如果指定了时间戳则以指定时间戳为准，不再添加默认时间戳；
+- `repos`: 可选，需要打 Tag 的源码仓库简称：`mall/mobile/picker`，多个简称之间用 `,` 分隔 ，默认值 `mall,mobile,picker`；
+- `delete`: 可选，`true`表示删除指定 Tag 且不重新添加对应 Tag，默认值 `false` 表示 Tag 不存在则创建 Tag，存在则先删除再创建;
+- 其他说明: 创建 Tag 的时候可以指定分支及其 Tag 后缀，具体可以在`termix.toml`里面的`gaiaSrcRepos`配置项里根据需要作调整;
+
+**使用举例**:
+
+```bash
+# 给`mall/mobile/picker`三个源码仓库创建新的Tag，比如 `v2.2.0-2021.10.27`
+just gaia-release v2.2.0
+# 删除mall,mobile,picker三个仓库`v2.2.0`对应的当天的Tag
+just gaia-release v2.2.0 mall,mobile,picker true
+# 在`mall,mobile`仓库创建Tag时以给定完整的包含时间戳的Tag名称为准，取代默认添加的时间戳
+just gaia-release v2.2.0.21-2021.11.09 mall,mobile
+```
+
+### 19. 查询二开仓库的远程分支及 Tag 信息{#ls-redev-refs}
 
 **功能描述**:
 
@@ -544,7 +571,7 @@ just ls-redev-refs
 just ls-redev-refs true
 ```
 
-### 19. 批量更新远程二开仓库代码到本地{#pull-redev}
+### 20. 批量更新远程二开仓库代码到本地{#pull-redev}
 
 **功能描述**: 更新远程二开仓库代码到本地，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `TERMIX_TMP_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `termixTmpPath` 配置;
 
@@ -564,9 +591,9 @@ just pull-redev
 just pull-redev develop true
 ```
 
-### 20. 给远程二开仓库批量打 Tag{#tag-redev}
+### 21. 给远程二开仓库批量打 Tag{#tag-redev}
 
-**功能描述**: 给远程二开仓库指定分支批量打 Tag, 也可以用于删除指定 Tag
+**功能描述**: 给远程二开仓库指定分支批量打 Release Tag, 目前前端二开仓库含增量、全量及所有业态有 12 个，人工挨个仓库打 Tag 是不现实的，也很容易出错。另外，该命令也可以用于删除指定 Tag。
 
 **命令格式**: `just tag-redev tag=('') branch=('master') delete=('false')`
 
@@ -589,30 +616,6 @@ just tag-redev v2.5.0 develop
 just tag-redev v2.2.0.21-2021.11.09 master
 ```
 
-### 21. 给标品源码仓库批量打 Tag{#gaia-release}
-
-**功能描述**: 给标品 `gaia-mall,gaia-mobile,gaia-picker` 源码仓库指定分支批量打 Tag, 也可以用于删除指定 Tag
-
-**命令格式**: `gaia-release version=('') repos=('mall,mobile,picker') delete=('false')`
-
-**参数说明**:
-
-- `version`: 必填，需要新增的 Tag 前缀，创建 Tag 的时候默认会加上日期信息，比如当指定 Tag 为`v2.2.0`的时候实际生成的可能为`v2.2.0-2021.10.27`, 也可以自己指定时间戳，如果指定了时间戳则以指定时间戳为准，不再添加默认时间戳；
-- `repos`: 可选，需要打 Tag 的源码仓库简称：`mall/mobile/picker`，多个简称之间用 `,` 分隔 ，默认值 `mall,mobile,picker`；
-- `delete`: 可选，`true`表示删除指定 Tag 且不重新添加对应 Tag，默认值 `false` 表示 Tag 不存在则创建 Tag，存在则先删除再创建;
-- 其他说明: 创建 Tag 的时候可以指定分支及其 Tag 后缀，具体可以在`termix.toml`里面的`gaiaSrcRepos`配置项里根据需要作调整;
-
-**使用举例**:
-
-```bash
-# 给`mall/mobile/picker`三个源码仓库创建新的Tag，比如 `v2.2.0-2021.10.27`
-just gaia-release v2.2.0
-# 删除mall,mobile,picker三个仓库`v2.2.0`对应的当天的Tag
-just gaia-release v2.2.0 mall,mobile,picker true
-# 在`mall,mobile`仓库创建Tag时以给定完整的包含时间戳的Tag名称为准，取代默认添加的时间戳
-just gaia-release v2.2.0.21-2021.11.09 mall,mobile
-```
-
 ### 22. 查看团队成员当前 EMP 工时填报情况{#emp}
 
 **功能描述**: 查看团队成员当前 EMP 工时填报情况
@@ -622,7 +625,7 @@ just gaia-release v2.2.0.21-2021.11.09 mall,mobile
 **配置说明**:
 
 - `showAll`: 可选参数，是否显示所有成员的填报情况，默认值为`false`，表示只显示当前未填满的成员；
-- `EMP_UC_COOKIE`: 必填, `.env`里面环境变量配置项, EMP `emp_u_c_local` 对应的 Cookie Value, 貌似每周需要更新一次；
+- `EMP_UC_COOKIE`: 必填, `.env`里面环境变量配置项, EMP `emp_u_c_local` 对应的 Cookie Value, 貌似每周需要更新一次，否则会超时失效；
 - `EMP_OUTER_ID`: 必填, `.env`里面环境变量配置项, 可以在 emp 查看团队成员工时页面的`/api/trantor/data-source`请求的 Request Payload 里面找到；
 - `EMP_WORKING_HOUR_TITLE`: 必填, `.env`里面环境变量配置项，控制台输出内容的标题，默认值为"本周工时填报"可以自己按需修改；
 
