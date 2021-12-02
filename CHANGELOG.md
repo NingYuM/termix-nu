@@ -1,6 +1,33 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.2.5] - 2021-12-02
+
+### Bug Fixes
+
+- Add repo not exist error handler for `git repo-transfer`
+
+### Documentation
+
+- Update readme.md, add `Just` & `nu` upgrade check related docs
+- Reorder command docs
+- Improve docs
+
+### Features
+
+- Add min just version check, add warning tips to upgrade just if required
+- Add source repo release new version support by `gaia-release` command
+- Add latest termix-nu version check support
+- Add git repo transfer feature by `git repo-transfer` command
+- Improve `git-age` command add last commit author name
+
+### Refactor
+
+- Change `REDEV_REPO_PATH` to `TERMIX_TMP_PATH` in .env config, and `redevRepoPath` to `termixTmpPath` in toml conf
+- Add $TERMIX_CONF constant and get-tmp-path helper
+- Use `path join` instead of string concatenation
+- Move redev related scripts from git to actions dir
+
 ## [1.2.3] - 2021-11-26
 
 ### Bug Fixes
