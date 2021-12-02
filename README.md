@@ -54,7 +54,7 @@ cargo +stable install nu --all-features --version 0.39.0
 ## 配置{#config}
 
 1. Clone `termix-nu` 源码:
-   `git clone https://erda.cloud/terminus/dop/gaia-app-redev/termix-nu`
+   `git clone https://erda.cloud/terminus/dop/frontend-product/termix-nu`
 
 2. 配置环境变量:
 
