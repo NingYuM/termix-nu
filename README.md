@@ -1,17 +1,17 @@
 ## 前言
 
-`termix` ，`termi` 是公司英文简称前缀，也是命令行终端 `terminal` 的前缀，`mix` 可以理解为工具箱，`termix` 就是公司内部使用的命令行工具箱了。`termix-nu` 主要为[`Nushell`](https://github.com/nushell/nushell) 版本的`termix`, 与之对应的还有个 JS 版本的[`termix`](https://fe-docs.app.terminus.io/docs/termix/termix), 为了避免重复开发两者虽然名字上有关联，但是功能实际上是不重叠的。
+`termix` ，`termi` 是公司英文简称前缀，也是命令行终端 `terminal` 的前缀，`mix` 可以理解为工具箱，`termix` 就是公司内部使用的命令行工具箱了。`termix-nu` 主要为[`Nushell`](https://github.com/nushell/nushell) 版本的`termix`, 与之对应的还有个 JS 版本的[`termix`](https://fe-docs.app.terminus.io/docs/termix/termix), 为了避免重复造轮子两者虽然名字上有关联，但实际上功能是不重叠的。
 
 :::tip
 既然可以用 JS 写为什么还要采用 `Nushell`？
 
 1. 用 JS 写的脚本在使用前需要安装`node_modules`依赖, 使用上稍有不便，`termix-nu`里面的脚本希望单独把脚本文件发给其他人的时候对方可以直接执行(前提是本机安装过`Nushell`)，另一方面本仓库里面的脚本主要用于日常开发的时候完成一些“微不足道”的小功能: 这些能力看似可有可无，比较杂，且不设限，不适合也没有放到`@terminus/termix`里面的必要，它的定位就是**"尽可能地通过脚本化的方式消灭日常开发过程中一切低效、重复或者人工操作起来不太方便的工作"**;
 2. 没有选择`Bash`脚本是因为`Bash`是一种比较糟糕的脚本语言: 阅读维护都不太方便、而且不适合处理结构化的数据，比如 JSON、TOML、CSV 等等，更重要的是不能跨平台(或者比较有限)；
-3. 选用 `Nushell`则是因为其更加现代、强大、语法更优雅，代码可读性和可维护性有质的提升，天生支持结构化数据、可以跨平台、具有函数式风格等等，而且未来还会提供模块化以及并行执行等能力，至少相比`bash`而言`nushell`是个更好的选择。更多详情可以查看其官网文档: https://www.nushell.sh/ ；
+3. 选用 `Nushell`则是因为其更加现代、强大、语法更优雅，代码可读性和可维护性有质的提升，天生支持结构化数据、可以跨平台、具有函数式风格和强大的表现力等等，而且未来还会提供模块化以及并行执行等能力，至少相比`bash`而言`nushell`是个更好的选择。更多详情可以查看其官网文档: https://www.nushell.sh/ ；
 
 :::
 
-另外，不管是`nushell`、`just`还是此脚本工具集都只是标品开发辅助工具，不会侵入业务代码因而不是强依赖，也不会出现在项目二开或者实施过程中，所以不会增加客户或者合作伙伴的学习成本。
+另外，不管是`nushell`、后面即将要用到的`just`还是此脚本工具集都只是标品开发辅助工具，不会侵入业务代码因而不是强依赖，也不会出现在项目二开或者实施过程中，所以不会增加客户或者合作伙伴的学习成本。
 
 ## 安装{#install}
 
@@ -66,29 +66,31 @@ cargo +stable install nu --all-features --version 0.39.0
 3. 在`termix-nu` 目录下执行 `just` 即可查看当前提供的所有命令或者工具，如下所示:
 
    ```bash
-    ➜  $ just
-    Available recipes:
-    ··· check-desc                    # Check whether all remote branches have related description
-    ··· default                       # List available commands by default
-    ··· desc branch=(`git branch --show-current`) showNotes=('false') # Show branch description from branch description file `d` of `i` branch
-    ··· dir-batch-exec cmd +DIRS=('') # 在指定目录(支持'*'通配符)或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
-    ··· emp showAll=('false')         # 查询电商前端团队本周工时填报情况
-    ··· git-age                       # Listing the branches of a git repo and the time of the last commit
-    ··· git-batch-exec cmd +branches=('') # 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用空格分隔
-    ··· git-batch-reset n +branches=('') # 将指定Git分支硬回滚N个commit
-    ··· git-remote-age remote=('origin') showTag=('false') # Listing the remote branches of a git repo and the day of the last commit
-    ··· git-sync-branch localRef localOid remoteRef # 批量同步本地分支到远程指定分支,git pre-push hooks调用,请勿手工触发
-    ··· go nav=('list')               # Quickly open the matched nav url in default browser, for mac only
-    ··· ls-node minVer=('12') isLts=('false') # 查询已发布Node版本，支持指定最低版本号
-    ··· ls-redev-refs showBranch=('false') # Show Branches and Tags of redevelop related repos
-    ··· pull-all                      # Pull all local branches from remote repo
-    ··· pull-redev branch=('master') diff=('false') # 更新远程二开仓库代码到本地
-    ··· release updateLog=('false')   # Release a new version for termix-nu
-    ··· rename-branch from=('') to=('') remote=('origin') # Rename remote branch, and delete old branch after rename
-    ··· show-env                      # 显示本机安装应用版本及环境变量相关信息
-    ··· tag-redev tag=('') branch=('master') delete=('false') # 给远程二开仓库批量打 Tag
-    ··· upgrade                       # Upgrade termix-nu repo to the latest version
-    ··· ver                           # Display termix current version number
+   ➜  $ just
+   Available recipes:
+   ··· check-desc                    # Check whether all remote branches have related description
+   ··· default                       # List available commands by default
+   ··· desc branch=(`git branch --show-current`) showNotes=('false') # Show branch description from branch description file `d` of `i` branch
+   ··· dir-batch-exec cmd +DIRS=('') # 在指定目录(支持'*'通配符)或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
+   ··· emp showAll=('false')         # 查询电商前端团队本周工时填报情况
+   ··· gaia-release version=('') repos=('mall,mobile,picker') delete=('false') # 给标品源码仓库打 Release Tag
+   ··· git-age                       # Listing the branches of a git repo and the time of the last commit
+   ··· git-batch-exec cmd +branches=('') # 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用空格分隔
+   ··· git-batch-reset n +branches=('') # 将指定Git分支硬回滚N个commit
+   ··· git-remote-age remote=('origin') showTag=('false') # Listing the remote branches of a git repo and the day of the last commit
+   ··· git-sync-branch localRef localOid remoteRef # 批量同步本地分支到远程指定分支,git pre-push hooks调用,请勿手工触发
+   ··· go nav=('list')               # Quickly open the matched nav url in default browser, for mac only
+   ··· ls-node minVer=('12') isLts=('false') # 查询已发布Node版本，支持指定最低版本号
+   ··· ls-redev-refs showBranch=('false') # Show Branches and Tags of redevelop related repos
+   ··· pull-all                      # Pull all local branches from remote repo
+   ··· pull-redev branch=('master') diff=('false') # 更新远程二开仓库代码到本地
+   ··· release updateLog=('false')   # Release a new version for termix-nu
+   ··· rename-branch from=('') to=('') remote=('origin') # Rename remote branch, and delete old branch after rename
+   ··· repo-transfer from=('') to=('') # Transfer a git repo from source to the dest
+   ··· show-env                      # 显示本机安装应用版本及环境变量相关信息
+   ··· tag-redev tag=('') branch=('master') delete=('false') # 给远程二开仓库批量打 Tag
+   ··· upgrade                       # Upgrade termix-nu repo to the latest version
+   ··· ver                           # Display termix current version number
    ```
 
 4. 如果你希望在本机任意位置都可以使用`termix-nu`提供的功能，需要建立软连接:
@@ -109,7 +111,7 @@ cargo +stable install nu --all-features --version 0.39.0
 
 5. 简化命令行输入
 
-   可以像下面这样建一个 alias，这样以后就直接输入`t`就可以了(Task)的简称：
+   完成前面四步就可以使用所有命令了，不过为了简化输入可以像下面这样建一个 alias，这样以后就直接输入`t`就可以了(Task)的简称(该操作除了简化输入外还可以跟系统其他 Just 管理的脚本进行区分，如果有的话)：
 
    ```bash
     # Edit ~/.zshrc or ~/.bashrc and add:
@@ -142,9 +144,13 @@ cargo +stable install nu --all-features --version 0.39.0
 
 可以通过 `just ver` 命令查看本地 `termix-nu` 的版本号;
 
+---
+
 ### 2. 更新 `termix-nu` 到最新版本{#upgrade}
 
-此工具箱里面的脚本每天第一次执行的时候会检查远程是否有新版本，如果有可以通过 `just upgrade` 命令更新 `termix-nu` 到最新版本, 本质上是将本地脚本仓库更新到最新的 Release Tag 对应提交;
+此工具箱里面的脚本每天第一次执行的时候会检查远程是否有新版本，如果有可以通过 `just upgrade` 命令更新 `termix-nu` 到最新版本, 本质上是将本地脚本仓库更新到远程最新的 Release Tag 对应提交;
+
+---
 
 ### 3. 发布 `termix-nu` 新版本{#release}
 
@@ -173,6 +179,8 @@ just release
 just release true
 ```
 
+---
+
 ### 4. 浏览器快捷导航{#go}
 
 **功能描述**: 在命令行通过 `just go xx` 快速在浏览器里面打开 `xx` 对应的链接
@@ -195,7 +203,9 @@ docs = 'https://erda.cloud/terminus/dop/projects/213/apps/7542/repo'
 
 然后通过`just go docs`就可以在默认浏览器里面打开`docs`对应的链接了，而且`docs`不用全部输入，如果`do`只能匹配一个简称用`just go do`也可以达到同样效果, 如果找不到任何匹配项将列出所有可用链接。考虑到不同人的常用链接可能差别很大，所以允许使用者自由定制：脚本会自动将执行`just go`命令时所在目录里面的`.termixrc`文件里面的`quickNavs`配置项与`termix.toml`里面的同名配置进行合并，如果**链接简称**重复则`.termixrc`文件里面的优先级更高。
 
-另：当`termix.toml`里面的`useConfFromBranch`配置项值为`_current_`时`.termixrc`配置会从当前分支对应的远程分支读取，当该配置的值为`i`时会从`origin/i`分支上读取，关于`i`分支的更多说明请看后文。
+另：当`termix.toml`里面的`useConfFromBranch`配置项值为`_current_`时`.termixrc`配置会从当前分支对应的远程分支读取，当该配置的值为`i`时会从`origin/i`分支上读取，关于`i`分支的更多说明请看[后文](#desc)。
+
+---
 
 ### 5. 指定目录批量执行特定命令{#dir-batch-exec}
 
@@ -217,6 +227,8 @@ just dir-batch-exec 'git co develop; git pull' gaia-mall gaia-mobile gaia-picker
 cd ./mall-base/packages;
 just dir-batch-exec 'pwd;ncu'
 ```
+
+---
 
 ### 6. 查询已发布 Node 版本{#ls-node}
 
@@ -242,6 +254,8 @@ just ls-node v16
 just ls-node 12 true
 ```
 
+---
+
 ### 7. 显示本机 CLI 应用版本及环境变量信息{#show-env}
 
 **功能描述**: 显示本机安装应用版本及环境变量相关信息, 这个主要为了方便排查问题
@@ -254,6 +268,8 @@ just ls-node 12 true
 
 **输出样例**:
 ![Show-Env Output](https://img.alicdn.com/imgextra/i2/O1CN01fOhVIk1vNKTl9ubIz_!!6000000006160-2-tps-902-944.png)
+
+---
 
 ### 8. 查看本地 Git 仓库分支及最后提交时间{#git-age}
 
@@ -268,6 +284,8 @@ just ls-node 12 true
 **输出样例**:
 
 ![Git-Age Output](https://img.alicdn.com/imgextra/i1/O1CN01TSmh2F1ImH2PuFvU0_!!6000000000935-2-tps-476-190.png)
+
+---
 
 ### 9. 显示 Git 仓库远程分支及其最后提交信息{#git-remote-age}
 
@@ -293,6 +311,8 @@ just git-remote-age origin true
 
 ![Git-Remote-Age Output](https://img.alicdn.com/imgextra/i3/O1CN01Nif5F31Bun5nC7Fpl_!!6000000000006-2-tps-561-249.png)
 
+---
+
 ### 10. 在指定 Git 分支上批量执行特定命令{#git-batch-exec}
 
 **功能描述**: 在指定 Git 分支上执行指定命令
@@ -311,6 +331,8 @@ just git-remote-age origin true
 just git-batch-exec 'git cherry-pick abcxyzuvw; git push' develop feature/latest
 ```
 
+---
+
 ### 11. 将指定 Git 分支硬回滚 N 个 commit{#git-batch-reset}
 
 **功能描述**: 将指定 Git 分支硬回滚 N 个 Commit, 这个命令的使用场景可能不是很多，当时是为了测试后面的 `just pull-all` 用的前置命令
@@ -328,6 +350,8 @@ just git-batch-exec 'git cherry-pick abcxyzuvw; git push' develop feature/latest
 # 将 develop feature/latest 两个分支上的代码硬回滚2个commit
 just git-batch-reset 2 develop feature/latest
 ```
+
+---
 
 ### 12. 从远程更新本地所有分支代码到最新{#pull-all}
 
@@ -357,6 +381,8 @@ just git-batch-reset 2 develop feature/latest
 just rename-branch feature/old feature/new
 ```
 
+---
+
 ### 14. Git 仓库迁移{#repo-transfer}
 
 **功能描述**: 将 Git 仓库迁移到新的地址：迁移内容包含代码、提交历史记录、分支、Tag 等
@@ -373,6 +399,8 @@ just rename-branch feature/old feature/new
 ```bash
 just repo-transfer https://old.source-repo.url https://new.dest-repo.url
 ```
+
+---
 
 ### 15. 查看 Git 分支描述信息{#desc}
 
@@ -391,6 +419,20 @@ just repo-transfer https://old.source-repo.url https://new.dest-repo.url
 - 如果不想把 i 分支拉到本地可以在执行`git fetch origin i`后通过`git show origin/i:d`查看;
 - 以上通过`git show`查看分支描述显示的是整个描述文件，找起来还是不方便所以可以通过本工具定向查询
 
+**分支描述配置**
+
+分支描述文件`d`为`toml`格式，大致如下:
+
+```toml
+[descriptions]
+master = "测试通过的主分支, support/master 可以合并到该分支"
+develop = "国内版移动端最新开发分支，support/seldon2可以合并到该分支"
+"support/seldon2" = "谢顿二期移动端国内版Bug修复以及测试环境对应部署分支"
+"support/sea" = "谢顿二期移动端海外版Bug修复以及测试环境对应部署分支"
+"support/release-2.4" = '''Gaia v2.4.2 对应国内版二开发布分支, 将发布到二开仓库 develop分支,
+support/master 可以合并到该分支'''
+```
+
 **命令格式**: `just desc branch=(`git branch --show-current`) showNotes=('false')`
 
 **参数说明**:
@@ -406,6 +448,8 @@ just desc
 # 查看 develop 分支描述信息以及分支描述说明文档
 just desc develop true
 ```
+
+---
 
 ### 16. Git 分支描述检查{#check-desc}
 
@@ -424,6 +468,8 @@ just check-desc
 
 ![Just Check Desc Output](https://img.alicdn.com/imgextra/i3/O1CN01wxKoPt1il40LSxtzu_!!6000000004452-2-tps-675-275.png)
 
+---
+
 ### 17. Git Push 自动将代码同步到多个仓库{#git-sync-branch}
 
 **功能描述**: 通过 Git Pre Push Hook 在将分支 Push 到远程的时候自动将该分支同步到多个目标仓库，该命令应该通过 Git Hook 自动调用，不建议手工调用；
@@ -431,7 +477,7 @@ just check-desc
 **命令格式**: `just git-sync-branch localRef localOid remoteRef`
 
 **使用场景**:
-由于前端代码目前是基于源码部署的，而且可能需要部署多个环境，比如 PC 端可能需要部署 Mix、BBC、CE 等环境，而且 PC 端的业务包括国内和海外，移动端也类似，在这种情况下如果要求开发在提交代码后手工推到各个环境对应仓库就太麻烦了，而且也很容易遗漏。当前是通过 Erda 的 Pipeline 进行代码自动同步的，这种情况下已经不需要手工去操作了，但是发现个问题：如果要同步的目标仓库很多的话一方面耗时比较长、另一方面经常会因为服务器资源紧张等原因导致同步失败，即便可以成功耗时普遍也要 3 分钟以上，所以可以通过**Git Pre Push Hook**当开发将代码推到源码仓库的时候，自动根据配置文件的同步规则把代码推送到其他目的仓库，这样代码同步时间就可以缩短到秒级（第一次推送是全量的耗时稍久，之后都是增量推送耗时很短），而开发的代码推送关注点仍然只有一个，即 Gaia-App-Source 源码仓库。
+由于前端代码目前是基于源码部署的，而且可能需要部署多个环境，比如 PC 端可能需要部署 Mix、BBC、CE 等环境，而且 PC 端的业务包括国内和海外，移动端也类似，在这种情况下如果要求开发在提交代码后手工推到各个环境对应仓库就太麻烦了，而且也很容易遗漏。**当前是通过 Erda 的 Pipeline 进行代码自动同步**的，这种情况下已经不需要手工去操作了，但是发现个问题：如果要同步的目标仓库很多的话一方面耗时比较长、另一方面经常会因为服务器资源紧张等原因导致同步失败，即便可以成功耗时普遍也要 3 分钟以上，所以可以通过**Git Pre Push Hook**当开发将代码推到源码仓库的时候，自动根据配置文件的同步规则把代码推送到其他目的仓库，这样代码同步时间就可以缩短到秒级（第一次推送是全量的耗时稍久，之后都是增量推送耗时很短），而开发的代码推送关注点仍然只有一个，即 Gaia-App-Source 源码仓库。
 
 **配置步骤**:
 
@@ -521,10 +567,12 @@ just check-desc
 
 相比原来利用 Erda Pipeline 进行代码同步的方式，该同步方式具有以下优点：
 
-1. 同步更迅速：原来利用流水线同步需要 3~8 分钟不等，而且经常失败，对服务器资源也有一定要求，新的方式可以在秒级完成；
-2. 更轻量、灵活：原来的同步方式每增加一个同步目标，需要在默认 Pipeline 里面增加一个 `custom-script`节点，新的方式只需要改 1~2 行配置就可以了，而且可读性更好；
-3. 这次是“真”同步，同步后目的分支和源分支的内容完全一样，提交记录完全一样，原来 Erda 同步时为了避免“**递归同步**”需要对目的仓库的默认 Pipeline 做修改, 以免触发由自动同步导致的自动同步；
+1. **同步更迅速**：原来利用流水线同步需要 3~8 分钟不等，而且经常失败，对服务器资源也有一定要求，新的方式可以在秒级完成；
+2. **更轻量、灵活**：原来的同步方式每增加一个同步目标，需要在默认 Pipeline 里面增加一个 `custom-script`节点，新的方式只需要改 1~2 行配置就可以了，而且可读性更好；
+3. 这次是**“真”同步**，同步后目的分支和源分支的内容完全一样，提交记录完全一样，原来 Erda 同步时为了避免“**递归同步**”需要对目的仓库的默认 Pipeline 做修改, 以免触发由自动同步导致的自动同步；
 4. 不仅支持分支创建、更新同步还**支持分支同步删除**，原来用 Erda 同步的时候源分支删除后目的分支并未被删除；
+
+---
 
 ### 18. 给标品源码仓库批量打 Tag{#gaia-release}
 
@@ -550,48 +598,9 @@ just gaia-release v2.2.0 mall,mobile,picker true
 just gaia-release v2.2.0.21-2021.11.09 mall,mobile
 ```
 
-### 19. 查询二开仓库的远程分支及 Tag 信息{#ls-redev-refs}
+---
 
-**功能描述**:
-
-显示标品二开仓库的所有 Tag 及其对应创建时间，也可以额外显示分支及其最后提交时间，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `TERMIX_TMP_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `termixTmpPath` 配置;
-
-**命令格式**: `just ls-redev-refs showBranch=('false')`
-
-**参数说明**:
-
-- `showBranch`: 可选，是否显示远程分支信息，默认值 `false`;
-
-**使用举例**:
-
-```bash
-# 仅显示所有Tag及其对应创建时间信息
-just ls-redev-refs
-# 同时显示二开仓库Tag及分支信息
-just ls-redev-refs true
-```
-
-### 20. 批量更新远程二开仓库代码到本地{#pull-redev}
-
-**功能描述**: 更新远程二开仓库代码到本地，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `TERMIX_TMP_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `termixTmpPath` 配置;
-
-**命令格式**: `just pull-redev branch=('master') diff=('false')`
-
-**参数说明**:
-
-- `branch`: 可选，需要更新代码的二开分支，默认值 `master`；
-- `diff`: 可选，是否显示与指定 Tag 相比变化的文件，默认值 `false`，待比较的 Tag 可以在 .env 环境变量里面通过`REDEV_PREV_TAG`变量指定;
-
-**使用举例**:
-
-```bash
-# 更新二开master分支代码到本地，不显示变化的文件列表
-just pull-redev
-# 更新二开develop分支代码到本地，并显示变化的文件名列表
-just pull-redev develop true
-```
-
-### 21. 给远程二开仓库批量打 Tag{#tag-redev}
+### 19. 给远程二开仓库批量打 Tag{#tag-redev}
 
 **功能描述**: 给远程二开仓库指定分支批量打 Release Tag, 目前前端二开仓库含增量、全量及所有业态有 12 个，人工挨个仓库打 Tag 是不现实的，也很容易出错。另外，该命令也可以用于删除指定 Tag。
 
@@ -615,6 +624,53 @@ just tag-redev v2.5.0 develop
 # 创建Tag时以给定完整的包含时间戳的Tag名称为准，取代默认添加的时间戳
 just tag-redev v2.2.0.21-2021.11.09 master
 ```
+
+---
+
+### 20. 查询二开仓库的远程分支及 Tag 信息{#ls-redev-refs}
+
+**功能描述**:
+
+显示标品二开仓库的所有 Tag 及其对应创建时间，也可以额外显示分支及其最后提交时间，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `TERMIX_TMP_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `termixTmpPath` 配置;
+
+**命令格式**: `just ls-redev-refs showBranch=('false')`
+
+**参数说明**:
+
+- `showBranch`: 可选，是否显示远程分支信息，默认值 `false`;
+
+**使用举例**:
+
+```bash
+# 仅显示所有Tag及其对应创建时间信息
+just ls-redev-refs
+# 同时显示二开仓库Tag及分支信息
+just ls-redev-refs true
+```
+
+---
+
+### 21. 批量更新远程二开仓库代码到本地{#pull-redev}
+
+**功能描述**: 更新远程二开仓库代码到本地，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `TERMIX_TMP_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `termixTmpPath` 配置;
+
+**命令格式**: `just pull-redev branch=('master') diff=('false')`
+
+**参数说明**:
+
+- `branch`: 可选，需要更新代码的二开分支，默认值 `master`；
+- `diff`: 可选，是否显示与指定 Tag 相比变化的文件，默认值 `false`，待比较的 Tag 可以在 .env 环境变量里面通过`REDEV_PREV_TAG`变量指定;
+
+**使用举例**:
+
+```bash
+# 更新二开master分支代码到本地，不显示变化的文件列表
+just pull-redev
+# 更新二开develop分支代码到本地，并显示变化的文件名列表
+just pull-redev develop true
+```
+
+---
 
 ### 22. 查看团队成员当前 EMP 工时填报情况{#emp}
 
