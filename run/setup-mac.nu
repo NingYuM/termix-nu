@@ -16,9 +16,7 @@ def 'setup-mac' [] {
 
     # brew update
     echo [
-        (brew-inst aria2,bat,curl,dua-cli,esbuild,exa,fd,fnm,fzf,git,git-extras)
-        (brew-inst glances,go,hyperfine,just,loc,mcfly,mysql,neovim,nginx,node)
-        (brew-inst redis,ripgrep,rust,sd,siege,starship,tree,wget,zoxide,yj)
+        (brew-inst ripgrep,zoxide,just,mcfly,fnm,fd)
     ] | flatten
 }
 

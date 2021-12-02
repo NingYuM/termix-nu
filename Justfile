@@ -74,6 +74,12 @@ git-age: _check-ver
     source {{ join(_termix, 'git', 'age.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git age {{JUST_INVOKE_DIR}}
 
+# Listing the remote branches of a git repo and the day of the last commit
+git-remote-age remote=('origin')  showTag=('false'): _check-ver
+  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+    source {{ join(_termix, 'git', 'remote-age.nu') }}; \
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git remote-age {{JUST_INVOKE_DIR}} {{remote}} --show-tag={{showTag}}
+
 # Show branch description from branch description file `d` of `i` branch
 desc branch=(`git branch --show-current`)  showNotes=('false'): _check-ver
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
@@ -97,19 +103,6 @@ rename-branch from=('') to=('') remote=('origin'): _check-ver
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'git', 'rename-branch.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git branch-rename {{from}} {{to}} {{remote}}
-
-# Listing the remote branches of a git repo and the day of the last commit
-git-remote-age remote=('origin')  showTag=('false'): _check-ver
-  @source {{ join(_termix, 'utils', 'common.nu') }}; \
-    source {{ join(_termix, 'git', 'remote-age.nu') }}; \
-    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git remote-age {{JUST_INVOKE_DIR}} {{remote}} --show-tag={{showTag}}
-
-# Show Branches and Tags of redevelop related repos
-ls-redev-refs showBranch=('false'): _check-ver
-  @source {{ join(_termix, 'utils', 'common.nu') }}; \
-    source {{ join(_termix, 'git', 'age.nu') }}; \
-    source {{ join(_termix, 'git', 'ls-redev-refs.nu') }}; \
-    git-check --check-repo=0 {{JUST_INVOKE_DIR}}; git ls-redev-refs --show-branches={{showBranch}}
 
 # 显示本机安装应用版本及环境变量相关信息
 show-env: _check-ver
@@ -144,7 +137,7 @@ repo-transfer from=('') to=(''): _check-ver
 # 更新远程二开仓库代码到本地
 pull-redev branch=('master') diff=('false'): _check-ver
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
-    source {{ join(_termix, 'git', 'pull-redev.nu') }}; \
+    source {{ join(_termix, 'actions', 'pull-redev.nu') }}; \
     git-check --check-repo=0 {{JUST_INVOKE_DIR}}; git pull-redev {{branch}} --show-diff={{diff}}
 
 # Use tag=('v2.0.2') to set default $1
@@ -152,8 +145,15 @@ pull-redev branch=('master') diff=('false'): _check-ver
 # 给远程二开仓库批量打 Tag
 tag-redev tag=('') branch=('master') delete=('false'): _check-ver
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
-    source {{ join(_termix, 'git', 'tag-redev.nu') }}; \
+    source {{ join(_termix, 'actions', 'tag-redev.nu') }}; \
     git-check --check-repo=0 {{JUST_INVOKE_DIR}}; git tag-redev '{{tag}}' {{branch}} --delete-tag={{delete}}
+
+# Show Branches and Tags of redevelop related repos
+ls-redev-refs showBranch=('false'): _check-ver
+  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+    source {{ join(_termix, 'git', 'age.nu') }}; \
+    source {{ join(_termix, 'actions', 'ls-redev-refs.nu') }}; \
+    git-check --check-repo=0 {{JUST_INVOKE_DIR}}; git ls-redev-refs --show-branches={{showBranch}}
 
 # 批量同步本地分支到远程指定分支,git pre-push hooks调用,请勿手工触发
 git-sync-branch localRef localOid remoteRef: _check-ver
