@@ -30,7 +30,7 @@ def 'git sync-branch' [
   # 获取待同步目的仓库及目的分支映射
   let syncDests = ($pushConf | query json $'branches.($current)' | insert SYNC {
       get repo | each { if ($',($ignored),' =~ $',($it),') { '   x' } { '   √' } }
-    } | sort-by SYNC)
+    } | insert source $current | move source --before dest | sort-by SYNC)
   # 如果没有找到对应分支的 push hook 配置则直接退出
   if (($syncDests | length) > 0) {
     $'(char nl)Found the following matched dests from (ansi g)`origin/($confBr):.termixrc`(ansi reset):(char nl)'
