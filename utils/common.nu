@@ -35,6 +35,10 @@ def 'get-tmp-path' [] {
   # 先从环境变量里面查找临时文件路径
   let tmpDir = (get-env TERMIX_TMP_PATH '')
   let tmpPath = (if ($tmpDir | empty?) { ($actionConf | get termixTmpPath) } { $tmpDir })
+  if ($tmpPath | path exists) {} {
+    $'(ansi r)Path ($tmpPath) does not exist, please create it and try agian...(ansi reset)(char nl)(char nl)'
+    exit --now
+  }
   echo $tmpPath
 }
 
