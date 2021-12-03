@@ -5,6 +5,9 @@
 
 let __env = ($nu.env | pivot key value)
 
+# Global date format
+let _DATE_FMT = '%Y.%m.%d'
+
 # Termix.toml config file path
 let _TERMIX_CONF = ([$nu.env.TERMIX_DIR 'termix.toml'] | path join)
 

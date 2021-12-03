@@ -14,7 +14,6 @@ def 'gaia-release' [
   --delete-tag(-d): string  # Set to 'true' if you want to delete the specified tag
 ] {
 
-  let DATE_FMT = '%Y.%m.%d'
   let repoPath = (get-tmp-path)
   let gaiaSrcRepos = (open $_TERMIX_CONF | get gaiaSrcRepos)
   $'Using global repo path: (ansi p)($repoPath)(ansi reset)(char nl)(char nl)'
@@ -22,7 +21,7 @@ def 'gaia-release' [
   $gaiaSrcRepos | match name ($repos | str find-replace -a ',' '|') | each { |repo|
     # 单一仓库完整路径
     let destRepoPath = ([$repoPath $repo.name] | path join)
-    let dateSuffix = (date now | date format $DATE_FMT)
+    let dateSuffix = (date now | date format $_DATE_FMT)
     let releaseTag = (if ($repo.suffix | empty?) { $'($version)-($dateSuffix)' } { $'($version)-($repo.suffix)-($dateSuffix)' })
     # let tagName = 'v1.0.0-2021.08.09'
     # 如果传入的是完整的带时间戳的 Tag 名就不用再重复加时间戳了

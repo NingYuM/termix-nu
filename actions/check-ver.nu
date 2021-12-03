@@ -22,11 +22,10 @@ def 'just-ver' [] {
 
 # Check latest termix-nu version and show upgrading tips if there is a new release
 def 'termix-ver' [] {
-  let DATE_FMT = '%Y.%m.%d'
   let tmpPath = (get-tmp-path)
   let currentVer = (get-conf version)
   let confName = ([$tmpPath '.termix-conf'] | path join)
-  let checkDate = (date now | date format $DATE_FMT)
+  let checkDate = (date now | date format $_DATE_FMT)
   if ($confName | path exists) {
     let conf = (open $confName -r)
     if ($conf | query json 'checkDate') == $checkDate {
