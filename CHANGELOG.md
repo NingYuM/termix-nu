@@ -1,6 +1,32 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.2.6] - 2021-12-06
+
+### Bug Fixes
+
+- Add temp dir existence check, notify user if it does not exist.
+- Fix `error: Coercion error` for `sync-branch` and `trigger-sync`
+
+### Documentation
+
+- Update readme.md add .env and git branch sync related tips
+
+### Features
+
+- Add source branch name to branch syncing summary table
+- Add `trigger-sync` feature for repo syncing and related docs
+- Add `SYNC_IGNORE_ALIAS` in `show-env` output
+
+### Miscellaneous Tasks
+
+- Add source code counter for each folder or file
+- Move temp git.nu to run dir
+
+### Refactor
+
+- Add global date format constant: _DATE_FMT
+
 ## [1.2.5] - 2021-12-02
 
 ### Bug Fixes
