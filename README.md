@@ -7,7 +7,7 @@
 
 1. 用 JS 写的脚本在使用前需要安装`node_modules`依赖, 使用上稍有不便，`termix-nu`里面的脚本希望单独把脚本文件发给其他人的时候对方可以直接执行(前提是本机安装过`Nushell`)，另一方面本仓库里面的脚本主要用于日常开发的时候完成一些“微不足道”的小功能: 这些能力看似可有可无，比较杂，且不设限，不适合也没有放到`@terminus/termix`里面的必要，它的定位就是**"尽可能地通过脚本化的方式消灭日常开发过程中一切低效、重复或者人工操作起来不太方便的工作"**;
 2. 没有选择`Bash`脚本是因为`Bash`是一种比较糟糕的脚本语言: 阅读维护都不太方便、而且不适合处理结构化的数据，比如 JSON、TOML、CSV 等等，更重要的是不能跨平台(或者比较有限)；
-3. 选用 `Nushell`则是因为其更加现代、强大、语法更优雅，代码可读性和可维护性有质的提升，天生支持结构化数据、可以跨平台、具有函数式风格和强大的表现力等等，而且未来还会提供模块化以及并行执行等能力，至少相比`bash`而言`nushell`是个更好的选择。更多详情可以查看其官网文档: https://www.nushell.sh/ ；
+3. 选用 `Nushell`则是因为其更加现代、强大、语法更优雅，代码可读性和可维护性都有质的提升，天生支持结构化数据、可以跨平台、具有函数式风格和强大的表现力等等，甚至可以用来完成一些数据分析任务，而且未来还会提供模块化以及部分场景下的并行执行等能力，至少相比`bash`而言`nushell`是个更好的选择。更多详情可以查看其官网文档: https://www.nushell.sh/ ；
 
 :::
 
@@ -54,7 +54,12 @@ cargo +stable install nu --all-features --version 0.39.0
 ## 配置{#config}
 
 1. Clone `termix-nu` 源码:
-   `git clone https://erda.cloud/terminus/dop/frontend-product/termix-nu`
+
+   Erda 地址: https://erda.cloud/terminus/dop/projects/213/apps/8053/repo
+
+   ```bash
+   git clone https://erda.cloud/terminus/dop/frontend-product/termix-nu
+   ```
 
 2. 配置环境变量:
 
@@ -116,6 +121,14 @@ cargo +stable install nu --all-features --version 0.39.0
    ```bash
     # Edit ~/.zshrc or ~/.bashrc and add:
     alias t="just --justfile ~/.justfile --working-directory ."
+    # After source the profile you have edit, you can use `t` now
+   ```
+
+   执行`just`命令的时候如果在`Justfile`里面设置了`set dotenv-load := true`会优先从当前目录加载`.env`文件，如果在项目里面也配置了`.env`文件此时`just`优先加载的环境变量文件可能不是我们想要的，这种情况下可以通过绝对路径指定环境变量配置文件，比如: `just --dotenv-path ~/.env`, 所以保险起见可以在全局 alias 里面把`Justfile` & `.env`都明确指定，比如：
+
+   ```bash
+    # Edit ~/.zshrc or ~/.bashrc and add:
+    alias t="just --justfile ~/.justfile --dotenv-path ~/.env --working-directory ."
     # After source the profile you have edit, you can use `t` now
    ```
 
@@ -571,6 +584,15 @@ just check-desc
 2. **更轻量、灵活**：原来的同步方式每增加一个同步目标，需要在默认 Pipeline 里面增加一个 `custom-script`节点，新的方式只需要改 1~2 行配置就可以了，而且可读性更好；
 3. 这次是**“真”同步**，同步后目的分支和源分支的内容完全一样，提交记录完全一样，原来 Erda 同步时为了避免“**递归同步**”需要对目的仓库的默认 Pipeline 做修改, 以免触发由自动同步导致的自动同步；
 4. 不仅支持分支创建、更新同步还**支持分支同步删除**，原来用 Erda 同步的时候源分支删除后目的分支并未被删除；
+
+:::tip
+为什么没有采用`git`内置的**多 push 地址**的方式同步？
+
+git 本身也是可以通过简单的配置支持一次推送多个目的仓库的：
+`git remote set-url origin --push --add https://git.dest/dest1` & `git remote set-url origin --push --add https://git.dest/dest2`
+然后执行`git push origin branch/name` 可以同时将`branch/name`分支推送到以上两个仓库，但是这种方式缺乏灵活性 —— 要求同一源分支在两个目的仓库同步后的分支名始终保持一致，但是我们实际开发过程中因为多业态的原因可能有多个活跃分支，比如：`support/b2c-iter2` & `support/b2b-iter3`，这两个分支最终会分别部署到 `b2c` 和 `b2b` 的测试环境，而测试环境支持的分支只有 `develop`, 这就需要 `support/b2c-iter2 ---> b2c's develop` 且 `support/b2b-iter3 ---> b2b's develop`, 这种情况下采用`git`内置的**多 push 地址**的方式同步就无法满足要求了。
+
+:::
 
 ---
 
