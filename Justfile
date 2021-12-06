@@ -81,7 +81,7 @@ git-remote-age remote=('origin')  showTag=('false'): _check-ver
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git remote-age {{JUST_INVOKE_DIR}} {{remote}} --show-tag={{showTag}}
 
 # Show branch description from branch description file `d` of `i` branch
-desc branch=(`git branch --show-current`)  showNotes=('false'): _check-ver
+desc branch=(`git branch --show-current`) showNotes=('false'): _check-ver
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'git', 'branch-desc.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; branch-desc {{branch}} --show-notes={{showNotes}}
@@ -160,6 +160,12 @@ git-sync-branch localRef localOid remoteRef: _check-ver
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'git', 'sync-branch.nu') }}; \
     git sync-branch {{localRef}} {{localOid}} {{remoteRef}}
+
+# 手工触发批量同步本地分支到远程指定分支
+trigger-sync branch=(`git branch --show-current`): _check-ver
+  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+    source {{ join(_termix, 'git', 'trigger-sync.nu') }}; \
+    git trigger-sync {{branch}}
 
 # 复用 utils 里面定义的公用方法: nu 不支持动态 source 只能拼接下了
 # 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用空格分隔

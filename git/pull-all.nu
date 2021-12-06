@@ -12,7 +12,7 @@ def 'git pull-all' [
   cd $repoDir
   let startMark = $'[($alias)/'
   let behindMark = ': behind'
-  let currentBranch = (git branch --show-current)
+  let currentBranch = (git branch --show-current | str trim)
   # Save changes before switch to other branches
   let statusCheck = (git status --porcelain)
   if ($statusCheck | empty?) {} {

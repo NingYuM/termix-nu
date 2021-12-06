@@ -18,7 +18,7 @@ def 'git batch-reset' [
   } {}
   # fix: 'fatal: not a git repository (or any of the parent directories): .git'
   cd $nu.env.JUST_INVOKE_DIR
-  let current = (git branch --show-current)
+  let current = (git branch --show-current | str trim)
 
   # 如果有远程分支不存在会出错
   # FIXME: filter branches which does not exsit in the remote

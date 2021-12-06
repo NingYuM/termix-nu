@@ -43,7 +43,7 @@ def 'merge-navs' [] {
   enter $nu.env.JUST_INVOKE_DIR
   # Decide which branch to get `.termixrc` conf from ?
   let useConfBr = (get-conf useConfFromBranch)
-  let confBr = (if $useConfBr == '_current_' { (git branch --show-current) } { 'i' })
+  let confBr = (if $useConfBr == '_current_' { (git branch --show-current | str trim) } { 'i' })
 
   # let specialNavs = (if $confExists { (open .termixrc | from toml | to json | query json 'quickNavs') } { ([[]; []]) })
   # FIXME: fatal: invalid object name 'origin/i'.

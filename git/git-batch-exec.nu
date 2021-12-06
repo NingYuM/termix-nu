@@ -18,7 +18,7 @@ def 'git batch-exec' [
   let dest = ($branches | str trim | split row ' ' | compact)
   # fix: 'fatal: not a git repository (or any of the parent directories): .git'
   cd $nu.env.JUST_INVOKE_DIR
-  let current = (git branch --show-current)
+  let current = (git branch --show-current | str trim)
   let cmdToExec = (compose-cmd $cmd)
 
   # 如果有远程分支不存在会出错
