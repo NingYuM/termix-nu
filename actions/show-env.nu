@@ -10,6 +10,7 @@ def 'show-env' [] {
   let justFile = (get-env JUST_FILE_PATH '(empty)')
   let termixTmp = (get-env TERMIX_TMP_PATH '(empty)')
   let justInvokeDir = (get-env JUST_INVOKE_DIR '(empty)')
+  let syncIgnore = (get-env SYNC_IGNORE_ALIAS '(empty)')
   let npmVer = (get-ver npm 'npm --version')
   let yarnVer = (get-ver yarn 'yarn --version')
   let herdVer = (get-ver herd 'herd --version')
@@ -35,6 +36,7 @@ def 'show-env' [] {
     ['Termix', $termixVer]
     ['-------', '--------']
     ['SHELL_TO_RUN_CMD', $shell]
+    ['SYNC_IGNORE_ALIAS', $syncIgnore]
     ['JUST_FILE', $justFile]
     ['TERMIX_TMP_PATH', $termixTmp]
     ['TERMIX_DIR', $termixDir]
