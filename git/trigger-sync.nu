@@ -14,7 +14,12 @@ def 'git trigger-sync' [
   let current = (git branch --show-current | str trim)
   let selected = (if (has-ref $branch) { $branch } { $current } | str trim)
   # 从远程更新指定分支代码到本地
-  if ($current == $selected) { git pull } { git fetch origin $'($selected):($selected)' }
+  if ($current == $selected) { git pull origin $selected } { git fetch origin $'($selected):($selected)' }
+  # Remote branch does not exit
+  if (has-ref $'origin/($selected)') {} {
+    git push origin $selected -u
+    exit --now
+  }
   let diff = (git rev-list --left-right $'($selected)...origin/($selected)' --count | detect columns -n | rename local remote | update cells { $it | into int })
   # 如果本地分支超前于远程分支直接push就可以了，会自动触发批量同步
   if ($diff.remote == 0 && $diff.local > 0) {
@@ -33,7 +38,14 @@ def 'git trigger-sync' [
   let pushConf = (git show $'origin/($confBr):.termixrc' | from toml | to json)
   let ignored = (get-env SYNC_IGNORE_ALIAS '')
   # 获取待同步目的仓库及目的分支映射
-  let syncDests = ($pushConf | query json $'branches.($selected)' | insert SYNC {
+  let dests = ($pushConf | query json $'branches.($selected)')
+  # 如果没有任何同步配置直接退出
+  # FIXME: ignore `error: Coercion error`
+  do -i {
+    if ($dests == $nothing) { exit --now } {}
+  }
+
+  let syncDests = ($dests | insert SYNC {
       get repo | each { if ($',($ignored),' =~ $',($it),') { '   x' } { '   √' } }
     } | insert source $selected | move source --before dest | sort-by SYNC)
   # 如果没有找到对应分支的 push hook 配置则直接退出

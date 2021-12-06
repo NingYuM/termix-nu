@@ -28,7 +28,14 @@ def 'git sync-branch' [
   # The following line not work: ^^^ Expected column path, found string
   # let matchBranch = ($pushConf | get branches | default $current '' | select $current | compact | length)
   # 获取待同步目的仓库及目的分支映射
-  let syncDests = ($pushConf | query json $'branches.($current)' | insert SYNC {
+  let dests = ($pushConf | query json $'branches.($current)')
+  # 如果没有任何同步配置直接退出
+  # FIXME: ignore `error: Coercion error`
+  do -i {
+    if ($dests == $nothing) { exit --now } {}
+  }
+
+  let syncDests = ($dests | insert SYNC {
       get repo | each { if ($',($ignored),' =~ $',($it),') { '   x' } { '   √' } }
     } | insert source $current | move source --before dest | sort-by SYNC)
   # 如果没有找到对应分支的 push hook 配置则直接退出
