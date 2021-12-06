@@ -2,7 +2,7 @@
 
 `termix` ，`termi` 是公司英文简称前缀，也是命令行终端 `terminal` 的前缀，`mix` 可以理解为工具箱，`termix` 就是公司内部使用的命令行工具箱了。`termix-nu` 主要为[`Nushell`](https://github.com/nushell/nushell) 版本的`termix`, 与之对应的还有个 JS 版本的[`termix`](https://fe-docs.app.terminus.io/docs/termix/termix), 为了避免重复造轮子两者虽然名字上有关联，但实际上功能是不重叠的。
 
-:::tip
+:::info
 既然可以用 JS 写为什么还要采用 `Nushell`？
 
 1. 用 JS 写的脚本在使用前需要安装`node_modules`依赖, 使用上稍有不便，`termix-nu`里面的脚本希望单独把脚本文件发给其他人的时候对方可以直接执行(前提是本机安装过`Nushell`)，另一方面本仓库里面的脚本主要用于日常开发的时候完成一些“微不足道”的小功能: 这些能力看似可有可无，比较杂，且不设限，不适合也没有放到`@terminus/termix`里面的必要，它的定位就是**"尽可能地通过脚本化的方式消灭日常开发过程中一切低效、重复或者人工操作起来不太方便的工作"**;
@@ -75,7 +75,7 @@ cargo +stable install nu --all-features --version 0.39.0
    Available recipes:
    ··· check-desc                    # Check whether all remote branches have related description
    ··· default                       # List available commands by default
-   ··· desc branch=(`git branch --show-current`) showNotes=('false') # Show branch description from branch description file `d` of `i` branch
+   ··· desc branch=(`git branch --show-current`) showNotes=('false') # Show branch description from branch description file `d.toml` of `i` branch
    ··· dir-batch-exec cmd +DIRS=('') # 在指定目录(支持'*'通配符)或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
    ··· emp showAll=('false')         # 查询电商前端团队本周工时填报情况
    ··· gaia-release version=('') repos=('mall,mobile,picker') delete=('false') # 给标品源码仓库打 Release Tag
@@ -423,18 +423,18 @@ just repo-transfer https://old.source-repo.url https://new.dest-repo.url
 由于标品仓库分支动辄 10~20 个甚至更多，为方便分支管理和识别特拟此规范:
 
 - 新增`i` 分支(information)是唯一可以不用遵循分支命名规范的分支;
-- `i` 分支只有一个文件 d, d 为 description 简称, 这两个名字起得简单主要为了后续操作方便;
-- 初次创建 i 分支: `git checkout --orphan i`, 并在其中添加 d 文件用于对其他分支进行描述;
-- 每一个生命周期超过**5**天的分支都应在 i 分支的唯一文件 d 里面添加该分支的说明，并推送远程;
-- 如果分支被删除或者分支用途发生变更也应该同步更新 i 分支里面的 d 文件;
+- `i` 分支只有一个文件 `d.toml`, d 为 description 简称, 这两个名字起得简单主要为了后续操作方便;
+- 初次创建 i 分支: `git checkout --orphan i`, 并在其中添加 `d.toml` 文件用于对其他分支进行描述;
+- 每一个生命周期超过**5**天的分支都应在 i 分支的唯一文件 `d.toml` 里面添加该分支的说明，并推送远程;
+- 如果分支被删除或者分支用途发生变更也应该同步更新 i 分支里面的 `d.toml` 文件;
 - 其他同学可以通过 `git fetch origin i:i` 命令在不改变当前分支的情况下更新 i 分支;
-- 更新完毕后可以在该仓库任意分支任意位置通过此命令查看分支说明: `git show i:d`;
-- 如果不想把 i 分支拉到本地可以在执行`git fetch origin i`后通过`git show origin/i:d`查看;
+- 更新完毕后可以在该仓库任意分支任意位置通过此命令查看分支说明: `git show i:d.toml`;
+- 如果不想把 i 分支拉到本地可以在执行`git fetch origin i`后通过`git show origin/i:d.toml`查看;
 - 以上通过`git show`查看分支描述显示的是整个描述文件，找起来还是不方便所以可以通过本工具定向查询
 
 **分支描述配置**
 
-分支描述文件`d`为`toml`格式，大致如下:
+分支描述文件`d.toml`为`toml`格式，大致如下:
 
 ```toml
 [descriptions]
@@ -570,7 +570,7 @@ just check-desc
 3. 代码能够同步成功的前提是你有对应目标仓库的 push 权限，如果没有可以申请权限或者在本地环境变量里面设置忽略推送，需要修改`.env`环境变量里面的`SYNC_IGNORE_ALIAS`配置项，将需要忽略推送的仓库别名加进去，多个别名之间用`,`隔开即可；
 4. `.termixrc`配置文件可以从当前分支对应的远程分支读取也可以从远程`origin/i`分支读取，`termix.toml` 里面有个配置项 `useConfFromBranch` 该配置项可以指定`.termixrc`配置文件从哪个分支读取，当该配置项的值为 `_current_` 的时候表示从当前分支对应的**远程分支**读取，否则从`origin/i`分支读取，默认也是从`origin/i`分支读取, 此时`origin/i`分支相当于是一个可以存储全局数据的地方，所有开发成员从任何分支都可以读取该分支的数据，也避免了各成员、各分支配置数据不同步的情况，关于`i`分支[前面](#desc)已经有所说明；
 
-:::tip
+:::caution
 同步配置变更后下次 push 生效！！！
 
 1. 当 `useConfFromBranch` 配置为 `_current_` 时，如果开发修改了`.termixrc`同步配置并 push 到`origin`对应的 remote 上的时候建议加上`--no-verify`参数，因为此时同步配置还没有更新到线上，故而此时依然用的是老的配置，所以建议跳过同步，而之后的 push 就可以使用刚才提交的同步配置了；
