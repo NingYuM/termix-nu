@@ -16,7 +16,7 @@ def 'nu-ver' [] {
 def 'just-ver' [] {
 
   let currentVer = (just --version | str find-replace 'just' '' | str trim | first)
-  let minVer = (get-conf minJustVer '0.10.4')
+  let minVer = (get-conf minJustVer '0.10.5')
   upgrade-tip just $minVer $currentVer
 }
 
