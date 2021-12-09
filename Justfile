@@ -45,7 +45,8 @@ JUST_INVOKE_DIR := replace(replace(invocation_directory(), '/', _s), '\d\', 'D:\
 
 # List available commands by default
 default: _check-ver
-  @just --list --list-prefix '··· '
+  @let justfile = (if ($'($nu.env.HOME)/.justfile' | path exists) { $'($nu.env.HOME)/.justfile' } { 'Justfile' }); \
+    just --justfile $justfile --list --list-prefix '··· '
 
 # Display termix current version number
 ver: _check-ver
