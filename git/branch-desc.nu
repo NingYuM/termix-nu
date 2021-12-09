@@ -14,7 +14,7 @@ def 'branch-desc' [
   let localIExists = (has-ref i)
   let remoteIExists = (has-ref origin/i)
   if ($localIExists || $remoteIExists) {} {
-    $'You do not have a i branch, branch description query failed, bye...(char nl)'
+    $'You do not have an i branch, branch description query failed, bye...(char nl)'
     exit --now
   }
   # 本地 i 分支优先级高于远程

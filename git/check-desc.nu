@@ -11,7 +11,7 @@ def 'check-desc' [] {
   let localIExists = (has-ref i)
   let remoteIExists = (has-ref origin/i)
   if ($localIExists || $remoteIExists) {} {
-    $'You do not have a i branch, branch description query failed, bye...(char nl)'
+    $'You do not have an i branch, branch description query failed, bye...(char nl)'
     exit --now
   }
   # 本地 i 分支优先级高于远程
@@ -33,6 +33,18 @@ def 'check-desc' [] {
       each { git show $'origin/($it)' --no-patch --format=%ci | str to-datetime }
     } |
     sort-by last-commit
+
+  # 检查并显示所有描述存在但是远程已经被删掉的分支
+  let gone = ($descriptions | query json 'descriptions' | pivot | rename name description | get name |
+              each { |br| if (has-ref $'origin/($br)') == $false { $br } { '' } })
+
+  # FIXME: 有点Hack啊，如果不通过这种方式判断就会有各种错……😌
+  let empty = ($gone | str collect | str trim | empty?)
+  if ($empty) {} {
+    $'(ansi p)  Branches that have a description but were(ansi r) removed from remote(ansi reset):(char nl)(char nl)(ansi reset)'
+    $gone | compact | wrap 'name'
+  }
+
 }
 
 # Check if the specified branch has a description in `descriptions`
