@@ -37,14 +37,22 @@ redevRepos = [
   { name = 'b2c-mall-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-b2c-redev' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6897/repo/tags
   { name = 'b2c-mall-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-b2c-redev-origin' },
-  # https://erda.cloud/terminus/dop/projects/385/apps/6857/repo/tags
-  { name = 'b2c-mobile-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-b2c-redev' },
-  # https://erda.cloud/terminus/dop/projects/385/apps/6871/repo/tags
-  { name = 'b2c-mobile-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-b2c-redev-origin' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6994/repo/tags
   { name = 'sea-mall-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-sea-redev' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6995/repo/tags
   { name = 'sea-mall-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-sea-redev-origin' },
+  # https://erda.cloud/terminus/dop/projects/691/apps/8112/repo
+  { name = 'b2c-brand-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-brand-redev' },
+  # https://erda.cloud/terminus/dop/projects/691/apps/8113/repo
+  { name = 'b2c-brand-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-brand-redev-origin' },
+  # https://erda.cloud/terminus/dop/projects/691/apps/8114/repo
+  { name = 'b2c-brand-oversea-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-brand-oversea-redev' },
+  # https://erda.cloud/terminus/dop/projects/691/apps/8115/repo
+  { name = 'b2c-brand-oversea-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-brand-oversea-redev-origin' },
+  # https://erda.cloud/terminus/dop/projects/385/apps/6857/repo/tags
+  { name = 'b2c-mobile-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-b2c-redev' },
+  # https://erda.cloud/terminus/dop/projects/385/apps/6871/repo/tags
+  { name = 'b2c-mobile-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-b2c-redev-origin' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6992/repo/tags
   { name = 'sea-mobile-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-sea-redev' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6993/repo/tags

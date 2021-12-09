@@ -61,7 +61,7 @@ release  updateLog=('false'): _check-ver
     source {{ join(_termix, 'actions', 'release.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; release --update-log={{updateLog}}
 
-# Quickly open the matched nav url in default browser, for mac only
+# Quickly open the matched nav url in default browser, for mac or windows with powershell
 go nav=('list'): _check-ver
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'actions', 'quick-nav.nu') }}; \
