@@ -31,7 +31,7 @@ def 'git pull-redev' [
     $'(char nl)Pull repo (ansi gb)($repoName)(ansi reset): (char nl)'
 
     cd $destRepoPath;
-    if (has-ref $branch) {} {
+    if ((has-ref $branch) || (has-ref $'origin/($branch)')) {} {
       $'Dest branch: ($branch) does not exist, bye...(char nl)'
       exit --now
     }
@@ -50,8 +50,10 @@ def 'git pull-redev' [
         git --no-pager diff $prevTagName $branch --name-only
       } {}
     } {
-      # 使用原生 echo 命令
-      ^echo $'(char nl) (ansi r)Tag: ($prevTagName) does not exist in repo: ($repoName) (ansi reset)(char nl)'
+      if $show-diff == 'true' {
+        # 使用原生 echo 命令
+        ^echo $'(char nl) (ansi r)Tag: ($prevTagName) does not exist in repo: ($repoName) (ansi reset)(char nl)'
+      } {}
     }
   }
 }
