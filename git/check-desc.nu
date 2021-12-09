@@ -15,24 +15,29 @@ def 'check-desc' [] {
     exit --now
   }
   # 本地 i 分支优先级高于远程
+  let repo = (pwd | path basename)
   let querySource = (if ($localIExists) { 'i' } { 'origin/i' })
   let descriptions = (git show $'($querySource):($descFile)' | from toml | to json)
   # Alternatively since nushell v0.40.0 you can use the following line, which is longer but more readable
   # git ls-remote --heads --refs origin | detect columns -n | rename cid name |
   #     update name { get name | str find-replace 'refs/heads/' '' } | get name
   let remoteBranches = (git ls-remote --heads --refs origin | lines | str substring '52,')
-  let repo = (pwd | path basename)
+  let allDescribed = ($remoteBranches | where (no-desc $descriptions $it) | str collect | str trim | empty?)
 
-  $'(ansi p)(char nl)  Branches that do not have a description in (ansi g)($repo)(ansi reset):(char nl)(char nl)(ansi reset)'
-  $remoteBranches | where (no-desc $descriptions $it) | wrap name |
-    insert commit-by {
-      get name | each { git show $'origin/($it)' -s --format='%an' }
-    } |
-    insert last-commit {
-      get name |
-      each { git show $'origin/($it)' --no-patch --format=%ci | str to-datetime }
-    } |
-    sort-by last-commit
+  if ($allDescribed) {
+    $'(char nl) Well done! All Branches have been described in (ansi g)($repo)(ansi reset).(char nl)(char nl)'
+  } {
+    $'(ansi p)(char nl)  Branches that do not have a description in (ansi g)($repo)(ansi reset):(char nl)(char nl)(ansi reset)'
+    $remoteBranches | where (no-desc $descriptions $it) | wrap name |
+      insert commit-by {
+        get name | each { git show $'origin/($it)' -s --format='%an' }
+      } |
+      insert last-commit {
+        get name |
+        each { git show $'origin/($it)' --no-patch --format=%ci | str to-datetime }
+      } |
+      sort-by last-commit
+  }
 
   # 检查并显示所有描述存在但是远程已经被删掉的分支
   let gone = ($descriptions | query json 'descriptions' | pivot | rename name description | get name |
