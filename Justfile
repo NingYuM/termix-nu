@@ -116,6 +116,11 @@ ls-node minVer=('12') isLts=('false'): _check-ver
   @source {{ join(_termix, 'actions', 'ls-node.nu') }}; \
     ls-node-remote {{minVer}} {{isLts}}
 
+# 开启或者关闭 git 代理, 目前仅支持阿里郎加速
+git-proxy status=('on'): _check-ver
+  @load-env [[name, value]; ['GIT_PROXY_STATUS', '{{status}}']]; \
+    nu {{ join(_termix, 'git', 'git-proxy.nu') }}
+
 # 查询电商前端团队本周工时填报情况
 emp showAll=('false'): _check-ver
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
