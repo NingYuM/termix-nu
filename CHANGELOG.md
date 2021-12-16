@@ -1,6 +1,32 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.2.7] - 2021-12-16
+
+### Bug Fixes
+
+- Fix `check-desc` command when all branches have been described
+- Fix some issues for `pull-redev` command
+- Fix default command list display issue while another justfile exists in invoke dir
+- Fix `emp` working hour query command for the new emp
+
+### Documentation
+
+- Update nav menu of README.md
+- Add `git-proxy` related docs, update `emp` doc
+
+### Features
+
+- `check-desc` command add checking branches that have a description but were removed from remote support
+- Add b2c brand site related config
+- Add `git-proxy` command only works when AliLang speed up was enabled
+- Add git proxy status for `show-env` command
+
+### Miscellaneous Tasks
+
+- Add b2b/srm/mbr repo navs
+- Update min nushell version to v0.41.0
+
 ## [1.2.6] - 2021-12-06
 
 ### Bug Fixes
