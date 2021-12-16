@@ -173,6 +173,12 @@ trigger-sync branch=(`git branch --show-current`): _check-ver
     source {{ join(_termix, 'git', 'trigger-sync.nu') }}; \
     git trigger-sync {{branch}}
 
+# Clean possibly unused branches of synced dest repos
+prune-synced-branches dryRun=('true'): _check-ver
+  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+    source {{ join(_termix, 'actions', 'prune-synced-branches.nu') }}; \
+    prune-synced-branches --dry-run={{dryRun}}
+
 # 复用 utils 里面定义的公用方法: nu 不支持动态 source 只能拼接下了
 # 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用空格分隔
 git-batch-exec cmd +branches=(''): _check-ver
