@@ -20,6 +20,7 @@ def 'show-env' [] {
   let justVer = (get-ver just "just --version | str find-replace 'just ' '' | first")
   let gitVer = (get-ver git "git --version | str find-replace 'git version' '' | str trim")
   let time = (date now | date format -t '%Y/%m/%d %H:%M:%S')
+  let gitProxy = (if (git config --global --list | grep proxy | empty?) { 'Off' } { 'On' })
 
   # echo $env
   ^echo (nu -c 'version | pivot | rename nu-ver value')
@@ -35,6 +36,7 @@ def 'show-env' [] {
     ['Yarn', $yarnVer]
     ['Termix', $termixVer]
     ['-------', '--------']
+    ['Git Proxy', $gitProxy]
     ['SHELL_TO_RUN_CMD', $shell]
     ['SYNC_IGNORE_ALIAS', $syncIgnore]
     ['JUST_FILE', $justFile]
