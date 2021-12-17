@@ -109,11 +109,12 @@ def 'handle-working-hours' [
     if ($result == $nothing) { $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; exit --now } {}
   }
 
-  $result | insert WARN { |it|
-    if ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8) {
-      $'(ansi r)('*' | str lpad -l 6 -c $'(char sp)')(ansi reset)'
-    } {}
-  } | sort-by -r WARN Name
+  $result | insert Gap { $total * 8 - ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave) } |
+    insert WARN { |it|
+      if ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8) {
+        $'(ansi r)('*' | str lpad -l 6 -c $'(char sp)')(ansi reset)'
+      } {}
+    } | sort-by -r WARN Gap Name
 }
 
 # Get the beginning time of monday, like 2021-12-06 00:00:00
