@@ -59,8 +59,9 @@ def 'git trigger-sync' [
     let navUrl = ($pushConf | query json $'repos.($it.repo).url')
 
     ^echo $'Sync from local (ansi g)($selected)(ansi reset) to remote (ansi p)($it.dest) of repo ($it.repo)(ansi reset) -->(char nl)'
+    let force = (get-env FORCE '0' | into int)
     let forcePush = (get-env FORCE_PUSH '0' | into int)
-    if ($forcePush == 1) {
+    if ($forcePush == 1 || $force == 1) {
       # You MUST use '--no-verify' to prevent infinit loops!!!
       git push --no-verify --force $gitUrl $'($selected):($it.dest)'
     } {
