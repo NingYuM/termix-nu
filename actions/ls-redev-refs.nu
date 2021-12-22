@@ -6,14 +6,20 @@
 
 # Show Branches and Tags of redevelop related repos
 def 'git ls-redev-refs' [
+  group: string             # Specify the groups of repo to list their refs
   --show-branches: string   # Set true to show remote branches last commit info
 ] {
 
   let repoPath = (get-tmp-path)
   let redevRepos = (open $_TERMIX_CONF | get redevRepos)
+  let filteredRepos = ($redevRepos | where $',($group),' =~ $it.group)
+
+  if ($filteredRepos | length) > 0 {
+    $'(ansi p)Found the following matched repos:(ansi reset)(char nl)(char nl)'; $filteredRepos
+  } { $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'; exit --now }
   $'(ansi p)---------------> List remote refs <--------------- (char nl)(ansi reset)'
 
-  $redevRepos | each {
+  $filteredRepos | each {
     let url = (echo $it | get url)
     let repoNameIdx = (($url | str index-of -e '/') + 1)
     let repoName = ($url | str substring $'($repoNameIdx),')

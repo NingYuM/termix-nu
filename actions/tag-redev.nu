@@ -8,6 +8,7 @@
 def 'git tag-redev' [
   tag: string               # Specify the tag you want to create
   branch: string            # Specify the branch to create a tag from
+  group: string             # Specify the groups of repo to create a tag for
   --delete-tag(-d): string  # Set to 'true' if you want to delete the specified tag
 ] {
 
@@ -23,17 +24,21 @@ def 'git tag-redev' [
   # let tagName = 'v1.0.0-2021.08.09'
   # 如果传入的是完整的带时间戳的 Tag 名就不用再重复加时间戳了
   let tagName = (if ($TAG | str contains '-') { $TAG } { $'($TAG)-(date now | date format $_DATE_FMT)' })
-  $'Delete tag ($tagName) ---> (ansi r)($delete)(ansi reset)(char nl)(char nl)'
 
   let repoPath = (get-tmp-path)
   let redevRepos = ($actionConf | get redevRepos)
-  let exists = ($repoPath | path exists)
+  let filteredRepos = ($redevRepos | where $',($group),' =~ $it.group)
+  if ($filteredRepos | length) > 0 {
+    $'(ansi p)Found the following matched repos:(ansi reset)(char nl)(char nl)'; $filteredRepos
+  } { $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'; exit --now }
+
+  $'Delete tag ($tagName) ---> (ansi r)($delete)(ansi reset)(char nl)(char nl)'
   # 不存在则创建临时路径
-  if $exists {} { mkdir $repoPath }
+  if ($repoPath | path exists) {} { mkdir $repoPath }
   # 保存当前路径方便后期跳回
   let currentDir = (pwd)
 
-  $redevRepos | each { |repo|
+  $redevRepos | where $',($group),' =~ $it.group | each { |repo|
     let repoNameIdx = (($repo.url | str index-of -e '/') + 1)
     let repoName = ($repo.url | str substring $'($repoNameIdx),')
     # 单一二开仓库完整路径

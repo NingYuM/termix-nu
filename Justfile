@@ -140,26 +140,26 @@ repo-transfer from=('') to=(''): _check-ver
     git repo-transfer {{from}} {{to}}
 
 # t pull-redev true
-# 更新远程二开仓库代码到本地
-pull-redev branch=('master') diff=('false'): _check-ver
+# 更新远程二开仓库代码到本地, 可以指定分支和仓库分组多个分组之间用`,`隔开
+pull-redev branch=('master') group=('b2c,b2b,mbr,pik') diff=('false'): _check-ver
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'actions', 'pull-redev.nu') }}; \
-    git-check --check-repo=0 {{JUST_INVOKE_DIR}}; git pull-redev {{branch}} --show-diff={{diff}}
+    git-check --check-repo=0 {{JUST_INVOKE_DIR}}; git pull-redev {{branch}} {{group}} --show-diff={{diff}}
 
 # Use tag=('v2.0.2') to set default $1
 # delete: 是否删除当前日期对应的二开标签，且不重新打标, 只有为true的时候才删除，其他情况会重新打标
-# 给远程二开仓库批量打 Tag
-tag-redev tag=('') branch=('master') delete=('false'): _check-ver
+# 给远程二开仓库批量打 Tag, 可以指定分支和仓库分组多个分组之间用`,`隔开
+tag-redev tag=('') branch=('master') group=('b2c,b2b,mbr,pik') delete=('false'): _check-ver
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'actions', 'tag-redev.nu') }}; \
-    git-check --check-repo=0 {{JUST_INVOKE_DIR}}; git tag-redev '{{tag}}' {{branch}} --delete-tag={{delete}}
+    git-check --check-repo=0 {{JUST_INVOKE_DIR}}; git tag-redev '{{tag}}' {{branch}} {{group}} --delete-tag={{delete}}
 
-# Show Branches and Tags of redevelop related repos
-ls-redev-refs showBranch=('false'): _check-ver
+# Show Branches and Tags of redevelop related repos, 可以指定仓库分组多个分组之间用`,`隔开
+ls-redev-refs group=('b2c,b2b,mbr,pik') showBranch=('false'): _check-ver
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'git', 'age.nu') }}; \
     source {{ join(_termix, 'actions', 'ls-redev-refs.nu') }}; \
-    git-check --check-repo=0 {{JUST_INVOKE_DIR}}; git ls-redev-refs --show-branches={{showBranch}}
+    git-check --check-repo=0 {{JUST_INVOKE_DIR}}; git ls-redev-refs {{group}} --show-branches={{showBranch}}
 
 # 批量同步本地分支到远程指定分支,git pre-push hooks调用,请勿手工触发
 git-sync-branch localRef localOid remoteRef: _check-ver

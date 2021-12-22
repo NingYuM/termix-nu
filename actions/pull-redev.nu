@@ -8,17 +8,22 @@
 # 列出远程二开仓库 Tags
 def 'git pull-redev' [
   branch: string            # Specify the branch to pull
+  group: string             # Specify the groups of repo to update
   --show-diff(-d): string   # Set to 'true' if you want to see the files changed since prev tag
 ] {
 
   let repoPath = (get-tmp-path)
   let redevRepos = (open $_TERMIX_CONF | get redevRepos)
+  let filteredRepos = ($redevRepos | where $',($group),' =~ $it.group)
+  if ($filteredRepos | length) > 0 {
+    $'(ansi p)Found the following matched repos:(ansi reset)(char nl)(char nl)'; $filteredRepos
+  } { $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'; exit --now }
   $'Pull remote redevelop repos in directory (ansi g)($repoPath)(ansi reset):(char nl)'
 
   # 此处迭代变量不要采用默认的 `$it`, 否则会出错，坑爹啊……
   # It's better to have a named param on blocks because $it can be consumed and lost.
   # Ref: https://github.com/nushell/nushell/issues/4060
-  $redevRepos | each { |repo|
+  $filteredRepos | each { |repo|
     let repoNameIdx = (($repo.url | str index-of -e '/') + 1)
     let repoName = ($repo.url | str substring $'($repoNameIdx),')
     # 单一二开仓库完整路径

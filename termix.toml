@@ -24,63 +24,62 @@ redevTagComment = 'This is a release tag'
 # .termixrc 配置从哪个分支上读取？`_current_` 代表当前所在 git 分支, `i` 表示全局 i 分支
 useConfFromBranch = 'i'
 
-# [ ] 支持仓库分组？
+# [√] 支持仓库分组？
 # [ ] 添加 enable 字段?
-# [ ] REDEV_GIT_PREFIX = https://erda.cloud/terminus/dop/gaia-app-redev/
 # 远程二开仓库地址
 redevRepos = [
-  # https://erda.cloud/terminus/dop/projects/385/apps/6898/repo/tags
-  { name = 'b2b-mall-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-b2b-redev' },
-  # https://erda.cloud/terminus/dop/projects/385/apps/6899/repo/tags
-  { name = 'b2b-mall-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-b2b-redev-origin' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6896/repo/tags
-  { name = 'b2c-mall-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-b2c-redev' },
+  { group = 'b2c', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-b2c-redev' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6897/repo/tags
-  { name = 'b2c-mall-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-b2c-redev-origin' },
+  { group = 'b2c', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-b2c-redev-origin' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6994/repo/tags
-  { name = 'sea-mall-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-sea-redev' },
+  { group = 'b2c', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-sea-redev' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6995/repo/tags
-  { name = 'sea-mall-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-sea-redev-origin' },
+  { group = 'b2c', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-sea-redev-origin' },
   # https://erda.cloud/terminus/dop/projects/691/apps/8112/repo
-  { name = 'b2c-brand-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-brand-redev' },
+  { group = 'b2c', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-brand-redev' },
   # https://erda.cloud/terminus/dop/projects/691/apps/8113/repo
-  { name = 'b2c-brand-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-brand-redev-origin' },
+  { group = 'b2c', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-brand-redev-origin' },
   # https://erda.cloud/terminus/dop/projects/691/apps/8114/repo
-  { name = 'b2c-brand-oversea-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-brand-oversea-redev' },
+  { group = 'b2c', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-brand-oversea-redev' },
   # https://erda.cloud/terminus/dop/projects/691/apps/8115/repo
-  { name = 'b2c-brand-oversea-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-brand-oversea-redev-origin' },
+  { group = 'b2c', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-brand-oversea-redev-origin' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6857/repo/tags
-  { name = 'b2c-mobile-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-b2c-redev' },
+  { group = 'b2c', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-b2c-redev' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6871/repo/tags
-  { name = 'b2c-mobile-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-b2c-redev-origin' },
-  # https://erda.cloud/terminus/dop/projects/691/apps/8166/repo
-  { name = 'b2b-mobile-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-b2b-redev' },
-  # https://erda.cloud/terminus/dop/projects/691/apps/8167/repo
-  { name = 'b2b-mobile-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-b2b-redev-origin' },
+  { group = 'b2c', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-b2c-redev-origin' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6992/repo/tags
-  { name = 'sea-mobile-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-sea-redev' },
+  { group = 'b2c', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-sea-redev' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6993/repo/tags
-  { name = 'sea-mobile-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-sea-redev-origin' },
-  # https://erda.cloud/terminus/dop/projects/691/apps/8316/repo
-  { name = 'mbr-mobile-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-mbr-redev' },
-  # https://erda.cloud/terminus/dop/projects/691/apps/8317/repo
-  { name = 'mbr-mobile-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-mbr-redev-origin' },
+  { group = 'b2c', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-sea-redev-origin' },
   # https://erda.cloud/terminus/dop/projects/691/apps/8345/repo
-  { name = 'point-mobile-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-point-redev' },
+  { group = 'b2c', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-point-redev' },
   # https://erda.cloud/terminus/dop/projects/691/apps/8346/repo
-  { name = 'point-mobile-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-point-redev-origin' },
+  { group = 'b2c', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-point-redev-origin' },
   # https://erda.cloud/terminus/dop/projects/691/apps/8318/repo
-  { name = 'brand-mobile-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-brand-redev' },
+  { group = 'b2c', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-brand-redev' },
   # https://erda.cloud/terminus/dop/projects/691/apps/8319/repo
-  { name = 'brand-mobile-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-brand-redev-origin' },
+  { group = 'b2c', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-brand-redev-origin' },
   # https://erda.cloud/terminus/dop/projects/691/apps/8320/repo
-  { name = 'mobile-brand-sea-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-brand-oversea-redev' },
+  { group = 'b2c', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-brand-oversea-redev' },
   # https://erda.cloud/terminus/dop/projects/691/apps/8321/repo
-  { name = 'mobile-brand-sea-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-brand-oversea-redev-origin' },
+  { group = 'b2c', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-brand-oversea-redev-origin' },
+    # https://erda.cloud/terminus/dop/projects/691/apps/8316/repo
+  { group = 'mbr', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-mbr-redev' },
+  # https://erda.cloud/terminus/dop/projects/691/apps/8317/repo
+  { group = 'mbr', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-mbr-redev-origin' },
+  # https://erda.cloud/terminus/dop/projects/691/apps/8166/repo
+  { group = 'b2b', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-b2b-redev' },
+  # https://erda.cloud/terminus/dop/projects/691/apps/8167/repo
+  { group = 'b2b', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-b2b-redev-origin' },
+  # https://erda.cloud/terminus/dop/projects/385/apps/6898/repo/tags
+  { group = 'b2b', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-b2b-redev' },
+  # https://erda.cloud/terminus/dop/projects/385/apps/6899/repo/tags
+  { group = 'b2b', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mall-b2b-redev-origin' },
   # https://erda.cloud/terminus/dop/projects/385/apps/7422/repo/tags
-  { name = 'gaia-picker-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-picker-redev' },
+  { group = 'pik', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-picker-redev' },
   # https://erda.cloud/terminus/dop/projects/385/apps/7423/repo/tags
-  { name = 'gaia-picker-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-picker-redev-origin' },
+  { group = 'pik', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-picker-redev-origin' },
 ]
 
 # 标品前端远程源码仓库配置，供标品打 Release Tag 之用
