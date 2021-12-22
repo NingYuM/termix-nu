@@ -53,6 +53,10 @@ redevRepos = [
   { name = 'b2c-mobile-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-b2c-redev' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6871/repo/tags
   { name = 'b2c-mobile-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-b2c-redev-origin' },
+  # https://erda.cloud/terminus/dop/projects/691/apps/8166/repo
+  { name = 'b2b-mobile-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-b2b-redev' },
+  # https://erda.cloud/terminus/dop/projects/691/apps/8167/repo
+  { name = 'b2b-mobile-origin', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-b2b-redev-origin' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6992/repo/tags
   { name = 'sea-mobile-all', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-sea-redev' },
   # https://erda.cloud/terminus/dop/projects/385/apps/6993/repo/tags
