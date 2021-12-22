@@ -13,7 +13,7 @@ def 'git sync-branch' [
   cd $nu.env.JUST_INVOKE_DIR
   # `git hash-object --stdin < /dev/null` will raise "fatal: could not open '<' for reading: No such file or directory" error
   # 一定要 trim 啊，否则后面可能匹配不到，哎呦……
-  let zero = (git hash-object -t tree /dev/null | tr '[0-9a-f]' '0' | str trim)
+  let zero = (git hash-object -t tree /dev/null | str find-replace -a '[0-9a-f]' '0' | str trim)
   let useRef = (if $localOid == $zero { $remoteRef } { $localRef })
   let current = ($useRef | str find-replace 'refs/heads/' '')
   # Decide which branch to get `.termixrc` conf from ?
