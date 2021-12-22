@@ -14,11 +14,11 @@ def 'git sync-branch' [
   # `git hash-object --stdin < /dev/null` will raise "fatal: could not open '<' for reading: No such file or directory" error
   # 一定要 trim 啊，否则后面可能匹配不到，哎呦……
   let zero = (git hash-object -t tree /dev/null | str find-replace -a '[0-9a-f]' '0' | str trim)
-  let useRef = (if $localOid == $zero { $remoteRef } { $localRef })
-  let current = ($useRef | str find-replace 'refs/heads/' '')
+  let destBranch = ($remoteRef | str find-replace 'refs/heads/' '')
+  let localBranch = ($localRef | str find-replace 'refs/heads/' '')
   # Decide which branch to get `.termixrc` conf from ?
   let useConfBr = (get-conf useConfFromBranch)
-  let confBr = (if $useConfBr == '_current_' { $current } { 'i' })
+  let confBr = (if $useConfBr == '_current_' { $destBranch } { 'i' })
 
   if (has-ref $'origin/($confBr)') {} {
     $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
@@ -27,9 +27,9 @@ def 'git sync-branch' [
   let pushConf = (git show $'origin/($confBr):.termixrc' | from toml | to json)
   let ignored = (get-env SYNC_IGNORE_ALIAS '')
   # The following line not work: ^^^ Expected column path, found string
-  # let matchBranch = ($pushConf | get branches | default $current '' | select $current | compact | length)
+  # let matchBranch = ($pushConf | get branches | default $destBranch '' | select $destBranch | compact | length)
   # 获取待同步目的仓库及目的分支映射
-  let dests = ($pushConf | query json $'branches.($current)')
+  let dests = ($pushConf | query json $'branches.($destBranch)')
   # 如果没有任何同步配置直接退出
   # FIXME: ignore `error: Coercion error`
   do -i {
@@ -38,7 +38,7 @@ def 'git sync-branch' [
 
   let syncDests = ($dests | insert SYNC {
       get repo | each { if ($',($ignored),' =~ $',($it),') { '   x' } { '   √' } }
-    } | insert source $current | move source --before dest | sort-by SYNC)
+    } | insert source $localBranch | move source --before dest | sort-by SYNC)
   # 如果没有找到对应分支的 push hook 配置则直接退出
   if (($syncDests | length) > 0) {
     $'(char nl)Found the following matched dests from (ansi g)`origin/($confBr):.termixrc`(ansi reset):(char nl)'
@@ -53,14 +53,14 @@ def 'git sync-branch' [
       # You MUST use '--no-verify' to prevent infinit loops!!!
       git push --no-verify $gitUrl $':($it.dest)'
     } {
-      ^echo $'Sync from local (ansi g)($current)(ansi reset) to remote (ansi p)($it.dest) of repo ($it.repo)(ansi reset) -->(char nl)'
+      ^echo $'Sync from local (ansi g)($localBranch)(ansi reset) to remote (ansi p)($it.dest) of repo ($it.repo)(ansi reset) -->(char nl)'
       let force = (get-env FORCE '0' | into int)
       let forcePush = (get-env FORCE_PUSH '0' | into int)
       if ($forcePush == 1 || $force == 1) {
         # You MUST use '--no-verify' to prevent infinit loops!!!
-        git push --no-verify --force $gitUrl $'($current):($it.dest)'
+        git push --no-verify --force $gitUrl $'($localBranch):($it.dest)'
       } {
-        git push --no-verify $gitUrl $'($current):($it.dest)'
+        git push --no-verify $gitUrl $'($localBranch):($it.dest)'
       }
     }
     if ($navUrl != '') { ^echo $'You can check the result from: (ansi g)($navUrl)(ansi reset)\n' } { ^echo '' }
