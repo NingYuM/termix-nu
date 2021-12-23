@@ -1,6 +1,31 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.2.8] - 2021-12-23
+
+### Bug Fixes
+
+- Fix error of fatal: could not open '<' for reading: No such file or directory
+- Fix repo syncing issue while doing a redirect push like `git push origin a:b`
+
+### Documentation
+
+- Add `prune-synced-branches` releated docs
+- Update docs for redevelop related commands
+
+### Features
+
+- Add `prune-synced-branches` command
+- Add gap column for emp working hours stat table
+- Add redevelop repos for mbr/brand and point malls
+- Add b2b mobile to redevelop repos
+- Update redevelop related commands add grouping support
+
+### Miscellaneous Tasks
+
+- Change FORCE_PUSH to FORCE, make it more simple to do a force push
+- Use internal `str find-replace` instead of external `tr`
+
 ## [1.2.7] - 2021-12-16
 
 ### Bug Fixes
