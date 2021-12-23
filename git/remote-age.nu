@@ -24,6 +24,9 @@ def 'git remote-age' [
     lines |
     str substring 52, |
     wrap name |
+    insert local {
+      get name | each { if (has-ref $it) { '   √' } {}  }
+    } |
     insert author {
       get name | each { git show $"remotes/($alias)/($it)" -s --format='%an' }
     } |

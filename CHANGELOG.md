@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
 
 ### Documentation
 
-- Add `prune-synced-branches` releated docs
+- Add `prune-synced-branches` related docs
 - Update docs for redevelop related commands
 
 ### Features
@@ -283,7 +283,7 @@ All notable changes to this project will be documented in this file.
 
 - Refactor commands
 - Change ls-remote-tag to ls-redev-tag
-- Remove unnecessary semicoln and echo
+- Remove unnecessary semicolon and echo
 
 ### Refactor
 
