@@ -91,6 +91,7 @@ gaiaSrcRepos = [
 ]
 
 [empWorkingHour]
+app = 'x-trantor-app: emp_worktime'
 type = 'Content-Type: application/json'
 cookie = 'Cookie: emp_stage_u_c_local=_EMP_UC_COOKIE_'
 timeUrl = 'https://staging-gateway.app.terminus.io/compass/emp-worktime/worktime/15078/api/trantor/func/worktime_GetStaffWorkTimeFunc'

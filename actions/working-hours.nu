@@ -42,7 +42,7 @@ def 'working-hours' [
       str find-replace '_staffs_' ($staffs | query json 'res' | to json))
 
   let allStaffs = ($staffs | query json 'res' | select id name | rename id Name)
-  let hours = (curl $emp.timeUrl -H $emp.type -H $userCookie -s --data-raw $timePayload | str collect)
+  let hours = (curl $emp.timeUrl -H $emp.type -H $emp.app -H $userCookie -s --data-raw $timePayload | str collect)
   let leaves = (curl $emp.leaveUrl -H $emp.type -H $userCookie -s --data-raw $leavePayload | str collect)
   let workingHours = (
       $hours | query json 'res'| select fillDate percentage staff |
@@ -52,6 +52,9 @@ def 'working-hours' [
       $leaves | query json 'res'| select beginTime duration staff |
         insert staffId { get staff | each { $it.id } } | reject staff
     )
+
+  # Set a default leaving record
+  let leavingHours = (if ($leavingHours | empty?) { [[beginTime, duration, staffId]; [0, 0, 0]] } { $leavingHours })
 
   handle-working-hours $allStaffs $workingHours $leavingHours
 }
