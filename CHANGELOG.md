@@ -1,6 +1,21 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.2.9] - 2021-12-30
+
+### Bug Fixes
+
+- Fix emp query error while there is no leaving record
+
+### Features
+
+- Add local branch existence check for `git-remote-age` command
+
+### Miscellaneous Tasks
+
+- REMOVE unused files
+- Update min nushell version to v0.42.0, bump version v1.2.9
+
 ## [1.2.8] - 2021-12-23
 
 ### Bug Fixes
