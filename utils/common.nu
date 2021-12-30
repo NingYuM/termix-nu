@@ -29,7 +29,7 @@ def 'get-conf' [
   key: string       # The key to get it's value from termix.toml
   default?: any     # The default value for an empty conf
 ] {
-  let result = (open $_TERMIX_CONF | get ($key | into column_path))
+  let result = (open $_TERMIX_CONF | get ($key | into column-path))
   if ($result | empty?) { $default } { $result }
 }
 

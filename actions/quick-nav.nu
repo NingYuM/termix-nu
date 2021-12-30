@@ -21,7 +21,7 @@ def 'go' [
 
   # Found match item
   let navKey = ($matchs | nth 0).key
-  let url = ($allNavs | get ($navKey | into column_path))
+  let url = ($allNavs | get ($navKey | into column-path))
   if ($url | str starts-with 'http') {
     $'Going to open matched url: (ansi g)($url)(ansi reset) in default browser...(char nl)'
     # Use powershell command to open url in default browser for Windows

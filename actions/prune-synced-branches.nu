@@ -45,7 +45,7 @@ def 'prune-synced-branches' [
     if (($cleanable | str trim) == '') {} {
       $'Possibly unused branches in (ansi g)($alias):(ansi reset)(char nl)(char nl)'
       $cleanable | lines | wrap branch-name
-      let url = ($repos|get ($alias | into column_path)).url
+      let url = ($repos|get ($alias | into column-path)).url
       ^echo $'Visit repo url: ($url)'
       ^echo '---------------------------------------------------------------------------->'
     }
