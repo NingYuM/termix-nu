@@ -589,6 +589,10 @@ just check-desc
    "feature/hooks" = [
       { repo = "mix", dest = "feature/hooks" },
       { repo = "bbc", dest = "feature/hooks-sync" },
+      # 同步配置里面可以添加`lock`字段，该字段的值为字符串 `"true"` 或者 某一个 Commit ID
+      # 当该字段的值为字符串 `"true"` 时同步的时候会跳过该分支对相应仓库的同步
+      # 当该字段的值为某一个 Commit ID 时同步的时候会将指定的 Commit 同步到相应仓库
+      { repo = "b2b", dest = "feature/hooks-sync", lock = "719afc0" },
    ]
    ```
 
