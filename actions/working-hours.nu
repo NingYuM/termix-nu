@@ -54,7 +54,7 @@ def 'working-hours' [
     )
 
   # Set a default leaving record
-  let leavingHours = (if ($leavingHours | empty?) { [[beginTime, duration, staffId]; [0, 0, 0]] } { $leavingHours })
+  let leavingHours = (if ($leavingHours | compact | length) == 0 { [[beginTime, duration, staffId]; [0, 0, 0]] } { $leavingHours })
 
   handle-working-hours $allStaffs $workingHours $leavingHours
 }
