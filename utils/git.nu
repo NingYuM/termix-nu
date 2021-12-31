@@ -14,9 +14,9 @@ def 'do-sync' [
   let hasLock = ($repo | select lock | compact | length) > 0
   if ($forcePush == 1 || $force == 1 || $hasLock) {
     # You MUST use '--no-verify' to prevent infinit loops!!!
-    git push --no-verify --force $gitUrl $'($syncFrom):($repo.dest)'
+    git push --no-verify --force $gitUrl $'($syncFrom):refs/heads/($repo.dest)'
   } {
-    git push --no-verify $gitUrl $'($syncFrom):($repo.dest)'
+    git push --no-verify $gitUrl $'($syncFrom):refs/heads/($repo.dest)'
   }
 }
 
