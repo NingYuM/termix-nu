@@ -42,28 +42,21 @@ def 'git sync-branch' [
   # 如果没有找到对应分支的 push hook 配置则直接退出
   if (($syncDests | length) > 0) {
     $'(char nl)Found the following matched dests from (ansi g)`origin/($confBr):.termixrc`(ansi reset):(char nl)'
-    echo $syncDests
+    echo $syncDests | default lock '-' | move lock --before SYNC
   } { exit --now }
 
-  echo $syncDests | where SYNC == '   √' | each {
-    let gitUrl = ($pushConf | query json $'repos.($it.repo).git')
-    let navUrl = ($pushConf | query json $'repos.($it.repo).url')
+  echo $syncDests | where SYNC == '   √' | each { |iter|
+    let syncFrom = (get-sync-ref $localBranch $iter)
+    let gitUrl = ($pushConf | query json $'repos.($iter.repo).git')
+    let navUrl = ($pushConf | query json $'repos.($iter.repo).url')
     if $localOid == $zero {
-      ^echo $'Remove remote branch (ansi p)($it.dest) of repo ($it.repo)(ansi reset) -->(char nl)'
+      ^echo $'Remove remote branch (ansi p)($iter.dest) of repo ($iter.repo)(ansi reset) -->(char nl)'
       # You MUST use '--no-verify' to prevent infinit loops!!!
-      git push --no-verify $gitUrl $':($it.dest)'
+      git push --no-verify $gitUrl $':($iter.dest)'
     } {
-      ^echo $'Sync from local (ansi g)($localBranch)(ansi reset) to remote (ansi p)($it.dest) of repo ($it.repo)(ansi reset) -->(char nl)'
-      let force = (get-env FORCE '0' | into int)
-      let forcePush = (get-env FORCE_PUSH '0' | into int)
-      if ($forcePush == 1 || $force == 1) {
-        # You MUST use '--no-verify' to prevent infinit loops!!!
-        git push --no-verify --force $gitUrl $'($localBranch):($it.dest)'
-      } {
-        git push --no-verify $gitUrl $'($localBranch):($it.dest)'
-      }
+      if $syncFrom == $nothing {} { do-sync $syncFrom $iter }
     }
-    if ($navUrl != '') { ^echo $'You can check the result from: (ansi g)($navUrl)(ansi reset)\n' } { ^echo '' }
+    if ($navUrl != '' && $syncFrom != $nothing) { ^echo $'You can check the result from: (ansi g)($navUrl)(ansi reset)\n' } { ^echo '' }
   }
   char nl
 }

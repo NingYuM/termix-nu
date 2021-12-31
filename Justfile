@@ -164,12 +164,14 @@ ls-redev-refs group=('b2c,b2b,mbr,pik') showBranch=('false'): _check-ver
 # 批量同步本地分支到远程指定分支,git pre-push hooks调用,请勿手工触发
 git-sync-branch localRef localOid remoteRef: _check-ver
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
+    source {{ join(_termix, 'utils', 'git.nu') }}; \
     source {{ join(_termix, 'git', 'sync-branch.nu') }}; \
     git sync-branch {{localRef}} {{localOid}} {{remoteRef}}
 
 # 手工触发批量同步本地分支到远程指定分支
 trigger-sync branch=(`git branch --show-current`): _check-ver
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
+    source {{ join(_termix, 'utils', 'git.nu') }}; \
     source {{ join(_termix, 'git', 'trigger-sync.nu') }}; \
     git trigger-sync {{branch}}
 
