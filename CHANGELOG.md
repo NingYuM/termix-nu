@@ -1,6 +1,25 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.2.10] - 2021-12-31
+
+### Bug Fixes
+
+- Fix emp working hours query while there are leaving records
+
+### Documentation
+
+- Add lock related docs for git auto sync and trigger-sync
+
+### Features
+
+- Add lock feature for git auto sync while pushing commits
+- Add lock feature for `trigger-sync` command
+
+### Miscellaneous Tasks
+
+- Bump version v1.2.10
+
 ## [1.2.9] - 2021-12-30
 
 ### Bug Fixes
