@@ -35,9 +35,10 @@ def 'termix-ver' [] {
       upgrade-tip termix-nu (query-ver $confName) $currentVer
     }
 
-    let hasForceUpgrade = ($conf | select forceUpgrade | compact | length) > 0
-    let forceUpgrade = (if $hasForceUpgrade { ($conf | query json 'forceUpgrade') && (is-lower-ver $currentVer $latestVer) } { $false })
-    # Quit command if it's a force upgrade
+    # Parse conf as JSON and check forceUpgrade column
+    let hasForceUpgrade = ($conf | from json | select forceUpgrade | compact | length) > 0
+    let forceUpgrade = ($hasForceUpgrade && ($conf | query json 'forceUpgrade') && (is-lower-ver $currentVer $latestVer))
+    # Quit command right now if it's a force upgrade
     if ($forceUpgrade) {
       $'(ansi r)很抱歉，为了更好地为您服务请先更新 termix-nu 并重试...(ansi reset)(char nl)(char nl)'
       (query-ver $confName | ignore); exit 1 --now    # Query and update latest version again.
