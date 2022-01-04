@@ -28,12 +28,18 @@ def 'termix-ver' [] {
   let checkDate = (date now | date format $_DATE_FMT)
   if ($confName | path exists) {
     let conf = (open $confName -r)
+    let latestVer = ($conf | query json 'latestVer')
     if ($conf | query json 'checkDate') == $checkDate {
-      let latestVer = ($conf | query json 'latestVer')
       upgrade-tip termix-nu $latestVer $currentVer
     } {
       upgrade-tip termix-nu (query-ver $confName) $currentVer
     }
+    let forceUpgrade = ($conf | query json 'forceUpgrade') && (is-lower-ver $currentVer $latestVer)
+    # Quit command if it's a force upgrade
+    if ($forceUpgrade) {
+      $'(ansi r)很抱歉，为了更好地为您服务请先更新 termix-nu 并重试...(ansi reset)(char nl)(char nl)'
+      (query-ver $confName | ignore); exit 1 --now    # Query and update latest version again.
+    } {}
   } {
     upgrade-tip termix-nu (query-ver $confName) $currentVer
   }
@@ -43,9 +49,14 @@ def 'termix-ver' [] {
 def 'query-ver' [
   conf: string,
 ] {
+  # Update latest commits from remote to local, tags inclueded
   enter $nu.env.TERMIX_DIR; git fetch origin -p
+  # Get latest release tag name
   let latestVer = (git tag -l --sort=-v:refname | lines | nth 0)
-  [[latestVer checkDate]; [$latestVer $checkDate]]  | to json --pretty 2 | save $conf
+  # Check whether the latest release tag is a force upgrade
+  let msg = (git show --oneline --no-patch $latestVer)
+  let forceUpgrade = ($msg | str contains $_UPGRADE_TAG)
+  [[latestVer checkDate forceUpgrade]; [$latestVer $checkDate $forceUpgrade]]  | to json --pretty 2 | save $conf
   echo $latestVer
 }
 

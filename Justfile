@@ -57,10 +57,10 @@ upgrade: _check-ver
   @cd {{_termix}}; git checkout master; git pull origin (git tag -l --sort=-v:refname | lines | nth 0) --ff-only;
 
 # Release a new version for termix-nu
-release  updateLog=('false'): _check-ver
+release  updateLog=('false') forceUpgrade=('false'): _check-ver
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'actions', 'release.nu') }}; \
-    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; release --update-log={{updateLog}}
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; release --update-log={{updateLog}} --force-upgrade={{forceUpgrade}}
 
 # Quickly open the matched nav url in default browser, for mac or windows with powershell
 go nav=('list'): _check-ver

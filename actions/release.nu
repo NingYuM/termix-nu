@@ -11,7 +11,8 @@
 # 	just release
 
 def 'release' [
-  --update-log: string  # set to `true` do enable updating CHANGELOG.md
+  --update-log: string      # Set to `true` do enable updating CHANGELOG.md
+  --force-upgrade: string   # Add `$-FORCE-UPGRADE-$` to release tag commit message
 ] {
 
   cd $nu.env.TERMIX_DIR
@@ -36,5 +37,7 @@ def 'release' [
     git cliff --unreleased --tag ($releaseVer | str find-replace 'v' '') --prepend CHANGELOG.md;
     git commit CHANGELOG.md -m $'update CHANGELOG.md for ($releaseVer)'
   } {}
-  git tag $releaseVer -am $'A new release for version: ($releaseVer) created by Release command of termix-nu'; git push origin --tags
+  let commitMsg = $'A new release for version: ($releaseVer) created by Release command of termix-nu'
+  let tagMsg = (if $force-upgrade == 'true' { $'($commitMsg). ($_UPGRADE_TAG)' } { $commitMsg })
+  git tag $releaseVer -am $tagMsg; git push origin --tags
 }
