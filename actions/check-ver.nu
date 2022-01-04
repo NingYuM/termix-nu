@@ -20,6 +20,13 @@ def 'just-ver' [] {
   upgrade-tip just $minVer $currentVer
 }
 
+# Force Upgrade Test Case:
+# [√] 兼容老的配置项: 没有 forceUpgrade 配置项时正常执行;
+# [√] 发布**非强制更新新版本**的时候不升级的情况下可以正常执行当前命令;
+# [√] 发布新的强制更新版本时：
+#     [√] 可以检测到并在第二次执行命令时强制更新否则退出;
+#     [√] 当用户升级到最新版本后所有命令可以正常执行；
+#     [√] 当删除掉最新的强制更新版本 Release Tag 时用户端可以检测到并在不升级的情况下恢复正常使用；
 # Check latest termix-nu version and show upgrading tips if there is a new release
 def 'termix-ver' [] {
   let tmpPath = (get-tmp-path)
