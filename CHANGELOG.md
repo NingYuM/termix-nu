@@ -1,6 +1,22 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.2.11] - 2022-01-04
+
+### Bug Fixes
+
+- Fix repo syncing with lock error when the remote branch does not exist
+- Fix force upgrade feature, make its config compatible with previous version
+- Fix force upgrading feature, improve version check strategy
+
+### Features
+
+- Add force upgrade feature, if a force-upgrade version was released all commands will stop running before upgrading termix-nu
+
+### Miscellaneous Tasks
+
+- Add test case in comments for force upgrade feature
+
 ## [1.2.10] - 2021-12-31
 
 ### Bug Fixes
