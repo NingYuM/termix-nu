@@ -14,6 +14,9 @@ def 'git age' [
     lines |
     str substring 2, |
     wrap name |
+    insert remote {
+      get name | each { if (has-ref $'origin/($it)') { '   √' } {}  }
+    } |
     insert author {
       get name | each { git show $it -s --format='%an' }
     } |
