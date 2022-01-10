@@ -34,12 +34,12 @@ def 'brew-speed-up' [
   brew config
   $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
   if ($status == 'off') {
-    $'如果当前 Shell 配置文件（通常为~/.zshrc 或 ~/.bashrc）中包含 "export HOMEBREW_BOTTLE_DOMAIN=xx" 请将其删除(char nl)'
-    $'(char nl)删除完毕记得执行 source 命令使最新配置生效!(char nl)'
+    $'(ansi r)如果当前 Shell 配置文件（通常为~/.zshrc 或 ~/.bashrc）中包含 "export HOMEBREW_BOTTLE_DOMAIN=xx" 请将其删除(ansi reset)(char nl)'
+    $'(char nl)删除完毕记得执行 source 命令, eg: `source ~/.bashrc` 使最新配置生效!(char nl)'
   } {
-    $'尚需手工将以下内容添加到当前 Shell 配置文件（通常为~/.zshrc 或 ~/.bashrc）中:(char nl)'
+    $'(ansi r)尚需手工将以下内容添加到当前 Shell 配置文件（通常为~/.zshrc 或 ~/.bashrc）中:(ansi reset)(char nl)'
     $'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.aliyun.com/homebrew/homebrew-bottles'
-    $'(char nl)添加完毕记得执行 source 命令使最新配置生效!(char nl)'
+    $'(char nl)添加完毕记得执行 source 命令, eg: `source ~/.bashrc` 使最新配置生效!(char nl)'
   }
 }
 
