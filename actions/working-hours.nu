@@ -78,6 +78,9 @@ def 'handle-working-hours' [
   # 正常情况下一周工作 5 天
   let total = (if $weekDay >= 5 { 5 } { $weekDay + 1 })
 
+  # Set a default working hour record
+  let workingHours = (if ($workingHours | compact | length) == 0 { [[fillDate, percentage, staffId]; [0, 0, 0]] } { $workingHours })
+
   let hours = ($workingHours | insert day {
         get fillDate | each {
           let day = (($it / 1000) | into string | str to-datetime -o 8)
