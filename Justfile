@@ -116,6 +116,12 @@ ls-node minVer=('12') isLts=('false'): _check-ver
   @source {{ join(_termix, 'actions', 'ls-node.nu') }}; \
     ls-node-remote {{minVer}} {{isLts}}
 
+# 开启或者关闭 Brew 国内镜像加速
+brew-speed-up status=('on'): _check-ver
+  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+    source {{ join(_termix, 'actions', 'brew-speed-up.nu') }}; \
+    brew-speed-up {{status}}
+
 # 开启或者关闭 git 代理, 目前仅支持在阿里郎加速模式下开启 git 代理
 git-proxy status=('on'): _check-ver
   @load-env [[name, value]; ['GIT_PROXY_STATUS', '{{status}}']]; \
