@@ -1,6 +1,21 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.2.12] - 2022-01-17
+
+### Bug Fixes
+
+- Fix empty working-hours execption for `t emp`
+
+### Documentation
+
+- Add `brew-speed-up` related docs
+
+### Features
+
+- Add feature of checking if local branch exists in remote repo for `git-age` command
+- Add `brew-speed-up` command to set much faster brew mirrors quickly
+
 ## [1.2.11] - 2022-01-04
 
 ### Bug Fixes
