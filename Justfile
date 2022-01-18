@@ -53,7 +53,7 @@ ver: _check-ver
   @^echo (open $'($nu.env.TERMIX_DIR)/termix.toml' | get version)
 
 # Upgrade termix-nu repo to the latest version
-upgrade: _check-ver
+upgrade:
   @cd {{_termix}}; git checkout master; git pull origin (git tag -l --sort=-v:refname | lines | nth 0) --ff-only;
 
 # Release a new version for termix-nu
