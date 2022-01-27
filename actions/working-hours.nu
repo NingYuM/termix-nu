@@ -102,7 +102,8 @@ def 'handle-working-hours' [
       insert Leave {
         get id | { each { |id|
           let leaves = ($leavingHours | where staffId == $id)
-          if ($leaves | empty?) { 0 } { ($leaves | get duration | math sum) * 8 | into int }
+          # FIXME: Very hackable here, `nth 0` is required
+          if ($leaves | empty? | nth 0) { 0 } { ($leaves | get duration | math sum) * 8 | into int }
         }}
       } | reject id
     )
