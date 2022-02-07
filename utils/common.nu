@@ -71,9 +71,12 @@ def 'is-lower-ver' [
 ] {
   let dest = ($to | str trim -c 'v' | str trim)
   let source = ($from | str trim -c 'v' | str trim)
-  let t = ($dest | split row '.' | each { $it | into int })
-  let f = ($source | split row '.' | each { $it | into int })
-  if (($f.0 < $t.0) || ($f.1 < $t.1) || ($f.2 < $t.2)) { echo $true } { echo $false }
+  # 将三段式版本号转换成一个整数，每段最大值999，三段拼接一起进行比较
+  let t = ($dest | split row '.' | each { $it | str lpad -l 3 -c '0' })
+  let f = ($source | split row '.' | each { $it | str lpad -l 3 -c '0' })
+  let toVer = ($'($t.0)($t.1)($t.2)' | into int)
+  let fromVer = ($'($f.0)($f.1)($f.2)' | into int)
+  if ($fromVer < $toVer) { echo $true } { echo $false }
 }
 
 # Check if git was installed and if current directory is a git repo
