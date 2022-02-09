@@ -54,9 +54,8 @@ def 'git sync-branch' [
       # You MUST use '--no-verify' to prevent infinit loops!!!
       git push --no-verify $gitUrl $':($iter.dest)'
     } else {
-      if $syncFrom == $nothing {} else { do-sync $syncFrom $iter }
+      if $syncFrom == $nothing {} else { do-sync $syncFrom $gitUrl $iter }
     }
-    if ($navUrl != '' && $syncFrom != $nothing) { ^echo $'You can check the result from: (ansi g)($navUrl)(ansi reset)\n' } else { ^echo '' }
+    if ($navUrl != '' && $syncFrom != $nothing) { ^echo $'You can check the result from: (ansi g)($navUrl)(ansi reset)' } else { ^echo '' }
   }
-  char nl
 }

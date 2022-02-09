@@ -4,16 +4,16 @@
 .
 ├── [x] Justfile
 ├── [ ] actions
-│   ├── [ ] brew-speed-up.nu
+│   ├── [x] brew-speed-up.nu
 │   ├── [ ] check-ver.nu
 │   ├── [ ] dir-batch-exec.nu
 │   ├── [ ] gaia-release.nu
 │   ├── [x] ls-node.nu
 │   ├── [x] ls-redev-refs.nu
 │   ├── [x] prune-synced-branches.nu
-│   ├── [ ] pull-redev.nu
+│   ├── [x] pull-redev.nu
 │   ├── [ ] quick-nav.nu
-│   ├── [ ] release.nu
+│   ├── [x] release.nu
 │   ├── [ ] show-env.nu
 │   ├── [ ] tag-redev.nu
 │   └── [ ] working-hours.nu
@@ -23,13 +23,13 @@
 │   ├── [ ] check-desc.nu
 │   ├── [ ] git-batch-exec.nu
 │   ├── [ ] git-batch-reset.nu
-│   ├── [ ] git-proxy.nu
+│   ├── [x] git-proxy.nu
 │   ├── [ ] pull-all.nu
 │   ├── [x] remote-age.nu
-│   ├── [ ] rename-branch.nu
+│   ├── [x] rename-branch.nu
 │   ├── [ ] repo-transfer.nu
-│   ├── [ ] sync-branch.nu
-│   └── [ ] trigger-sync.nu
+│   ├── [x] sync-branch.nu
+│   └── [x] trigger-sync.nu
 ├── [ ] mall
 │   ├── [ ] clean-locale.nu
 │   └── [ ] repo-utils.sh
@@ -45,4 +45,4 @@
 └── [ ] utils
     ├── [ ] common.nu
     ├── [ ] compose-cmd.nu
-    └── [ ] git.nu
+    └── [x] git.nu

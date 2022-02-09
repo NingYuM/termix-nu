@@ -18,13 +18,12 @@ def 'release' [
   cd $env.TERMIX_DIR
   let releaseVer = (get-conf version)
   let greatestVer = (git tag -l --sort=-v:refname | lines | nth 0)
-  let releaseV = ($releaseVer | str find-replace -a '(v|\.)' '' | into int)
-  let greatestV = ($greatestVer | str find-replace -a '(v|\.)' '' | into int)
+
   if (has-ref $releaseVer) {
   	$'The version ($releaseVer) already exists, Please choose another version.(char nl)'
   	exit --now
   }
-  if ($releaseV <= $greatestV) {
+  if (is-lower-ver $releaseVer $greatestVer) {
   	$'The release version sould be greater than ($greatestVer), however, current release ver: ($releaseVer)(char nl)'
   	exit --now
   }
