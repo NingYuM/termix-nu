@@ -14,17 +14,17 @@ def 'git age' [
     lines |
     str substring 2, |
     wrap name |
-    insert remote {
-      get name | each { if (has-ref $'origin/($it)') { '   √' } {}  }
+    update remote {
+      get name | each { if (has-ref $'origin/($it)') { '   √' } else { '' }  }
     } |
-    insert author {
+    update author {
       get name | each { git show $it -s --format='%an' }
     } |
-    insert last-commit {
+    update last-commit {
       get name |
       each {
-        git show $it --no-patch --format=%ci | str to-datetime
+        git show $it --no-patch --format=%ci | into datetime
       }
     } |
-    sort-by last-commit
+    sort-by last-commit | table
 }

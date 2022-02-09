@@ -15,7 +15,7 @@ def 'do-sync' [
   if ($forcePush == 1 || $force == 1 || $hasLock) {
     # You MUST use '--no-verify' to prevent infinit loops!!!
     git push --no-verify --force $gitUrl $'($syncFrom):refs/heads/($repo.dest)'
-  } {
+  } else {
     git push --no-verify $gitUrl $'($syncFrom):refs/heads/($repo.dest)'
   }
 }
@@ -32,10 +32,10 @@ def 'get-sync-ref' [
 ] {
   let hasLock = ($repo | select lock | compact | length) > 0
   if $hasLock {
-    if $repo.lock == 'true' { $nothing } {
-      if (has-ref $repo.lock) { $repo.lock } { $nothing }
+    if $repo.lock == 'true' { $nothing } else {
+      if (has-ref $repo.lock) { $repo.lock } else { $nothing }
     }
-  } {
+  } else {
     $syncFrom
   }
 }

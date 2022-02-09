@@ -10,21 +10,21 @@
 #   t ls-node v15 true
 
 def 'ls-node-remote' [
-  minVer?: string  # The node version you want to query
+  minVer: string   # The node version you want to query
   isLts: string    # Filter the node versions that are LTS
 ] {
 
   # brew install fnm to install it, see: https://github.com/Schniz/fnm
-  let installed = ((which fnm | length) > 0)
-  let minVersion = (if ($minVer | empty?) { 10 } { ($minVer | str find-replace 'v' '' | into int) })
-  if $installed {}  {
+  let notInstalled = ((which fnm | length) == 0)
+  let minVersion = (if ($minVer | empty?) { 10 } else { ($minVer | str find-replace 'v' '' | into int) })
+  if $notInstalled {
     $'You should install `fnm` and try again..., bye!'
     exit --now
   }
 
   let vers = (fnm ls-remote | lines | str trim | wrap Version)
   let vRow = (
-    $vers | insert NO { |node| (
+    $vers | update NO { |node| (
       $node.Version |
       split row ' ' |
       first |
@@ -32,12 +32,12 @@ def 'ls-node-remote' [
       first |
       str substring (1,) |
       into int
-    )} | insert isLTS { |node| ($node.Version | str contains '(') }
+    )} | update isLTS { |node| ($node.Version | str contains '(') }
   )
   if $isLts == 'true' {
     # ($vRow | where {|node| $node.NO >= $minVersion && $node.isLTS } | select Version)
-    echo ($vRow | where NO >= $minVersion | where isLTS | select Version)
-  } {
-    echo ($vRow | where NO >= $minVersion | select Version)
+    echo ($vRow | where NO >= $minVersion | where isLTS == $true | select Version | table)
+  } else {
+    echo ($vRow | where NO >= $minVersion | select Version | table)
   }
 }

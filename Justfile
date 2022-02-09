@@ -45,12 +45,12 @@ JUST_INVOKE_DIR := replace(replace(invocation_directory(), '/', _s), '\d\', 'D:\
 
 # List available commands by default
 default: _check-ver
-  @let justfile = (if ($'($nu.env.HOME)/.justfile' | path exists) { $'($nu.env.HOME)/.justfile' } { 'Justfile' }); \
-    just --justfile $justfile --list --list-prefix '··· '
+  @let justfile = (if ($"($env.HOME)/.justfile" | path exists) { $"($env.HOME)/.justfile" } else { "Justfile" }); \
+    just --justfile $justfile --list --list-prefix "··· "
 
 # Display termix current version number
 ver: _check-ver
-  @^echo (open $'($nu.env.TERMIX_DIR)/termix.toml' | get version)
+  @^echo (open $'($env.TERMIX_DIR)/termix.toml' | get version)
 
 # Upgrade termix-nu repo to the latest version
 upgrade:

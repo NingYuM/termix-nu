@@ -14,11 +14,11 @@ def 'git-proxy' [
 
   if ($status == 'on') {
 
-    let proxy = (if $proxies == '' { $nothing } { ($proxies | detect columns -n).Column8 })
+    let proxy = (if $proxies == '' { $nothing } else { ($proxies | detect columns -n).Column8 })
     if ($proxy | empty?) {
       $'(ansi r)(char nl)Can not find Ali proxy, please start it and try again, bype...(ansi reset)(char nl)(char nl)'
       exit --now
-    } {}
+    }
 
     # let-env ALL_RROXY = $'socks://($proxy)'
     # let-env http_proxy = $'socks5://($proxy)'
@@ -30,7 +30,7 @@ def 'git-proxy' [
     $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
     $'If you want to set proxy for the terminal, please run: (char nl)'
     $'export http_proxy=socks5://($proxy) https_proxy=socks5://($proxy) ALL_RROXY=socks://($proxy)(char nl)(char nl)'
-  } {
+  } else {
     # unlet-env ALL_RROXY
     # unlet-env http_proxy
     # unlet-env https_proxy
@@ -44,4 +44,4 @@ def 'git-proxy' [
   }
 }
 
-git-proxy $nu.env.GIT_PROXY_STATUS
+git-proxy $env.GIT_PROXY_STATUS

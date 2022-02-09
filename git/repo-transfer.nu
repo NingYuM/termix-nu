@@ -26,11 +26,11 @@ def 'git repo-transfer' [
       git fetch origin -p
       git remote set-url origin --push $dest
       do-push $dest
-    } {
+    } else {
       $'(ansi r)Path ($tmpPath)/($repoName) already exists(ansi reset), Please remove it and try again...(char nl)'
       exit --now
     }
-  } {
+  } else {
     $'Cloning code to: (ansi g)($tmpPath)/($repoName)(ansi reset)(char nl)'
     git clone --mirror $source $repoName
     cd $repoName; git remote set-url origin --push $dest
@@ -47,7 +47,7 @@ def 'do-push' [
   echo $output
   if $output =~ 'not found' {
     $'(ansi r)Error: The dest repo does not exist, please create it and try again, bye...(ansi reset)(char nl)'
-  } {
+  } else {
     $'(ansi g)Bravo! Repo transfer successfully!(ansi reset)(char nl)'
   }
 }

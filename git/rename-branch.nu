@@ -18,7 +18,7 @@ def 'git branch-rename' [
   remote?: string   # Remote alias name, 'origin' by default
 ] {
 
-  let remoteAlias = (if ($remote | empty?) { 'origin' } { $remote })
+  let remoteAlias = (if ($remote | empty?) { 'origin' } else { $remote })
   git fetch $remoteAlias -p
 
   let localSrcExists = (has-ref $from)
@@ -30,26 +30,26 @@ def 'git branch-rename' [
   if ($remoteDestExists) {
     $'Dest branch (ansi r)($remote)/($to)(ansi reset) already exists in the remote, please use another new name...(char nl)'
     exit --now
-  } {}
+  }
   if ($localDestExists) {
     $'Dest branch (ansi r)($to)(ansi reset) already exists in local, please use another new name...(char nl)'
     exit --now
-  } {}
-  if ($remoteSrcExists || $localSrcExists) {} {
+  }
+  if ($remoteSrcExists || $localSrcExists) {} else {
     $'Branch (ansi r)($from) (ansi reset)does not exist in both remote and local, bye...(char nl)'
     exit --now
   }
 
   let statusCheck = (git status --porcelain)
   # Stash here, if needed
-  if ($statusCheck | empty?) {} {
+  if ($statusCheck | empty?) {} else {
     git stash save 'Stash before running git-batch-exec'
   }
 
   # Pull the branch to local if not exist
   if ($localSrcExists) {
     git checkout $from
-  } {
+  } else {
     $'Branch (ansi r)($from) (ansi reset)not exist in local, will pull from remote...(char nl)'
     git checkout $'($remoteAlias)/($from)' -b $from
   }
@@ -57,6 +57,6 @@ def 'git branch-rename' [
   # Rename, push to remote and ...
   git branch -m $to; git push $remoteAlias -u $to;
   # Delete remote old branch if exists
-  if ($remoteSrcExists) { git push $remoteAlias $':($from)' } {}
-  if ($statusCheck | empty?) {} { git stash pop }
+  if ($remoteSrcExists) { git push $remoteAlias $':($from)' }
+  if ($statusCheck | empty?) {} else { git stash pop }
 }

@@ -17,7 +17,7 @@ def 'git batch-exec' [
   # echo $cmd; echo $branches; exit --now
   let dest = ($branches | str trim | split row ' ' | compact)
   # fix: 'fatal: not a git repository (or any of the parent directories): .git'
-  cd $nu.env.JUST_INVOKE_DIR
+  cd $env.JUST_INVOKE_DIR
   let current = (git branch --show-current | str trim)
   let cmdToExec = (compose-cmd $cmd)
 
@@ -25,14 +25,14 @@ def 'git batch-exec' [
   # let available = (git for-each-ref --format='%(refname:short)' refs/heads | lines)
   # Fix `^^^^^ requires string input issue at 'lines'`
   let available = (git branch | into string | lines | str substring (2,))
-  let candidates = (if ($branches | empty?) { $available } { $dest })
+  let candidates = (if ($branches | empty?) { $available } else { $dest })
 
   $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi reset) on branches: (char nl)'
   echo $candidates
 
   $"(char nl)Current branch: ($current)"
   let statusCheck = (git status --porcelain)
-  if ($statusCheck | empty?) {} {
+  if ($statusCheck | empty?) {} else {
     git stash save 'Stash before running git-batch-exec'
   }
 
@@ -43,10 +43,10 @@ def 'git batch-exec' [
       $'--------------------------------------------------(char nl)'
       # Execute cmd here
       nu -c $cmdToExec
-    } {
+    } else {
       $'Branch (ansi r)($branch) (ansi reset)not available...(char nl)'
     }
   }
   char nl; git checkout $current
-  if ($statusCheck | empty?) {} { git stash pop }
+  if ($statusCheck | empty?) {} else { git stash pop }
 }

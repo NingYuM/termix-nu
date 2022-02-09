@@ -11,48 +11,48 @@ def 'go' [
 ] {
 
   # If the key of `just go` is blank or list, then show all the nav items
-  if ($nav-key == '' || $nav-key == 'list') { show-navs } {}
+  if ($nav-key == '' || $nav-key == 'list') { show-navs }
   # Find match from nav keys only
-  let matchs = ($allNavs | pivot | rename key url | select key | find $nav-key)
+  let matchs = ($allNavs | transpose | rename key url | select key | find $nav-key)
   # If no match item was found then show all the nav items
   do -i {
-    if ($matchs == $nothing) { show-navs } {}
+    if ($matchs == $nothing) { show-navs }
   }
 
   # Found match item
   let navKey = ($matchs | nth 0).key
-  let url = ($allNavs | get ($navKey | into column-path))
+  let url = ($allNavs | get $navKey)
   if ($url | str starts-with 'http') {
     $'Going to open matched url: (ansi g)($url)(ansi reset) in default browser...(char nl)'
     # Use powershell command to open url in default browser for Windows
-    if ($_OS =~ 'windows') { ^powershell -c $'Start-Process ($url)' } { ^open $url }
-  } {
+    if ($_OS =~ 'windows') { ^powershell -c $'Start-Process ($url)' } else { ^open $url }
+  } else {
     $'(ansi r)Invalid nav url, bye...(char nl)(ansi reset)'
   }
 }
 
 def 'show-navs' [] {
   $'(ansi pb)(char nl)Available Nav Items:(char nl)(char nl)(ansi reset)'
-  $allNavs | pivot | rename key url
+  $allNavs | transpose | rename key url
   exit --now
 }
 
 # Merge all nav items from termix.toml and .termixrc
 def 'merge-navs' [] {
   let quickNavs = (get-conf quickNavs)
-  enter $nu.env.JUST_INVOKE_DIR
+  enter $env.JUST_INVOKE_DIR
   # Decide which branch to get `.termixrc` conf from ?
   let useConfBr = (get-conf useConfFromBranch)
-  let confBr = (if $useConfBr == '_current_' { (git branch --show-current | str trim) } { 'i' })
+  let confBr = (if $useConfBr == '_current_' { (git branch --show-current | str trim) } else { 'i' })
 
   # let specialNavs = (if $confExists { (open .termixrc | from toml | to json | query json 'quickNavs') } { ([[]; []]) })
   # FIXME: fatal: invalid object name 'origin/i'.
   let specialNavs = (git show $'origin/($confBr):.termixrc' | from toml | to json | query json 'quickNavs')
-  let allNavs = (if (($specialNavs | compact | length) == 0) { $quickNavs } {
-    let navs = ($quickNavs | pivot key url)
-    let special = ($specialNavs | pivot key url)
+  let allNavs = (if (($specialNavs | compact | length) == 0) { $quickNavs } else {
+    let navs = ($quickNavs | transpose key url)
+    let special = ($specialNavs | transpose key url)
     # Concat tables, and special will override navs if they have the same key
-    echo (echo $navs $special | pivot -r)
+    echo (echo $navs $special | transpose -r)
   })
   echo $allNavs
 }

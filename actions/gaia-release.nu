@@ -22,14 +22,14 @@ def 'gaia-release' [
     # 单一仓库完整路径
     let destRepoPath = ([$repoPath $repo.name] | path join)
     let dateSuffix = (date now | date format $_DATE_FMT)
-    let releaseTag = (if ($repo.suffix | empty?) { $'($version)-($dateSuffix)' } { $'($version)-($repo.suffix)-($dateSuffix)' })
+    let releaseTag = (if ($repo.suffix | empty?) { $'($version)-($dateSuffix)' } else { $'($version)-($repo.suffix)-($dateSuffix)' })
     # let tagName = 'v1.0.0-2021.08.09'
     # 如果传入的是完整的带时间戳的 Tag 名就不用再重复加时间戳了
-    let tagName = (if ($version | str contains '-') { $version } { $releaseTag })
+    let tagName = (if ($version | str contains '-') { $version } else { $releaseTag })
     # 仓库存在则更新，不存在则 clone
     if ($destRepoPath | path exists) {
       cd $destRepoPath; git checkout $repo.branch; git pull
-    } {
+    } else {
       cd $repoPath; git clone -b $repo.branch $repo.url
       cd $destRepoPath; git checkout $repo.branch
     }
@@ -37,9 +37,9 @@ def 'gaia-release' [
     git fetch origin --prune '+refs/tags/*:refs/tags/*'
 
     # Check the tag status, if exists just recrete it.
-    if (has-ref $'refs/tags/($tagName)') { git tag -d $tagName; git push origin --delete $tagName } {}
+    if (has-ref $'refs/tags/($tagName)') { git tag -d $tagName; git push origin --delete $tagName }
 
-    if $delete-tag == 'true' {} {
+    if $delete-tag == 'true' {} else {
       let tagComment = $'A new release for version: ($tagName) created by gaia-release command of termix-nu'
       # Add a tag and push it to the remote repo
       git checkout $repo.branch; git tag $tagName -am $tagComment; git push origin --tags

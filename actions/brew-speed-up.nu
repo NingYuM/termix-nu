@@ -22,13 +22,13 @@ def 'brew-speed-up' [
     restore-origin $brewRepo
     restore-origin $brewCore
     restore-origin $brewCask
-  } {
+  } else {
     $'(ansi p)Going to speed up homebrew using mirrors:(ansi reset)(char nl)'
     backup-origin $brewRepo $BREW_MIRROR
     backup-origin $brewCore $CORE_MIRROR
     backup-origin $brewCask $CASK_MIRROR
   }
-  # Current shell: $nu.env.SHELL
+  # Current shell: $env.SHELL
   $'Update brew config successfully, latest config:(char nl)'
   $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
   brew config
@@ -36,7 +36,7 @@ def 'brew-speed-up' [
   if ($status == 'off') {
     $'(ansi r)如果当前 Shell 配置文件（通常为~/.zshrc 或 ~/.bashrc）中包含 "export HOMEBREW_BOTTLE_DOMAIN=xx" 请将其删除(ansi reset)(char nl)'
     $'(char nl)删除完毕记得执行 source 命令, eg: `source ~/.bashrc` 使最新配置生效!(char nl)'
-  } {
+  } else {
     $'(ansi r)尚需手工将以下内容添加到当前 Shell 配置文件（通常为~/.zshrc 或 ~/.bashrc）中:(ansi reset)(char nl)'
     $'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.aliyun.com/homebrew/homebrew-bottles'
     $'(char nl)添加完毕记得执行 source 命令, eg: `source ~/.bashrc` 使最新配置生效!(char nl)'
@@ -54,7 +54,7 @@ def 'backup-origin' [
     let origin = (git remote get-url origin | str trim)
     $'(ansi g)Backup origin url ($origin) to remote ‘prev’(ansi reset)(char nl)'
     git remote add prev $origin
-  } {}
+  }
   git remote set-url origin $mirrorUrl
 }
 
@@ -67,7 +67,7 @@ def 'restore-origin' [
   if (git remote -v | find prev) == '' {
     let baseName = ($dir | path basename)
     $'(ansi r)Can not find a remote backup for ($baseName), nothing to restore...(ansi reset)(char nl)'
-  } {
+  } else {
     git remote set-url origin (git remote get-url prev)
   }
 }

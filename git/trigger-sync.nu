@@ -10,13 +10,13 @@ def 'git trigger-sync' [
   branch?: string   # Local git branch/ref to push
 ] {
 
-  cd $nu.env.JUST_INVOKE_DIR
+  cd $env.JUST_INVOKE_DIR
   let current = (git branch --show-current | str trim)
-  let selected = (if (has-ref $branch) { $branch } { $current } | str trim)
+  let selected = (if (has-ref $branch) { $branch } else { $current } | str trim)
   # 从远程更新指定分支代码到本地
-  if ($current == $selected) { git pull origin $selected } { git fetch origin $'($selected):($selected)' }
+  if ($current == $selected) { git pull origin $selected } else { git fetch origin $'($selected):($selected)' }
   # Remote branch does not exit
-  if (has-ref $'origin/($selected)') {} {
+  if (has-ref $'origin/($selected)') {} else {
     git push origin $selected -u
     exit --now
   }
@@ -25,13 +25,13 @@ def 'git trigger-sync' [
   if ($diff.remote == 0 && $diff.local > 0) {
     git push origin $selected
     exit --now
-  } {}
+  }
 
   # Decide which branch to get `.termixrc` conf from ?
   let useConfBr = (get-conf useConfFromBranch)
-  let confBr = (if $useConfBr == '_current_' { $selected } { 'i' })
+  let confBr = (if $useConfBr == '_current_' { $selected } else { 'i' })
 
-  if (has-ref $'origin/($confBr)') {} {
+  if (has-ref $'origin/($confBr)') {} else {
     $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
     exit --now
   }
@@ -42,25 +42,25 @@ def 'git trigger-sync' [
   # 如果没有任何同步配置直接退出
   # FIXME: ignore `error: Coercion error`
   do -i {
-    if ($dests == $nothing) { exit --now } {}
+    if ($dests == $nothing) { exit --now }
   }
 
-  let syncDests = ($dests | insert SYNC {
-      get repo | each { if ($',($ignored),' =~ $',($it),') { '   x' } { '   √' } }
-    } | insert source $selected | move source --before dest | sort-by SYNC)
+  let syncDests = ($dests | update SYNC {
+      get repo | each { if ($',($ignored),' =~ $',($it),') { '   x' } else { '   √' } }
+    } | update source $selected | move source --before dest | sort-by SYNC)
   # 如果没有找到对应分支的 push hook 配置则直接退出
   if (($syncDests | length) > 0) {
     $'(char nl)Found the following matched dests from (ansi g)`origin/($confBr):.termixrc`(ansi reset):(char nl)'
     echo $syncDests | default lock '-' | move lock --before SYNC
-  } { exit --now }
+  } else { exit --now }
 
   echo $syncDests | where SYNC == '   √' | each { |iter|
     let syncFrom = (get-sync-ref $selected $iter)
     let gitUrl = ($pushConf | query json $'repos.($iter.repo).git')
     let navUrl = ($pushConf | query json $'repos.($iter.repo).url')
 
-    if $syncFrom == $nothing {} { do-sync $syncFrom $iter }
-    if ($navUrl != '' && $syncFrom != $nothing) { ^echo $'You can check the result from: (ansi g)($navUrl)(ansi reset)\n' } { ^echo '' }
+    if $syncFrom == $nothing {} else { do-sync $syncFrom $iter }
+    if ($navUrl != '' && $syncFrom != $nothing) { ^echo $'You can check the result from: (ansi g)($navUrl)(ansi reset)\n' } else { ^echo '' }
   }
   char nl
 }

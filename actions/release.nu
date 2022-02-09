@@ -15,7 +15,7 @@ def 'release' [
   --force-upgrade: string   # Add `$-FORCE-UPGRADE-$` to release tag commit message
 ] {
 
-  cd $nu.env.TERMIX_DIR
+  cd $env.TERMIX_DIR
   let releaseVer = (get-conf version)
   let greatestVer = (git tag -l --sort=-v:refname | lines | nth 0)
   let releaseV = ($releaseVer | str find-replace -a '(v|\.)' '' | into int)
@@ -23,21 +23,21 @@ def 'release' [
   if (has-ref $releaseVer) {
   	$'The version ($releaseVer) already exists, Please choose another version.(char nl)'
   	exit --now
-  } {}
+  }
   if ($releaseV <= $greatestV) {
   	$'The release version sould be greater than ($greatestVer), however, current release ver: ($releaseVer)(char nl)'
   	exit --now
-  } {}
+  }
   let statusCheck = (git status --porcelain)
-  if ($statusCheck | empty?) {} {
+  if ($statusCheck | empty?) {} else {
   	$'You have uncommit changes, please commit them and try `release` again!(char nl)'
   	exit --now
   }
   if ($update-log == 'true') {
     git cliff --unreleased --tag ($releaseVer | str find-replace 'v' '') --prepend CHANGELOG.md;
     git commit CHANGELOG.md -m $'update CHANGELOG.md for ($releaseVer)'
-  } {}
+  }
   let commitMsg = $'A new release for version: ($releaseVer) created by Release command of termix-nu'
-  let tagMsg = (if $force-upgrade == 'true' { $'($commitMsg). ($_UPGRADE_TAG)' } { $commitMsg })
+  let tagMsg = (if $force-upgrade == 'true' { $'($commitMsg). ($_UPGRADE_TAG)' } else { $commitMsg })
   git tag $releaseVer -am $tagMsg; git push origin --tags
 }

@@ -16,7 +16,7 @@ def 'compose-cmd' [
     # $'Run command with ($selectedShellOfEnv) from .env conf:(char nl)'
     # Output / return composed command
     echo $"($selectedShellOfEnv) ($shellOption) '($cmd)'"
-  } {
+  } else {
     # 如果环境变量里面没有找到则从 termix.toml 里面查找 shell 及其参数
     let selectedShell = ($actionConf | query json 'shellToRunCmd.currentSelected')
     # echo $'Run command with ($selectedShell) from termix.toml conf:(char nl)'

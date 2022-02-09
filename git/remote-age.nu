@@ -24,32 +24,31 @@ def 'git remote-age' [
     lines |
     str substring 52, |
     wrap name |
-    insert local {
-      get name | each { if (has-ref $it) { '   √' } {}  }
+    update local {
+      get name | each { if (has-ref $it) { '   √' }  }
     } |
-    insert author {
+    update author {
       get name | each { git show $"remotes/($alias)/($it)" -s --format='%an' }
     } |
-    insert last-commit {
+    update last-commit {
       get name |
       each {
-        git show $"remotes/($alias)/($it)" --no-patch --format=%ci | str to-datetime
+        git show $"remotes/($alias)/($it)" --no-patch --format=%ci | into datetime
       }
     } |
     sort-by last-commit
 
-  if $show-tag == 'false' { exit --now } {}
+  if $show-tag == 'false' { exit --now }
   $'Tags of (ansi gb)($repoName)(ansi reset) for remote ($alias)(char nl)'
   $'(ansi g)───────────────────────────────────────────────────────────────────────>(ansi reset)(char nl)'
   # git ls-remote --tags origin
-  let tagFormat = '%(align:1,30)%(color:green)%(refname:strip=2)%(end)%09%09%(color:yellow)%(creatordate:iso)'
   if ($_OS =~ 'windows') {
     # Git for Windows does't support sort by `creatordate` field?
-    git tag $'--format=($tagFormat)' --sort=-v:refname   # Reverse
-  } {
-    git tag $'--format=($tagFormat)' --sort=-creatordate # Reverse sort
+    git tag --format=%(align:1,30)%(color:green)%(refname:strip=2)%(end)%09%09%(color:yellow)%(creatordate:iso) --sort=-v:refname   # Reverse
+  } else {
+    git tag --format=%(align:1,30)%(color:green)%(refname:strip=2)%(end)%09%09%(color:yellow)%(creatordate:iso) --sort=-creatordate # Reverse sort
   }
 }
 
-# $nu.env | pivot
-# git remote-age $nu.env.JUST_INVOKE_DIR $nu.env.REMOTE_ALIAS
+# $env | transpose
+# git remote-age $env.JUST_INVOKE_DIR $env.REMOTE_ALIAS

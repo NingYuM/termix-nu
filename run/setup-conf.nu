@@ -30,7 +30,7 @@ def 'setup-conf' [] {
     #     append 'alias ll = ls --long'
     # )
 
-    # config set env  $nu.env
+    # config set env  $env
     config set path $nu.path
 
     $'Config file content as below:'

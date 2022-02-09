@@ -26,7 +26,7 @@ def 'git clean-remote' [] {
       let keep = (echo $whiteList | any? $it == $branch);
       if $keep {
         echo $"($remote) ---> ($branch) keep: ($keep)";
-      } {
+      } else {
         echo $"(ansi rb)($remote) ---> ($branch) keep: ($keep)(ansi reset)";
       }
     };

@@ -17,7 +17,7 @@ def 'git pull-redev' [
   let filteredRepos = ($redevRepos | where $',($group),' =~ $it.group)
   if ($filteredRepos | length) > 0 {
     $'(ansi p)Found the following matched repos:(ansi reset)(char nl)(char nl)'; $filteredRepos
-  } { $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'; exit --now }
+  } else { $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'; exit --now }
   $'Pull remote redevelop repos in directory (ansi g)($repoPath)(ansi reset):(char nl)'
 
   # 此处迭代变量不要采用默认的 `$it`, 否则会出错，坑爹啊……
@@ -29,14 +29,14 @@ def 'git pull-redev' [
     # 单一二开仓库完整路径
     let destRepoPath = ([$repoPath $repoName] | path join)
     # 仓库存在则更新，不存在则 clone
-    if ($destRepoPath | path exists) {} {
+    if ($destRepoPath | path exists) {} else {
       cd $repoPath; git clone -b $branch $repo.url
     }
     $'(ansi reset)─────────────────────────────────────────────────────────────────────────────────>'
     $'(char nl)Pull repo (ansi gb)($repoName)(ansi reset): (char nl)'
 
     cd $destRepoPath;
-    if ((has-ref $branch) || (has-ref $'origin/($branch)')) {} {
+    if ((has-ref $branch) || (has-ref $'origin/($branch)')) {} else {
       $'Dest branch: ($branch) does not exist, bye...(char nl)'
       exit --now
     }
@@ -53,12 +53,12 @@ def 'git pull-redev' [
       if $show-diff == 'true' && (git --no-pager diff $prevTagName $branch --name-only | lines | length) > 0 {
         $'---------> Update since latest tag <---------:(char nl)(ansi y)'
         git --no-pager diff $prevTagName $branch --name-only
-      } {}
-    } {
+      }
+    } else {
       if $show-diff == 'true' {
         # 使用原生 echo 命令
         ^echo $'(char nl) (ansi r)Tag: ($prevTagName) does not exist in repo: ($repoName) (ansi reset)(char nl)'
-      } {}
+      }
     }
   }
 }

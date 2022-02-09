@@ -10,13 +10,13 @@ def 'check-desc' [] {
   let descFile = 'd.toml'
   let localIExists = (has-ref i)
   let remoteIExists = (has-ref origin/i)
-  if ($localIExists || $remoteIExists) {} {
+  if ($localIExists || $remoteIExists) {} else {
     $'You do not have an i branch, branch description query failed, bye...(char nl)'
     exit --now
   }
   # 本地 i 分支优先级高于远程
   let repo = (pwd | path basename)
-  let querySource = (if ($localIExists) { 'i' } { 'origin/i' })
+  let querySource = (if ($localIExists) { 'i' } else { 'origin/i' })
   let descriptions = (git show $'($querySource):($descFile)' | from toml | to json)
   # Alternatively since nushell v0.40.0 you can use the following line, which is longer but more readable
   # git ls-remote --heads --refs origin | detect columns -n | rename cid name |
@@ -26,26 +26,26 @@ def 'check-desc' [] {
 
   if ($allDescribed) {
     $'(char nl) Well done! All Branches have been described in (ansi g)($repo)(ansi reset).(char nl)(char nl)'
-  } {
+  } else {
     $'(ansi p)(char nl)  Branches that do not have a description in (ansi g)($repo)(ansi reset):(char nl)(char nl)(ansi reset)'
     $remoteBranches | where (no-desc $descriptions $it) | wrap name |
-      insert commit-by {
+      update commit-by {
         get name | each { git show $'origin/($it)' -s --format='%an' }
       } |
-      insert last-commit {
+      update last-commit {
         get name |
-        each { git show $'origin/($it)' --no-patch --format=%ci | str to-datetime }
+        each { git show $'origin/($it)' --no-patch --format=%ci | into datetime }
       } |
       sort-by last-commit
   }
 
   # 检查并显示所有描述存在但是远程已经被删掉的分支
-  let gone = ($descriptions | query json 'descriptions' | pivot | rename name description | get name |
-              each { |br| if (has-ref $'origin/($br)') == $false { $br } { '' } })
+  let gone = ($descriptions | query json 'descriptions' | transpose | rename name description | get name |
+              each { |br| if (has-ref $'origin/($br)') == $false { $br } else { '' } })
 
   # FIXME: 有点Hack啊，如果不通过这种方式判断就会有各种错……😌
   let empty = ($gone | str collect | str trim | empty?)
-  if ($empty) {} {
+  if ($empty) {} else {
     $'(ansi p)  Branches that have a description but were(ansi r) removed from remote(ansi reset):(char nl)(char nl)(ansi reset)'
     $gone | compact | wrap 'name'
   }
@@ -59,7 +59,7 @@ def 'no-desc' [
 ] {
   # 处理分支名称包含‘.’的情况: `support/release-2.4`
   let escapedBranch = ($branch | str find-replace -a '\.' '\.')
-  # ($descriptions | select ($escapedBranch | into column-path) | compact | length) == 0
+  # ($descriptions | select $escapedBranch | compact | length) == 0
   let noDescription = ($descriptions | query json $'descriptions.($escapedBranch)') == ''
   echo ($noDescription && $branch != 'i')
 }

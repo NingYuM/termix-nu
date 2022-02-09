@@ -10,7 +10,7 @@ def 'git sync-branch' [
   remoteRef: string  # Remote git branch/ref to push to
 ] {
 
-  cd $nu.env.JUST_INVOKE_DIR
+  cd $env.JUST_INVOKE_DIR
   # `git hash-object --stdin < /dev/null` will raise "fatal: could not open '<' for reading: No such file or directory" error
   # 一定要 trim 啊，否则后面可能匹配不到，哎呦……
   let zero = (git hash-object -t tree /dev/null | str find-replace -a '[0-9a-f]' '0' | str trim)
@@ -18,9 +18,9 @@ def 'git sync-branch' [
   let localBranch = ($localRef | str find-replace 'refs/heads/' '')
   # Decide which branch to get `.termixrc` conf from ?
   let useConfBr = (get-conf useConfFromBranch)
-  let confBr = (if $useConfBr == '_current_' { $destBranch } { 'i' })
+  let confBr = (if $useConfBr == '_current_' { $destBranch } else { 'i' })
 
-  if (has-ref $'origin/($confBr)') {} {
+  if (has-ref $'origin/($confBr)') {} else {
     $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
     exit --now
   }
@@ -33,17 +33,17 @@ def 'git sync-branch' [
   # 如果没有任何同步配置直接退出
   # FIXME: ignore `error: Coercion error`
   do -i {
-    if ($dests == $nothing) { exit --now } {}
+    if ($dests == $nothing) { exit --now }
   }
 
-  let syncDests = ($dests | insert SYNC {
-      get repo | each { if ($',($ignored),' =~ $',($it),') { '   x' } { '   √' } }
-    } | insert source $localBranch | move source --before dest | sort-by SYNC)
+  let syncDests = ($dests | update SYNC {
+      get repo | each { if ($',($ignored),' =~ $',($it),') { '   x' } else { '   √' } }
+    } | update source $localBranch | move source --before dest | sort-by SYNC)
   # 如果没有找到对应分支的 push hook 配置则直接退出
   if (($syncDests | length) > 0) {
     $'(char nl)Found the following matched dests from (ansi g)`origin/($confBr):.termixrc`(ansi reset):(char nl)'
     echo $syncDests | default lock '-' | move lock --before SYNC
-  } { exit --now }
+  } else { exit --now }
 
   echo $syncDests | where SYNC == '   √' | each { |iter|
     let syncFrom = (get-sync-ref $localBranch $iter)
@@ -53,10 +53,10 @@ def 'git sync-branch' [
       ^echo $'Remove remote branch (ansi p)($iter.dest) of repo ($iter.repo)(ansi reset) -->(char nl)'
       # You MUST use '--no-verify' to prevent infinit loops!!!
       git push --no-verify $gitUrl $':($iter.dest)'
-    } {
-      if $syncFrom == $nothing {} { do-sync $syncFrom $iter }
+    } else {
+      if $syncFrom == $nothing {} else { do-sync $syncFrom $iter }
     }
-    if ($navUrl != '' && $syncFrom != $nothing) { ^echo $'You can check the result from: (ansi g)($navUrl)(ansi reset)\n' } { ^echo '' }
+    if ($navUrl != '' && $syncFrom != $nothing) { ^echo $'You can check the result from: (ansi g)($navUrl)(ansi reset)\n' } else { ^echo '' }
   }
   char nl
 }

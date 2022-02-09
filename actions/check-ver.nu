@@ -8,7 +8,7 @@
 def 'nu-ver' [] {
 
   let currentVer = ((version).version)
-  let minVer = (get-conf minNuVer '0.43.0')
+  let minVer = (get-conf minNuVer '0.59.0')
   upgrade-tip nushell $minVer $currentVer
 }
 
@@ -34,23 +34,23 @@ def 'termix-ver' [] {
   let confName = ([$tmpPath '.termix-conf'] | path join)
   let checkDate = (date now | date format $_DATE_FMT)
   if ($confName | path exists) {
-    let conf = (open $confName -r)
+    let conf = (open -r $confName)
     let latestVer = ($conf | query json 'latestVer')
     if ($conf | query json 'checkDate') == $checkDate {
       upgrade-tip termix-nu $latestVer $currentVer
-    } {
+    } else {
       upgrade-tip termix-nu (query-ver $confName) $currentVer
     }
 
     # Parse conf as JSON and check forceUpgrade column
     let hasForceUpgrade = ($conf | from json | select forceUpgrade | compact | length) > 0
-    let forceUpgrade = (if $hasForceUpgrade { ($conf | query json 'forceUpgrade') && (is-lower-ver $currentVer $latestVer)} { $false })
+    let forceUpgrade = (if $hasForceUpgrade { ($conf | query json 'forceUpgrade') && (is-lower-ver $currentVer $latestVer)} else { $false })
     # Quit command right now if it's a force upgrade
     if ($forceUpgrade) {
       $'(ansi r)很抱歉，为了更好地为您提供服务请先更新 termix-nu 并重试...(ansi reset)(char nl)(char nl)'
       (query-ver $confName | ignore); exit 1 --now    # Query and update latest version again.
-    } {}
-  } {
+    }
+  } else {
     upgrade-tip termix-nu (query-ver $confName) $currentVer
   }
 }
@@ -60,13 +60,14 @@ def 'query-ver' [
   conf: string,
 ] {
   # Update latest commits from remote to local, tags inclueded
-  enter $nu.env.TERMIX_DIR; git fetch origin -p
+  enter $env.TERMIX_DIR; git fetch origin -p
+  let checkDate = (date now | date format $_DATE_FMT)
   # Get latest release tag name
   let latestVer = (git tag -l --sort=-v:refname | lines | nth 0)
   # Check whether the latest release tag is a force upgrade
   let msg = (git show --oneline --no-patch $latestVer)
   let forceUpgrade = ($msg | str contains $_UPGRADE_TAG)
-  [[latestVer checkDate forceUpgrade]; [$latestVer $checkDate $forceUpgrade]]  | to json --pretty 2 | save $conf
+  [[latestVer checkDate forceUpgrade]; [$latestVer $checkDate $forceUpgrade]]  | to json | save $conf
   echo $latestVer
 }
 
@@ -82,7 +83,7 @@ def 'upgrade-tip' [
       $' -----> Your ($cmd) is (ansi r)OUTDATED(ansi reset), latest ver: ($min) <----- (char nl)'
       $'  Please run (ansi g)`just upgrade`(ansi reset) to upgrade to the latest version.(char nl)'
       $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
-    } {
+    } else {
       $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
       $'  Min required ($cmd) ver: (ansi r)($min)(ansi reset), current ($cmd) ver: ($current)(char nl)'
       $'  ------------> Your ($cmd) is (ansi r)OUTDATED(ansi reset) <------------ (char nl)'
@@ -90,5 +91,5 @@ def 'upgrade-tip' [
       $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
       exit --now
     }
-  } {}
+  }
 }

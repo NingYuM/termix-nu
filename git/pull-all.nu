@@ -15,7 +15,7 @@ def 'git pull-all' [
   let currentBranch = (git branch --show-current | str trim)
   # Save changes before switch to other branches
   let statusCheck = (git status --porcelain)
-  if ($statusCheck | empty?) {} {
+  if ($statusCheck | empty?) {} else {
     git stash save 'Stash before running pull-all action'
   }
 
@@ -31,8 +31,8 @@ def 'git pull-all' [
         let branchName = ($br | str substring $'($startIdx),($endIdx)')
         $'(char nl)  (ansi gb)--> Start to update branch: ($branchName)(ansi reset)(char nl)'
         git checkout $branchName; git pull
-      } {}
+      }
     }
   git checkout $currentBranch
-  if ($statusCheck | empty?) {} { git stash pop }
+  if ($statusCheck | empty?) {} else { git stash pop }
 }

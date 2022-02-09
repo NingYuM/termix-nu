@@ -15,26 +15,26 @@ def 'git tag-redev' [
   let currentBeTag = $tag
   let actionConf = (open $_TERMIX_CONF)
 
-  let delete = (if $delete-tag == 'true' { $true } { $false })
+  let delete = (if $delete-tag == 'true' { $true } else { $false })
   let TAG_COMMENT = ($actionConf | get redevTagComment)
   # 先从环境变量里面查找待创建的新标签的前缀
   let redevCurrentTag = (get-env REDEV_CURRENT_TAG '')
   # 这个条件赋值表达式真复杂啊: 如果调用命令的时候传参了则覆盖.env文件里面的标签
-  let TAG = (if ($currentBeTag | empty?) { $redevCurrentTag } { $currentBeTag })
+  let TAG = (if ($currentBeTag | empty?) { $redevCurrentTag } else { $currentBeTag })
   # let tagName = 'v1.0.0-2021.08.09'
   # 如果传入的是完整的带时间戳的 Tag 名就不用再重复加时间戳了
-  let tagName = (if ($TAG | str contains '-') { $TAG } { $'($TAG)-(date now | date format $_DATE_FMT)' })
+  let tagName = (if ($TAG | str contains '-') { $TAG } else { $'($TAG)-(date now | date format $_DATE_FMT)' })
 
   let repoPath = (get-tmp-path)
   let redevRepos = ($actionConf | get redevRepos)
   let filteredRepos = ($redevRepos | where $',($group),' =~ $it.group)
   if ($filteredRepos | length) > 0 {
     $'(ansi p)Found the following matched repos:(ansi reset)(char nl)(char nl)'; $filteredRepos
-  } { $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'; exit --now }
+  } else { $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'; exit --now }
 
   $'Delete tag ($tagName) ---> (ansi r)($delete)(ansi reset)(char nl)(char nl)'
   # 不存在则创建临时路径
-  if ($repoPath | path exists) {} { mkdir $repoPath }
+  if ($repoPath | path exists) {} else { mkdir $repoPath }
   # 保存当前路径方便后期跳回
   let currentDir = (pwd)
 
@@ -46,16 +46,16 @@ def 'git tag-redev' [
     # 仓库存在则更新，不存在则 clone
     if ($destRepoPath | path exists) {
       cd $destRepoPath; git checkout $branch; git pull
-    } {
+    } else {
       cd $repoPath; git clone -b $branch $repo.url
       cd $destRepoPath; git checkout $branch
     }
     # Delete tags that not exist in remote repo
     git fetch origin --prune '+refs/tags/*:refs/tags/*'
     # Check the tag status, if exists just recrete it.
-    if (has-ref $'refs/tags/($tagName)') { git tag -d $tagName; git push origin --delete $tagName } {}
+    if (has-ref $'refs/tags/($tagName)') { git tag -d $tagName; git push origin --delete $tagName }
 
-    if $delete {} {
+    if $delete {} else {
       # Add a tag and push it to the remote repo
       git checkout $branch; git tag $tagName -am $TAG_COMMENT; git push origin --tags
     }

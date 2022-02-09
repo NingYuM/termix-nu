@@ -16,7 +16,7 @@ def 'git ls-redev-refs' [
 
   if ($filteredRepos | length) > 0 {
     $'(ansi p)Found the following matched repos:(ansi reset)(char nl)(char nl)'; $filteredRepos
-  } { $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'; exit --now }
+  } else { $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'; exit --now }
   $'(ansi p)---------------> List remote refs <--------------- (char nl)(ansi reset)'
 
   $filteredRepos | each {
@@ -28,14 +28,14 @@ def 'git ls-redev-refs' [
     # 仓库存在则更新，不存在则 clone
     if ($destRepoPath | path exists) {
       cd $destRepoPath; git pull
-    } {
+    } else {
       cd $repoPath; git clone $url
     }
 
     if ($show-branches == 'true') {
       $'(char nl)Branches of repo (ansi gb)($repoName)(ansi reset): (char nl)(char nl)'
       git age $destRepoPath
-    } {}
+    }
 
     $'(char nl)Tags of repo (ansi gb)($repoName)(ansi reset): (char nl)'
     # git ls-remote --tags $url | grep -v '{}'
@@ -43,9 +43,8 @@ def 'git ls-redev-refs' [
     if ($_OS =~ 'windows') {
       # Git for Windows does't support sort by `creatordate` field?
       git tag --format='%(refname:strip=2)%09%(creatordate:iso)' --sort=-v:refname   # Reverse
-    } {
+    } else {
       git tag --format='%(refname:strip=2)%09%(creatordate:iso)' --sort=-creatordate # Reverse sort
     }
   }
-  char nl
 }

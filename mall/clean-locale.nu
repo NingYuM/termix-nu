@@ -20,7 +20,7 @@ def check-termix [] {
   if $check == 0 {
     echo "Command 'termix' could not be found, Please install it by 'npm i -g @terminus/termix@latest', and try again!"
     exit 1
-  } {
+  } else {
     let termixVer = (termix --version)
     echo "Current termix version: " $termixVer | str collect
   }
