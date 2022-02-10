@@ -60,5 +60,5 @@ def 'git pull-redev' [
         ^echo $'(char nl) (ansi r)Tag: ($prevTagName) does not exist in repo: ($repoName) (ansi reset)(char nl)'
       }
     }
-  }
+  } | str collect
 }

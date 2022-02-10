@@ -36,8 +36,8 @@ def 'ls-node-remote' [
   )
   if $isLts == 'true' {
     # ($vRow | where {|node| $node.NO >= $minVersion && $node.isLTS } | select Version)
-    echo ($vRow | where NO >= $minVersion | where isLTS == $true | select Version | table)
+    echo ($vRow | where NO >= $minVersion | where isLTS == $true | select Version)
   } else {
-    echo ($vRow | where NO >= $minVersion | select Version | table)
+    echo ($vRow | where NO >= $minVersion | select Version)
   }
 }

@@ -23,7 +23,7 @@ def 'show-env' [] {
   let gitProxy = (if (git config --global --list | grep proxy | empty?) { 'Off' } else { 'On' })
 
   # echo $env
-  version | transpose | rename nu-ver value | table
+  version | transpose | rename nu-ver value
 
   [
     [name, value];
@@ -44,5 +44,5 @@ def 'show-env' [] {
     ['TERMIX_DIR', $termixDir]
     ['JUST_INVOKE_DIR', $justInvokeDir]
     ['Current Time', $time]
-  ] | table
+  ]
 }

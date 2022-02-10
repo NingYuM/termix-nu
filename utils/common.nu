@@ -19,11 +19,11 @@ let _OS = (version).build_os
 
 # Get the specified env key's value or ''
 def 'get-env' [
-  key: string     # The key to get it's env value
-  default?: string # The default value for an empty env
+  key: string       # The key to get it's env value
+  default?: string  # The default value for an empty env
 ] {
-  let val = do -i { $env | get $key }
-  if ($val | empty?) { $default } else { $val }
+  let hasEnv = (env | any? name == $key)
+  if $hasEnv { $env | get $key } else { $default }
 }
 
 # Get the specified config from `termix.toml` by key
@@ -54,7 +54,7 @@ def 'get-ver' [
   verCmd: string  # The Nushell command to get it's version number
 ] {
   let installed = ((which $app | length) > 0)
-  echo (if $installed { nu -c $verCmd } else { 'N/A' })
+  echo (if $installed { (nu -c $verCmd) } else { 'N/A' })
 }
 
 # Check if a git repo has the specified ref: could be a branch or tag, etc.
@@ -102,4 +102,13 @@ def 'git-check' [
       }
     }
   }
+}
+
+# Log some variables
+def 'log' [
+  var: any
+] {
+  $'(ansi g)-------------> Debug Begin <---------------------(ansi reset)'
+  echo $var
+  $'(ansi g)------------->  Debug End <---------------------(char nl)(ansi reset)'
 }

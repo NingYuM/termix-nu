@@ -33,7 +33,7 @@ def 'git ls-redev-refs' [
     }
 
     if ($show-branches == 'true') {
-      $'(char nl)Branches of repo (ansi gb)($repoName)(ansi reset): (char nl)(char nl)'
+      $'(char nl)Branches of repo (ansi gb)($repoName)(ansi reset): (char nl)'
       git age $destRepoPath
     }
 
@@ -46,5 +46,5 @@ def 'git ls-redev-refs' [
     } else {
       git tag --format='%(refname:strip=2)%09%(creatordate:iso)' --sort=-creatordate # Reverse sort
     }
-  }
+  } | str collect
 }

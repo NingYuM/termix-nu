@@ -49,7 +49,7 @@ def 'prune-synced-branches' [
       ^echo $'Visit repo url: ($url)'
       ^echo '---------------------------------------------------------------------------->'
     }
-  }
+  } | str collect
 }
 
 # Clone or update repo, setup all dest remote alias
@@ -62,7 +62,7 @@ def 'prepare-repo' [
   }
 
   let repoPath = (get-tmp-path)
-  let sampleRepo = ($repos | first | transpose k repo | nth 0).repo
+  let sampleRepo = ($repos | first | transpose k repo | select 0).repo
   let repoName = ($'prune-(pwd | path basename)' | str trim)
   # 待清理仓库完整路径
   let destRepoPath = ([$repoPath $repoName] | path join)

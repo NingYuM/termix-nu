@@ -26,5 +26,5 @@ def 'git age' [
         git show $it --no-patch --format=%ci | into datetime
       }
     } |
-    sort-by last-commit | table
+    sort-by last-commit
 }

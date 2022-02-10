@@ -85,7 +85,7 @@ def 'handle-working-hours' [
         get fillDate | each {
           let day = (($it / 1000) | into string | into datetime -o 8)
           let idx = ((([$day] | dfr to-df | dfr get-weekday).0 + 1) mod 7)
-          echo ($week | nth $idx)
+          echo ($week | select $idx)
         }
       } | update Hrs {
         get percentage | each { ($it * 8) | into int }
@@ -102,8 +102,8 @@ def 'handle-working-hours' [
       update Leave {
         get id | { each { |id|
           let leaves = ($leavingHours | where staffId == $id)
-          # FIXME: Very hackable here, `nth 0` is required
-          if ($leaves | empty? | nth 0) { 0 } { ($leaves | get duration | math sum) * 8 | into int }
+          # FIXME: Very hackable here, `select 0` is required
+          if ($leaves | empty? | select 0) { 0 } { ($leaves | get duration | math sum) * 8 | into int }
         }}
       } | reject id
     )
@@ -131,7 +131,7 @@ def 'get-monday' [] {
   let durations = [0day, 1day, 2day, 3day, 4day, 5day, 6day]
   let weekDay = ([(date now)] | dfr to-df | dfr get-weekday).0
   let beginOfToday = ($'($today.year)-($today.month)-($today.day)' | into datetime)
-  echo (($beginOfToday - ($durations | nth $weekDay)) | date format $_TIME_FMT)
+  echo (($beginOfToday - ($durations | select $weekDay)) | date format $_TIME_FMT)
 }
 
 # Get the ending time of sunday, like 2021-12-12 23:59:59
@@ -145,7 +145,7 @@ def 'get-hr-per-staff' [
   weekDay: string
 ] {
   let hour = ($hours | where staffId == $id && day == $weekDay)
-  if ($hour | empty?) { 0 } else { ($hour | nth 0).Hrs }
+  if ($hour | empty?) { 0 } else { ($hour | select 0).Hrs }
 }
 
 # 处理未登录、超时、服务器错误等

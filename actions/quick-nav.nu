@@ -20,7 +20,7 @@ def 'go' [
   }
 
   # Found match item
-  let navKey = ($matchs | nth 0).key
+  let navKey = ($matchs | select 0).key
   let url = ($allNavs | get $navKey)
   if ($url | str starts-with 'http') {
     $'Going to open matched url: (ansi g)($url)(ansi reset) in default browser...(char nl)'
