@@ -6,7 +6,7 @@ ls | select name | update Lines {
         lines | parse -r  "TypeScript.+\s+(?P<code>\d+)$" |
         get code | into int
     }
-} | default Lines 0
+} | default Lines 0 | flatten
 
 char nl; char nl;
 
@@ -16,7 +16,7 @@ char nl; char nl;
 #         lines | parse -r  "TypeScript  .+\s+(?P<code>\d+)$" |
 #         get code | into int
 #     }
-# } | default Lines 0
+# } | default Lines 0 | flatten
 
 # Counting all nushell lines:
 # fd .nu | lines | each { wc -l $it } | detect columns -n | rename lines file | get lines | each { $it|into int } | math sum

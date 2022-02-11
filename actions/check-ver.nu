@@ -29,7 +29,6 @@ def 'just-ver' [] {
 #     [√] 当删除掉最新的强制更新版本 Release Tag 时用户端可以检测到并在不升级的情况下恢复正常使用；
 # Check latest termix-nu version and show upgrading tips if there is a new release
 def 'termix-ver' [] {
-  log $_DATE_FMT
   let tmpPath = (get-tmp-path)
   let currentVer = (get-conf version)
   let confName = ([$tmpPath '.termix-conf'] | path join)
@@ -40,7 +39,7 @@ def 'termix-ver' [] {
     if ($conf | query json 'checkDate') == $checkDate {
       upgrade-tip termix-nu $latestVer $currentVer
     } else {
-      # upgrade-tip termix-nu (query-ver $confName) $currentVer
+      upgrade-tip termix-nu (query-ver $confName) $currentVer
     }
 
     # Parse conf as JSON and check forceUpgrade column
@@ -64,11 +63,12 @@ def 'query-ver' [
   enter $env.TERMIX_DIR; git fetch origin -p
   let checkDate = (date now | date format $_DATE_FMT)
   # Get latest release tag name
-  let latestVer = (git tag -l --sort=-v:refname | lines | select 0)
+  let latestVer = (git tag -l --sort=-v:refname | lines | select 0).0
   # Check whether the latest release tag is a force upgrade
   let msg = (git show --oneline --no-patch $latestVer)
   let forceUpgrade = ($msg | str contains $_UPGRADE_TAG)
-  [[latestVer checkDate forceUpgrade]; [$latestVer $checkDate $forceUpgrade]]  | to json | save $conf
+  let config = { latestVer: $latestVer, checkDate: $checkDate, forceUpgrade: $forceUpgrade }
+  $config | to json | save $conf
   echo $latestVer
 }
 

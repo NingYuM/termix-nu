@@ -3,7 +3,7 @@
 
 # 清理不在白名单里面的远程分支
 def 'git clean-remote' [] {
-  let remoteAlias = [ 'mix', 'bbc', 'sea', 'src' ];
+  let remoteAlias = [ 'mix', 'bbc', 'sea', 'src' ]
   let whiteList = [
     'develop'
     'master'
@@ -18,18 +18,18 @@ def 'git clean-remote' [] {
     'support/seldon3'
     'release/latest'
     'release/redevelop'
-  ];
+  ]
   $remoteAlias | each { |remote|
-    let branches = (git ls-remote --heads --refs $remote | lines | each { |line| echo $line | str substring 52, });
-    echo $'Remote branches of ($remote):(char nl)';
+    let branches = (git ls-remote --heads --refs $remote | lines | each { |line| $line | str substring 52, })
+    $'Remote branches of ($remote):(char nl)'
     $branches | each { |branch|
-      let keep = (echo $whiteList | any? $it == $branch);
+      let keep = (echo $whiteList | any? $it == $branch)
       if $keep {
-        echo $"($remote) ---> ($branch) keep: ($keep)";
+        $"($remote) ---> ($branch) keep: ($keep)"
       } else {
-        echo $"(ansi rb)($remote) ---> ($branch) keep: ($keep)(ansi reset)";
+        $"(ansi rb)($remote) ---> ($branch) keep: ($keep)(ansi reset)"
       }
-    };
+    }
   }
 }
 

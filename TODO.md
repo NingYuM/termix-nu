@@ -5,45 +5,44 @@
 ├── [x] Justfile
 ├── [ ] actions
 │   ├── [x] brew-speed-up.nu
-│   ├── [?] check-ver.nu
-│   ├── [?] dir-batch-exec.nu
-│   ├── [ ] gaia-release.nu
+│   ├── [x] check-ver.nu        // 多级调用变量丢失: https://github.com/nushell/nushell/issues/4402
+│   ├── [?] dir-batch-exec.nu   // `to json`转换错误: https://github.com/nushell/nushell/issues/4403
+│   ├── [?] gaia-release.nu     // Match 现在还不支持: https://github.com/nushell/nushell/issues/4356
 │   ├── [x] ls-node.nu
 │   ├── [x] ls-redev-refs.nu
 │   ├── [x] prune-synced-branches.nu
 │   ├── [x] pull-redev.nu
-│   ├── [?] quick-nav.nu
+│   ├── [x] quick-nav.nu        // 多级调用变量丢失: https://github.com/nushell/nushell/issues/4402
 │   ├── [x] release.nu
 │   ├── [x] show-env.nu
-│   ├── [ ] tag-redev.nu
-│   ├── [ ] upgrade
-│   └── [?] working-hours.nu
+│   ├── [?] tag-redev.nu        // glob expansion错误: https://github.com/nushell/nushell/issues/4404
+│   ├── [x] upgrade
+│   └── [?] working-hours.nu    // `to json`转换错误: https://github.com/nushell/nushell/issues/4403
 ├── [ ] git
 │   ├── [x] age.nu
-│   ├── [?] branch-desc.nu
-│   ├── [?] check-desc.nu
-│   ├── [?] git-batch-exec.nu
+│   ├── [?] branch-desc.nu      // `to json`转换错误: https://github.com/nushell/nushell/issues/4403
+│   ├── [?] check-desc.nu       // `to json`转换错误: https://github.com/nushell/nushell/issues/4403
+│   ├── [?] git-batch-exec.nu   // `to json`转换错误: https://github.com/nushell/nushell/issues/4403
 │   ├── [x] git-batch-reset.nu
 │   ├── [x] git-proxy.nu
-│   ├── [ ] pull-all.nu
+│   ├── [?] pull-all.nu         // 终端输入异常: https://github.com/nushell/nushell/issues/4384
 │   ├── [x] remote-age.nu
 │   ├── [x] rename-branch.nu
-│   ├── [ ] repo-transfer.nu
+│   ├── [?] repo-transfer.nu    // glob expansion错误: https://github.com/nushell/nushell/issues/4404
 │   ├── [x] sync-branch.nu
 │   └── [x] trigger-sync.nu
 ├── [ ] mall
-│   ├── [ ] clean-locale.nu
-│   └── [ ] repo-utils.sh
+│   └── [x] clean-locale.nu
 ├── [ ] run
-│   ├── [ ] git.nu
+│   ├── [x] git.nu
 │   ├── [ ] merge-perf.nu
 │   ├── [ ] merge.nu
-│   ├── [ ] set-git-alias.nu
+│   ├── [x] set-git-alias.nu
 │   ├── [ ] setup-conf.nu
 │   ├── [ ] setup-mac.nu
-│   └── [ ] ts-stat.nu
+│   └── [x] ts-stat.nu
 ├── [x] termix.toml
 └── [ ] utils
     ├── [ ] common.nu
-    ├── [?] compose-cmd.nu
+    ├── [?] compose-cmd.nu      // `to json`转换错误: https://github.com/nushell/nushell/issues/4403
     └── [x] git.nu

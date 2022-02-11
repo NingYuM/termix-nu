@@ -106,9 +106,10 @@ def 'git-check' [
 
 # Log some variables
 def 'log' [
+  name: string
   var: any
 ] {
-  $'(ansi g)-------------> Debug Begin <---------------------(ansi reset)'
+  $'(ansi g)-------------> Debug Begin: ($name) <---------------------(ansi reset)'
   echo $var
   $'(ansi g)------------->  Debug End <---------------------(char nl)(ansi reset)'
 }

@@ -15,13 +15,11 @@ def 'go' [
   # Find match from nav keys only
   let matchs = ($allNavs | transpose | rename key url | select key | find $nav-key)
   # If no match item was found then show all the nav items
-  do -i {
-    if ($matchs == $nothing) { show-navs }
-  }
+  if ($matchs | length) == 0 { show-navs }
 
   # Found match item
-  let navKey = ($matchs | select 0).key
-  let url = ($allNavs | get $navKey)
+  let navKey = ($matchs | get key).0
+  let url = ($allNavs | get $navKey).0
   if ($url | str starts-with 'http') {
     $'Going to open matched url: (ansi g)($url)(ansi reset) in default browser...(char nl)'
     # Use powershell command to open url in default browser for Windows
@@ -52,7 +50,7 @@ def 'merge-navs' [] {
     let navs = ($quickNavs | transpose key url)
     let special = ($specialNavs | transpose key url)
     # Concat tables, and special will override navs if they have the same key
-    echo (echo $navs $special | transpose -r)
+    echo (echo $navs $special | flatten | transpose -r)
   })
   echo $allNavs
 }

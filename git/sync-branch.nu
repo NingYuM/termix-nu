@@ -56,6 +56,6 @@ def 'git sync-branch' [
     } else {
       if $syncFrom == $nothing {} else { do-sync $syncFrom $gitUrl $iter }
     }
-    if ($navUrl != '' && $syncFrom != $nothing) { ^echo $'You can check the result from: (ansi g)($navUrl)(ansi reset)' } else { ^echo '' }
-  }
+    if ($navUrl != '' && $syncFrom != $nothing) { ^echo $'You can check the result from: (ansi g)($navUrl)(ansi reset)' }
+  } | str collect
 }
