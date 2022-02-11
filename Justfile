@@ -28,6 +28,7 @@ _termix := env_var('TERMIX_DIR')
 # Used to handle the path seperator issue
 _s := if os_family() == "windows" { '\' } else { '/' }
 JUST_FILE_PATH := justfile()
+NU_DIR := parent_directory(`(which nu).path.0`)
 # FIXME: A just bug: invalid directory path by invoking invocation_directory
 JUST_INVOKE_DIR := replace(replace(invocation_directory(), '/', _s), '\d\', 'D:\')
 
@@ -64,7 +65,8 @@ release  updateLog=('false') forceUpgrade=('false'): _check-ver
 
 # Quickly open the matched nav url in default browser, for mac or windows with powershell
 go nav=('list'): _check-ver
-  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+  @register -e capnp {{ join(NU_DIR, 'nu_plugin_query') }}; \
+    source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'actions', 'quick-nav.nu') }}; \
     go {{nav}}
 
@@ -83,13 +85,15 @@ git-remote-age remote=('origin')  showTag=('false'): _check-ver
 
 # Show branch description from branch description file `d` of `i` branch
 desc branch=(`git branch --show-current`) showNotes=('false'): _check-ver
-  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+  @register -e capnp {{ join(NU_DIR, 'nu_plugin_query') }}; \
+    source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'git', 'branch-desc.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; branch-desc {{branch}} --show-notes={{showNotes}}
 
 # Check whether all remote branches have related description
 check-desc: _check-ver
-  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+  @register -e capnp {{ join(NU_DIR, 'nu_plugin_query') }}; \
+    source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'git', 'check-desc.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; check-desc
 
@@ -129,7 +133,8 @@ git-proxy status=('on'): _check-ver
 
 # 查询电商前端团队本周工时填报情况
 emp showAll=('false'): _check-ver
-  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+  @register -e capnp {{ join(NU_DIR, 'nu_plugin_query') }}; \
+    source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'actions', 'working-hours.nu') }}; \
     working-hours --show-all={{showAll}}
 
@@ -169,35 +174,40 @@ ls-redev-refs group=('b2c,b2b,mbr,pik') showBranch=('false'): _check-ver
 
 # 批量同步本地分支到远程指定分支,git pre-push hooks调用,请勿手工触发
 git-sync-branch localRef localOid remoteRef: _check-ver
-  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+  @register -e capnp {{ join(NU_DIR, 'nu_plugin_query') }}; \
+    source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'utils', 'git.nu') }}; \
     source {{ join(_termix, 'git', 'sync-branch.nu') }}; \
     git sync-branch {{localRef}} {{localOid}} {{remoteRef}}
 
 # 手工触发批量同步本地分支到远程指定分支
 trigger-sync branch=(`git branch --show-current`): _check-ver
-  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+  @register -e capnp {{ join(NU_DIR, 'nu_plugin_query') }}; \
+    source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'utils', 'git.nu') }}; \
     source {{ join(_termix, 'git', 'trigger-sync.nu') }}; \
     git trigger-sync {{branch}}
 
 # Clean possibly unused branches of synced dest repos
 prune-synced-branches dryRun=('true'): _check-ver
-  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+  @register -e capnp {{ join(NU_DIR, 'nu_plugin_query') }}; \
+    source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'actions', 'prune-synced-branches.nu') }}; \
     prune-synced-branches --dry-run={{dryRun}}
 
 # 复用 utils 里面定义的公用方法: nu 不支持动态 source 只能拼接下了
 # 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用空格分隔
 git-batch-exec cmd +branches=(''): _check-ver
-  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+  @register -e capnp {{ join(NU_DIR, 'nu_plugin_query') }}; \
+    source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'utils', 'compose-cmd.nu') }}; \
     source {{ join(_termix, 'git', 'git-batch-exec.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git batch-exec "{{cmd}}" "{{branches}}"
 
 # 将指定Git分支硬回滚N个commit
 git-batch-reset n +branches=(''): _check-ver
-  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+  @register -e capnp {{ join(NU_DIR, 'nu_plugin_query') }}; \
+    source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'git', 'git-batch-reset.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git batch-reset {{n}} "{{branches}}"
 
@@ -211,5 +221,6 @@ dir-batch-exec cmd +DIRS=(''): _check-ver
     dir-batch-exec "{{cmd}}" "{{DIRS}}" --parent={{JUST_INVOKE_DIR}}
 
 _check-ver:
-  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+  @register -e capnp {{ join(NU_DIR, 'nu_plugin_query') }}; \
+    source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'actions', 'check-ver.nu') }}; termix-ver; nu-ver; just-ver

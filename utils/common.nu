@@ -8,9 +8,6 @@ let _DATE_FMT = '%Y.%m.%d'
 let _TIME_FMT = '%Y-%m-%d %H:%M:%S'
 let _UPGRADE_TAG = '$-FORCE-UPGRADE-$'
 
-# FIXME: Register query plugin in a better way!!
-register -e capnp ~/.cargo/bin/nu_plugin_query
-
 # Termix.toml config file path
 let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
 
