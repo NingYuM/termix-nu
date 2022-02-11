@@ -38,7 +38,7 @@ def 'get-tmp-path' [] {
   # 先从环境变量里面查找临时文件路径
   let tmpDir = (get-env TERMIX_TMP_PATH '')
   let tmpPath = (if ($tmpDir | empty?) { ($actionConf | get termixTmpPath) } else { $tmpDir })
-  if ($tmpPath | path exists) {} else {
+  if ($tmpPath | path exists) == $false {
     $'(ansi r)Path ($tmpPath) does not exist, please create it and try agian...(ansi reset)(char nl)(char nl)'
     exit --now
   }
@@ -84,7 +84,7 @@ def 'git-check' [
 ] {
   cd $dest
   let isGitInstalled = ((which git | length) > 0)
-  if $isGitInstalled {} else {
+  if $isGitInstalled == $false {
     $'You should (ansi r)INSTALL git(ansi reset) first to run this command, bye...'
     exit --now
   }

@@ -17,7 +17,7 @@ def 'prune-synced-branches' [
   let useConfBr = (get-conf useConfFromBranch)
   let confBr = (if $useConfBr == '_current_' { $current } else { 'i' })
 
-  if (has-ref $'origin/($confBr)') {} else {
+  if (has-ref $'origin/($confBr)') == $false {
     $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
     exit --now
   }
@@ -73,10 +73,14 @@ def 'prepare-repo' [
     cd $repoPath; git clone $sampleRepo.git $repoName
     cd $destRepoPath;
   }
-  # echo $repos | transpose name repo
-  $repos | transpose name repo | each {|dest|
+
+  $repos | transpose name repo | flatten | each {|dest|
     let aliasExists = (git remote -v | detect columns -n | rename alias git | where alias == $dest.name | length) > 0
-    if ($aliasExists) { git remote set-url $dest.name $dest.repo.git } else { git remote add $dest.name $dest.repo.git }
+    if ($aliasExists) {
+      git remote set-url $dest.name $dest.git
+    } else {
+      git remote add $dest.name $dest.git
+    }
     # 更新远程仓库信息到本地
     git fetch $dest.name -p
   } | str collect ''

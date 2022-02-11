@@ -32,7 +32,7 @@ def 'git batch-reset' [
 
   $"(char nl)Current branch: ($current)"
   let statusCheck = (git status --porcelain)
-  if ($statusCheck | empty?) {} else {
+  if ($statusCheck | empty?) == $false {
     git stash save 'Stash before running git-batch-reset'
   }
 
@@ -46,5 +46,5 @@ def 'git batch-reset' [
     }
   }
   git checkout $current
-  if ($statusCheck | empty?) {} else { git stash pop }
+  if ($statusCheck | empty?) == $false { git stash pop }
 }

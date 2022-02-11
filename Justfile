@@ -99,7 +99,8 @@ check-desc: _check-ver
 
 # Pull all local branches from remote repo
 pull-all: _check-ver
-  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+  @register -e capnp {{ join(NU_DIR, 'nu_plugin_gstat') }}; \
+    source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'git', 'pull-all.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git pull-all {{JUST_INVOKE_DIR}} "origin"
 

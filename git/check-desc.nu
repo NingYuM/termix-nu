@@ -10,7 +10,7 @@ def 'check-desc' [] {
   let descFile = 'd.toml'
   let localIExists = (has-ref i)
   let remoteIExists = (has-ref origin/i)
-  if ($localIExists || $remoteIExists) {} else {
+  if ($localIExists || $remoteIExists) == $false {
     $'You do not have an i branch, branch description query failed, bye...(char nl)'
     exit --now
   }
@@ -45,7 +45,7 @@ def 'check-desc' [] {
 
   # FIXME: 有点Hack啊，如果不通过这种方式判断就会有各种错……😌
   let empty = ($gone | str collect | str trim | empty?)
-  if ($empty) {} else {
+  if $empty == $false {
     $'(ansi p)  Branches that have a description but were(ansi r) removed from remote(ansi reset):(char nl)(char nl)(ansi reset)'
     $gone | compact | wrap 'name'
   }

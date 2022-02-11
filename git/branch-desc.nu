@@ -13,7 +13,7 @@ def 'branch-desc' [
   let descFile = 'd.toml'
   let localIExists = (has-ref i)
   let remoteIExists = (has-ref origin/i)
-  if ($localIExists || $remoteIExists) {} else {
+  if ($localIExists || $remoteIExists) == $false {
     $'You do not have an i branch, branch description query failed, bye...(char nl)'
     exit --now
   }

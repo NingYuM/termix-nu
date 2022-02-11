@@ -10,29 +10,24 @@ def 'git pull-all' [
 ] {
 
   cd $repoDir
-  let startMark = $'[($alias)/'
-  let behindMark = ': behind'
   let currentBranch = (git branch --show-current | str trim)
   # Save changes before switch to other branches
   let statusCheck = (git status --porcelain)
-  if ($statusCheck | empty?) {} else {
+  if ($statusCheck | empty?) == $false {
     git stash save 'Stash before running pull-all action'
   }
 
   git fetch $alias -p
-  # `LANG=en_US git` 强制 git 输出语言切换为英文
-  echo (LANG=en_US git branch -vv) |
-    lines |
-    each { |br|
-      let isBehind = ($br | str contains $behindMark)
-      if $isBehind {
-        let endIdx = ($br | str index-of $behindMark)
-        let startIdx = (($br | str index-of $startMark) + ($startMark | str length))
-        let branchName = ($br | str substring $'($startIdx),($endIdx)')
-        $'(char nl)  (ansi gb)--> Start to update branch: ($branchName)(ansi reset)(char nl)'
-        git checkout $branchName; git pull
-      }
+  let available = (git branch | into string | lines | str substring (2,))
+  # FIXME: `LANG=en_US git` 强制 git 输出语言切换为英文
+  let behind = (git br -vv | lines | find ': behind')
+  $available | each { |br|
+    if ($behind | find $br | length) > 0 {
+      git checkout $br
+      let stat = (gstat)
+      if ($stat.behind > 0 && $stat.ahead == 0) { git pull }
     }
+  } | str collect
   git checkout $currentBranch
-  if ($statusCheck | empty?) {} else { git stash pop }
+  if ($statusCheck | empty?) == $false { git stash pop }
 }

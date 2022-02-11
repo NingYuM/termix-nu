@@ -25,7 +25,7 @@
 │   ├── [?] git-batch-exec.nu   // `to json`转换错误: https://github.com/nushell/nushell/issues/4403
 │   ├── [x] git-batch-reset.nu
 │   ├── [x] git-proxy.nu
-│   ├── [?] pull-all.nu         // 终端输入异常: https://github.com/nushell/nushell/issues/4384
+│   ├── [*] pull-all.nu         // 终端输入异常: https://github.com/nushell/nushell/issues/4384
 │   ├── [x] remote-age.nu
 │   ├── [x] rename-branch.nu
 │   ├── [?] repo-transfer.nu    // glob expansion错误: https://github.com/nushell/nushell/issues/4404

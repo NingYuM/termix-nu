@@ -34,7 +34,7 @@ def 'git tag-redev' [
 
   $'Delete tag ($tagName) ---> (ansi r)($delete)(ansi reset)(char nl)(char nl)'
   # 不存在则创建临时路径
-  if ($repoPath | path exists) {} else { mkdir $repoPath }
+  if ($repoPath | path exists) == $false { mkdir $repoPath }
   # 保存当前路径方便后期跳回
   let currentDir = (pwd)
 
@@ -55,7 +55,7 @@ def 'git tag-redev' [
     # Check the tag status, if exists just recrete it.
     if (has-ref $'refs/tags/($tagName)') { git tag -d $tagName; git push origin --delete $tagName }
 
-    if $delete {} else {
+    if $delete == $false {
       # Add a tag and push it to the remote repo
       git checkout $branch; git tag $tagName -am $TAG_COMMENT; git push origin --tags
     }
