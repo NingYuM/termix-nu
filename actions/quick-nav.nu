@@ -23,7 +23,7 @@ def 'go' [
   if ($url | str starts-with 'http') {
     $'Going to open matched url: (ansi g)($url)(ansi reset) in default browser...(char nl)'
     # Use powershell command to open url in default browser for Windows
-    if ($_OS =~ 'windows') { ^powershell -c $'Start-Process ($url)' } else { ^open $url }
+    if (windows?) { ^powershell -c $'Start-Process ($url)' } else { ^open $url }
   } else {
     $'(ansi r)Invalid nav url, bye...(char nl)(ansi reset)'
   }

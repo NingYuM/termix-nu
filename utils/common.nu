@@ -11,8 +11,11 @@ let _UPGRADE_TAG = '$-FORCE-UPGRADE-$'
 # Termix.toml config file path
 let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
 
-# Current OS: windows / macos
-let _OS = (version).build_os
+# If current host is Windows
+def windows? [] {
+  # Windows / Darwin
+  (sys).host.name == 'Windows'
+}
 
 # Get the specified env key's value or ''
 def 'get-env' [
