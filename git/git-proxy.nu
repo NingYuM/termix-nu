@@ -20,6 +20,7 @@ def 'git-proxy' [
       exit --now
     }
 
+    let proxy = ($proxy).0
     # let-env ALL_RROXY = $'socks://($proxy)'
     # let-env http_proxy = $'socks5://($proxy)'
     # let-env https_proxy = $'socks5://($proxy)'

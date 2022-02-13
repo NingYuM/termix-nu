@@ -5,14 +5,14 @@
 ├── [x] Justfile
 ├── [ ] actions
 │   ├── [x] brew-speed-up.nu
-│   ├── [x] check-ver.nu        // 多级调用变量丢失: https://github.com/nushell/nushell/issues/4402
+│   ├── [x] check-ver.nu        // Variable Capture: https://github.com/nushell/nushell/issues/4402
 │   ├── [?] dir-batch-exec.nu   // `to json`转换错误: https://github.com/nushell/nushell/issues/4403
 │   ├── [?] gaia-release.nu     // Match 现在还不支持: https://github.com/nushell/nushell/issues/4356
 │   ├── [x] ls-node.nu
 │   ├── [x] ls-redev-refs.nu
 │   ├── [x] prune-synced-branches.nu
 │   ├── [x] pull-redev.nu
-│   ├── [x] quick-nav.nu        // 多级调用变量丢失: https://github.com/nushell/nushell/issues/4402
+│   ├── [x] quick-nav.nu        // Variable Capture: https://github.com/nushell/nushell/issues/4402
 │   ├── [x] release.nu
 │   ├── [x] show-env.nu
 │   ├── [?] tag-redev.nu        // glob expansion错误: https://github.com/nushell/nushell/issues/4404
