@@ -15,7 +15,7 @@ def 'check-desc' [] {
     exit --now
   }
   # 本地 i 分支优先级高于远程
-  let repo = (pwd | path basename)
+  let repo = (pwd | path basename | str trim)
   let querySource = (if ($localIExists) { 'i' } else { 'origin/i' })
   let descriptions = (git show $'($querySource):($descFile)' | from toml | to json)
   # Alternatively since nushell v0.40.0 you can use the following line, which is longer but more readable
@@ -27,7 +27,7 @@ def 'check-desc' [] {
   if ($allDescribed) {
     $'(char nl) Well done! All Branches have been described in (ansi g)($repo)(ansi reset).(char nl)(char nl)'
   } else {
-    $'(ansi p)(char nl)  Branches that do not have a description in (ansi g)($repo)(ansi reset):(char nl)(char nl)(ansi reset)'
+    $'(ansi p)(char nl)  Branches that do not have a description in (ansi g)($repo)(ansi reset): (char nl)(ansi reset)'
     $remoteBranches | where (no-desc $descriptions $it) | wrap name |
       update commit-by {
         get name | each { git show $'origin/($it)' -s --format='%an' }
@@ -60,6 +60,6 @@ def 'no-desc' [
   # 处理分支名称包含‘.’的情况: `support/release-2.4`
   let escapedBranch = ($branch | str find-replace -a '\.' '\.')
   # ($descriptions | select $escapedBranch | compact | length) == 0
-  let noDescription = ($descriptions | query json $'descriptions.($escapedBranch)') == ''
+  let noDescription = ($descriptions | query json $'descriptions.($escapedBranch)' | empty?)
   echo ($noDescription && $branch != 'i')
 }

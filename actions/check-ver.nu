@@ -7,7 +7,7 @@
 # Check min nushell version and show upgrading tips to the user
 def 'nu-ver' [] {
 
-  let currentVer = ((version).version)
+  let currentVer = (version).version
   let minVer = (get-conf minNuVer '0.59.0')
   upgrade-tip nushell $minVer $currentVer
 }

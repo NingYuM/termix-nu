@@ -216,7 +216,8 @@ git-batch-reset n +branches=(''): _check-ver
 # 在指定目录(支持'*'通配符)或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
 dir-batch-exec cmd +DIRS=(''): _check-ver
   @# load-env { BATCH_EXEC_CMD: '{{cmd}}', BATCH_EXEC_DIRS: '{{DIRS}}' }
-  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+  @register -e capnp {{ join(NU_DIR, 'nu_plugin_extra_query') }}; \
+    source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'utils', 'compose-cmd.nu') }}; \
     source {{ join(_termix, 'actions', 'dir-batch-exec.nu') }}; \
     dir-batch-exec "{{cmd}}" "{{DIRS}}" --parent={{JUST_INVOKE_DIR}}

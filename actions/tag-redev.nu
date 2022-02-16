@@ -36,7 +36,7 @@ def 'git tag-redev' [
   # 不存在则创建临时路径
   if ($repoPath | path exists) == $false { mkdir $repoPath }
   # 保存当前路径方便后期跳回
-  let currentDir = (pwd)
+  let currentDir = (pwd | str trim)
 
   $redevRepos | where $',($group),' =~ $it.group | each { |repo|
     let repoNameIdx = (($repo.url | str index-of -e '/') + 1)
@@ -50,6 +50,8 @@ def 'git tag-redev' [
       cd $repoPath; git clone -b $branch $repo.url
       cd $destRepoPath; git checkout $branch
     }
+    # FIXME: in nu v0.60+ we need this to keep the path
+    cd $destRepoPath;
     # Delete tags that not exist in remote repo
     git fetch origin --prune '+refs/tags/*:refs/tags/*'
     # Check the tag status, if exists just recrete it.
@@ -60,6 +62,6 @@ def 'git tag-redev' [
       git checkout $branch; git tag $tagName -am $TAG_COMMENT; git push origin --tags
     }
     ^echo $'(ansi g)──────────────────────────────────────────────────────────────────────>(ansi reset)'
-  }
-  cd $currentDir; ls $repoPath
+  } | str collect
+  cd $repoPath; ls; cd $currentDir
 }

@@ -46,7 +46,7 @@ def 'git batch-exec' [
     } else {
       $'Branch (ansi r)($branch) (ansi reset)not available...(char nl)'
     }
-  }
+  } | str collect
   char nl; git checkout $current
   if ($statusCheck | empty?) == $false { git stash pop }
 }

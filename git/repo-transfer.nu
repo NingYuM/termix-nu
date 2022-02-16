@@ -43,7 +43,7 @@ def 'do-push' [
 ] {
   $'(ansi g)Push code to the remote dest:(ansi reset)(char nl)'
   # FIXME: fatal: repository 'xxx' not found
-  let output = ((^git push --mirror 2>&1) | compact | str collect)
+  let output = ((bash -c 'git push --mirror 2>&1') | compact | str collect)
   echo $output
   if $output =~ 'not found' {
     $'(ansi r)Error: The dest repo does not exist, please create it and try again, bye...(ansi reset)(char nl)'
