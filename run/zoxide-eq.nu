@@ -44,7 +44,9 @@ let-env ZOXIDE_INITIALIZED = (if ("ZOXIDE_INITIALIZED" not-in (env).name) {
 let-env _OLD_PROMPT_COMMAND = (if $env.ZOXIDE_INITIALIZED {
     $env._OLD_PROMPT_COMMAND
 } else {
-    $env.PROMPT_COMMAND
+    if (env | any? name == 'PROMPT_COMMAND') {
+        $env.PROMPT_COMMAND
+    }
 })
 
 # TODO
