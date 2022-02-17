@@ -50,7 +50,7 @@ def 'git tag-redev' [
       cd $repoPath; git clone -b $branch $repo.url
       cd $destRepoPath; git checkout $branch
     }
-    # FIXME: in nu v0.60+ we need this to keep the path
+    # Note: in nu v0.60+ we need this to keep the path be changed
     cd $destRepoPath;
     # Delete tags that not exist in remote repo
     git fetch origin --prune '+refs/tags/*:refs/tags/*'

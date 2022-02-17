@@ -20,7 +20,6 @@ def 'working-hours' [
     $'(ansi r)Not enough parameters, make sure you have set the EMP_UC_COOKIE and EMP_PROJECT_CODE var in .env file, bye...(char nl)(ansi reset)'
     exit --now
   }
-  let title = (get-env EMP_WORKING_HOUR_TITLE '本周工时填报')
   let userCookie = ($emp.cookie | str find-replace '_EMP_UC_COOKIE_' $empUserCookie)
   let staffPayload = ($emp.staffPayload | str find-replace '_first_day_' $monday |
       str find-replace '_last_day_' $sunday |
@@ -46,30 +45,33 @@ def 'working-hours' [
   let leaves = (curl $emp.leaveUrl -H $emp.type -H $userCookie -s --data-raw $leavePayload | str collect)
   let workingHours = (
       $hours | query json 'res'| select fillDate percentage staff |
-        update staffId { get staff | each { $it.id } } | reject staff
+        update staffId { |it| $it.staff.id } | reject staff
     )
+
   let leavingHours = (
       $leaves | query json 'res'| select beginTime duration staff |
-        update staffId { get staff | each { $it.id } } | reject staff
+        update staffId {|staff| $staff.staff.id } | reject staff
     )
 
   # Set a default leaving record
   let leavingHours = (if ($leavingHours | compact | length) == 0 { [[beginTime, duration, staffId]; [0, 0, 0]] } else { $leavingHours })
 
-  handle-working-hours $allStaffs $workingHours $leavingHours
+  handle-working-hours $allStaffs $workingHours $leavingHours --show-all=$show-all
 }
 
 # 显示工时统计信息
 def 'handle-working-hours' [
-  staffs: any
+  allStaffs: any
   workingHours: any
   leavingHours: any
+  --show-all: bool
 ] {
 
+  let title = (get-env EMP_WORKING_HOUR_TITLE '本周工时填报')
   # echo ($data | reject id isDeleted week year createdAt updatedAt updatedBy createdBy)
   $'(char nl)  (ansi p)'
   $'-------------------------> ($title) <-------------------------'
-  $'(ansi reset)(char nl)(char nl)'
+  $'(ansi reset)(char nl)'
   let week = [Mon, Tue, Wen, Thu, Fri, Sat, Sun]
   # 当前是一年中的第几周
   let weekNo = ([(date now)] | dfr to-df | dfr get-week).0
@@ -81,34 +83,29 @@ def 'handle-working-hours' [
   # Set a default working hour record
   let workingHours = (if ($workingHours | compact | length) == 0 { [[fillDate, percentage, staffId]; [0, 0, 0]] } else { $workingHours })
 
-  let hours = ($workingHours | update day {
-        get fillDate | each {
-          let day = (($it / 1000) | into string | into datetime -o 8)
-          let idx = ((([$day] | dfr to-df | dfr get-weekday).0 + 1) mod 7)
-          echo ($week | select $idx)
-        }
-      } | update Hrs {
-        get percentage | each { ($it * 8) | into int }
+  let hours = ($workingHours | update day { |work|
+        let day = (($work.fillDate / 1000) | into string | into datetime -o 8)
+        let idx = ((([$day] | dfr to-df | dfr get-weekday).0 + 1) mod 7)
+        echo ($week | select $idx).0
+      } | update Hrs { |work|
+        ($work.percentage * 8) | into int
       } | select staffId day Hrs
     )
 
   let allMembers = ($allStaffs |
-      update Mon { get id | each { |id| (get-hr-per-staff $id 'Mon') } } |
-      update Tue { get id | each { |id| (get-hr-per-staff $id 'Tue') } } |
-      update Wen { get id | each { |id| (get-hr-per-staff $id 'Wen') } } |
-      update Thu { get id | each { |id| (get-hr-per-staff $id 'Thu') } } |
-      update Fri { get id | each { |id| (get-hr-per-staff $id 'Fri') } } |
+      update Mon { |staff| (get-hr-per-staff $staff.id 'Mon' $hours) } |
+      update Tue { |staff| (get-hr-per-staff $staff.id 'Tue' $hours) } |
+      update Wen { |staff| (get-hr-per-staff $staff.id 'Wen' $hours) } |
+      update Thu { |staff| (get-hr-per-staff $staff.id 'Thu' $hours) } |
+      update Fri { |staff| (get-hr-per-staff $staff.id 'Fri' $hours) } |
       update 'WeekNO.' $weekNo |
-      update Leave {
-        get id | { each { |id|
-          let leaves = ($leavingHours | where staffId == $id)
-          # FIXME: Very hackable here, `select 0` is required
-          if ($leaves | empty? | select 0) { 0 } { ($leaves | get duration | math sum) * 8 | into int }
-        }}
+      update Leave { |staff|
+        let leaves = ($leavingHours | where staffId == $staff.id)
+        if ($leaves | length) == 0 { 0 } else { ($leaves | get duration | math sum) * 8 | into int }
       } | reject id
     )
 
-  let result = (if ($show-all == 'true') { $allMembers } else {
+  let result = (if $show-all { $allMembers } else {
     ($allMembers | where { |it| $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8 })
   })
 
@@ -116,12 +113,12 @@ def 'handle-working-hours' [
     if ($result == $nothing) { $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; exit --now }
   }
 
-  $result | update Gap { $total * 8 - ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave) } |
+  $result | update Gap {|it| $total * 8 - ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave) } |
     update WARN { |it|
       if ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8) {
         $'(ansi r)('*' | str lpad -l 6 -c $'(char sp)')(ansi reset)'
       }
-    } | sort-by -r WARN Gap Name
+    } | sort-by WARN Gap Name
 }
 
 # Get the beginning time of monday, like 2021-12-06 00:00:00
@@ -130,8 +127,8 @@ def 'get-monday' [] {
   # Currently convert string to duration is not supported
   let durations = [0day, 1day, 2day, 3day, 4day, 5day, 6day]
   let weekDay = ([(date now)] | dfr to-df | dfr get-weekday).0
-  let beginOfToday = ($'($today.year)-($today.month)-($today.day)' | into datetime)
-  echo (($beginOfToday - ($durations | select $weekDay)) | date format $_TIME_FMT)
+  let beginOfToday = ($'($today.year.0)-($today.month.0)-($today.day.0)' | into datetime)
+  echo (($beginOfToday - ($durations | select $weekDay).0) | date format $_TIME_FMT)
 }
 
 # Get the ending time of sunday, like 2021-12-12 23:59:59
@@ -143,9 +140,10 @@ def 'get-sunday' [] {
 def 'get-hr-per-staff' [
   id: string
   weekDay: string
+  hours: any
 ] {
   let hour = ($hours | where staffId == $id && day == $weekDay)
-  if ($hour | empty?) { 0 } else { ($hour | select 0).Hrs }
+  if ($hour | length) == 0 { 0 } else { ($hour | select 0).0.Hrs }
 }
 
 # 处理未登录、超时、服务器错误等

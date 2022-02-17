@@ -11,6 +11,11 @@ let _UPGRADE_TAG = '$-FORCE-UPGRADE-$'
 # Termix.toml config file path
 let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
 
+# Global nushell configs
+let $config = {
+  table_mode: light
+}
+
 # If current host is Windows
 def windows? [] {
   # Windows / Darwin

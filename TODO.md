@@ -5,24 +5,24 @@
 ├── [x] Justfile
 ├── [ ] actions
 │   ├── [x] brew-speed-up.nu
-│   ├── [x] check-ver.nu        // Variable Capture: https://github.com/nushell/nushell/issues/4402
-│   ├── [*] dir-batch-exec.nu   // `to json`转换错误: https://github.com/nushell/nushell/issues/4403
+│   ├── [x] check-ver.nu
+│   ├── [*] dir-batch-exec.nu
 │   ├── [?] gaia-release.nu     // Match 现在还不支持: https://github.com/nushell/nushell/issues/4356
 │   ├── [x] ls-node.nu
 │   ├── [x] ls-redev-refs.nu
 │   ├── [x] prune-synced-branches.nu
 │   ├── [x] pull-redev.nu
-│   ├── [x] quick-nav.nu        // Variable Capture: https://github.com/nushell/nushell/issues/4402
+│   ├── [x] quick-nav.nu
 │   ├── [x] release.nu
 │   ├── [x] show-env.nu
 │   ├── [*] tag-redev.nu        // glob expansion错误: https://github.com/nushell/nushell/issues/4404
 │   ├── [x] upgrade
-│   └── [?] working-hours.nu    // `to json`转换错误: https://github.com/nushell/nushell/issues/4403
+│   └── [x] working-hours.nu
 ├── [ ] git
 │   ├── [x] age.nu
-│   ├── [x] branch-desc.nu      // `to json`转换错误: https://github.com/nushell/nushell/issues/4403
-│   ├── [x] check-desc.nu       // `to json`转换错误: https://github.com/nushell/nushell/issues/4403
-│   ├── [*] git-batch-exec.nu   // `to json`转换错误: https://github.com/nushell/nushell/issues/4403
+│   ├── [x] branch-desc.nu
+│   ├── [x] check-desc.nu
+│   ├── [*] git-batch-exec.nu
 │   ├── [x] git-batch-reset.nu
 │   ├── [x] git-proxy.nu
 │   ├── [*] pull-all.nu         // 终端输入异常: https://github.com/nushell/nushell/issues/4384
@@ -44,5 +44,5 @@
 ├── [x] termix.toml
 └── [ ] utils
     ├── [ ] common.nu
-    ├── [?] compose-cmd.nu      // `to json`转换错误: https://github.com/nushell/nushell/issues/4403
+    ├── [x] compose-cmd.nu
     └── [x] git.nu
