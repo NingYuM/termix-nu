@@ -37,16 +37,15 @@ def 'git batch-exec' [
   }
 
   $candidates | each { |branch|
-    $"--------------------------------------------------(char nl)"
     if (has-ref $branch) {
-      ^git checkout $branch
       $'--------------------------------------------------(char nl)'
+      ^git checkout $branch
       # Execute cmd here
       nu -c $cmdToExec
     } else {
       $'Branch (ansi r)($branch) (ansi reset)not available...(char nl)'
     }
   } | str collect
-  char nl; git checkout $current
+  git checkout $current
   if ($statusCheck | empty?) == $false { git stash pop }
 }

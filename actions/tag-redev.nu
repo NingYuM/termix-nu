@@ -53,6 +53,7 @@ def 'git tag-redev' [
     # Note: in nu v0.60+ we need this to keep the path be changed
     cd $destRepoPath;
     # Delete tags that not exist in remote repo
+    # FIXME: nu has bug here
     git fetch origin --prune '+refs/tags/*:refs/tags/*'
     # Check the tag status, if exists just recrete it.
     if (has-ref $'refs/tags/($tagName)') { git tag -d $tagName; git push origin --delete $tagName }

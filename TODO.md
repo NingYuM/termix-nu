@@ -22,7 +22,7 @@
 │   ├── [x] age.nu
 │   ├── [x] branch-desc.nu
 │   ├── [x] check-desc.nu
-│   ├── [*] git-batch-exec.nu
+│   ├── [x] git-batch-exec.nu
 │   ├── [x] git-batch-reset.nu
 │   ├── [x] git-proxy.nu
 │   ├── [*] pull-all.nu         // 终端输入异常: https://github.com/nushell/nushell/issues/4384
@@ -31,7 +31,7 @@
 │   ├── [*] repo-transfer.nu    // glob expansion错误: https://github.com/nushell/nushell/issues/4404
 │   ├── [x] sync-branch.nu
 │   └── [x] trigger-sync.nu
-├── [ ] mall
+├── [x] mall
 │   └── [x] clean-locale.nu
 ├── [ ] run
 │   ├── [x] git.nu
@@ -42,7 +42,7 @@
 │   ├── [ ] setup-mac.nu
 │   └── [x] ts-stat.nu
 ├── [x] termix.toml
-└── [ ] utils
-    ├── [ ] common.nu
+└── [x] utils
+    ├── [x] common.nu
     ├── [x] compose-cmd.nu
     └── [x] git.nu

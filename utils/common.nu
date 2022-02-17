@@ -114,7 +114,7 @@ def 'log' [
   name: string
   var: any
 ] {
-  $'(ansi g)-------------> Debug Begin: ($name) <---------------------(ansi reset)'
+  $'(ansi g)-----------------> Debug Begin: ($name) <-----------------(ansi reset)'
   echo $var
-  $'(ansi g)------------->  Debug End <---------------------(char nl)(ansi reset)'
+  $'(ansi g)------------------->  Debug End <---------------------(char nl)(ansi reset)'
 }
