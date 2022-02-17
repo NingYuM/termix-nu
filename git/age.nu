@@ -15,14 +15,14 @@ def 'git age' [
     str substring 2, |
     wrap name |
     update remote {
-      get name | each { if (has-ref $'origin/($it)') { '   √' } else { '' }  }
+      get name | each { |it| if (has-ref $'origin/($it)') { '   √' } else { '' }  }
     } |
     update author {
-      get name | each { git show $it -s --format='%an' }
+      get name | each { |it| git show $it -s --format='%an' }
     } |
     update last-commit {
       get name |
-      each {
+      each { |it|
         git show $it --no-patch --format=%ci | into datetime
       }
     } |

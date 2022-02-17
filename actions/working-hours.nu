@@ -64,7 +64,7 @@ def 'handle-working-hours' [
   allStaffs: any
   workingHours: any
   leavingHours: any
-  --show-all: bool
+  --show-all: string
 ] {
 
   let title = (get-env EMP_WORKING_HOUR_TITLE '本周工时填报')
@@ -105,7 +105,7 @@ def 'handle-working-hours' [
       } | reject id
     )
 
-  let result = (if $show-all { $allMembers } else {
+  let result = (if $show-all == 'true' { $allMembers } else {
     ($allMembers | where { |it| $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8 })
   })
 

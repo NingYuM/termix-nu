@@ -30,11 +30,11 @@ def 'check-desc' [] {
     $'(ansi p)(char nl)  Branches that do not have a description in (ansi g)($repo)(ansi reset): (char nl)(ansi reset)'
     $remoteBranches | where (no-desc $descriptions $it) | wrap name |
       update commit-by {
-        get name | each { git show $'origin/($it)' -s --format='%an' }
+        get name | each { |it| git show $'origin/($it)' -s --format='%an' }
       } |
       update last-commit {
         get name |
-        each { git show $'origin/($it)' --no-patch --format=%ci | into datetime }
+        each { |it| git show $'origin/($it)' --no-patch --format=%ci | into datetime }
       } |
       sort-by last-commit
   }

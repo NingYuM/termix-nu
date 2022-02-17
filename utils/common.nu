@@ -78,8 +78,8 @@ def 'is-lower-ver' [
   let dest = ($to | str trim -c 'v' | str trim)
   let source = ($from | str trim -c 'v' | str trim)
   # 将三段式版本号转换成一个整数，每段最大值999，三段拼接一起进行比较
-  let t = ($dest | split row '.' | each { $it | str lpad -l 3 -c '0' })
-  let f = ($source | split row '.' | each { $it | str lpad -l 3 -c '0' })
+  let t = ($dest | split row '.' | each { |it| $it | str lpad -l 3 -c '0' })
+  let f = ($source | split row '.' | each { |it| $it | str lpad -l 3 -c '0' })
   let toVer = ($t | str collect | into int)
   let fromVer = ($f | str collect | into int)
   if ($fromVer < $toVer) { echo $true } else { echo $false }

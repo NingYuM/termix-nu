@@ -19,7 +19,7 @@ def 'git ls-redev-refs' [
   } else { $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'; exit --now }
   $'(ansi p)---------------> List remote refs <--------------- (char nl)(ansi reset)'
 
-  $filteredRepos | each {
+  $filteredRepos | each { |it|
     let url = (echo $it | get url)
     let repoNameIdx = (($url | str index-of -e '/') + 1)
     let repoName = ($url | str substring $'($repoNameIdx),')

@@ -25,14 +25,14 @@ def 'git remote-age' [
     str substring 52, |
     wrap name |
     update local {
-      get name | each { if (has-ref $it) { '   √' }  }
+      get name | each { |it| if (has-ref $it) { '   √' }  }
     } |
     update author {
-      get name | each { git show $"remotes/($alias)/($it)" -s --format='%an' }
+      get name | each { |it| git show $"remotes/($alias)/($it)" -s --format='%an' }
     } |
     update last-commit {
       get name |
-      each {
+      each { |it|
         git show $"remotes/($alias)/($it)" --no-patch --format=%ci | into datetime
       }
     } |
