@@ -20,7 +20,7 @@ def 'git trigger-sync' [
     git push origin $selected -u
     exit --now
   }
-  let diff = (git rev-list --left-right $'($selected)...origin/($selected)' --count | detect columns -n | rename local remote | update cells { $it | into int })
+  let diff = (git rev-list --left-right $'($selected)...origin/($selected)' --count | detect columns -n | rename local remote | update cells { |it| $it | into int })
   # 如果本地分支超前于远程分支直接push就可以了，会自动触发批量同步
   if ($diff.remote.0 == 0 && $diff.local.0 > 0) {
     git push origin $selected

@@ -40,14 +40,12 @@ def 'check-desc' [] {
   }
 
   # 检查并显示所有描述存在但是远程已经被删掉的分支
-  let gone = ($descriptions | query json 'descriptions' | transpose | rename name description | get name |
-              each { |br| if (has-ref $'origin/($br)') == $false { $br } else { '' } })
+  let gone = ($descriptions | query json 'descriptions' | transpose name description | get name |
+              each { |br| if (has-ref $'origin/($br)') == $false { $br } } | compact)
 
-  # FIXME: 有点Hack啊，如果不通过这种方式判断就会有各种错……😌
-  let empty = ($gone | str collect | str trim | empty?)
-  if $empty == $false {
+  if ($gone | length) > 0 {
     $'(ansi p)  Branches that have a description but were(ansi r) removed from remote(ansi reset):(char nl)(char nl)(ansi reset)'
-    $gone | compact | wrap 'name'
+    $gone | wrap 'name'
   }
 
 }
