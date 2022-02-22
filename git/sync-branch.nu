@@ -50,12 +50,15 @@ def 'git sync-branch' [
     let gitUrl = ($pushConf | query json $'repos.($iter.repo).git')
     let navUrl = ($pushConf | query json $'repos.($iter.repo).url')
     if $localOid == $zero {
-      ^echo $'Remove remote branch (ansi p)($iter.dest) of repo ($iter.repo)(ansi reset) -->(char nl)'
+      print $'Remove remote branch (ansi p)($iter.dest) of repo ($iter.repo)(ansi reset) -->(char nl)'
       # You MUST use '--no-verify' to prevent infinit loops!!!
       git push --no-verify $gitUrl $':($iter.dest)'
     } else {
       if $syncFrom == $nothing {} else { do-sync $syncFrom $gitUrl $iter }
     }
-    if ($navUrl != '' && $syncFrom != $nothing) { ^echo $'You can check the result from: (ansi g)($navUrl)(ansi reset)' }
+    if ($navUrl != '' && $syncFrom != $nothing) {
+      print $'You can check the result from: (ansi g)($navUrl)(ansi reset)'
+      hr-line
+    }
   } | str collect
 }

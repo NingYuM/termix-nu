@@ -25,8 +25,8 @@ def 'branch-desc' [
   let escapedBranch = ($queryBranch | str find-replace -a '\.' '\.')
   let desc = ($descriptions | query json $'descriptions.($escapedBranch)')
   let rules = ($descriptions | query json 'rules')
-  $'(char nl)(ansi p)($queryBranch) (ansi reset)分支描述：'
-  $'(char nl)(ansi g)---------------------------------------------------------------------------(ansi reset)'
+  $'(char nl)(ansi p)($queryBranch) (ansi reset)分支描述：(char nl)'
+  hr-line
   $'(char nl)($desc)(char nl)(char nl)'
   if ($show-notes == 'false') {} else {
     $rules | each -n { |rule|

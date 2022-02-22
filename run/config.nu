@@ -46,6 +46,7 @@ def "nu-complete git remotes" [] {
 
 extern "git co" [
   branch?: string@"nu-complete git branches" # name of the branch to checkout
+  ...files?: string                          # the file(s) to checkout
   -b: string                                 # create and checkout a new branch
   -B: string                                 # create/reset and checkout a branch
   -l                                         # create reflog for new branch
@@ -123,32 +124,64 @@ extern "git difff" [
 
 # -------------------- Nushell Configs -------------------------
 # The default config record. This is where much of your global configuration is setup.
+let default_theme = {
+  # color for nushell primitives
+  separator: white
+  leading_trailing_space_bg: { attr: b }
+  header: green_bold
+  empty: blue
+  bool: white
+  int: white
+  filesize: white
+  duration: white
+  date: white
+  range: white
+  float: white
+  string: white
+  nothing: white
+  binary: white
+  cellpath: white
+  row_index: green_bold
+  record: white
+  list: white
+  block: white
+  hints: dark_gray
+
+  # shapes are used to change the cli syntax highlighting
+  shape_garbage: { fg: "#FFFFFF" bg: "#FF0000" attr: b}
+  shape_bool: light_cyan
+  shape_int: purple_bold
+  shape_float: purple_bold
+  shape_range: yellow_bold
+  shape_internalcall: cyna_bold
+  shape_external: cyan
+  shape_externalarg: green_bold
+  shape_literal: blue
+  shape_operator: yellow
+  shape_signature: green_bold
+  shape_string: green
+  shape_string_interpolation: cyan_bold
+  shape_list: cyan_bold
+  shape_table: blue_bold
+  shape_record: cyan_bold
+  shape_block: blue_bold
+  shape_filepath: cyan
+  shape_globpattern: cyan_bold
+  shape_variable: purple
+  shape_flag: blue_bold
+  shape_custom: green
+  shape_nothing: light_cyan
+}
+
 let $config = {
   filesize_metric: $false
-  table_mode: light # basic, compact, compact_double, light, thin, with_love, rounded, reinforced, heavy, none, other
   use_ls_colors: $true
   rm_always_trash: $false
-  color_config: {
-    separator: white
-    leading_trailing_space_bg: white
-    header: green_bold
-    date: white
-    filesize: white
-    row_index: green_bold
-    hints: dark_gray
-    bool: white
-    int: white
-    duration: white
-    range: white
-    float: white
-    string: white
-    nothing: white
-    binary: white
-    cellpath: white
-  }
+  color_config: $default_theme
   use_grid_icons: $true
-  footer_mode: auto # always, never, number_of_rows, auto
-  quick_completions: $false  # set this to $true to auto-select completions when only one remains
+  footer_mode: "25" # always, never, number_of_rows, auto
+  table_mode: light # basic, compact, compact_double, light, thin, with_love, rounded, reinforced, heavy, none, other
+  quick_completions: $true  # set this to $false to prevent auto-selecting completions when only one remains
   animate_prompt: $false # redraw the prompt every second
   float_precision: 2
   use_ansi_coloring: $true
@@ -190,13 +223,13 @@ def sum [] { reduce {|acc, item| $acc + $item } }
 
 def un-doced [] {
   $scope.commands |
-    where ($it.examples | length) == 0 && is_custom == $false && category != deprecated && is_plugin == $false |
+    where ($it.examples | length) == 0 && is_custom == $false && category != deprecated && is_plugin == $false && is_extern == $false |
     get command |
-    where $it in [date, from, hash, into, keybindings, math, path, random, roll, split, str, to, url] == $false
+    where $it in [date, from, hash, into, keybindings, math, path, random, roll, split, str, to, url, dfr] == $false
 }
 
-def cargo-ile   [] { cargo install --features=extra --path .  }
-def cargo-tests [] { cargo nextest run --all --all-features   }
+def cargo-ile [] { cargo install --features=extra --path .  }
+def cargo-ta  [] { cargo test --all --all-features          }
 
 def cargo-clippy [] {
     cargo clippy --all --all-features -- -D warnings -D clippy::unwrap_used -A clippy::needless_collect

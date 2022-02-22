@@ -37,7 +37,7 @@ def 'git batch-reset' [
   }
 
   $candidates | each { |br|
-    echo $"--------------------> (char nl)"
+    hr-line -b
     if (has-ref $br) {
       git checkout $br
       do { (bash -c $'git reset --hard HEAD~($count)') }

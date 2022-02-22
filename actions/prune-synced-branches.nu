@@ -27,7 +27,7 @@ def 'prune-synced-branches' [
   let branches = ($pushConf | query json $'branches')
   let repoName = (prepare-repo $repos)
   let syncs = ($branches | transpose branch dests | each {|sync|
-    echo $sync.dests
+    $sync.dests
   })
 
   $'(ansi p)All available syncing configs:(ansi reset)(char nl)(char nl)'
@@ -46,10 +46,10 @@ def 'prune-synced-branches' [
       $'Possibly unused branches in (ansi g)($alias):(ansi reset)(char nl)(char nl)'
       $cleanable | lines | wrap branch-name
       let url = ($repos|get $alias).url
-      ^echo $'Visit repo url: ($url)'
-      ^echo '---------------------------------------------------------------------------->'
+      print $'Visit repo url: ($url)'
+      hr-line
     }
-  } | str collect
+  }
 }
 
 # Clone or update repo, setup all dest remote alias

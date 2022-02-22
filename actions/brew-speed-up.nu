@@ -30,9 +30,9 @@ def 'brew-speed-up' [
   }
   # Current shell: $env.SHELL
   $'Update brew config successfully, latest config:(char nl)'
-  $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+  hr-line
   brew config
-  $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+  hr-line -b
   if ($status == 'off') {
     $'(ansi r)如果当前 Shell 配置文件（通常为~/.zshrc 或 ~/.bashrc）中包含 "export HOMEBREW_BOTTLE_DOMAIN=xx" 请将其删除(ansi reset)(char nl)'
     $'(char nl)删除完毕记得执行 source 命令, eg: `source ~/.bashrc` 使最新配置生效!(char nl)'

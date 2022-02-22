@@ -118,3 +118,10 @@ def 'log' [
   echo $var
   $'(ansi g)------------------->  Debug End <---------------------(char nl)(ansi reset)'
 }
+
+def 'hr-line' [
+  --blank-line(-b): bool
+] {
+  print $'(ansi g)---------------------------------------------------------------------------->(ansi reset)'
+  if $blank-line { char nl }
+}

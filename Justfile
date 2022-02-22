@@ -51,7 +51,7 @@ default: _check-ver
 
 # Display termix current version number
 ver: _check-ver
-  @^echo (open $'($env.TERMIX_DIR)/termix.toml' | get version)
+  @print (open $'($env.TERMIX_DIR)/termix.toml' | get version)
 
 # Upgrade termix-nu repo to the latest version
 upgrade:
@@ -118,7 +118,8 @@ show-env: _check-ver
 
 # 查询已发布Node版本，支持指定最低版本号
 ls-node minVer=('12') isLts=('false'): _check-ver
-  @source {{ join(_termix, 'actions', 'ls-node.nu') }}; \
+  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+    source {{ join(_termix, 'actions', 'ls-node.nu') }}; \
     ls-node-remote {{minVer}} {{isLts}}
 
 # 开启或者关闭 Brew 国内镜像加速
@@ -130,6 +131,7 @@ brew-speed-up status=('on'): _check-ver
 # 开启或者关闭 git 代理, 目前仅支持在阿里郎加速模式下开启 git 代理
 git-proxy status=('on'): _check-ver
   @load-env { GIT_PROXY_STATUS: '{{status}}' }; \
+    source {{ join(_termix, 'utils', 'common.nu') }}; \
     nu {{ join(_termix, 'git', 'git-proxy.nu') }}
 
 # 查询电商前端团队本周工时填报情况

@@ -46,5 +46,6 @@ def 'git ls-redev-refs' [
     } else {
       git tag --format='%(refname:strip=2)%09%(creatordate:iso)' --sort=-creatordate # Reverse sort
     }
-  } | str collect
+    print ''  # 作为清理空行之用
+  }
 }

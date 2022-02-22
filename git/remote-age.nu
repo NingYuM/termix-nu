@@ -40,7 +40,7 @@ def 'git remote-age' [
 
   if $show-tag == 'false' { exit --now }
   $'Tags of (ansi gb)($repoName)(ansi reset) for remote ($alias)(char nl)'
-  $'(ansi g)───────────────────────────────────────────────────────────────────────>(ansi reset)(char nl)'
+  hr-line -b
   # git ls-remote --tags origin
   if (windows?) {
     # Git for Windows does't support sort by `creatordate` field?

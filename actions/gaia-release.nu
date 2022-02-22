@@ -44,6 +44,6 @@ def 'gaia-release' [
       # Add a tag and push it to the remote repo
       git checkout $repo.branch; git tag $tagName -am $tagComment; git push origin --tags
     }
-    ^echo $'(ansi g)──────────────────────────────────────────────────────────────────────>(ansi reset)'
+    hr-line
   }
 }

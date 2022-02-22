@@ -14,7 +14,7 @@ def 'git-proxy' [
 
   if ($status == 'on') {
 
-    let proxy = (if $proxies == '' { [] } else { ($proxies | detect columns -n).Column8 })
+    let proxy = (if $proxies == '' { [] } else { ($proxies | detect columns -n).column8 })
     if ($proxy | length) == 0 {
       $'(ansi r)(char nl)Can not find Ali proxy, please start it and try again, bype...(ansi reset)(char nl)(char nl)'
       exit --now

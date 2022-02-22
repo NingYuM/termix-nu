@@ -21,7 +21,8 @@ def 'dir-batch-exec' [
     cd $it
     # FIXME: colored output required
     $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi reset) in dir ($it): (char nl)(nu -c $cmdToExec)'
-  } | str collect
+    hr-line
+  }
 }
 
 # $env | transpose

@@ -60,6 +60,9 @@ def 'git trigger-sync' [
     let navUrl = ($pushConf | query json $'repos.($iter.repo).url')
 
     if $syncFrom == $nothing {} else { do-sync $syncFrom $gitUrl $iter }
-    if ($navUrl != '' && $syncFrom != $nothing) { ^echo $'You can check the result from: (ansi g)($navUrl)(ansi reset)' }
-  } | str collect
+    if ($navUrl != '' && $syncFrom != $nothing) {
+      print $'You can check the result from: (ansi g)($navUrl)(ansi reset)'
+      hr-line
+    }
+  }
 }

@@ -38,7 +38,7 @@ def 'git batch-exec' [
 
   $candidates | each { |branch|
     if (has-ref $branch) {
-      $'--------------------------------------------------(char nl)'
+      hr-line
       ^git checkout $branch
       # Execute cmd here
       nu -c $cmdToExec

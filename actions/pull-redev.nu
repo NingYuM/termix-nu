@@ -32,7 +32,7 @@ def 'git pull-redev' [
     if ($destRepoPath | path exists) == $false {
       cd $repoPath; git clone -b $branch $repo.url
     }
-    $'(ansi reset)─────────────────────────────────────────────────────────────────────────────────>'
+    hr-line
     $'(char nl)Pull repo (ansi gb)($repoName)(ansi reset): (char nl)'
 
     cd $destRepoPath;
@@ -57,8 +57,8 @@ def 'git pull-redev' [
     } else {
       if $show-diff == 'true' {
         # 使用原生 echo 命令
-        ^echo $'(char nl) (ansi r)Tag: ($prevTagName) does not exist in repo: ($repoName) (ansi reset)(char nl)'
+        print $'(char nl) (ansi r)Tag: ($prevTagName) does not exist in repo: ($repoName) (ansi reset)(char nl)'
       }
     }
-  } | str collect
+  }
 }

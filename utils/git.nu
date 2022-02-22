@@ -9,7 +9,7 @@ def 'do-sync' [
   gitUrl: string    # The remote git repo url
   repo: any         # The git repo config options
 ] {
-  ^echo $'Sync from local (ansi g)($syncFrom)(ansi reset) to remote (ansi p)($repo.dest) of repo ($repo.repo)(ansi reset) -->(char nl)'
+  print $'Sync from local (ansi g)($syncFrom)(ansi reset) to remote (ansi p)($repo.dest) of repo ($repo.repo)(ansi reset) -->(char nl)'
   let force = (get-env FORCE '0' | into int)
   let forcePush = (get-env FORCE_PUSH '0' | into int)
   let hasLock = (do -i { $repo | get lock }) != $nothing

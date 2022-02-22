@@ -12,7 +12,7 @@ def 'git repo-transfer' [
   cd $tmpPath
   $'(char nl)Sync git repo from ($source)(char nl)'
   $'to dest:      (ansi g)---> ($dest)(ansi reset)(char nl)'
-  $'(ansi g)─────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+  hr-line -b
   let nameIndexStart = ($source | str index-of -e '/')
   let repoName = $'($source | str substring $'($nameIndexStart + 1),')-sync'
   let exists = ([$tmpPath $repoName] | path join | path exists)
@@ -43,7 +43,7 @@ def 'do-push' [
 ] {
   $'(ansi g)Push code to the remote dest:(ansi reset)(char nl)'
   # FIXME: fatal: repository 'xxx' not found, use ^git instead of bash -c
-  let output = ((sh -c 'git push --mirror 2>&1') | compact | str collect)
+  let output = ((^git push --mirror 2>&1) | compact | str collect)
   echo $output
   if $output =~ 'not found' {
     $'(ansi r)Error: The dest repo does not exist, please create it and try again, bye...(ansi reset)(char nl)'
