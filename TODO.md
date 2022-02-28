@@ -7,7 +7,7 @@
 ├── [ ] actions
 │   ├── [x] [x] brew-speed-up.nu
 │   ├── [x] [ ] check-ver.nu
-│   ├── [*] [ ] dir-batch-exec.nu   # 输出色彩丢失
+│   ├── [*] [x] dir-batch-exec.nu
 │   ├── [?] [ ] gaia-release.nu     # Match 现在还不支持: https://github.com/nushell/nushell/issues/4356
 │   ├── [x] [x] ls-node.nu
 │   ├── [x] [x] ls-redev-refs.nu
@@ -23,13 +23,13 @@
 │   ├── [x] [x] age.nu
 │   ├── [x] [x] branch-desc.nu
 │   ├── [x] [x] check-desc.nu
-│   ├── [x] [ ] git-batch-exec.nu
-│   ├── [x] [ ] git-batch-reset.nu
-│   ├── [x] [ ] git-proxy.nu
+│   ├── [x] [x] git-batch-exec.nu
+│   ├── [x] [x] git-batch-reset.nu
+│   ├── [x] [x] git-proxy.nu
 │   ├── [x] [x] pull-all.nu         # 终端输入异常: https://github.com/nushell/nushell/issues/4384
 │   ├── [x] [x] remote-age.nu
-│   ├── [x] [ ] rename-branch.nu
-│   ├── [*] [ ] repo-transfer.nu    # glob expansion错误: https://github.com/nushell/nushell/issues/4404
+│   ├── [x] [ ] rename-branch.nu    # 在 gaia-picker 上操作会出现同步信息输出乱序异常
+│   ├── [*] [x] repo-transfer.nu    # glob expansion错误: https://github.com/nushell/nushell/issues/4404
 │   ├── [x] [x] sync-branch.nu      # 同步其他仓库的时候 Git 本身输出被吞噬 ?
 │   └── [x] [x] trigger-sync.nu     # 同步其他仓库的时候 Git 本身输出被吞噬 ?
 ├── [x] mall
@@ -44,7 +44,7 @@
 │   └── [x] ts-stat.nu
 ├── [x] termix.toml
 └── [x] utils
-    ├── [x] [ ] common.nu
-    ├── [x] [ ] compose-cmd.nu
-    └── [x] [ ] git.nu
+    ├── [x] [x] common.nu
+    ├── [x] [x] compose-cmd.nu
+    └── [x] [x] git.nu
 ```

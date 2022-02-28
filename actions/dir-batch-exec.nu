@@ -19,8 +19,8 @@ def 'dir-batch-exec' [
   let cmdToExec = (compose-cmd $cmd)
   $destDirs | where ($it | path exists) | each { |it|
     cd $it
-    # FIXME: colored output required
-    $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi reset) in dir ($it): (char nl)(nu -c $cmdToExec)'
+    $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi reset) in dir ($it):(char nl)'
+    nu -c $cmdToExec
     hr-line
   }
 }

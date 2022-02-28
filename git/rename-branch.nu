@@ -19,7 +19,7 @@ def 'git branch-rename' [
 ] {
 
   let remoteAlias = (if ($remote | empty?) { 'origin' } else { $remote })
-  git fetch $remoteAlias -p
+  print (git fetch $remoteAlias -p)
 
   let localSrcExists = (has-ref $from)
   let remoteSrcExists = (has-ref $'($remoteAlias)/($from)')
@@ -53,10 +53,10 @@ def 'git branch-rename' [
     $'Branch (ansi r)($from) (ansi reset)not exist in local, will pull from remote...(char nl)'
     git checkout $'($remoteAlias)/($from)' -b $from
   }
-
   # Rename, push to remote and ...
-  git branch -m $to; git push $remoteAlias -u $to;
+  print (git branch -m $to)
+  print (git push $remoteAlias -u $to)
   # Delete remote old branch if exists
-  if ($remoteSrcExists) { git push $remoteAlias $':($from)' }
+  if ($remoteSrcExists) { print (git push $remoteAlias $':($from)') }
   if ($statusCheck | empty?) == $false { git stash pop }
 }

@@ -26,8 +26,14 @@ def 'git pull-all' [
     if ($behind | find $br | length) > 0 || ($ahead | find $br | length) > 0 {
       git checkout $br
       let stat = (gstat)
-      if ($stat.behind > 0 && $stat.ahead == 0) { git pull; hr-line }
-      if ($stat.behind > 0 && $stat.ahead > 0) { git reset --hard $'($alias)/($br)'; hr-line }
+      if ($stat.behind > 0 && $stat.ahead == 0) {
+        print $'(ansi p)Start pulling ($br) branch...(ansi reset)'
+        git pull; hr-line
+      }
+      if ($stat.behind > 0 && $stat.ahead > 0) {
+        print $'(ansi p)Start reseting ($alias)/($br) branch...(ansi reset)'
+        git reset --hard $'($alias)/($br)'; hr-line
+      }
     }
   }
   git checkout $currentBranch

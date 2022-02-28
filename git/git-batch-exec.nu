@@ -28,7 +28,7 @@ def 'git batch-exec' [
   let candidates = (if ($branches | empty?) { $available } else { $dest })
 
   $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi reset) on branches: (char nl)'
-  echo $candidates
+  echo ($candidates | wrap name)
 
   $"(char nl)Current branch: ($current)"
   let statusCheck = (git status --porcelain)
@@ -38,14 +38,14 @@ def 'git batch-exec' [
 
   $candidates | each { |branch|
     if (has-ref $branch) {
-      hr-line
-      ^git checkout $branch
+      print (^git checkout $branch)
       # Execute cmd here
       nu -c $cmdToExec
+      hr-line
     } else {
       $'Branch (ansi r)($branch) (ansi reset)not available...(char nl)'
     }
-  } | str collect
+  }
   git checkout $current
   if ($statusCheck | empty?) == $false { git stash pop }
 }
