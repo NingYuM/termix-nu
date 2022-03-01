@@ -25,13 +25,13 @@ def 'ls-node-remote' [
   let vers = (fnm ls-remote | lines | str trim | wrap Version)
   let vRow = (
     $vers | update NO { |node| (
-      $node.Version |
-      split row ' ' |
-      first |
-      split row '.' |
-      first |
-      str substring (1,) |
-      into int
+      $node.Version
+        | split row ' '
+        | first
+        | split row '.'
+        | first
+        | str substring (1,)
+        | into int
     )} | update isLTS { |node| ($node.Version | str contains '(') }
   )
   if $isLts == 'true' {

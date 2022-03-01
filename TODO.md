@@ -8,7 +8,7 @@
 │   ├── [x] [x] brew-speed-up.nu
 │   ├── [x] [ ] check-ver.nu
 │   ├── [*] [x] dir-batch-exec.nu
-│   ├── [?] [ ] gaia-release.nu     # Match 现在还不支持: https://github.com/nushell/nushell/issues/4356
+│   ├── [x] [x] gaia-release.nu
 │   ├── [x] [x] ls-node.nu
 │   ├── [x] [x] ls-redev-refs.nu
 │   ├── [x] [x] prune-synced-branches.nu
@@ -26,7 +26,7 @@
 │   ├── [x] [x] git-batch-exec.nu
 │   ├── [x] [x] git-batch-reset.nu
 │   ├── [x] [x] git-proxy.nu
-│   ├── [x] [x] pull-all.nu         # 终端输入异常: https://github.com/nushell/nushell/issues/4384
+│   ├── [x] [x] pull-all.nu
 │   ├── [x] [x] remote-age.nu
 │   ├── [x] [ ] rename-branch.nu    # 在 gaia-picker 上操作会出现同步信息输出乱序异常
 │   ├── [*] [x] repo-transfer.nu    # glob expansion错误: https://github.com/nushell/nushell/issues/4404

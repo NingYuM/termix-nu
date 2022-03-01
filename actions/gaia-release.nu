@@ -16,9 +16,9 @@ def 'gaia-release' [
 
   let repoPath = (get-tmp-path)
   let gaiaSrcRepos = (open $_TERMIX_CONF | get gaiaSrcRepos)
-  $'Using global repo path: (ansi p)($repoPath)(ansi reset)(char nl)(char nl)'
+  $'Using global repo path: (ansi p)($repoPath)(ansi reset)(char nl)'
 
-  $gaiaSrcRepos | match name ($repos | str find-replace -a ',' '|') | each { |repo|
+  $gaiaSrcRepos | find name --regex ($repos | str find-replace -a ',' '|') | each { |repo|
     # 单一仓库完整路径
     let destRepoPath = ([$repoPath $repo.name] | path join)
     let dateSuffix = (date now | date format $_DATE_FMT)
@@ -28,21 +28,25 @@ def 'gaia-release' [
     let tagName = (if ($version | str contains '-') { $version } else { $releaseTag })
     # 仓库存在则更新，不存在则 clone
     if ($destRepoPath | path exists) {
-      cd $destRepoPath; git checkout $repo.branch; git pull
+      cd $destRepoPath; print (git checkout $repo.branch; git pull)
     } else {
-      cd $repoPath; git clone -b $repo.branch $repo.url
+      cd $repoPath; print (git clone -b $repo.branch $repo.url)
       cd $destRepoPath; git checkout $repo.branch
     }
+    cd $destRepoPath
     # Delete tags that not exist in remote repo
-    git fetch origin --prune '+refs/tags/*:refs/tags/*'
+    print (git fetch origin --prune '+refs/tags/*:refs/tags/*')
 
     # Check the tag status, if exists just recrete it.
-    if (has-ref $'refs/tags/($tagName)') { git tag -d $tagName; git push origin --delete $tagName }
+    if (has-ref $'refs/tags/($tagName)') { print (git tag -d $tagName; git push origin --delete $tagName) }
 
-    if $delete-tag == 'true' {} else {
+    if $delete-tag == 'true' {
+      print $'(ansi g)Tag delete successfully!(ansi reset)'
+    } else {
       let tagComment = $'A new release for version: ($tagName) created by gaia-release command of termix-nu'
       # Add a tag and push it to the remote repo
-      git checkout $repo.branch; git tag $tagName -am $tagComment; git push origin --tags
+      print (git checkout $repo.branch; git tag $tagName -am $tagComment; git push origin --tags)
+      print $'(ansi g)New tag created successfully!(ansi reset)'
     }
     hr-line
   }

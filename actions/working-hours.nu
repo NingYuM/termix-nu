@@ -21,36 +21,37 @@ def 'working-hours' [
     exit --now
   }
   let userCookie = ($emp.cookie | str find-replace '_EMP_UC_COOKIE_' $empUserCookie)
-  let staffPayload = ($emp.staffPayload | str find-replace '_first_day_' $monday |
-      str find-replace '_last_day_' $sunday |
-      str find-replace '_project_code_' $code )
+  let staffPayload = ($emp.staffPayload
+      | str find-replace '_first_day_' $monday
+      | str find-replace '_last_day_' $sunday
+      | str find-replace '_project_code_' $code )
   # Week No of now: [(date now)] | dfr to-df | dfr get-week
   let staffs = (curl $emp.staffUrl -H $emp.type -H $userCookie -s --data-raw $staffPayload | str collect)
 
   handle-exception $staffs
 
   $'Query working hours from ($monday) to ($sunday) ---> (char nl)'
-  let timePayload = ($emp.timePayload |
-      str find-replace '_first_day_' $monday |
-      str find-replace '_last_day_' $sunday |
-      str find-replace '_staffs_' ($staffs | query json 'res' | to json))
+  let timePayload = ($emp.timePayload
+      | str find-replace '_first_day_' $monday
+      | str find-replace '_last_day_' $sunday
+      | str find-replace '_staffs_' ($staffs | query json 'res' | to json))
 
-  let leavePayload = ($emp.leavePayload |
-      str find-replace '_first_day_' $monday |
-      str find-replace '_last_day_' $sunday |
-      str find-replace '_staffs_' ($staffs | query json 'res' | to json))
+  let leavePayload = ($emp.leavePayload
+      | str find-replace '_first_day_' $monday
+      | str find-replace '_last_day_' $sunday
+      | str find-replace '_staffs_' ($staffs | query json 'res' | to json))
 
   let allStaffs = ($staffs | query json 'res' | select id name | rename id Name)
   let hours = (curl $emp.timeUrl -H $emp.type -H $emp.app -H $userCookie -s --data-raw $timePayload | str collect)
   let leaves = (curl $emp.leaveUrl -H $emp.type -H $userCookie -s --data-raw $leavePayload | str collect)
   let workingHours = (
-      $hours | query json 'res'| select fillDate percentage staff |
-        update staffId { |it| $it.staff.id } | reject staff
+      $hours | query json 'res'| select fillDate percentage staff
+        | update staffId { |it| $it.staff.id } | reject staff
     )
 
   let leavingHours = (
-      $leaves | query json 'res'| select beginTime duration staff |
-        update staffId {|staff| $staff.staff.id } | reject staff
+      $leaves | query json 'res'| select beginTime duration staff
+        | update staffId {|staff| $staff.staff.id } | reject staff
     )
 
   # Set a default leaving record
@@ -92,14 +93,14 @@ def 'handle-working-hours' [
       } | select staffId day Hrs
     )
 
-  let allMembers = ($allStaffs |
-      update Mon { |staff| (get-hr-per-staff $staff.id 'Mon' $hours) } |
-      update Tue { |staff| (get-hr-per-staff $staff.id 'Tue' $hours) } |
-      update Wen { |staff| (get-hr-per-staff $staff.id 'Wen' $hours) } |
-      update Thu { |staff| (get-hr-per-staff $staff.id 'Thu' $hours) } |
-      update Fri { |staff| (get-hr-per-staff $staff.id 'Fri' $hours) } |
-      update 'WeekNO.' $weekNo |
-      update Leave { |staff|
+  let allMembers = ($allStaffs
+      | update Mon { |staff| (get-hr-per-staff $staff.id 'Mon' $hours) }
+      | update Tue { |staff| (get-hr-per-staff $staff.id 'Tue' $hours) }
+      | update Wen { |staff| (get-hr-per-staff $staff.id 'Wen' $hours) }
+      | update Thu { |staff| (get-hr-per-staff $staff.id 'Thu' $hours) }
+      | update Fri { |staff| (get-hr-per-staff $staff.id 'Fri' $hours) }
+      | update 'WeekNO.' $weekNo
+      | update Leave { |staff|
         let leaves = ($leavingHours | where staffId == $staff.id)
         if ($leaves | length) == 0 { 0 } else { ($leaves | get duration | math sum) * 8 | into int }
       } | reject id
