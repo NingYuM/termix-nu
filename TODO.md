@@ -28,7 +28,7 @@
 │   ├── [x] [x] git-proxy.nu
 │   ├── [x] [x] pull-all.nu
 │   ├── [x] [x] remote-age.nu
-│   ├── [x] [ ] rename-branch.nu    # 在 gaia-picker 上操作会出现同步信息输出乱序异常
+│   ├── [x] [x] rename-branch.nu    # 在 gaia-picker 上操作会出现同步信息输出乱序异常
 │   ├── [*] [x] repo-transfer.nu    # glob expansion错误: https://github.com/nushell/nushell/issues/4404
 │   ├── [x] [x] sync-branch.nu      # 同步其他仓库的时候 Git 本身输出被吞噬 ?
 │   └── [x] [x] trigger-sync.nu     # 同步其他仓库的时候 Git 本身输出被吞噬 ?

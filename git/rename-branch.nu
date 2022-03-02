@@ -46,6 +46,7 @@ def 'git branch-rename' [
     git stash save 'Stash before running git-batch-exec'
   }
 
+  print $'(ansi g)Going to rename branch from ($from) to ($to)(ansi reset)'; hr-line
   # Pull the branch to local if not exist
   if ($localSrcExists) {
     git checkout $from

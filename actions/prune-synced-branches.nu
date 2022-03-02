@@ -30,7 +30,7 @@ def 'prune-synced-branches' [
     $sync.dests
   })
 
-  $'(ansi p)All available syncing configs:(ansi reset)(char nl)(char nl)'
+  $'(ansi p)All available syncing configs:(ansi reset)(char nl)'
   $syncs | flatten | select repo dest | sort-by repo dest
 
   $repos | transpose | rename alias | get alias | each { |alias|
@@ -68,12 +68,12 @@ def 'prepare-repo' [
   let destRepoPath = ([$repoPath $repoName] | path join)
   # 仓库存在则更新，不存在则 clone
   if ($destRepoPath | path exists) {
-    cd $destRepoPath;
+    print $'(ansi p)Updating remote repos to local...(ansi reset)'; hr-line
   } else {
     cd $repoPath; git clone $sampleRepo.git $repoName
-    cd $destRepoPath;
   }
 
+  cd $destRepoPath;
   $repos | transpose name repo | flatten | each {|dest|
     let aliasExists = (git remote -v | detect columns -n | rename alias git | where alias == $dest.name | length) > 0
     if ($aliasExists) {
@@ -82,7 +82,9 @@ def 'prepare-repo' [
       git remote add $dest.name $dest.git
     }
     # 更新远程仓库信息到本地
-    git fetch $dest.name -p
-  } | str collect ''
+    let output = (git fetch $dest.name -p)
+    if ($output | str trim | empty?) == $false { print $output }
+  }
+  print 'Repo preparing done!'; hr-line
   echo $repoName
 }

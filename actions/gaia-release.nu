@@ -28,19 +28,21 @@ def 'gaia-release' [
     let tagName = (if ($version | str contains '-') { $version } else { $releaseTag })
     # 仓库存在则更新，不存在则 clone
     if ($destRepoPath | path exists) {
-      cd $destRepoPath; print (git checkout $repo.branch; git pull)
+      cd $destRepoPath
+      git checkout $repo.branch; git pull
     } else {
       cd $repoPath; print (git clone -b $repo.branch $repo.url)
       cd $destRepoPath; git checkout $repo.branch
     }
-    cd $destRepoPath
+    cd $destRepoPath;
     # Delete tags that not exist in remote repo
     print (git fetch origin --prune '+refs/tags/*:refs/tags/*')
 
+    let tagExists = (has-ref $'refs/tags/($tagName)')
     # Check the tag status, if exists just recrete it.
-    if (has-ref $'refs/tags/($tagName)') { print (git tag -d $tagName; git push origin --delete $tagName) }
+    if ($tagExists) { print (git tag -d $tagName; git push origin --delete $tagName) }
 
-    if $delete-tag == 'true' {
+    if ($delete-tag == 'true') {
       print $'(ansi g)Tag delete successfully!(ansi reset)'
     } else {
       let tagComment = $'A new release for version: ($tagName) created by gaia-release command of termix-nu'

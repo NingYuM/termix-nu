@@ -211,6 +211,28 @@ let $config = {
       keycode: char_t
       mode: vi_insert # emacs vi_normal vi_insert
       event: { send: menu name: context_menu }
+    },
+    {
+      name: cargo_test
+      modifier: control
+      keycode: char_t
+      mode: emacs
+      event: [
+        { edit: { cmd: clear } }
+        { edit: { cmd: insertString value: "cargo test --all --all-features" } }
+        { send: enter }
+      ]
+    },
+    {
+        name: reload_config
+        modifier: control
+        keycode: char_r
+        mode: emacs
+        event: [
+            { edit: { cmd: clear } }
+            { edit: { cmd: insertString value: $"source '($nu.config-path)'" } }
+            { send: Enter }
+        ]
     }
   ]
 }
@@ -220,6 +242,7 @@ let $config = {
 def cls [] { ansi cls }
 def 'env exists?' [] { $in in (env).name }
 def sum [] { reduce {|acc, item| $acc + $item } }
+def ver [] { (version | transpose key value | to md --pretty) }
 
 def un-doced [] {
   $scope.commands |
@@ -233,5 +256,12 @@ def cargo-ta  [] { cargo test --all --all-features          }
 
 def cargo-clippy [] {
     cargo clippy --all --all-features -- -D warnings -D clippy::unwrap_used -A clippy::needless_collect
+}
+
+# example usage: `$nu.config-path | goto`
+def-env goto [] {
+    let input = $in
+    let path = if ($input | path type) == file { ($input | path dirname) } else { $input }
+    cd $path
 }
 
