@@ -55,17 +55,17 @@
 .
 ├── [ ] Justfile
 ├── [ ] actions
-│   ├── [ ] brew-speed-up.nu
+│   ├── [-] brew-speed-up.nu
 │   ├── [ ] check-ver.nu
 │   ├── [ ] dir-batch-exec.nu
 │   ├── [ ] gaia-release.nu
-│   ├── [ ] ls-node.nu
-│   ├── [ ] ls-redev-refs.nu
+│   ├── [x] ls-node.nu
+│   ├── [ ] ls-redev-refs.nu    # t ls-redev-refs pik false 最后阶段报错
 │   ├── [ ] prune-synced-branches.nu
 │   ├── [ ] pull-redev.nu
-│   ├── [ ] quick-nav.nu
+│   ├── [ ] quick-nav.nu    # t go docs 报错
 │   ├── [ ] release.nu
-│   ├── [ ] show-env.nu
+│   ├── [ ] show-env.nu     # 输出布局异常
 │   ├── [ ] tag-redev.nu
 │   ├── [ ] upgrade
 │   └── [ ] working-hours.nu
@@ -76,7 +76,7 @@
 │   ├── [ ] git-batch-exec.nu
 │   ├── [ ] git-batch-reset.nu
 │   ├── [ ] git-proxy.nu
-│   ├── [ ] pull-all.nu
+│   ├── [x] pull-all.nu
 │   ├── [ ] remote-age.nu
 │   ├── [ ] rename-branch.nu
 │   ├── [ ] repo-transfer.nu
