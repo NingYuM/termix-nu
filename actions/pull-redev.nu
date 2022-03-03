@@ -9,7 +9,7 @@
 def 'git pull-redev' [
   branch: string            # Specify the branch to pull
   group: string             # Specify the groups of repo to update
-  --show-diff(-d): string   # Set to 'true' if you want to see the files changed since prev tag
+  --show-diff(-d): bool     # Set to 'true' if you want to see the files changed since prev tag
 ] {
 
   let repoPath = (get-tmp-path)
@@ -50,12 +50,12 @@ def 'git pull-redev' [
     let prevTagName = (get-env REDEV_PREV_TAG '')
     # Check the tag status, if exists just recrete it.
     if (has-ref $'refs/tags/($prevTagName)') {
-      if $show-diff == 'true' && (git --no-pager diff $prevTagName $branch --name-only | lines | length) > 0 {
+      if $show-diff && (git --no-pager diff $prevTagName $branch --name-only | lines | length) > 0 {
         $'---------> Update since latest tag <---------:(char nl)(ansi y)'
         git --no-pager diff $prevTagName $branch --name-only
       }
     } else {
-      if $show-diff == 'true' {
+      if $show-diff {
         # 使用原生 echo 命令
         print $'(char nl) (ansi r)Tag: ($prevTagName) does not exist in repo: ($repoName) (ansi reset)(char nl)'
       }

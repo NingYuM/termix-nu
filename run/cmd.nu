@@ -11,6 +11,6 @@ def main [
 ] {
     $foo
     $var1 == 'abc'
-    $show == $true
+    $show == true
     if $option == $nothing { 'empty' } else { $option }
 }

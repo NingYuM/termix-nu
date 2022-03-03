@@ -7,7 +7,7 @@
 
 # Clean possibly unused branches of synced dest repos
 def 'prune-synced-branches' [
-  --dry-run(-d): string   # In dry-run mode no branch will be deleted, just show all deletable branches
+  --dry-run(-d): bool   # In dry-run mode no branch will be deleted, just show all deletable branches
 ] {
 
   cd $env.JUST_INVOKE_DIR

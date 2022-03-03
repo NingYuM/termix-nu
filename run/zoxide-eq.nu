@@ -27,10 +27,10 @@ def __zoxide_prompt [] {
 
 # Hook to add new entries to the database.
 def __zoxide_hook [] {
-    # shells | where active == $true | get path | each {
+    # shells | where active == true | get path | each {
     #     zoxide add -- $it
     # }
-    zoxide add -- (shells | where active == $true | get path | get 0)
+    zoxide add -- (shells | where active == true | get path | get 0)
 }
 
 # Initialize hook.
@@ -72,7 +72,7 @@ let-env PROMPT_COMMAND = {
 
 # Jump to a directory using only keywords.
 def-env __zoxide_z [...rest:string] {
-    # if (shells | where active == $true) {
+    # if (shells | where active == true) {
     #     if ($rest | length) > 1 {
     #         $'zoxide: can only jump in active shells(char nl)'
     #     } else {
@@ -118,4 +118,4 @@ alias zi = __zoxide_zi
 
 # If everything went fine, set a flag that zoxide is initialized to avoid
 # recursively calling _OLD_PROMPT_COMMAND
-let-env ZOXIDE_INITIALIZED = $true
+let-env ZOXIDE_INITIALIZED = true

@@ -7,7 +7,7 @@
 #   git-proxy on ali
 
 # Turn on or off the proxies for git
-def 'git-proxy' [
+def-env 'git-proxy' [
   status: string  # Set proxy status: on/off
 ] {
   let proxies = (lsof -i -n -P | grep LISTEN | grep 'AliMgrSoc')
@@ -32,9 +32,9 @@ def 'git-proxy' [
     $'If you want to set proxy for the terminal, please run: (char nl)'
     $'export http_proxy=socks5://($proxy) https_proxy=socks5://($proxy) ALL_RROXY=socks://($proxy)(char nl)(char nl)'
   } else {
-    # unlet-env ALL_RROXY
-    # unlet-env http_proxy
-    # unlet-env https_proxy
+    # if ('ALL_RROXY' in (env).name) { hide ALL_RROXY }
+    # if ('http_proxy' in (env).name) { hide http_proxy }
+    # if ('https_proxy' in (env).name) { hide https_proxy }
     git config --global --unset http.proxy
     git config --global --unset https.proxy
     git config --global --unset socks.proxy

@@ -6,8 +6,8 @@
 
 # Show branch description from branch description file `d` of `i` branch
 def 'branch-desc' [
-  branch?: string       # The branch to query from description file
-  --show-notes: string  # Set to 'ture' to show notes infomation
+  branch: string        # The branch to query from description file
+  --show-notes: bool    # Set to 'ture' to show notes infomation
 ] {
 
   let descFile = 'd.toml'
@@ -28,7 +28,7 @@ def 'branch-desc' [
   $'(char nl)(ansi p)($queryBranch) (ansi reset)分支描述：(char nl)'
   hr-line
   $'(char nl)($desc)(char nl)(char nl)'
-  if ($show-notes == 'false') {} else {
+  if ($show-notes) {
     $rules | each -n { |rule|
       echo $'(ansi g)($rule.index + 1)(ansi reset). ($rule.item)'
     } | str collect $'(char nl)'; char nl

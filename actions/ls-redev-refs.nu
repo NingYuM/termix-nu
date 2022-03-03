@@ -7,7 +7,7 @@
 # Show Branches and Tags of redevelop related repos
 def 'git ls-redev-refs' [
   group: string             # Specify the groups of repo to list their refs
-  --show-branches: string   # Set true to show remote branches last commit info
+  --show-branches: bool     # Set true to show remote branches last commit info
 ] {
 
   let repoPath = (get-tmp-path)
@@ -32,7 +32,7 @@ def 'git ls-redev-refs' [
       cd $repoPath; git clone $url
     }
 
-    if ($show-branches == 'true') {
+    if ($show-branches) {
       $'(char nl)Branches of repo (ansi gb)($repoName)(ansi reset): (char nl)'
       git age $destRepoPath
     }

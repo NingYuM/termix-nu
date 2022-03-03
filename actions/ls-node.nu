@@ -11,7 +11,7 @@
 
 def 'ls-node-remote' [
   minVer: string   # The node version you want to query
-  isLts: string    # Filter the node versions that are LTS
+  isLts: bool      # Filter the node versions that are LTS
 ] {
 
   # brew install fnm to install it, see: https://github.com/Schniz/fnm
@@ -34,9 +34,9 @@ def 'ls-node-remote' [
         | into int
     )} | update isLTS { |node| ($node.Version | str contains '(') }
   )
-  if $isLts == 'true' {
+  if $isLts {
     # ($vRow | where {|node| $node.NO >= $minVersion && $node.isLTS } | select Version)
-    echo ($vRow | where NO >= $minVersion | where isLTS == $true | select Version)
+    echo ($vRow | where NO >= $minVersion | where isLTS == true | select Version)
   } else {
     echo ($vRow | where NO >= $minVersion | select Version)
   }

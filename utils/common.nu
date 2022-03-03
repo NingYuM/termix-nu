@@ -67,7 +67,7 @@ def 'has-ref' [
   ref: string   # The git ref to check
 ] {
   let parse = (git rev-parse --verify -q $ref)
-  if ($parse | empty?) { $false } else { $true }
+  if ($parse | empty?) { false } else { true }
 }
 
 # Compare two version number, return true if first one is lower then second one
@@ -82,7 +82,7 @@ def 'is-lower-ver' [
   let f = ($source | split row '.' | each { |it| $it | str lpad -l 3 -c '0' })
   let toVer = ($t | str collect | into int)
   let fromVer = ($f | str collect | into int)
-  if ($fromVer < $toVer) { echo $true } else { echo $false }
+  ($fromVer < $toVer)
 }
 
 # Check if git was installed and if current directory is a git repo

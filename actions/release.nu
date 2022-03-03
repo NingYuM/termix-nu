@@ -11,8 +11,8 @@
 # 	just release
 
 def 'release' [
-  --update-log: string      # Set to `true` do enable updating CHANGELOG.md
-  --force-upgrade: string   # Add `$-FORCE-UPGRADE-$` to release tag commit message
+  --update-log: bool      # Set to `true` do enable updating CHANGELOG.md
+  --force-upgrade: bool   # Add `$-FORCE-UPGRADE-$` to release tag commit message
 ] {
 
   cd $env.TERMIX_DIR
@@ -32,11 +32,11 @@ def 'release' [
   	$'You have uncommit changes, please commit them and try `release` again!(char nl)'
   	exit --now
   }
-  if ($update-log == 'true') {
+  if ($update-log) {
     git cliff --unreleased --tag ($releaseVer | str find-replace 'v' '') --prepend CHANGELOG.md;
     git commit CHANGELOG.md -m $'update CHANGELOG.md for ($releaseVer)'
   }
   let commitMsg = $'A new release for version: ($releaseVer) created by Release command of termix-nu'
-  let tagMsg = (if $force-upgrade == 'true' { $'($commitMsg). ($_UPGRADE_TAG)' } else { $commitMsg })
+  let tagMsg = if $force-upgrade { $'($commitMsg). ($_UPGRADE_TAG)' } else { $commitMsg }
   git tag $releaseVer -am $tagMsg; git push origin --tags
 }

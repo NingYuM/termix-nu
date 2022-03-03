@@ -8,23 +8,14 @@ def 'git age' [
   repo: path    # The repo path to show git age
 ] {
 
-  $'(ansi p)(char nl)Last commit info of local branches: (ansi reset)(char nl)(char nl)'
+  $'(ansi p)(char nl)Last commit info of local branches: (ansi reset)(char nl)'
   cd $repo
   git branch |
     lines |
-    str substring 2, |
+    str substring '2,' |
     wrap name |
-    update remote {
-      get name | each { |it| if (has-ref $'origin/($it)') { '   √' } else { '' }  }
-    } |
-    update author {
-      get name | each { |it| git show $it -s --format='%an' }
-    } |
-    update last-commit {
-      get name |
-      each { |it|
-        git show $it --no-patch --format=%ci | into datetime
-      }
-    } |
+    update remote { |it| if (has-ref $'origin/($it.name)') { '   √' } else { '' } } |
+    update author { |it| git show $it.name -s --format='%an' } |
+    update last-commit {|it| git show $it.name --no-patch --format=%ci | into datetime } |
     sort-by last-commit
 }

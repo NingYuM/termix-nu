@@ -9,7 +9,7 @@
 def 'setup-conf' [] {
 
     $'Current config path: `(config path)`'
-    config set ctrlc_exit $true
+    config set ctrlc_exit true
     config set table_mode 'light'
     config set prompt 'starship_prompt'
     config set line_editor.edit_mode 'vim'

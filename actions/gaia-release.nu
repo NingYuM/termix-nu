@@ -9,9 +9,9 @@
 # 	just gaia-release
 
 def 'gaia-release' [
-  version: string   # Gaia FE release version
-  repos: string     # The repos to creat a release tag, multi repo could be separated by ','
-  --delete-tag(-d): string  # Set to 'true' if you want to delete the specified tag
+  version: string         # Gaia FE release version
+  repos: string           # The repos to creat a release tag, multi repo could be separated by ','
+  --delete-tag(-d): bool  # Set to 'true' if you want to delete the specified tag
 ] {
 
   let repoPath = (get-tmp-path)
@@ -42,7 +42,7 @@ def 'gaia-release' [
     # Check the tag status, if exists just recrete it.
     if ($tagExists) { print (git tag -d $tagName; git push origin --delete $tagName) }
 
-    if ($delete-tag == 'true') {
+    if ($delete-tag) {
       print $'(ansi g)Tag delete successfully!(ansi reset)'
     } else {
       let tagComment = $'A new release for version: ($tagName) created by gaia-release command of termix-nu'

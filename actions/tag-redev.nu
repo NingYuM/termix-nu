@@ -9,13 +9,12 @@ def 'git tag-redev' [
   tag: string               # Specify the tag you want to create
   branch: string            # Specify the branch to create a tag from
   group: string             # Specify the groups of repo to create a tag for
-  --delete-tag(-d): string  # Set to 'true' if you want to delete the specified tag
+  --delete-tag(-d): bool    # Set to 'true' if you want to delete the specified tag
 ] {
 
   let currentBeTag = $tag
   let actionConf = (open $_TERMIX_CONF)
 
-  let delete = (if $delete-tag == 'true' { $true } else { $false })
   let TAG_COMMENT = ($actionConf | get redevTagComment)
   # 先从环境变量里面查找待创建的新标签的前缀
   let redevCurrentTag = (get-env REDEV_CURRENT_TAG '')
@@ -32,7 +31,7 @@ def 'git tag-redev' [
     $'(ansi p)Found the following matched repos:(ansi reset)(char nl)(char nl)'; $filteredRepos
   } else { $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'; exit --now }
 
-  $'Delete tag ($tagName) ---> (ansi r)($delete)(ansi reset)(char nl)(char nl)'
+  $'Delete tag ($tagName) ---> (ansi r)($delete-tag)(ansi reset)(char nl)(char nl)'
   # 不存在则创建临时路径
   if ($repoPath | path exists) == $false { mkdir $repoPath }
   # 保存当前路径方便后期跳回
@@ -60,7 +59,7 @@ def 'git tag-redev' [
       print $'Tag: (ansi p)($tagName)(ansi reset) delete successfully!'
     }
 
-    if $delete == $false {
+    if $delete-tag == false {
       # Add a tag and push it to the remote repo
       git checkout $branch; git tag $tagName -am $TAG_COMMENT; git push origin --tags
       print $'Tag: (ansi p)($tagName)(ansi reset) created successfully!'

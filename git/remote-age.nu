@@ -8,9 +8,9 @@
 # Creates a table listing the remote branches of
 # a git repository and the time of the last commit
 def 'git remote-age' [
-  repo: string  # The git repo to display branch ages
-  alias: string # The remote url alias for git repo
-  --show-tag(-t): string  # Set to 'true' if you want to show all the tags
+  repo: string          # The git repo to display branch ages
+  alias: string         # The remote url alias for git repo
+  --show-tag(-t): bool  # Set to 'true' if you want to show all the tags
 ] {
 
   cd $repo
@@ -24,23 +24,17 @@ def 'git remote-age' [
     lines |
     str substring 52, |
     wrap name |
-    update local {
-      get name | each { |it| if (has-ref $it) { '   √' }  }
-    } |
-    update author {
-      get name | each { |it| git show $"remotes/($alias)/($it)" -s --format='%an' }
-    } |
+    update local { |it|  if (has-ref $it.name) { '   √' }} |
+    update author { |it| git show $"remotes/($alias)/($it.name)" -s --format='%an' } |
     update last-commit {
       get name |
-      each { |it|
-        git show $"remotes/($alias)/($it)" --no-patch --format=%ci | into datetime
-      }
+      each { |it| git show $"remotes/($alias)/($it)" --no-patch --format=%ci | into datetime }
     } |
     sort-by last-commit
 
-  if $show-tag == 'false' { exit --now }
-  $'Tags of (ansi gb)($repoName)(ansi reset) for remote ($alias)(char nl)'
-  hr-line -b
+  if $show-tag == false { exit --now }
+
+  $'Tags of (ansi gb)($repoName)(ansi reset) for remote ($alias)'; hr-line
   # git ls-remote --tags origin
   if (windows?) {
     # Git for Windows does't support sort by `creatordate` field?
