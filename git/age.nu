@@ -10,12 +10,14 @@ def 'git age' [
 
   $'(ansi p)(char nl)Last commit info of local branches: (ansi reset)(char nl)'
   cd $repo
-  git branch |
-    lines |
-    str substring '2,' |
-    wrap name |
-    update remote { |it| if (has-ref $'origin/($it.name)') { '   √' } else { '' } } |
-    update author { |it| git show $it.name -s --format='%an' } |
-    update last-commit {|it| git show $it.name --no-patch --format=%ci | into datetime } |
-    sort-by last-commit
+  ( # Use `()` to wrap the pipes to make them work on windows
+    git branch
+      | lines
+      | str substring '2,'
+      | wrap name
+      | update remote { |it| if (has-ref $'origin/($it.name)') { '   √' } else { '' } }
+      | update author { |it| git show $it.name -s --format='%an' }
+      | update last-commit {|it| git show $it.name --no-patch --format=%ci | into datetime }
+      | sort-by last-commit
+  )
 }

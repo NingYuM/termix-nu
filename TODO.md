@@ -65,19 +65,19 @@
 │   ├── [ ] pull-redev.nu
 │   ├── [ ] quick-nav.nu    # t go docs 报错
 │   ├── [ ] release.nu
-│   ├── [ ] show-env.nu     # 输出布局异常
+│   ├── [x] show-env.nu     # 输出布局异常
 │   ├── [ ] tag-redev.nu
 │   ├── [ ] upgrade
 │   └── [ ] working-hours.nu
 ├── [ ] git
-│   ├── [ ] age.nu
+│   ├── [x] age.nu
 │   ├── [ ] branch-desc.nu
 │   ├── [ ] check-desc.nu
 │   ├── [ ] git-batch-exec.nu
 │   ├── [ ] git-batch-reset.nu
 │   ├── [ ] git-proxy.nu
 │   ├── [x] pull-all.nu
-│   ├── [ ] remote-age.nu
+│   ├── [x] remote-age.nu   # 输出布局异常
 │   ├── [ ] rename-branch.nu
 │   ├── [ ] repo-transfer.nu
 │   ├── [ ] sync-branch.nu

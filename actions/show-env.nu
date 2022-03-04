@@ -22,10 +22,13 @@ def 'show-env' [] {
   let time = (date now | date format '%Y/%m/%d %H:%M:%S')
   let gitProxy = (if (git config --global --list | grep proxy | empty?) { 'Off' } else { 'On' })
 
-  # echo $env
+  # basic, compact, compact_double, light, thin, with_love, rounded, reinforced, heavy, none, other
+  let tableMode = if windows? { 'none' } else { 'light' }
+  let $config = { table_mode: $tableMode }
+
   version | transpose | rename nu-ver value
 
-  [
+  print [
     [name, value];
     ['Git', $gitVer]
     ['Fnm', $fnmVer]

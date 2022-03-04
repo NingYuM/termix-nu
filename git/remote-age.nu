@@ -20,17 +20,20 @@ def 'git remote-age' [
   git fetch $alias -p
   $'(char nl)Branches of (ansi gb)($repoName)(ansi reset) for remote ($alias)(char nl)'
 
-  git ls-remote --heads --refs $alias |
-    lines |
-    str substring 52, |
-    wrap name |
-    update local { |it|  if (has-ref $it.name) { '   √' }} |
-    update author { |it| git show $"remotes/($alias)/($it.name)" -s --format='%an' } |
-    update last-commit {
-      get name |
-      each { |it| git show $"remotes/($alias)/($it)" --no-patch --format=%ci | into datetime }
-    } |
-    sort-by last-commit
+  # basic, compact, compact_double, light, thin, with_love, rounded, reinforced, heavy, none, other
+  let tableMode = if windows? { 'none' } else { 'light' }
+  let $config = { table_mode: $tableMode }
+
+  ( # Use `()` to wrap the pipes to make them work on windows
+    git ls-remote --heads --refs $alias
+      | lines
+      | str substring 52,
+      | wrap name
+      | update local { |it|  if (has-ref $it.name) { '   √' }}
+      | update author { |it| git show $"remotes/($alias)/($it.name)" -s --format='%an' }
+      | update last-commit { |it| git show $"remotes/($alias)/($it.name)" --no-patch --format=%ci | into datetime }
+      | sort-by last-commit
+  )
 
   if (! $show-tag) { exit --now }
 
