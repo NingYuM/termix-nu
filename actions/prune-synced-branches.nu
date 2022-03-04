@@ -12,6 +12,8 @@ def 'prune-synced-branches' [
 
   cd $env.JUST_INVOKE_DIR
   let current = (git branch --show-current | str trim)
+  let tableMode = if windows? { 'none' } else { 'light' }
+  let $config = { table_mode: $tableMode }
 
   # Decide which branch to get `.termixrc` conf from ?
   let useConfBr = (get-conf useConfFromBranch)

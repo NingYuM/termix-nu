@@ -7,7 +7,7 @@
 #   https://emp.app.terminus.io/view/worktime_WorkTimeBO_DepartmentWorkTime
 
 def 'working-hours' [
-  --show-all: string   # Set true to show all members even if the working hours filled correctly
+  --show-all: any   # Set true to show all members even if the working hours filled correctly
 ] {
 
   let monday = (get-monday)
@@ -45,8 +45,12 @@ def 'working-hours' [
   let hours = (curl $emp.timeUrl -H $emp.type -H $emp.app -H $userCookie -s --data-raw $timePayload | str collect)
   let leaves = (curl $emp.leaveUrl -H $emp.type -H $userCookie -s --data-raw $leavePayload | str collect)
   let workingHours = (
-      $hours | query json 'res'| select fillDate percentage staff
-        | update staffId { |it| $it.staff.id } | reject staff
+      $hours
+        | query json 'res'
+        | default percentage 0.00
+        | select percentage fillDate staff
+        | update staffId { |it| $it.staff.id }
+        | reject staff
     )
 
   let leavingHours = (
@@ -65,7 +69,7 @@ def 'handle-working-hours' [
   allStaffs: any
   workingHours: any
   leavingHours: any
-  --show-all: string
+  --show-all: any
 ] {
 
   let title = (get-env EMP_WORKING_HOUR_TITLE '本周工时填报')
@@ -106,7 +110,7 @@ def 'handle-working-hours' [
       } | reject id
     )
 
-  let result = (if $show-all == 'true' { $allMembers } else {
+  let result = (if $show-all { $allMembers } else {
     ($allMembers | where { |it| $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8 })
   })
 
@@ -114,12 +118,12 @@ def 'handle-working-hours' [
     if ($result == $nothing) { $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; exit --now }
   }
 
-  $result | update Gap {|it| $total * 8 - ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave) } |
+  ($result | update Gap {|it| $total * 8 - ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave) } |
     update WARN { |it|
       if ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8) {
         $'(ansi r)('*' | str lpad -l 6 -c $'(char sp)')(ansi reset)'
       }
-    } | sort-by WARN Gap Name
+    } | sort-by WARN Gap Name)
 }
 
 # Get the beginning time of monday, like 2021-12-06 00:00:00

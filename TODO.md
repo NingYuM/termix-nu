@@ -53,11 +53,11 @@
 
 ```shell
 .
-├── [ ] Justfile
+├── [x] Justfile
 ├── [ ] actions
 │   ├── [-] brew-speed-up.nu
 │   ├── [ ] check-ver.nu
-│   ├── [ ] dir-batch-exec.nu
+│   ├── [x] dir-batch-exec.nu
 │   ├── [ ] gaia-release.nu
 │   ├── [x] ls-node.nu
 │   ├── [x] ls-redev-refs.nu    # t ls-redev-refs pik true 输出布局异常
@@ -67,7 +67,7 @@
 │   ├── [ ] release.nu
 │   ├── [x] show-env.nu     # 输出布局异常
 │   ├── [ ] tag-redev.nu
-│   ├── [ ] upgrade
+│   ├── [x] upgrade
 │   └── [ ] working-hours.nu
 ├── [ ] git
 │   ├── [x] age.nu
@@ -75,10 +75,10 @@
 │   ├── [x] check-desc.nu
 │   ├── [x] git-batch-exec.nu
 │   ├── [x] git-batch-reset.nu
-│   ├── [ ] git-proxy.nu
+│   ├── [-] git-proxy.nu
 │   ├── [x] pull-all.nu
 │   ├── [x] remote-age.nu   # 输出布局异常
-│   ├── [ ] rename-branch.nu
+│   ├── [x] rename-branch.nu
 │   ├── [ ] repo-transfer.nu
 │   ├── [ ] sync-branch.nu
 │   └── [ ] trigger-sync.nu
@@ -94,7 +94,7 @@
 │   └── [ ] ts-stat.nu
 ├── [ ] termix.toml
 └── [ ] utils
-    ├── [ ] common.nu
-    ├── [ ] compose-cmd.nu
-    └── [ ] git.nu
+    ├── [x] common.nu
+    ├── [x] compose-cmd.nu
+    └── [x] git.nu
 ```

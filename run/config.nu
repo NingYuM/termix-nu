@@ -206,11 +206,15 @@ let $config = {
   }
   keybindings: [
     {
-      name: completion
+      name: fzf
       modifier: control
-      keycode: char_t
-      mode: vi_insert # emacs vi_normal vi_insert
-      event: { send: menu name: context_menu }
+      keycode: char_f
+      mode: emacs
+      event: [
+        { edit: { cmd: clear } }
+        { edit: { cmd: insertstring value: 'cd (ls | where type == dir | each {|it| $it.name} | str collect (char nl) | fzf | decode utf-8 | str trim)' } }
+        { send: enter }
+      ]
     },
     {
       name: cargo_test
