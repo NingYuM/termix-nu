@@ -37,7 +37,7 @@ let-env PROMPT_INDICATOR = $"(ansi y)$> (ansi reset)"
 #
 # This is a simplified version of completions for git branches and git remotes
 def "nu-complete git branches" [] {
-  ^git branch | lines | each { |line| $line | str find-replace "\* " "" | str trim }
+  ^git branch | lines | each { |line| $line | str find-replace '\* ' '' | str trim }
 }
 
 def "nu-complete git remotes" [] {
@@ -251,8 +251,12 @@ def un-doced [] {
     where $it in [date, from, hash, into, keybindings, math, path, random, roll, split, str, to, url, dfr] == $false
 }
 
-def cargo-ile [] { cargo install --features=extra --path .  }
-def cargo-ta  [] { cargo test --all --all-features          }
+def cargo-ile [] {
+  fd -I shadow.rs | lines | each {|it| rm $it } | flatten
+  cargo install --features=extra --path .
+}
+
+def cargo-ta  [] { cargo test --all --all-features }
 
 def cargo-clippy [] {
     cargo clippy --all --all-features -- -D warnings -D clippy::unwrap_used -A clippy::needless_collect

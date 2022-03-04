@@ -125,3 +125,5 @@ def 'hr-line' [
   print $'(ansi g)---------------------------------------------------------------------------->(ansi reset)'
   if $blank-line { char nl }
 }
+
+def ! [b: expr] { if ($b) { $false } else { $true } }

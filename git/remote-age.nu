@@ -32,7 +32,7 @@ def 'git remote-age' [
     } |
     sort-by last-commit
 
-  if $show-tag == false { exit --now }
+  if (! $show-tag) { exit --now }
 
   $'Tags of (ansi gb)($repoName)(ansi reset) for remote ($alias)'; hr-line
   # git ls-remote --tags origin

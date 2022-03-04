@@ -59,7 +59,7 @@ def 'git tag-redev' [
       print $'Tag: (ansi p)($tagName)(ansi reset) delete successfully!'
     }
 
-    if $delete-tag == false {
+    if (! $delete-tag) {
       # Add a tag and push it to the remote repo
       git checkout $branch; git tag $tagName -am $TAG_COMMENT; git push origin --tags
       print $'Tag: (ansi p)($tagName)(ansi reset) created successfully!'
