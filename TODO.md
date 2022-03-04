@@ -60,10 +60,10 @@
 │   ├── [ ] dir-batch-exec.nu
 │   ├── [ ] gaia-release.nu
 │   ├── [x] ls-node.nu
-│   ├── [ ] ls-redev-refs.nu    # t ls-redev-refs pik false 最后阶段报错
+│   ├── [x] ls-redev-refs.nu    # t ls-redev-refs pik true 输出布局异常
 │   ├── [ ] prune-synced-branches.nu
-│   ├── [ ] pull-redev.nu
-│   ├── [ ] quick-nav.nu    # t go docs 报错
+│   ├── [x] pull-redev.nu
+│   ├── [x] quick-nav.nu
 │   ├── [ ] release.nu
 │   ├── [x] show-env.nu     # 输出布局异常
 │   ├── [ ] tag-redev.nu
@@ -71,10 +71,10 @@
 │   └── [ ] working-hours.nu
 ├── [ ] git
 │   ├── [x] age.nu
-│   ├── [ ] branch-desc.nu
-│   ├── [ ] check-desc.nu
-│   ├── [ ] git-batch-exec.nu
-│   ├── [ ] git-batch-reset.nu
+│   ├── [x] branch-desc.nu
+│   ├── [x] check-desc.nu
+│   ├── [x] git-batch-exec.nu
+│   ├── [x] git-batch-reset.nu
 │   ├── [ ] git-proxy.nu
 │   ├── [x] pull-all.nu
 │   ├── [x] remote-age.nu   # 输出布局异常

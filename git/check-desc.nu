@@ -10,6 +10,8 @@ def 'check-desc' [] {
   let descFile = 'd.toml'
   let localIExists = (has-ref i)
   let remoteIExists = (has-ref origin/i)
+  let tableMode = if windows? { 'none' } else { 'light' }
+  let $config = { table_mode: $tableMode }
   if ($localIExists || $remoteIExists) == $false {
     $'You do not have an i branch, branch description query failed, bye...(char nl)'
     exit --now
@@ -28,15 +30,12 @@ def 'check-desc' [] {
     $'(char nl) Well done! All Branches have been described in (ansi g)($repo)(ansi reset).(char nl)(char nl)'
   } else {
     $'(ansi p)(char nl)  Branches that do not have a description in (ansi g)($repo)(ansi reset): (char nl)(ansi reset)'
-    $remoteBranches | where (no-desc $descriptions $it) | wrap name |
-      update commit-by {
-        get name | each { |it| git show $'origin/($it)' -s --format='%an' }
-      } |
-      update last-commit {
-        get name |
-        each { |it| git show $'origin/($it)' --no-patch --format=%ci | into datetime }
-      } |
-      sort-by last-commit
+    ($remoteBranches
+      | where (no-desc $descriptions $it)
+      | wrap name
+      | update commit-by { |it| git show $'origin/($it.name)' -s --format='%an' }
+      | update last-commit { |it| git show $'origin/($it.name)' --no-patch --format=%ci | into datetime }
+      | sort-by last-commit)
   }
 
   # 检查并显示所有描述存在但是远程已经被删掉的分支

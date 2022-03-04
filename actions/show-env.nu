@@ -28,6 +28,7 @@ def 'show-env' [] {
 
   version | transpose | rename nu-ver value
 
+  # FIXME: Table layout will be broken on Windows if using `echo` here
   print [
     [name, value];
     ['Git', $gitVer]
