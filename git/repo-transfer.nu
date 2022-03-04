@@ -23,7 +23,7 @@ def 'git repo-transfer' [
     let prevFetchUrl = (git remote get-url origin | str trim)
     if ($prevFetchUrl == $source) {
       $'Repo ($repoName) already exists, just sync code from source to dest.(char nl)'
-      print (git fetch origin -p)
+      git fetch origin -p
       git remote set-url origin --push $dest
       do-push $dest
     } else {
@@ -32,8 +32,7 @@ def 'git repo-transfer' [
     }
   } else {
     $'Cloning code to: (ansi g)($tmpPath)/($repoName)(ansi reset)(char nl)'
-    # FIXME: print 才会同步，否则 cd 会被异步执行，nushell 的 bug？
-    print (git clone --mirror $source $repoName); cd $repoName
+    git clone --mirror $source $repoName; cd $repoName
     git remote set-url origin --push $dest
     do-push $dest
   }

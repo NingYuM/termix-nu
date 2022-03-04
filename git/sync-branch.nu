@@ -52,7 +52,7 @@ def 'git sync-branch' [
     if $localOid == $zero {
       print $'Remove remote branch (ansi p)($iter.dest) of repo ($iter.repo)(ansi reset) -->(char nl)'
       # You MUST use '--no-verify' to prevent infinit loops!!!
-      print (git push --no-verify $gitUrl $':($iter.dest)')
+      git push --no-verify $gitUrl $':($iter.dest)'
     } else {
       if $syncFrom == $nothing {} else { do-sync $syncFrom $gitUrl $iter }
     }

@@ -31,23 +31,23 @@ def 'gaia-release' [
       cd $destRepoPath
       git checkout $repo.branch; git pull
     } else {
-      cd $repoPath; print (git clone -b $repo.branch $repo.url)
+      cd $repoPath; git clone -b $repo.branch $repo.url
       cd $destRepoPath; git checkout $repo.branch
     }
     cd $destRepoPath;
     # Delete tags that not exist in remote repo
-    print (git fetch origin --prune '+refs/tags/*:refs/tags/*')
+    git fetch origin --prune '+refs/tags/*:refs/tags/*'
 
     let tagExists = (has-ref $'refs/tags/($tagName)')
     # Check the tag status, if exists just recrete it.
-    if ($tagExists) { print (git tag -d $tagName; git push origin --delete $tagName) }
+    if ($tagExists) { git tag -d $tagName; git push origin --delete $tagName }
 
     if ($delete-tag) {
       print $'(ansi g)Tag delete successfully!(ansi reset)'
     } else {
       let tagComment = $'A new release for version: ($tagName) created by gaia-release command of termix-nu'
       # Add a tag and push it to the remote repo
-      print (git checkout $repo.branch; git tag $tagName -am $tagComment; git push origin --tags)
+      git checkout $repo.branch; git tag $tagName -am $tagComment; git push origin --tags
       print $'(ansi g)New tag created successfully!(ansi reset)'
     }
     hr-line
