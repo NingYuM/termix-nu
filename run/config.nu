@@ -30,6 +30,20 @@ let posh-theme = $'($posh-dir)/share/oh-my-posh/themes/'
 let-env PROMPT_COMMAND = { oh-my-posh --config $'($posh-theme)/zash.omp.json' }
 let-env PROMPT_INDICATOR = $"(ansi y)$> (ansi reset)"
 
+# Specifies how environment variables are:
+# - converted from a string to a value on Nushell startup (from_string)
+# - converted from a value back to a string when running extrnal commands (to_string)
+let-env ENV_CONVERSIONS = {
+  "PATH": {
+    from_string: { |s| $s | split row (char esep) }
+    to_string: { |v| $v | str collect (char esep) }
+  }
+  "Path": {
+    from_string: { |s| $s | split row (char esep) }
+    to_string: { |v| $v | str collect (char esep) }
+  }
+}
+
 # -------------------------- Autocompletion ------------------------
 # Custom completions for external commands (those outside of Nushell)
 # Each completions has two parts: the form of the external command, including its flags and parameters
@@ -249,7 +263,7 @@ def sum [] { reduce {|acc, item| $acc + $item } }
 def ver [] { (version | transpose key value | to md --pretty) }
 
 def un-doced [] {
-  $scope.commands |
+  $nu.scope.commands |
     where ($it.examples | length) == 0 && is_custom == $false && category != deprecated && is_plugin == $false && is_extern == $false |
     get command |
     where $it in [date, from, hash, into, keybindings, math, path, random, roll, split, str, to, url, dfr] == $false

@@ -32,8 +32,8 @@ _s := if os_family() == 'windows' { '\' } else { '/' }
 # FIXME: A just bug: invalid directory path by invoking invocation_directory
 JUST_INVOKE_DIR := replace(replace(invocation_directory(), '/', _s), '\d\', 'D:\')
 _default_just_file := if os_family() == 'windows' { 'D:\.justfile' } else { '~/.justfile' }
-_query_plugin := if os_family() == 'windows' { 'nu_plugin_extra_query.exe' } else { 'nu_plugin_extra_query' }
-_gstat_plugin := if os_family() == 'windows' { 'nu_plugin_extra_gstat.exe' } else { 'nu_plugin_extra_gstat' }
+_query_plugin := if os_family() == 'windows' { 'nu_plugin_query.exe' } else { 'nu_plugin_query' }
+_gstat_plugin := if os_family() == 'windows' { 'nu_plugin_gstat.exe' } else { 'nu_plugin_gstat' }
 
 # Just commands aliases
 # alias ag := git-age
