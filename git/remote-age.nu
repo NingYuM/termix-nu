@@ -24,16 +24,14 @@ def 'git remote-age' [
   let tableMode = if windows? { 'none' } else { 'light' }
   let $config = { table_mode: $tableMode }
 
-  ( # Use `()` to wrap the pipes to make them work on windows
-    git ls-remote --heads --refs $alias
-      | lines
-      | str substring 52,
-      | wrap name
-      | update local { |it|  if (has-ref $it.name) { '   √' }}
-      | update author { |it| git show $"remotes/($alias)/($it.name)" -s --format='%an' }
-      | update last-commit { |it| git show $"remotes/($alias)/($it.name)" --no-patch --format=%ci | into datetime }
-      | sort-by last-commit
-  )
+  git ls-remote --heads --refs $alias
+    | lines
+    | str substring 52,
+    | wrap name
+    | update local { |it|  if (has-ref $it.name) { '   √' }}
+    | update author { |it| git show $"remotes/($alias)/($it.name)" -s --format='%an' }
+    | update last-commit { |it| git show $"remotes/($alias)/($it.name)" --no-patch --format=%ci | into datetime }
+    | sort-by last-commit
 
   if (! $show-tag) { exit --now }
 
