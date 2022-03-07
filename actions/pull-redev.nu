@@ -29,14 +29,14 @@ def 'git pull-redev' [
     # 单一二开仓库完整路径
     let destRepoPath = ([$repoPath $repoName] | path join)
     # 仓库存在则更新，不存在则 clone
-    if ($destRepoPath | path exists) == $false {
+    if ($destRepoPath | path exists) == false {
       cd $repoPath; git clone -b $branch $repo.url
     }
     hr-line
     $'(char nl)Pull repo (ansi gb)($repoName)(ansi reset): (char nl)'
 
     cd $destRepoPath;
-    if ((has-ref $branch) || (has-ref $'origin/($branch)')) == $false {
+    if ((has-ref $branch) || (has-ref $'origin/($branch)')) == false {
       $'Dest branch: ($branch) does not exist, bye...(char nl)'
       exit --now
     }

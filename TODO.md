@@ -81,7 +81,7 @@
 │   ├── [x] rename-branch.nu
 │   ├── [ ] repo-transfer.nu
 │   ├── [ ] sync-branch.nu
-│   └── [ ] trigger-sync.nu
+│   └── [x] trigger-sync.nu
 ├── [ ] mall
 │   └── [ ] clean-locale.nu
 ├── [ ] run

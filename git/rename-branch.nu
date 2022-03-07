@@ -35,14 +35,14 @@ def 'git branch-rename' [
     $'Dest branch (ansi r)($to)(ansi reset) already exists in local, please use another new name...(char nl)'
     exit --now
   }
-  if ($remoteSrcExists || $localSrcExists) == $false {
+  if ($remoteSrcExists || $localSrcExists) == false {
     $'Branch (ansi r)($from) (ansi reset)does not exist in both remote and local, bye...(char nl)'
     exit --now
   }
 
   let statusCheck = (git status --porcelain)
   # Stash here, if needed
-  if ($statusCheck | empty?) == $false {
+  if ($statusCheck | empty?) == false {
     git stash save 'Stash before running git-batch-exec'
   }
 
@@ -59,5 +59,5 @@ def 'git branch-rename' [
   git push $remoteAlias -u $to
   # Delete remote old branch if exists
   if ($remoteSrcExists) { git push $remoteAlias $':($from)' }
-  if ($statusCheck | empty?) == $false { git stash pop }
+  if ($statusCheck | empty?) == false { git stash pop }
 }

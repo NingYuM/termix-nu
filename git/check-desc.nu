@@ -12,7 +12,7 @@ def 'check-desc' [] {
   let remoteIExists = (has-ref origin/i)
   let tableMode = if windows? { 'none' } else { 'light' }
   let $config = { table_mode: $tableMode }
-  if ($localIExists || $remoteIExists) == $false {
+  if ($localIExists || $remoteIExists) == false {
     $'You do not have an i branch, branch description query failed, bye...(char nl)'
     exit --now
   }
@@ -40,7 +40,7 @@ def 'check-desc' [] {
 
   # 检查并显示所有描述存在但是远程已经被删掉的分支
   let gone = ($descriptions | query json 'descriptions' | transpose name description | get name |
-              each { |br| if (has-ref $'origin/($br)') == $false { $br } } | compact)
+              each { |br| if (has-ref $'origin/($br)') == false { $br } } | compact)
 
   if ($gone | length) > 0 {
     $'(ansi p)  Branches that have a description but were(ansi r) removed from remote(ansi reset):(char nl)(char nl)(ansi reset)'

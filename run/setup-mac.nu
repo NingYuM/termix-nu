@@ -20,7 +20,7 @@ def 'setup-mac' [] {
     ] | flatten
 }
 
-# Check if a CLI App was installed, return true if installed, otherwise return $false
+# Check if a CLI App was installed, return true if installed, otherwise return false
 def 'is-installed' [
   app: string     # The CLI App to check
 ] {

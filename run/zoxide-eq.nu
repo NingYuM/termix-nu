@@ -36,7 +36,7 @@ def __zoxide_hook [] {
 # Initialize hook.
 
 let-env ZOXIDE_INITIALIZED = (if ("ZOXIDE_INITIALIZED" not-in (env).name) {
-    $false
+    false
 } else {
     $env.ZOXIDE_INITIALIZED
 })
@@ -90,7 +90,7 @@ def-env __zoxide_z [...rest:string] {
 
 # Jump to a directory using interactive search.
 def-env __zoxide_zi  [...rest:string] {
-    # if (shells | where active == $false) {
+    # if (shells | where active == false) {
     #     $'zoxide: can only jump in active shells(char nl)'
     # } else {
         # cd $'(zoxide query -i -- $rest.0)'
