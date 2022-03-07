@@ -68,7 +68,7 @@
 │   ├── [x] show-env.nu     # 输出布局异常
 │   ├── [ ] tag-redev.nu
 │   ├── [x] upgrade
-│   └── [ ] working-hours.nu
+│   └── [x] working-hours.nu
 ├── [ ] git
 │   ├── [x] age.nu
 │   ├── [x] branch-desc.nu

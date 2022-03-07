@@ -13,6 +13,7 @@ alias la = exa -la
 alias .. = cd ..
 alias ... = 'cd .. ; cd ..'
 alias t = just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .
+alias tokeid = (tokei | lines | skip 1 | str collect "\n" | detect columns | where Language !~ "=" && Language !~ "|" && Language !~ "-" && Language !~ "(" | into int Files Lines Code Comments Blanks)
 
 # ----------------------- ENV VARS ------------------------
 # Use nushell functions to define your right and left prompt

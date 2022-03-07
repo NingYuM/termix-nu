@@ -31,15 +31,19 @@ def 'working-hours' [
   handle-exception $staffs
 
   $'Query working hours from ($monday) to ($sunday) ---> (char nl)'
+  # 此处把中文名字字段过滤掉，否则在Windows下数据传到后端接口会发生解析错误
+  let staffPayload = ($staffs | query json 'res' | select id | to json -r)
   let timePayload = ($emp.timePayload
-      | str find-replace '_first_day_' $monday
       | str find-replace '_last_day_' $sunday
-      | str find-replace '_staffs_' ($staffs | query json 'res' | to json))
+      | str find-replace '_first_day_' $monday
+      | str find-replace '_staffs_' $staffPayload
+    )
 
   let leavePayload = ($emp.leavePayload
-      | str find-replace '_first_day_' $monday
       | str find-replace '_last_day_' $sunday
-      | str find-replace '_staffs_' ($staffs | query json 'res' | to json))
+      | str find-replace '_first_day_' $monday
+      | str find-replace '_staffs_' $staffPayload
+    )
 
   let allStaffs = ($staffs | query json 'res' | select id name | rename id Name)
   let hours = (curl $emp.timeUrl -H $emp.type -H $emp.app -H $userCookie -s --data-raw $timePayload | str collect)
