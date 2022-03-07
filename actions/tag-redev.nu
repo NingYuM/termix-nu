@@ -14,6 +14,8 @@ def 'git tag-redev' [
 
   let currentBeTag = $tag
   let actionConf = (open $_TERMIX_CONF)
+  let tableMode = if windows? { 'none' } else { 'light' }
+  let $config = { table_mode: $tableMode }
 
   let TAG_COMMENT = ($actionConf | get redevTagComment)
   # 先从环境变量里面查找待创建的新标签的前缀
@@ -66,5 +68,6 @@ def 'git tag-redev' [
     }
     hr-line
   }
+  # FIXME: nushell `pwd` output issue on Windows
   cd $repoPath; ls; cd $currentDir
 }

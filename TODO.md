@@ -58,7 +58,7 @@
 │   ├── [-] brew-speed-up.nu
 │   ├── [ ] check-ver.nu
 │   ├── [x] dir-batch-exec.nu
-│   ├── [ ] gaia-release.nu
+│   ├── [x] gaia-release.nu
 │   ├── [x] ls-node.nu
 │   ├── [x] ls-redev-refs.nu    # t ls-redev-refs pik true 输出布局异常
 │   ├── [ ] prune-synced-branches.nu
@@ -66,7 +66,7 @@
 │   ├── [x] quick-nav.nu
 │   ├── [ ] release.nu
 │   ├── [x] show-env.nu     # 输出布局异常
-│   ├── [ ] tag-redev.nu
+│   ├── [*] tag-redev.nu    # pwd output issue
 │   ├── [x] upgrade
 │   └── [x] working-hours.nu
 ├── [ ] git
@@ -79,21 +79,11 @@
 │   ├── [x] pull-all.nu
 │   ├── [x] remote-age.nu   # 输出布局异常
 │   ├── [x] rename-branch.nu
-│   ├── [ ] repo-transfer.nu
-│   ├── [ ] sync-branch.nu
+│   ├── [x] repo-transfer.nu
+│   ├── [x] sync-branch.nu
 │   └── [x] trigger-sync.nu
-├── [ ] mall
-│   └── [ ] clean-locale.nu
-├── [ ] run
-│   ├── [ ] git.nu
-│   ├── [ ] merge-perf.nu
-│   ├── [ ] merge.nu
-│   ├── [ ] set-git-alias.nu
-│   ├── [ ] setup-conf.nu
-│   ├── [ ] setup-mac.nu
-│   └── [ ] ts-stat.nu
-├── [ ] termix.toml
-└── [ ] utils
+├── [x] termix.toml
+└── [x] utils
     ├── [x] common.nu
     ├── [x] compose-cmd.nu
     └── [x] git.nu
