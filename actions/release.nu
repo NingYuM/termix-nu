@@ -36,6 +36,8 @@ def 'release' [
     git cliff --unreleased --tag ($releaseVer | str find-replace 'v' '') --prepend CHANGELOG.md;
     git commit CHANGELOG.md -m $'update CHANGELOG.md for ($releaseVer)'
   }
+  # Delete tags that not exist in remote repo
+  git fetch origin --prune '+refs/tags/*:refs/tags/*'
   let commitMsg = $'A new release for version: ($releaseVer) created by Release command of termix-nu'
   let tagMsg = if $force-upgrade { $'($commitMsg). ($_UPGRADE_TAG)' } else { $commitMsg }
   git tag $releaseVer -am $tagMsg; git push origin --tags

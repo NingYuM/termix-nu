@@ -4,9 +4,9 @@
 ```shell
 .
 ├── [x] Justfile
-├── [ ] actions
+├── [x] actions
 │   ├── [x] [x] brew-speed-up.nu
-│   ├── [x] [ ] check-ver.nu
+│   ├── [x] [x] check-ver.nu
 │   ├── [*] [x] dir-batch-exec.nu
 │   ├── [x] [x] gaia-release.nu
 │   ├── [x] [x] ls-node.nu
@@ -14,12 +14,12 @@
 │   ├── [x] [x] prune-synced-branches.nu
 │   ├── [x] [x] pull-redev.nu
 │   ├── [x] [x] quick-nav.nu
-│   ├── [x] [ ] release.nu
+│   ├── [x] [x] release.nu
 │   ├── [x] [x] show-env.nu
 │   ├── [*] [x] tag-redev.nu        # glob expansion错误: https://github.com/nushell/nushell/issues/4404
 │   ├── [x] [x] upgrade
 │   └── [x] [x] working-hours.nu
-├── [ ] git
+├── [x] git
 │   ├── [x] [x] age.nu
 │   ├── [x] [x] branch-desc.nu
 │   ├── [x] [x] check-desc.nu
@@ -56,7 +56,7 @@
 ├── [x] Justfile
 ├── [ ] actions
 │   ├── [-] brew-speed-up.nu
-│   ├── [ ] check-ver.nu
+│   ├── [x] check-ver.nu
 │   ├── [x] dir-batch-exec.nu
 │   ├── [x] gaia-release.nu
 │   ├── [x] ls-node.nu
@@ -64,7 +64,7 @@
 │   ├── [ ] prune-synced-branches.nu
 │   ├── [x] pull-redev.nu
 │   ├── [x] quick-nav.nu
-│   ├── [ ] release.nu
+│   ├── [x] release.nu
 │   ├── [x] show-env.nu     # 输出布局异常
 │   ├── [x] tag-redev.nu
 │   ├── [x] upgrade
