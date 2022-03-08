@@ -7,6 +7,8 @@
 
 # Clean possibly unused branches of synced dest repos
 def 'prune-synced-branches' [
+  --user: string        # Git repo access user name
+  --ak: string          # Git repo access token
   --dry-run(-d): bool   # In dry-run mode no branch will be deleted, just show all deletable branches
 ] {
 
@@ -27,13 +29,17 @@ def 'prune-synced-branches' [
   let repos = ($pushConf | query json $'repos')
   # 获取待同步目的仓库及目的分支映射
   let branches = ($pushConf | query json $'branches')
-  let repoName = (prepare-repo $repos)
+  let repoName = (prepare-repo $repos --user=$user --ak=$ak)
   let syncs = ($branches | transpose branch dests | each {|sync|
     $sync.dests
   })
 
   $'(ansi p)All available syncing configs:(ansi reset)(char nl)'
   $syncs | flatten | select repo dest | sort-by repo dest
+
+  # Must change to the scopped directory before doing the following work
+  let repoPath = (get-tmp-path)
+  cd $repoPath; cd $repoName
 
   $repos | transpose | rename alias | get alias | each { |alias|
     let cleanable = (
@@ -57,6 +63,8 @@ def 'prune-synced-branches' [
 # Clone or update repo, setup all dest remote alias
 def 'prepare-repo' [
   repos: any
+  --user: string        # Git repo access user name
+  --ak: string          # Git repo access token
 ] {
   if ($repos | empty?) {
     $'No dest repos to be cleaned, bye...(char nl)'
@@ -72,16 +80,21 @@ def 'prepare-repo' [
   if ($destRepoPath | path exists) {
     print $'(ansi p)Updating remote repos to local...(ansi reset)'; hr-line
   } else {
-    cd $repoPath; git clone $sampleRepo.git $repoName
+    let gitUrl = if ($user != '' && $ak != '-') {
+      ($sampleRepo.git | str find-replace '//' $'//($user):($ak)@' )
+    } else { $sampleRepo.git }
+    cd $repoPath; git clone $gitUrl $repoName
   }
 
   cd $destRepoPath;
   $repos | transpose name repo | flatten | each {|dest|
     let aliasExists = (git remote -v | detect columns -n | rename alias git | where alias == $dest.name | length) > 0
+    let gitDest = if ($user != '' && $ak != '-') { ($dest.git | str find-replace '//' $'//($user):($ak)@' ) } else { $dest.git }
+
     if ($aliasExists) {
-      git remote set-url $dest.name $dest.git
+      git remote set-url $dest.name $gitDest
     } else {
-      git remote add $dest.name $dest.git
+      git remote add $dest.name $gitDest
     }
     # 更新远程仓库信息到本地
     let output = (git fetch $dest.name -p)
