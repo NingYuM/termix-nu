@@ -19,7 +19,7 @@ def 'go' [
 
   # Found match item
   let navKey = ($matchs | get key).0
-  let url = ($allNavs | get $navKey).0
+  let url = ($allNavs | get $navKey)
   if ($url | str starts-with 'http') {
     $'Going to open matched url: (ansi g)($url)(ansi reset) in default browser...(char nl)'
     # Use powershell command to open url in default browser for Windows

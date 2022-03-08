@@ -8,7 +8,7 @@
 def 'nu-ver' [] {
 
   let currentVer = (version).version
-  let minVer = (get-conf minNuVer '0.59.0')
+  let minVer = (get-conf minNuVer '0.59.1')
   upgrade-tip nushell $minVer $currentVer
 }
 
@@ -16,7 +16,7 @@ def 'nu-ver' [] {
 def 'just-ver' [] {
 
   let currentVer = (just --version | str find-replace 'just' '' | str trim | first)
-  let minVer = (get-conf minJustVer '0.11.0')
+  let minVer = (get-conf minJustVer '1.0.1')
   upgrade-tip just $minVer $currentVer
 }
 
@@ -43,12 +43,15 @@ def 'termix-ver' [] {
     }
 
     # Parse conf as JSON and check forceUpgrade column
-    let hasForceUpgrade = ($conf | from json | select forceUpgrade | compact | length) > 0
+    let hasForceUpgrade = ($conf | query json forceUpgrade) != $nothing
     let forceUpgrade = (if $hasForceUpgrade { ($conf | query json 'forceUpgrade') && (is-lower-ver $currentVer $latestVer)} else { false })
     # Quit command right now if it's a force upgrade
     if ($forceUpgrade) {
       $'(ansi r)很抱歉，为了更好地为您提供服务请先更新 termix-nu 并重试...(ansi reset)(char nl)(char nl)'
       (query-ver $confName | ignore); exit 1 --now    # Query and update latest version again.
+    }
+    if $hasForceUpgrade == false {
+      query-ver $confName | ignore
     }
   } else {
     upgrade-tip termix-nu (query-ver $confName) $currentVer
