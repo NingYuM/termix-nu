@@ -17,7 +17,7 @@ def 'check-desc' [] {
     exit --now
   }
   # 本地 i 分支优先级高于远程
-  let repo = (pwd | path basename | str trim)
+  let repo = ($env.PWD | path basename | str trim)
   let querySource = (if ($localIExists) { 'i' } else { 'origin/i' })
   let descriptions = (git show $'($querySource):($descFile)' | from toml | to json)
   # Alternatively since nushell v0.40.0 you can use the following line, which is longer but more readable

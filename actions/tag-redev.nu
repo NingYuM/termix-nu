@@ -37,7 +37,7 @@ def 'git tag-redev' [
   # 不存在则创建临时路径
   if ($repoPath | path exists) == false { mkdir $repoPath }
   # 保存当前路径方便后期跳回
-  let currentDir = (pwd | str trim)
+  let currentDir = ($env.PWD | str trim)
 
   $redevRepos | where $',($group),' =~ $it.group | each { |repo|
     let repoNameIdx = (($repo.url | str index-of -e '/') + 1)
@@ -68,6 +68,5 @@ def 'git tag-redev' [
     }
     hr-line
   }
-  # FIXME: nushell `pwd` output issue on Windows
   cd $repoPath; ls; cd $currentDir
 }

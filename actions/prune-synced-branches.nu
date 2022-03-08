@@ -65,7 +65,7 @@ def 'prepare-repo' [
 
   let repoPath = (get-tmp-path)
   let sampleRepo = ($repos | first | transpose k repo | select 0).repo
-  let repoName = ($'prune-(pwd | path basename)' | str trim)
+  let repoName = ($'prune-($env.PWD | path basename)' | str trim)
   # 待清理仓库完整路径
   let destRepoPath = ([$repoPath $repoName] | path join)
   # 仓库存在则更新，不存在则 clone

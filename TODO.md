@@ -66,10 +66,10 @@
 │   ├── [x] quick-nav.nu
 │   ├── [ ] release.nu
 │   ├── [x] show-env.nu     # 输出布局异常
-│   ├── [*] tag-redev.nu    # pwd output issue
+│   ├── [x] tag-redev.nu
 │   ├── [x] upgrade
 │   └── [x] working-hours.nu
-├── [ ] git
+├── [x] git
 │   ├── [x] age.nu
 │   ├── [x] branch-desc.nu
 │   ├── [x] check-desc.nu
