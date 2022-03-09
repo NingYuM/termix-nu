@@ -18,7 +18,9 @@ def 'git ls-redev-refs' [
 
   if ($filteredRepos | length) > 0 {
     $'(ansi p)Found the following matched repos:(ansi reset)(char nl)(char nl)'; $filteredRepos
-  } else { $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'; exit --now }
+  } else {
+    $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'; exit --now
+  }
   $'(ansi p)---------------> List remote refs <--------------- (char nl)(ansi reset)'
 
   $filteredRepos | each { |it|

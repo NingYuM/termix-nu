@@ -30,7 +30,7 @@ def 'working-hours' [
 
   handle-exception $staffs
 
-  $'Query working hours from ($monday) to ($sunday) ---> (char nl)'
+  $'Query working hours from ($monday) to ($sunday) --->'
   # 此处把中文名字字段过滤掉，否则在Windows下数据传到后端接口会发生解析错误
   let staffPayload = ($staffs | query json 'res' | select id | to json -r)
   let timePayload = ($emp.timePayload

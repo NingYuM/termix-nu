@@ -33,7 +33,7 @@ def 'git tag-redev' [
     $'(ansi p)Found the following matched repos:(ansi reset)(char nl)(char nl)'; $filteredRepos
   } else { $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'; exit --now }
 
-  $'Delete tag ($tagName) ---> (ansi r)($delete-tag)(ansi reset)(char nl)(char nl)'
+  $'Delete tag ($tagName) ---> (ansi r)($delete-tag)(ansi reset)(char nl)'
   # 不存在则创建临时路径
   if ($repoPath | path exists) == false { mkdir $repoPath }
   # 保存当前路径方便后期跳回
@@ -58,7 +58,7 @@ def 'git tag-redev' [
     # Check the tag status, if exists just recrete it.
     if (has-ref $'refs/tags/($tagName)') {
       git tag -d $tagName; git push origin --delete $tagName
-      print $'Tag: (ansi p)($tagName)(ansi reset) delete successfully!'
+      print $'Tag: (ansi p)($tagName)(ansi reset) delete successfully!(char nl)'
     }
 
     if (! $delete-tag) {

@@ -45,6 +45,38 @@ let-env ENV_CONVERSIONS = {
   }
 }
 
+# -------------------- Custom Commands -------------------------
+
+def cls [] { ansi cls }
+def 'env exists?' [] { $in in (env).name }
+def sum [] { reduce {|acc, item| $acc + $item } }
+def ver [] { (version | transpose key value | to md --pretty) }
+
+def un-doced [] {
+  $nu.scope.commands |
+    where ($it.examples | length) == 0 && is_custom == false && category != deprecated && is_plugin == false && is_extern == false |
+    get command |
+    where $it in [date, from, hash, into, keybindings, math, path, random, roll, split, str, to, url, dfr] == false
+}
+
+def cargo-ile [] {
+  fd -I shadow.rs | lines | each {|it| rm $it } | flatten
+  cargo install --features=extra --path .
+}
+
+def cargo-ta  [] { cargo test --all --all-features }
+
+def cargo-clippy [] {
+    cargo clippy --all --all-features -- -D warnings -D clippy::unwrap_used -A clippy::needless_collect
+}
+
+# example usage: `$nu.config-path | goto`
+def-env goto [] {
+    let input = $in
+    let path = if ($input | path type) == file { ($input | path dirname) } else { $input }
+    cd $path
+}
+
 # -------------------------- Autocompletion ------------------------
 # Custom completions for external commands (those outside of Nushell)
 # Each completions has two parts: the form of the external command, including its flags and parameters
@@ -254,37 +286,5 @@ let $config = {
         ]
     }
   ]
-}
-
-# -------------------- Custom Commands -------------------------
-
-def cls [] { ansi cls }
-def 'env exists?' [] { $in in (env).name }
-def sum [] { reduce {|acc, item| $acc + $item } }
-def ver [] { (version | transpose key value | to md --pretty) }
-
-def un-doced [] {
-  $nu.scope.commands |
-    where ($it.examples | length) == 0 && is_custom == false && category != deprecated && is_plugin == false && is_extern == false |
-    get command |
-    where $it in [date, from, hash, into, keybindings, math, path, random, roll, split, str, to, url, dfr] == false
-}
-
-def cargo-ile [] {
-  fd -I shadow.rs | lines | each {|it| rm $it } | flatten
-  cargo install --features=extra --path .
-}
-
-def cargo-ta  [] { cargo test --all --all-features }
-
-def cargo-clippy [] {
-    cargo clippy --all --all-features -- -D warnings -D clippy::unwrap_used -A clippy::needless_collect
-}
-
-# example usage: `$nu.config-path | goto`
-def-env goto [] {
-    let input = $in
-    let path = if ($input | path type) == file { ($input | path dirname) } else { $input }
-    cd $path
 }
 
