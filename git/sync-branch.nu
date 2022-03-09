@@ -31,10 +31,7 @@ def 'git sync-branch' [
   # 获取待同步目的仓库及目的分支映射
   let dests = ($pushConf | query json $'branches.($destBranch)')
   # 如果没有任何同步配置直接退出
-  # FIXME: ignore `error: Coercion error`
-  do -i {
-    if ($dests == $nothing) { exit --now }
-  }
+  if ($dests == $nothing) { exit --now }
 
   let syncDests = ($dests | update SYNC {
       get repo | each { |it| if ($',($ignored),' =~ $',($it),') { '   x' } else { '   √' } }

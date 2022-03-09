@@ -16,14 +16,9 @@ def 'git batch-reset' [
     $'You did not specify any branches to do reset, bye...(char nl)'
     exit --now
   }
-  # fix: 'fatal: not a git repository (or any of the parent directories): .git'
+
   cd $env.JUST_INVOKE_DIR
   let current = (git branch --show-current | str trim)
-
-  # 如果有远程分支不存在会出错
-  # FIXME: filter branches which does not exsit in the remote
-  # let available = (git for-each-ref --format='%(refname:short)' refs/heads | lines)
-  # Fix `^^^^^ requires string input issue at 'lines'`
   let available = (git branch | into string | lines | str substring (2,))
   let candidates = (if ($branches | empty?) { $available } else { $dest })
 
