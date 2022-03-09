@@ -97,14 +97,11 @@ def 'git-check' [
     exit --now
   }
   # If we don't need repo check just quit now
-  if ($check-repo == 0) {} else {
-
-    do -i {
-      let isGitRepo = (bash -c 'git rev-parse --is-inside-work-tree 2>/dev/null' | str trim)
-      if ($isGitRepo == 'true') {} else {
-        $'Current directory is (ansi r)NOT(ansi reset) a git repo, bye...(char nl)'
-        exit --now
-      }
+  if ($check-repo != 0) {
+    let checkRepo = (do -i { git rev-parse --is-inside-work-tree } | complete)
+    if ! ($checkRepo.stdout =~ 'true') {
+      $'Current directory is (ansi r)NOT(ansi reset) a git repo, bye...(char nl)'
+      exit --now
     }
   }
 }

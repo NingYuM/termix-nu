@@ -26,8 +26,8 @@ def 'branch-desc' [
   let desc = ($descriptions | query json $'descriptions.($escapedBranch)')
   let rules = ($descriptions | query json 'rules')
   $'(char nl)(ansi p)($queryBranch) (ansi reset)分支描述：(char nl)'
-  hr-line
-  $'(char nl)($desc)(char nl)(char nl)'
+  hr-line; $'(char nl)($desc)(char nl)'
+
   if ($show-notes) {
     $rules | each -n { |rule|
       echo $'(ansi g)($rule.index + 1)(ansi reset). ($rule.item)'

@@ -2,6 +2,8 @@
 # Created: 2021/11/30 11:06:52
 # Usage:
 #   t repo-transfer $source-repo $dest-repo
+# Ref:
+#   https://github.com/nushell/nushell/issues/4396
 
 # Transfer repo from source to dest
 def 'git repo-transfer' [
@@ -42,12 +44,13 @@ def 'do-push' [
   dest: string      # The dest repo git url
 ] {
   $'(ansi g)Push code to the remote dest:(ansi reset)(char nl)'
-  # FIXME: fatal: repository 'xxx' not found, use ^git instead of bash -c
-  let output = ((sh -c 'git push --mirror 2>&1') | compact | str collect)
-  print $output
-  if $output =~ 'not found' {
+  # 当仓库不存在的时候截获标准错误流需要 `do -i {}`
+  let push = (do -i { git push --mirror } | complete)
+  print $push.stdout
+  if $push.stderr =~ 'not found' {
     $'(ansi r)Error: The dest repo does not exist, please create it and try again, bye...(ansi reset)(char nl)'
-  } else {
+  }
+  if $push.exit_code == 0 {
     $'(ansi g)Bravo! Repo transfer successfully!(ansi reset)(char nl)'
   }
 }

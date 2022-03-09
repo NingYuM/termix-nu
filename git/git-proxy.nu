@@ -10,7 +10,7 @@
 def-env 'git-proxy' [
   status: string  # Set proxy status: on/off
 ] {
-  let proxies = (lsof -i -n -P | grep LISTEN | grep 'AliMgrSoc')
+  let proxies = (lsof -i -n -P | grep AliMgrSoc | grep LISTEN)
 
   if ($status == 'on') {
 
