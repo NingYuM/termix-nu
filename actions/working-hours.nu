@@ -51,7 +51,7 @@ def 'working-hours' [
   let workingHours = (
       $hours
         | query json 'res'
-        | default percentage 0.00
+        | default 0.00 percentage
         | select percentage fillDate staff
         | update staffId { |it| $it.staff.id }
         | reject staff

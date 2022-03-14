@@ -27,7 +27,7 @@ def 'git sync-branch' [
   let pushConf = (git show $'origin/($confBr):.termixrc' | from toml | to json)
   let ignored = (get-env SYNC_IGNORE_ALIAS '')
   # The following line not work: ^^^ Expected column path, found string
-  # let matchBranch = ($pushConf | get branches | default $destBranch '' | select $destBranch | compact | length)
+  # let matchBranch = ($pushConf | get branches | default '' $destBranch | select $destBranch | compact | length)
   # 获取待同步目的仓库及目的分支映射
   let dests = ($pushConf | query json $'branches.($destBranch)')
   # 如果没有任何同步配置直接退出
