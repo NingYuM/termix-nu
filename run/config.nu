@@ -258,8 +258,8 @@ let $config = {
       keycode: char_f
       mode: emacs
       event: [
-        { edit: { cmd: clear } }
-        { edit: { cmd: insertstring value: 'cd (ls | where type == dir | each {|it| $it.name} | str collect (char nl) | fzf | decode utf-8 | str trim)' } }
+        { edit: clear }
+        { edit: insertstring value: 'cd (ls | where type == dir | each {|it| $it.name} | str collect (char nl) | fzf | decode utf-8 | str trim)' }
         { send: enter }
       ]
     },
@@ -269,8 +269,8 @@ let $config = {
       keycode: char_t
       mode: emacs
       event: [
-        { edit: { cmd: clear } }
-        { edit: { cmd: insertString value: "cargo test --all --all-features" } }
+        { edit: clear }
+        { edit: insertString value: "cargo test --all --all-features" }
         { send: enter }
       ]
     },
@@ -280,8 +280,8 @@ let $config = {
         keycode: char_r
         mode: emacs
         event: [
-            { edit: { cmd: clear } }
-            { edit: { cmd: insertString value: $"source '($nu.config-path)'" } }
+            { edit: clear }
+            { edit: insertString value: $"source '($nu.config-path)'" }
             { send: Enter }
         ]
     }
