@@ -44,9 +44,12 @@ def 'prune-synced-branches' [
   $repos | transpose | rename alias | get alias | each { |alias|
     let cleanable = (
       git ls-remote --heads --refs $alias | detect columns -n | rename cid br | each {|branch|
-        let brnm = ($branch.br | str find-replace 'refs/heads/' '')
-        let noUse = ($syncs | where repo == $alias && dest == $brnm | length) == 0
-        if $noUse { $brnm }
+        # Ignore the repos that don't have access permission
+        if $branch != $nothing {
+          let brnm = ($branch.br | str find-replace 'refs/heads/' '')
+          let noUse = ($syncs | where repo == $alias && dest == $brnm | length) == 0
+          if $noUse { $brnm }
+        }
       } | str collect $'(char nl)'
     )
 
