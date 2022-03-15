@@ -1,3 +1,4 @@
+#!/usr/bin/env nu
 # Concatenate files performance test.
 # Run by nu run/merge-perf.nu
 #

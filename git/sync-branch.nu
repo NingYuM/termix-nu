@@ -1,3 +1,4 @@
+#!/usr/bin/env nu
 # Author: hustcer
 # Created: 2021/09/28 19:50:20
 # Usage:

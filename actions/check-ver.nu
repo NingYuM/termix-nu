@@ -1,3 +1,4 @@
+#!/usr/bin/env nu
 # Author: hustcer
 # Created: 2021/10/14 10:06:56
 # Description: Check the current nushell version

@@ -1,3 +1,4 @@
+#!/usr/bin/env nu
 # Author: hustcer
 # Created: 2021/10/11 19:57:20
 # Ref: https://linuxize.com/post/how-to-rename-local-and-remote-git-branch/

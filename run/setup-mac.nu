@@ -1,3 +1,4 @@
+#!/usr/bin/env nu
 # Author: hustcer
 # Created: 2021/10/05 19:39:56
 # Description: Install mac CLI Apps

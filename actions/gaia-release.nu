@@ -1,3 +1,4 @@
+#!/usr/bin/env nu
 # Author: hustcer
 # Created: 2021/11/29 13:50:05
 # Description: Script to release gaia-mall,gaia-mobile,gaia-picker

@@ -1,3 +1,4 @@
+#!/usr/bin/env nu
 # Author: hustcer
 # Created: 2021/11/12 10:06:56
 # Description: Script to release termix-nu

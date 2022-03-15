@@ -1,4 +1,4 @@
-
+#!/usr/bin/env nu
 # 按文件夹或者文件逐个统计其中的 TS 代码行数并打印
 ls | select name | update Lines {
     get name | each { |it|

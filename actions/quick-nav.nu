@@ -1,3 +1,4 @@
+#!/usr/bin/env nu
 # Author: hustcer
 # Created: 2021/11/12 15:06:56
 # Description: Quickly open the nav url in default browser, for mac and windows

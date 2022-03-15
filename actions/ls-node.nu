@@ -1,3 +1,4 @@
+#!/usr/bin/env nu
 # Author: hustcer
 # Created: 2021/10/05 12:06:56
 # Description: List remote node version, min version supported

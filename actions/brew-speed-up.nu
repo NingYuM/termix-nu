@@ -1,3 +1,4 @@
+#!/usr/bin/env nu
 # Author: hustcer
 # Created: 2021/12/13 15:20:20
 # Description: Script to speed up homebrew using CN mirrors

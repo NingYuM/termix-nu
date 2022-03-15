@@ -1,3 +1,4 @@
+#!/usr/bin/env nu
 # Author: hustcer
 # Created: 2021/10/05 09:36:56
 # To beautify toml file: code (config path) --> Format in VS Code --> Save

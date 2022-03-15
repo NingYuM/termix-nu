@@ -1,3 +1,4 @@
+#!/usr/bin/env nu
 # Author: hustcer
 # Created: 2021/12/10 10:09:52
 # Description: Turn on or off the proxies for git
