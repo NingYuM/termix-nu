@@ -28,7 +28,7 @@ let posh-dir = (brew --prefix oh-my-posh | str trim)
 let posh-theme = $'($posh-dir)/share/oh-my-posh/themes/'
 # Recomend themes: zash*/space/robbyrussel/powerline/powerlevel10k_lean*/material/half-life/lambda
 # Recomend double lines: amro/pure/spaceship
-let-env PROMPT_COMMAND = { oh-my-posh --config $'($posh-theme)/zash.omp.json' }
+let-env PROMPT_COMMAND = { oh-my-posh prompt print primary --config $'($posh-theme)/zash.omp.json' }
 let-env PROMPT_INDICATOR = $"(ansi y)$> (ansi reset)"
 
 # Specifies how environment variables are:
