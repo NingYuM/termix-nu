@@ -54,13 +54,13 @@ def 'working-hours' [
         | query json 'res'
         | default 0.00 percentage
         | select percentage fillDate staff
-        | update staffId { |it| $it.staff.id }
+        | upsert staffId { |it| $it.staff.id }
         | reject staff
     )
 
   let leavingHours = (
       $leaves | query json 'res'| select beginTime duration staff
-        | update staffId {|staff| $staff.staff.id } | reject staff
+        | upsert staffId {|staff| $staff.staff.id } | reject staff
     )
 
   # Set a default leaving record
@@ -93,23 +93,23 @@ def 'handle-working-hours' [
   # Set a default working hour record
   let workingHours = (if ($workingHours | compact | length) == 0 { [[fillDate, percentage, staffId]; [0, 0, 0]] } else { $workingHours })
 
-  let hours = ($workingHours | update day { |work|
+  let hours = ($workingHours | upsert day { |work|
         let day = (($work.fillDate / 1000) | into string | into datetime -o 8)
         let idx = ((([$day] | dfr to-df | dfr get-weekday).0 + 1) mod 7)
         echo ($week | select $idx).0
-      } | update Hrs { |work|
+      } | upsert Hrs { |work|
         ($work.percentage * 8) | into int
       } | select staffId day Hrs
     )
 
   let allMembers = ($allStaffs
-      | update Mon { |staff| (get-hr-per-staff $staff.id 'Mon' $hours) }
-      | update Tue { |staff| (get-hr-per-staff $staff.id 'Tue' $hours) }
-      | update Wen { |staff| (get-hr-per-staff $staff.id 'Wen' $hours) }
-      | update Thu { |staff| (get-hr-per-staff $staff.id 'Thu' $hours) }
-      | update Fri { |staff| (get-hr-per-staff $staff.id 'Fri' $hours) }
-      | update 'WeekNO.' $weekNo
-      | update Leave { |staff|
+      | upsert Mon { |staff| (get-hr-per-staff $staff.id 'Mon' $hours) }
+      | upsert Tue { |staff| (get-hr-per-staff $staff.id 'Tue' $hours) }
+      | upsert Wen { |staff| (get-hr-per-staff $staff.id 'Wen' $hours) }
+      | upsert Thu { |staff| (get-hr-per-staff $staff.id 'Thu' $hours) }
+      | upsert Fri { |staff| (get-hr-per-staff $staff.id 'Fri' $hours) }
+      | upsert 'WeekNO.' $weekNo
+      | upsert Leave { |staff|
         let leaves = ($leavingHours | where staffId == $staff.id)
         if ($leaves | length) == 0 { 0 } else { ($leaves | get duration | math sum) * 8 | into int }
       } | reject id
@@ -123,8 +123,8 @@ def 'handle-working-hours' [
     if ($result == $nothing) { $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; exit --now }
   }
 
-  ($result | update Gap {|it| $total * 8 - ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave) } |
-    update WARN { |it|
+  ($result | upsert Gap {|it| $total * 8 - ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave) } |
+    upsert WARN { |it|
       if ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8) {
         $'(ansi r)('*' | str lpad -l 6 -c $'(char sp)')(ansi reset)'
       }

@@ -21,7 +21,7 @@ def 'git trigger-sync' [
     git push origin $selected -u
     exit --now
   }
-  let diff = (git rev-list --left-right $'($selected)...origin/($selected)' --count | detect columns -n | rename local remote | update cells { |it| $it | into int })
+  let diff = (git rev-list --left-right $'($selected)...origin/($selected)' --count | detect columns -n | rename local remote | upsert cells { |it| $it | into int })
   # 如果本地分支超前于远程分支直接push就可以了，会自动触发批量同步
   if ($diff.remote.0 == 0 && $diff.local.0 > 0) {
     git push origin $selected
@@ -46,13 +46,13 @@ def 'git trigger-sync' [
   # 如果没有任何同步配置直接退出
   if ($dests == $nothing) { exit --now }
 
-  let syncDests = ($dests | update SYNC {
+  let syncDests = ($dests | upsert SYNC {
       get repo | each { |it| if ($',($ignored),' =~ $',($it),') { '   x' } else { '   √' } }
-    } | update source $selected | move source --before dest | sort-by SYNC)
+    } | upsert source $selected | move source --before dest | sort-by SYNC)
   # 如果没有找到对应分支的 push hook 配置则直接退出
   if (($syncDests | length) > 0) {
     $'(char nl)Found the following matched dests from (ansi g)`origin/($confBr):.termixrc`(ansi reset):(char nl)'
-    echo $syncDests | update lock {|it| if ('lock' in $it) { $it.lock } else { '-' }} | move lock --before SYNC
+    echo $syncDests | upsert lock {|it| if ('lock' in $it) { $it.lock } else { '-' }} | move lock --before SYNC
   } else { exit --now }
 
   echo $syncDests | where SYNC == '   √' | each { |iter|

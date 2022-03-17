@@ -34,8 +34,8 @@ def 'check-desc' [] {
     ($remoteBranches
       | where (no-desc $descriptions $it)
       | wrap name
-      | update commit-by { |it| git show $'origin/($it.name)' -s --format='%an' }
-      | update last-commit { |it| git show $'origin/($it.name)' --no-patch --format=%ci | into datetime }
+      | upsert commit-by { |it| git show $'origin/($it.name)' -s --format='%an' }
+      | upsert last-commit { |it| git show $'origin/($it.name)' --no-patch --format=%ci | into datetime }
       | sort-by last-commit)
   }
 

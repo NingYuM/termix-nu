@@ -29,9 +29,9 @@ def 'git remote-age' [
     | lines
     | str substring 52,
     | wrap name
-    | update local { |it|  if (has-ref $it.name) { '   √' }}
-    | update author { |it| git show $"remotes/($alias)/($it.name)" -s --format='%an' }
-    | update last-commit { |it| git show $"remotes/($alias)/($it.name)" --no-patch --format=%ci | into datetime }
+    | upsert local { |it|  if (has-ref $it.name) { '   √' }}
+    | upsert author { |it| git show $"remotes/($alias)/($it.name)" -s --format='%an' }
+    | upsert last-commit { |it| git show $"remotes/($alias)/($it.name)" --no-patch --format=%ci | into datetime }
     | sort-by last-commit
 
   if (! $show-tag) { exit --now }

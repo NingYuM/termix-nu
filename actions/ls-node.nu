@@ -25,7 +25,7 @@ def 'ls-node-remote' [
 
   let vers = (fnm ls-remote | lines | str trim | wrap Version)
   let vRow = (
-    $vers | update NO { |node| (
+    $vers | upsert NO { |node| (
       $node.Version
         | split row ' '
         | first
@@ -33,7 +33,7 @@ def 'ls-node-remote' [
         | first
         | str substring (1,)
         | into int
-    )} | update isLTS { |node| ($node.Version | str contains '(') }
+    )} | upsert isLTS { |node| ($node.Version | str contains '(') }
   )
   if $isLts {
     # ($vRow | where {|node| $node.NO >= $minVersion && $node.isLTS } | select Version)

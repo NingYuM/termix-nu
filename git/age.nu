@@ -15,8 +15,8 @@ def 'git age' [
     | lines
     | str substring '2,'
     | wrap name
-    | update remote { |it| if (has-ref $'origin/($it.name)') { '   √' } else { '' } }
-    | update author { |it| git show $it.name -s --format='%an' }
-    | update last-commit {|it| git show $it.name --no-patch --format=%ci | into datetime }
+    | upsert remote { |it| if (has-ref $'origin/($it.name)') { '   √' } else { '' } }
+    | upsert author { |it| git show $it.name -s --format='%an' }
+    | upsert last-commit {|it| git show $it.name --no-patch --format=%ci | into datetime }
     | sort-by last-commit
 }

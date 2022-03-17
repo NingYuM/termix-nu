@@ -34,14 +34,14 @@ def 'git sync-branch' [
   # 如果没有任何同步配置直接退出
   if ($dests == $nothing) { exit --now }
 
-  let syncDests = ($dests | update SYNC {
+  let syncDests = ($dests | upsert SYNC {
       get repo | each { |it| if ($',($ignored),' =~ $',($it),') { '   x' } else { '   √' } }
-    } | update source $localBranch | move source --before dest | sort-by SYNC)
+    } | upsert source $localBranch | move source --before dest | sort-by SYNC)
 
   # 如果没有找到对应分支的 push hook 配置则直接退出
   if (($syncDests | length) > 0) {
     $'(char nl)Found the following matched dests from (ansi g)`origin/($confBr):.termixrc`(ansi reset):(char nl)'
-    echo $syncDests | update lock {|it| if ('lock' in $it) { $it.lock } else { '-' }} | move lock --before SYNC
+    echo $syncDests | upsert lock {|it| if ('lock' in $it) { $it.lock } else { '-' }} | move lock --before SYNC
   } else { exit --now }
 
   echo $syncDests | where SYNC == '   √' | each { |iter|

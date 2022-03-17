@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 # 按文件夹或者文件逐个统计其中的 TS 代码行数并打印
-ls | select name | update Lines {
+ls | select name | upsert Lines {
     get name | each { |it|
         cloc --include-lang=TypeScript --exclude-dir node_modules $it |
         lines | parse -r  "TypeScript.+\s+(?P<code>\d+)$" |
@@ -10,7 +10,7 @@ ls | select name | update Lines {
 
 char nl; char nl;
 
-# ls | select name | update Lines {
+# ls | select name | upsert Lines {
 #     get name | each { |it|
 #         scc  $it |
 #         lines | parse -r  "TypeScript  .+\s+(?P<code>\d+)$" |
