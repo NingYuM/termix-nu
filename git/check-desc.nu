@@ -11,8 +11,7 @@ def 'check-desc' [] {
   let descFile = 'd.toml'
   let localIExists = (has-ref i)
   let remoteIExists = (has-ref origin/i)
-  let tableMode = if windows? { 'none' } else { 'light' }
-  let $config = { table_mode: $tableMode }
+
   if ($localIExists || $remoteIExists) == false {
     $'You do not have an i branch, branch description query failed, bye...(char nl)'
     exit --now

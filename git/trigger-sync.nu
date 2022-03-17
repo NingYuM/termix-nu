@@ -21,7 +21,13 @@ def 'git trigger-sync' [
     git push origin $selected -u
     exit --now
   }
-  let diff = (git rev-list --left-right $'($selected)...origin/($selected)' --count | detect columns -n | rename local remote | upsert cells { |it| $it | into int })
+  let diff = (
+    git rev-list --left-right $'($selected)...origin/($selected)' --count
+      | detect columns -n
+      | rename local remote
+      | upsert local { |it| $it.local | into int }
+      | upsert remote { |it| $it.remote | into int }
+  )
   # 如果本地分支超前于远程分支直接push就可以了，会自动触发批量同步
   if ($diff.remote.0 == 0 && $diff.local.0 > 0) {
     git push origin $selected
@@ -31,9 +37,6 @@ def 'git trigger-sync' [
   # Decide which branch to get `.termixrc` conf from ?
   let useConfBr = (get-conf useConfFromBranch)
   let confBr = (if $useConfBr == '_current_' { $selected } else { 'i' })
-
-  let tableMode = if windows? { 'none' } else { 'light' }
-  let $config = { table_mode: $tableMode }
 
   if (has-ref $'origin/($confBr)') == false {
     $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'

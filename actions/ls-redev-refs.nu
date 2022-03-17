@@ -14,8 +14,6 @@ def 'git ls-redev-refs' [
   let repoPath = (get-tmp-path)
   let redevRepos = (open $_TERMIX_CONF | get redevRepos)
   let filteredRepos = ($redevRepos | where $',($group),' =~ $it.group)
-  let tableMode = if windows? { 'none' } else { 'light' }
-  let $config = { table_mode: $tableMode }
 
   if ($filteredRepos | length) > 0 {
     $'(ansi p)Found the following matched repos:(ansi reset)(char nl)(char nl)'; $filteredRepos

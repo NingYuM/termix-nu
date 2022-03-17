@@ -21,10 +21,6 @@ def 'git remote-age' [
   git fetch $alias -p
   $'(char nl)Branches of (ansi gb)($repoName)(ansi reset) for remote ($alias)(char nl)'
 
-  # basic, compact, compact_double, light, thin, with_love, rounded, reinforced, heavy, none, other
-  let tableMode = if windows? { 'none' } else { 'light' }
-  let $config = { table_mode: $tableMode }
-
   git ls-remote --heads --refs $alias
     | lines
     | str substring 52,
