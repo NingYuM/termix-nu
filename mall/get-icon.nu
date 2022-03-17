@@ -9,24 +9,35 @@
 #   nu scripts/nu/get-icon.nu b2c //at.alicdn.com/t/font_1949908_fie05xdkkq7.js
 #   npm run icon:get b2c //at.alicdn.com/t/font_1949908_fie05xdkkq7.js
 
-def 'is-installed' [
-    app: string     # The command to check
-] {
+# Check if some command available in current shell
+def 'is-installed' [ app: string ] {
     ((which $app | length) > 0)
 }
 
-def 'hr-line' [
-    --blank-line(-b): bool
-] {
+def 'hr-line' [ --blank-line(-b): bool ] {
     print $'(ansi g)---------------------------------------------------------------------------->(ansi reset)'
     if $blank-line { char nl }
 }
 
 # 根据`业务类型`和 `Iconfont Symbol JS 地址` 生成图标配置文件, 两个入参必填
 def main [
-    bizType: string,        # 业务类型: b2c|b2b|scrm|sea|point
-    iconFontURL: string,    # Iconfont Symbol JS 地址, 比如: //at.alicdn.com/t/font_1949908_fie05xdkkq7.js
+    bizType?: string,        # 业务类型: b2c|b2b|scrm|sea|point
+    iconFontURL?: string,    # Iconfont Symbol JS 地址, 比如: //at.alicdn.com/t/font_1949908_fie05xdkkq7.js
 ] {
+    if ($bizType == $nothing || $iconFontURL == $nothing) {
+        $'(char nl)Usage: nu get-icon.nu (ansi r)<bizType> <iconFontURL>(ansi reset)'; hr-line
+        $'(ansi g)Description: (ansi reset)根据`业务类型`和 `Iconfont Symbol JS 地址` 生成图标配置文件, 两个入参必填'
+        $'(ansi g)Supported bizTypes: (ansi reset)b2c / b2b / scrm / sea / point'
+        $'请确保参数输入无误并重试!(char nl)'
+        exit --now
+    }
+
+    let bizCheck = $bizType in ['b2c', 'b2b', 'scrm', 'sea', 'point']
+    if $bizCheck == false {
+        $'(ansi r)You have input the wrong biz type, Please try again!(ansi reset)(char nl)'
+        exit --now
+    }
+
     if (is-installed 'termix') {
         $'Current termix version: (ansi g)(termix --version | str trim)(ansi reset)'; hr-line
     } else {
@@ -34,14 +45,8 @@ def main [
         exit --now
     }
 
-    let bizCheck = $bizType in ['b2c', 'b2b', 'scrm', 'sea', 'point']
-    if $bizCheck {
-        $'Running fetch icons from ($iconFontURL) for (ansi p)($bizType)(ansi reset)...';
-        # Fixme: Not work currrently
-        # termix icon --output=$'./mall-($bizType)/client/fonts' $iconFontURL
-        nu -c $'termix icon --output=./mall-($bizType)/client/fonts ($iconFontURL)'
-    } else {
-        $'(ansi r)You have input the wrong biz type, Please try again!(ansi reset)'
-        exit --now
-    }
+    $'Running fetch icons from ($iconFontURL) for (ansi p)($bizType)(ansi reset)...';
+    # Fixme: The following does NOT work currrently
+    # termix icon --output=$'./mall-($bizType)/client/fonts' $iconFontURL
+    nu -c $'termix icon --output=./mall-($bizType)/client/fonts ($iconFontURL)'
 }

@@ -2,11 +2,11 @@
 ### From sh to nu
 
 - [x] get-icon.sh
+- [ ] upload-image.sh
+- [ ] compress-images.sh
 - [ ] clean-locale.sh
 - [ ] get-locale.sh
 - [ ] upload-locale.sh
-- [ ] upload-image.sh
-- [ ] compress-images.sh
 - [ ] watch-dev.sh
 - [ ] gen_redevelop_repos
 - [ ] gen_redevelop_main
