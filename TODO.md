@@ -1,4 +1,16 @@
 
+### From sh to nu
+
+- [x] get-icon.sh
+- [ ] clean-locale.sh
+- [ ] get-locale.sh
+- [ ] upload-locale.sh
+- [ ] upload-image.sh
+- [ ] compress-images.sh
+- [ ] watch-dev.sh
+- [ ] gen_redevelop_repos
+- [ ] gen_redevelop_main
+
 ### Adapt to Nushell v0.60.0
 
 ```shell
