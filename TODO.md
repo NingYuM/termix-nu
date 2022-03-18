@@ -2,8 +2,8 @@
 ### From sh to nu
 
 - [x] get-icon.sh
-- [ ] upload-image.sh
-- [ ] compress-images.sh
+- [x] upload-image.sh
+- [x] compress-images.sh
 - [ ] clean-locale.sh
 - [ ] get-locale.sh
 - [ ] upload-locale.sh
