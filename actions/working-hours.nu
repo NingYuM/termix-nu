@@ -134,11 +134,10 @@ def 'handle-working-hours' [
 # Get the beginning time of monday, like 2021-12-06 00:00:00
 def 'get-monday' [] {
   let today = (date to-table|select year month day)
-  # Currently convert string to duration is not supported
-  let durations = [0day, 1day, 2day, 3day, 4day, 5day, 6day]
   let weekDay = ([(date now)] | dfr to-df | dfr get-weekday).0
+  let duration = ($'($weekDay)day' | into duration)
   let beginOfToday = ($'($today.year.0)-($today.month.0)-($today.day.0)' | into datetime)
-  echo (($beginOfToday - ($durations | select $weekDay).0) | date format $_TIME_FMT)
+  echo (($beginOfToday - $duration) | date format $_TIME_FMT)
 }
 
 # Get the ending time of sunday, like 2021-12-12 23:59:59
