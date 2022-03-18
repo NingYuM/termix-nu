@@ -29,7 +29,7 @@ def 'prune-synced-branches' [
   # 获取待同步目的仓库及目的分支映射
   let branches = ($pushConf | query json $'branches')
   let repoName = (prepare-repo $repos --user=$user --ak=$ak)
-  let syncs = ($branches | transpose branch dests | each {|sync|
+  let syncs = ($branches | transpose branch dests | each { |sync|
     $sync.dests
   })
 
@@ -42,7 +42,7 @@ def 'prune-synced-branches' [
 
   $repos | transpose | rename alias | get alias | each { |alias|
     let cleanable = (
-      git ls-remote --heads --refs $alias | detect columns -n | rename cid br | each {|branch|
+      git ls-remote --heads --refs $alias | detect columns -n | rename cid br | each { |branch|
         # Ignore the repos that don't have access permission
         if $branch != $nothing {
           let brnm = ($branch.br | str find-replace 'refs/heads/' '')
@@ -89,7 +89,7 @@ def 'prepare-repo' [
   }
 
   cd $destRepoPath;
-  $repos | transpose name repo | flatten | each {|dest|
+  $repos | transpose name repo | flatten | each { |dest|
     let aliasExists = (git remote -v | detect columns -n | rename alias git | where alias == $dest.name | length) > 0
     let gitDest = if ($user != '' && $ak != '-') { ($dest.git | str find-replace '//' $'//($user):($ak)@' ) } else { $dest.git }
 

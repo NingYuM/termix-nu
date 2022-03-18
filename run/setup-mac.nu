@@ -34,7 +34,7 @@ def 'is-installed' [
 def 'brew-inst' [
     apps: string    # The cli apps to install, seperated by ','
 ] {
-    $apps | split row ',' | each {|app|
+    $apps | split row ',' | each { |app|
         [
             ($'($app) is installed ?' | str rpad -l 30 -c '.')
             (is-installed $app | into string)

@@ -75,7 +75,7 @@ def un-doced [] {
 }
 
 def cargo-ile [] {
-  fd -I shadow.rs | lines | each {|it| rm $it } | flatten
+  fd -I shadow.rs | lines | each { |it| rm $it } | flatten
   cargo install --features=extra --path .
 }
 

@@ -23,9 +23,10 @@ def 'working-hours' [
   }
   let userCookie = ($emp.cookie | str find-replace '_EMP_UC_COOKIE_' $empUserCookie)
   let staffPayload = ($emp.staffPayload
-      | str find-replace '_first_day_' $monday
       | str find-replace '_last_day_' $sunday
-      | str find-replace '_project_code_' $code )
+      | str find-replace '_first_day_' $monday
+      | str find-replace '_project_code_' $code
+    )
   # Week No of now: [(date now)] | dfr to-df | dfr get-week
   let staffs = (curl $emp.staffUrl -H $emp.type -H $userCookie -s --data-raw $staffPayload | str collect)
 
