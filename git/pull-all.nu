@@ -24,13 +24,15 @@ def 'git pull-all' [
   let ahead = (LANG=en_US git br -vv | lines | find ': ahead')
   let behind = (LANG=en_US git br -vv | lines | find ': behind')
   $available | each { |br|
-    if ($behind | find $br | length) > 0 || ($ahead | find $br | length) > 0 {
+    if ($behind | find -r $'($alias)/($br):' | length) > 0 || ($ahead | find -r $'($alias)/($br):' | length) > 0 {
       git checkout $br
       let stat = (gstat)
+      # Just pull if local repo is behind remote
       if ($stat.behind > 0 && $stat.ahead == 0) {
         print $'(ansi p)Start pulling ($br) branch...(ansi reset)'
         git pull; hr-line
       }
+      # If local is behind remote and have commits at the same time, do a reset, may be DANGEROUS
       if ($stat.behind > 0 && $stat.ahead > 0) {
         print $'(ansi p)Start reseting ($alias)/($br) branch...(ansi reset)'
         git reset --hard $'($alias)/($br)'; hr-line
