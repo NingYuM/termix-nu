@@ -33,13 +33,9 @@ def 'git remote-age' [
   if (! $show-tag) { exit --now }
 
   $'Tags of (ansi gb)($repoName)(ansi reset) for remote ($alias)'; hr-line
-  # git ls-remote --tags origin
-  if (windows?) {
-    # Git for Windows does't support sort by `creatordate` field?
-    git tag --format=%(align:1,30)%(color:green)%(refname:strip=2)%(end)%09%09%(color:yellow)%(creatordate:iso) --sort=-v:refname   # Reverse
-  } else {
-    git tag --format=%(align:1,30)%(color:green)%(refname:strip=2)%(end)%09%09%(color:yellow)%(creatordate:iso) --sort=-creatordate # Reverse sort
-  }
+  # Git for Windows does't support sort by `creatordate` field?
+  let sort = if (windows?) { '--sort=-v:refname' } else { '--sort=-creatordate' }
+  git tag --format=%(align:1,30)%(color:green)%(refname:strip=2)%(end)%09%09%(color:yellow)%(creatordate:iso) $sort
 }
 
 # $env | transpose

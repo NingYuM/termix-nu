@@ -24,7 +24,8 @@ def 'git pull-all' [
   let ahead = (LANG=en_US git br -vv | lines | find ': ahead')
   let behind = (LANG=en_US git br -vv | lines | find ': behind')
   $available | each { |br|
-    if ($behind | find -r $'($alias)/($br):' | length) > 0 || ($ahead | find -r $'($alias)/($br):' | length) > 0 {
+    let pattern = $'($alias)/($br):'
+    if ($behind | find -r $pattern | length) > 0 || ($ahead | find -r $pattern | length) > 0 {
       git checkout $br
       let stat = (gstat)
       # Just pull if local repo is behind remote

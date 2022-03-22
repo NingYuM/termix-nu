@@ -43,12 +43,9 @@ def 'git ls-redev-refs' [
     $'(char nl)Tags of repo (ansi gb)($repoName)(ansi reset): (char nl)'
     # git ls-remote --tags $url | grep -v '{}'
     cd $destRepoPath
-    if (windows?) {
-      # Git for Windows does't support sort by `creatordate` field?
-      git tag --format='%(refname:strip=2)%09%(creatordate:iso)' --sort=-v:refname   # Reverse
-    } else {
-      git tag --format='%(refname:strip=2)%09%(creatordate:iso)' --sort=-creatordate # Reverse sort
-    }
+    # Git for Windows does't support sort by `creatordate` field?
+    let sort = if (windows?) { '--sort=-v:refname' } else { '--sort=-creatordate' }
+    git tag --format='%(refname:strip=2)%09%(creatordate:iso)' $sort
     print ''  # 作为清理空行之用
   }
 }
