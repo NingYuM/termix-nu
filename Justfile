@@ -70,7 +70,7 @@ release  updateLog=('false') forceUpgrade=('false'): _check-ver
 
 # Quickly open the matched nav url in default browser, for mac or windows with powershell
 go nav=('list'): _check-ver
-  @register -e capnp {{ join(NU_DIR, _query_plugin) }}; \
+  @register -e json {{ join(NU_DIR, _query_plugin) }}; \
     source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'actions', 'quick-nav.nu') }}; \
     go {{nav}}
@@ -91,7 +91,7 @@ git-remote-age remote=('origin')  showTag=('false'): _check-ver
 
 # Show branch description from branch description file `d` of `i` branch
 desc branch=(`git branch --show-current`) showNotes=('false'): _check-ver
-  @register -e capnp {{ join(NU_DIR, _query_plugin) }}; \
+  @register -e json {{ join(NU_DIR, _query_plugin) }}; \
     source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'git', 'branch-desc.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; \
@@ -99,14 +99,14 @@ desc branch=(`git branch --show-current`) showNotes=('false'): _check-ver
 
 # Check whether all remote branches have related description
 check-desc: _check-ver
-  @register -e capnp {{ join(NU_DIR, _query_plugin) }}; \
+  @register -e json {{ join(NU_DIR, _query_plugin) }}; \
     source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'git', 'check-desc.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; check-desc
 
 # Pull all local branches from remote repo
 pull-all: _check-ver
-  @register -e capnp {{ join(NU_DIR, _gstat_plugin) }}; \
+  @register -e json {{ join(NU_DIR, _gstat_plugin) }}; \
     source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'git', 'pull-all.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git pull-all {{JUST_INVOKE_DIR}} "origin"
@@ -143,7 +143,7 @@ git-proxy status=('on'): _check-ver
 
 # 查询电商前端团队本周工时填报情况
 emp showAll=('false'): _check-ver
-  @register -e capnp {{ join(NU_DIR, _query_plugin) }}; \
+  @register -e json {{ join(NU_DIR, _query_plugin) }}; \
     source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'actions', 'working-hours.nu') }}; \
     working-hours --show-all={{showAll}}
@@ -187,7 +187,7 @@ ls-redev-refs group=('b2c,b2b,mbr,pik') showBranch=('false'): _check-ver
 
 # 批量同步本地分支到远程指定分支,git pre-push hooks调用,请勿手工触发
 git-sync-branch localRef localOid remoteRef: _check-ver
-  @register -e capnp {{ join(NU_DIR, _query_plugin) }}; \
+  @register -e json {{ join(NU_DIR, _query_plugin) }}; \
     source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'utils', 'git.nu') }}; \
     source {{ join(_termix, 'git', 'sync-branch.nu') }}; \
@@ -195,7 +195,7 @@ git-sync-branch localRef localOid remoteRef: _check-ver
 
 # 手工触发批量同步本地分支到远程指定分支
 trigger-sync branch=(`git branch --show-current`): _check-ver
-  @register -e capnp {{ join(NU_DIR, _query_plugin) }}; \
+  @register -e json {{ join(NU_DIR, _query_plugin) }}; \
     source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'utils', 'git.nu') }}; \
     source {{ join(_termix, 'git', 'trigger-sync.nu') }}; \
@@ -203,7 +203,7 @@ trigger-sync branch=(`git branch --show-current`): _check-ver
 
 # Clean possibly unused branches of synced dest repos
 prune-synced-branches dryRun=('true') user=('git') ak=('-'): _check-ver
-  @register -e capnp {{ join(NU_DIR, _query_plugin) }}; \
+  @register -e json {{ join(NU_DIR, _query_plugin) }}; \
     source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'actions', 'prune-synced-branches.nu') }}; \
     prune-synced-branches {{if dryRun == 'true' { '--dry-run' } else {''} }} --user={{user}} --ak={{ak}}
@@ -211,7 +211,7 @@ prune-synced-branches dryRun=('true') user=('git') ak=('-'): _check-ver
 # 复用 utils 里面定义的公用方法: nu 不支持动态 source 只能拼接下了
 # 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用空格分隔
 git-batch-exec cmd +branches=(''): _check-ver
-  @register -e capnp {{ join(NU_DIR, _query_plugin) }}; \
+  @register -e json {{ join(NU_DIR, _query_plugin) }}; \
     source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'utils', 'compose-cmd.nu') }}; \
     source {{ join(_termix, 'git', 'git-batch-exec.nu') }}; \
@@ -219,7 +219,7 @@ git-batch-exec cmd +branches=(''): _check-ver
 
 # 将指定Git分支硬回滚N个commit
 git-batch-reset n +branches=(''): _check-ver
-  @register -e capnp {{ join(NU_DIR, _query_plugin) }}; \
+  @register -e json {{ join(NU_DIR, _query_plugin) }}; \
     source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'git', 'git-batch-reset.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git batch-reset {{n}} "{{branches}}"
@@ -227,13 +227,13 @@ git-batch-reset n +branches=(''): _check-ver
 # 拼接复用 utils 里面定义的公用方法: https://github.com/nushell/nushell/issues/2990
 # 在指定目录(支持'*'通配符)或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
 dir-batch-exec cmd +DIRS=(''): _check-ver
-  @register -e capnp {{ join(NU_DIR, _query_plugin) }}; \
+  @register -e json {{ join(NU_DIR, _query_plugin) }}; \
     source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'utils', 'compose-cmd.nu') }}; \
     source {{ join(_termix, 'actions', 'dir-batch-exec.nu') }}; \
     dir-batch-exec "{{cmd}}" "{{DIRS}}" --parent={{JUST_INVOKE_DIR}}
 
 _check-ver:
-  @register -e capnp {{ join(NU_DIR, _query_plugin) }}; \
+  @register -e json {{ join(NU_DIR, _query_plugin) }}; \
     source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'actions', 'check-ver.nu') }}; termix-ver; nu-ver; just-ver
