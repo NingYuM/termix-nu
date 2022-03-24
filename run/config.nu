@@ -63,7 +63,7 @@ let-env NU_PLUGIN_DIRS = [
 # -------------------- Custom Commands -------------------------
 
 def cls [] { ansi cls }
-def 'env exists?' [] { $in in (env).name }
+def 'env exists?' [] { $in in (env).name }  # ' Just hack for syntax highlight
 def sum [] { reduce {|acc, item| $acc + $item } }
 def ver [] { (version | transpose key value | to md --pretty) }
 
@@ -82,15 +82,29 @@ def cargo-ile [] {
 def cargo-ta  [] { cargo test --all --all-features }
 
 def cargo-clippy [] {
-    cargo clippy --all --all-features -- -D warnings -D clippy::unwrap_used -A clippy::needless_collect
+  cargo clippy --all --all-features -- -D warnings -D clippy::unwrap_used -A clippy::needless_collect
 }
 
 # example usage: `$nu.config-path | goto`
 def-env goto [] {
-    let input = $in
-    let path = if ($input | path type) == file { ($input | path dirname) } else { $input }
-    cd $path
+  let input = $in
+  let path = if ($input | path type) == file { ($input | path dirname) } else { $input }
+  cd $path
 }
+
+def "cargo search" [ query: string, --limit=10 ] {
+  ^cargo search $query --limit $limit
+  | lines
+  | each { |line|
+    if ($line | str contains "#") {
+      $line | parse --regex '(?P<name>.+) = "(?P<version>.+)" +# (?P<description>.+)'
+    } else {
+      $line | parse --regex '(?P<name>.+) = "(?P<version>.+)"'
+    }
+  }
+  | flatten
+}
+
 
 # -------------------------- Autocompletion ------------------------
 # Custom completions for external commands (those outside of Nushell)
