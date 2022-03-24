@@ -67,6 +67,6 @@ def 'restore-origin' [
     let baseName = ($dir | path basename)
     $'(ansi r)Can not find a remote backup for ($baseName), nothing to restore...(ansi reset)(char nl)'
   } else {
-    git remote set-url origin (git remote get-url prev)
+    git remote set-url origin (git remote get-url prev | str trim)
   }
 }
