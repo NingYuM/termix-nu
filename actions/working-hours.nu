@@ -120,9 +120,7 @@ def 'handle-working-hours' [
     ($allMembers | where { |it| $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8 })
   })
 
-  do -i { # Ignore `error: Coercion error`
-    if ($result == $nothing) { $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; exit --now }
-  }
+  if ($result | empty?) { $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; exit --now }
 
   ($result | upsert Gap {|it| $total * 8 - ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave) } |
     upsert WARN { |it|
