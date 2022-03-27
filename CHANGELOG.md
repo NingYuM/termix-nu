@@ -1,6 +1,137 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] - 2022-03-26
+
+### Bug Fixes
+
+- Disable `_check-ver` for `upgrade` command
+- Fix bug of semver compare
+- Rename nu plugins for register, fix `git proxy` command for nu 0.60
+- Update the new `each` syntax
+- Adapt `gaia-release` for nu v0.59+
+- Change bool flags from string to bool, fix plugin import for windows
+- `git-age`, `git-remote-age`, `show-env` commands for Windows
+- Fix table laout broken for `ls-redev-refs`, `check-desc` on windows, fix `go` command
+- Adapt `emp` command again to v0.59+
+- Remove unnecessary hack for windows by using latest main branch
+- Fix `emp` command for windows with nu v0.59+
+- Use true/false instead of $true/$false and fix `trigger-sync` command
+- Adapt `go` and `tag-redev` command for nu v0.60
+- Update default just file path for windows, fix `tag-redev` command for win
+- `prune-synced-branches` command for windows
+- Fix `repo-transfer` and git repo check strategy
+- Fix `trigger-sync` and `git sync-branch` commands' lock issue
+- Update query emp working hours related config
+- Fix zoxide script
+- Adapt the new `default` syntax
+- Ignore the repos that don't have access permission for `prune-synced-branches` command
+- Update oh-my-posh prompt command
+- Remove unnecessary hacks for Win, fix `trigger-sync` command
+- Update `pull-all` command ignore i branch when possible
+- Change capnp to json for plugin register
+- Fix `repo-transfer` issue, output sync messages should be displayed
+- Fix `brew-speed-up off` command
+- `emp` command
+
+### Features
+
+- Add pull-all for local ahead support
+- Add config file for nu 0.60, fix `check-desc` command
+- Add `!` commnad for common
+- Update termix-nu related docs
+- Add get-icon.nu script for gaia-mobile
+- Add mall/upload-image.nu script
+- Add mall/compress-image.nu script
+- Update config for nu, add `cargo search` custom command
+
+### Miscellaneous Tasks
+
+- Update nushell min version check
+- Upgrade min just version to v 0.11.0
+- Lots of modification in order to adapt to nushell v0.60
+- Adapt to nu v0.60
+- Remove unnecessary print command usage
+- Adapt to latest nushell
+- Update `nu` and `just` version, fix version check
+- Update `release` command
+- Update nu config, fix `go` command
+- Remove unnecessary hacks
+- Update nushell config to the latest version
+- Update nushell config file
+- Add `#!/usr/bin/env nu` header for each script
+- Adapt to the latest nu syntax, and change `update` to `upsert`
+- Fix script indention and refactor by using `into duration`
+- Update minimum just and nu version required
+
+### Refactor
+
+- Adapt to nu v0.60, add log util, fix Justfile
+- Adapt `check-ver` and `quick-nav` command to nu v0.60
+- Adapt `pull-all` command with nu 0.60.0, use $false check instead of empty blocks
+- Adapt `tag-redev`, `check-desc`, `desc`, `repo-transfer` commands to nu v0.59
+- Adapt `emp` cmd to nu v0.60
+- Adapt `dir-batch-exec` for nu v0.60
+- Some optimization
+
+### Opt
+
+- Adapt to nushell next release v0.60
+- Adapt `git-proxy`, `trigger-sync`, `sync-branch`, and `release` command for nushell v0.60
+- Use just to register plugin dynamically for nushell
+- Add common host os checking command
+- Improve get-icon.nu for a better user experience
+
+## [1.2.12] - 2022-01-17
+
+### Bug Fixes
+
+- Fix empty working-hours execption for `t emp`
+
+### Documentation
+
+- Add `brew-speed-up` related docs
+
+### Features
+
+- Add feature of checking if local branch exists in remote repo for `git-age` command
+- Add `brew-speed-up` command to set much faster brew mirrors quickly
+
+## [1.2.11] - 2022-01-04
+
+### Bug Fixes
+
+- Fix repo syncing with lock error when the remote branch does not exist
+- Fix force upgrade feature, make its config compatible with previous version
+- Fix force upgrading feature, improve version check strategy
+
+### Features
+
+- Add force upgrade feature, if a force-upgrade version was released all commands will stop running before upgrading termix-nu
+
+### Miscellaneous Tasks
+
+- Add test case in comments for force upgrade feature
+
+## [1.2.10] - 2021-12-31
+
+### Bug Fixes
+
+- Fix emp working hours query while there are leaving records
+
+### Documentation
+
+- Add lock related docs for git auto sync and trigger-sync
+
+### Features
+
+- Add lock feature for git auto sync while pushing commits
+- Add lock feature for `trigger-sync` command
+
+### Miscellaneous Tasks
+
+- Bump version v1.2.10
+
 ## [1.2.12] - 2022-01-17
 
 ### Bug Fixes
