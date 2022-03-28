@@ -8,7 +8,7 @@
 # Show branch description from branch description file `d` of `i` branch
 def 'branch-desc' [
   branch: string        # The branch to query from description file
-  --show-notes: bool    # Set to 'ture' to show notes infomation
+  --show-notes: any     # Set to 'ture' to show notes infomation, defined as `any` acutually `bool`
 ] {
 
   let descFile = 'd.toml'

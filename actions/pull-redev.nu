@@ -10,7 +10,7 @@
 def 'git pull-redev' [
   branch: string            # Specify the branch to pull
   group: string             # Specify the groups of repo to update
-  --show-diff(-d): bool     # Set to 'true' if you want to see the files changed since prev tag
+  --show-diff(-d): any      # Set to 'true' if you want to see the files changed since prev tag, defined as `any` acutually `bool`
 ] {
 
   let repoPath = (get-tmp-path)

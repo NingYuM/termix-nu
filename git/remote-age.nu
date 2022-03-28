@@ -11,7 +11,7 @@
 def 'git remote-age' [
   repo: string          # The git repo to display branch ages
   alias: string         # The remote url alias for git repo
-  --show-tag(-t): bool  # Set to 'true' if you want to show all the tags
+  --show-tag(-t): any   # Set to 'true' if you want to show all the tags, defined as `any` acutually `bool`
 ] {
 
   cd $repo

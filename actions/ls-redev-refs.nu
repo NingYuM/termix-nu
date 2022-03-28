@@ -8,7 +8,7 @@
 # Show Branches and Tags of redevelop related repos
 def 'git ls-redev-refs' [
   group: string             # Specify the groups of repo to list their refs
-  --show-branches: bool     # Set true to show remote branches last commit info
+  --show-branches: any      # Set true to show remote branches last commit info, defined as `any` acutually `bool`
 ] {
 
   let repoPath = (get-tmp-path)

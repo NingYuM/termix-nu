@@ -12,7 +12,7 @@
 def 'gaia-release' [
   version: string         # Gaia FE release version
   repos: string           # The repos to creat a release tag, multi repo could be separated by ','
-  --delete-tag(-d): bool  # Set to 'true' if you want to delete the specified tag
+  --delete-tag(-d): any   # Set to 'true' if you want to delete the specified tag, defined as `any` acutually `bool`
 ] {
 
   let repoPath = (get-tmp-path)
