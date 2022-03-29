@@ -5,7 +5,7 @@
 - [x] upload-image.sh
 - [x] compress-images.sh
 - [ ] clean-locale.sh
-- [ ] get-locale.sh
+- [x] get-locale.sh
 - [ ] upload-locale.sh
 - [ ] watch-dev.sh
 - [ ] gen_redevelop_repos

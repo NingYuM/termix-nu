@@ -2,7 +2,7 @@
 
 # Author: hustcer
 # Created: 2022/03/18 13:50:56
-# 上传图片到cdn, 需要根目录下有 oss-conf.json 配置文件;
+# 上传图片到CDN, 需要根目录下有 oss-conf.json 配置文件;
 # 并全局安装了 @terminus/termix, 最低版本 v1.2.1;
 # 使用:
 #   nu upload-image.nu b2c
@@ -18,7 +18,7 @@ def 'hr-line' [ --blank-line(-b): bool ] {
   if $blank-line { char nl }
 }
 
-# 根据`业务类型`和 `Iconfont Symbol JS 地址` 生成图标配置文件, 两个入参必填
+# 根据`业务类型` 上传指定业务类型图片到CDN, 入参必填
 def main [
   bizType?: string,        # 业务类型: b2c|b2b|scrm|sea|point
 ] {

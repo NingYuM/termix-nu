@@ -18,7 +18,7 @@ def 'hr-line' [ --blank-line(-b): bool ] {
   if $blank-line { char nl }
 }
 
-# 根据`业务类型`和 `Iconfont Symbol JS 地址` 生成图标配置文件, 两个入参必填
+# 根据`业务类型` 使用 tinypng api 压缩指定业务类型的本地图片, 入参必填
 def main [
   bizType?: string,        # 业务类型: b2c|b2b|scrm|sea|point
 ] {
