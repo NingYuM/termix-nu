@@ -4,7 +4,7 @@
 - [x] get-icon.sh
 - [x] upload-image.sh
 - [x] compress-images.sh
-- [ ] clean-locale.sh
+- [x] clean-locale.sh
 - [x] get-locale.sh
 - [x] upload-locale.sh
 - [ ] watch-dev.sh
