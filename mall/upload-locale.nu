@@ -2,10 +2,13 @@
 
 # Author: hustcer
 # Created: 2022/03/29 16:15:20
-# 从国际化文案管理平台下载最新的中英文文案到本地；
-# 需要全局安装了 @terminus/termix, 最低版本 v2.2.5;
+# 该命令会将指定文件夹下`locale/zh/messages.json` & `locale/en/messages.json`
+# 里的中英文案合并起来并上传到国际化平台指定ID的项目里面；除了直接上传外也可
+# 以扫描指定文件夹下的文案然后将输出结果上传；
+#
+# 需要全局安装了 @terminus/termix, 最低版本 v2.0.0;
 # 使用:
-#   nu get-locale.nu b2c
+#   nu upload-locale.nu b2c
 
 let I18 = {
   b2c: { PID: 5, DESIGN_PID: 6 },
@@ -23,13 +26,13 @@ def 'hr-line' [ --blank-line(-b): bool ] {
   if $blank-line { char nl }
 }
 
-# 根据`业务类型`从国际化文案管理平台下载最新的中英文文案到本地；
+# 根据`业务类型`从本地上传文案到国际化文案管理平台，也可以从源码扫描并上传；
 def main [
   bizType?: string,        # 业务类型: b2c|b2b|scrm|sea|point
 ] {
   if ($bizType == $nothing) {
-    $'(char nl)Usage: nu get-locale.nu (ansi r)<bizType>(ansi reset)'; hr-line
-    $'(ansi g)Description: (ansi reset)根据`业务类型`从国际化文案管理平台下载最新的中英文文案到本地'
+    $'(char nl)Usage: nu upload-locale.nu (ansi r)<bizType>(ansi reset)'; hr-line
+    $'(ansi g)Description: (ansi reset)根据`业务类型`从本地上传文案到国际化文案管理平台，也支持从源码扫描并上传'
     $'(ansi g)Supported bizTypes: (ansi reset)b2c / b2b / scrm / sea / point'
     $'请确保参数输入无误并重试!(char nl)'
     exit --now
@@ -53,21 +56,15 @@ def main [
     exit --now
   }
 
-  let ZH_DIR = 'client/locale/zh/messages.json'
-  let EN_DIR = 'client/locale/en/messages.json'
-  let DESIGN_ZH_DIR = 'client/design/locale/zh/messages.json'
-  let DESIGN_EN_DIR = 'client/design/locale/en/messages.json'
-
   if $bizType not-in $I18 {
     $'Locale ID for biz type: ($bizType) has not been configured, please try agian...'
     exit --now
   }
 
-  $'Running get locale for (ansi p)($bizType)(ansi reset)...'
+  $'Running upload locale for (ansi p)($bizType)(ansi reset)...'
   let PID = ($I18 | get $bizType).PID
   let DESIGN_PID = ($I18 | get $bizType).DESIGN_PID
-  termix locale-get $PID -o $'mall-($bizType)/($ZH_DIR)'
-  termix locale-get $PID -o $'mall-($bizType)/($EN_DIR)' -f
-  termix locale-get $DESIGN_PID -o $'mall-($bizType)/($DESIGN_ZH_DIR)'
-  termix locale-get $DESIGN_PID -o $'mall-($bizType)/($DESIGN_EN_DIR)' -f
+  termix locale-upload --from-extract $'--pid=($PID)' $'mall-common,mall-($bizType)'
+  termix locale-upload --from-extract --extract-design $'--pid=$(DESIGN_PID)' $'mall-common,mall-($bizType)'
+  npm run locale:get $bizType
 }
