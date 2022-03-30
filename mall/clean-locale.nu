@@ -15,6 +15,10 @@
 #   nu clean-locale.nu b2c
 #   npm run locale:clean b2c
 
+# use ./mall/i18n.nu [get-i18n-conf]
+
+# let I18 = (get-i18n-conf)
+
 let I18 = {
   b2c: { PID: 5, DESIGN_PID: 6 },
   sea: { PID: 7, DESIGN_PID: 8 },
