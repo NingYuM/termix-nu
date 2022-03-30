@@ -41,6 +41,8 @@ def main [
     npm i -g @terminus/termix@latest
   }
   $'(ansi pr) Termix version: (termix --version | str trim) (ansi reset)'; hr-line
+  # Disable `initial branch name` hints from git
+  git config --global init.defaultBranch master
   if (git config --global --get user.name | empty?) {
     git config --global user.name 'git'
     git config --global user.email 'erda@terminus.io'
@@ -75,7 +77,7 @@ def main [
   if (git diff-index --quiet HEAD | complete | get exit_code) == 1 {
     git commit -am $commit-msg
   }
-  'Redevelop origin repo git status:'; git status; hr-line
+  $'(ansi g)Redevelop origin repo git status:(ansi reset)'; git status; hr-line
   # 推送可升级部分增量代码到另外仓库
   git remote add gaia $redev-origin-git; git push gaia $dest-branch --force
 
@@ -86,6 +88,6 @@ def main [
   if (git diff-index --quiet HEAD | complete | get exit_code) == 1 {
     git commit -am $commit-msg
   }
-  $'Redevelop repo git status:'; git status; hr-line
+  $'(ansi g)Redevelop repo git status:(ansi reset)'; git status; hr-line
   git push gaia $dest-branch --force
 }

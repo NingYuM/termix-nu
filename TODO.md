@@ -8,8 +8,8 @@
 - [x] get-locale.sh
 - [x] upload-locale.sh
 - [ ] watch-dev.sh
-- [?] gen_redevelop_repos
 - [ ] gen_redevelop_main
+- [x] gen_redevelop_repos
 
 ### Adapt to Nushell v0.60.0
 
