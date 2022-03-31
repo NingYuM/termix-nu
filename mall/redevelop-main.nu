@@ -1,15 +1,14 @@
 #!/usr/bin/env nu
 
 # Author: hustcer
-# Created: 2022/03/30 11:20:56
-# 在本地或远程比如编译期通过 Erda Actions 生成全量和增量二开工程
+# Created: 2022/03/31 10:50:56
+# 在本地或远程，比如编译期通过 Erda Actions 生成全量二开工程
 # Usage:
 # In local ~/redevelop directory:
-# nu redevelop-all.nu -t rn_b2c -c support/release-2.4 -k YOUR_TOKEN
+# nu redevelop-main.nu -t rn_b2c -c support/release-2.5 -k YOUR_TOKEN
 #     --redev-dir=/Users/abc/redevelop/gaia-mobile-b2c-redev
-#     --redev-origin-dir=/Users/abc/redevelop/gaia-mobile-b2c-redev-origin
 #     --redev-git=https://erda.cloud/terminus/dop/gaia-app-redev/b2c-mobile-redev
-#     --redev-origin-git=https://erda.cloud/terminus/dop/gaia-app-redev/b2c-mobile-redev-origin
+#     --map-branch=support/release-2.5
 # TODO:
 #   [ ] rm .husky/pre-push
 #   [ ] Check .dice in redevelop repo
@@ -28,12 +27,10 @@ def 'is-installed' [ app: string ] {
 def main [
   --template(-t): string      # termix redevelop template value
   --checkout(-c): string      # termix redevelop checkout value
-  --redev-dir: string         # 二开全量仓库对应代码目录,比如对于alias为redev-repo的git-checkout Action可以传 ${redev-repo}
-  --redev-origin-dir: string  # 二开增量仓库对应代码目录,比如对于alias为redev-origin-repo的git-checkout Action可以传 ${redev-origin-repo}
-  --redev-git: string         # 二开全量仓库Git地址
-  --redev-origin-git: string  # 二开增量仓库Git地址
   --token(-k): string         # git 账号对应的 Access Token
-  --dest-branch(-d): string = 'master'    # 需要推送到的二开仓库目的分支, 默认为 master, 也可以另外指定
+  --redev-dir: string         # 二开全量仓库对应代码目录,比如对于alias为redev-repo的git-checkout Action可以传 ${redev-repo}
+  --redev-git: string         # 二开全量仓库Git地址
+  --map-branch: string        # 需要映射到测试环境 develop 分支的分支名
 ] {
   # We don't need herd image, a raw linux distro image with node installed is okay
   # npm config set registry https://registry.npm.terminus.io/
@@ -62,24 +59,8 @@ def main [
   $'Empty repo done! Redevelop repo contents:'; ls -a $redev-dir
   cp -r redev-app/* $redev-dir
 
-  # Origin 为可升级部分代码，需要单独另放一个仓库里面
-  # 删除二开增量仓库里面除了.git以外的内容，用新生成的二开内容替换，防止冲突
-  cp -r $'($redev-origin-dir)/.git' $'($redev-origin-dir)/../.git-back'
-  rm -rf $redev-origin-dir; mkdir $redev-origin-dir
-  mv $'($redev-origin-dir)/../.git-back' $'($redev-origin-dir)/.git'
-  $'Empty repo done! Redevelop origin dir contents:'; ls -a $redev-origin-dir
-  cp -r redev-app/origin/* $redev-origin-dir; cd $redev-origin-dir
-  git add --ignore-removal .
-
   let src-msg = if 'COMMIT_MSG' in (env).name { $env.COMMIT_MSG } else { 'Test redevelop locally' }
   let commit-msg = $"($src-msg), Redevelop from checkout:($checkout) by termix@(termix --version)"
-  # https://stackoverflow.com/questions/8123674/how-to-git-commit-nothing-without-an-error
-  if (git diff-index --quiet HEAD | complete | get exit_code) == 1 {
-    git commit -am $commit-msg
-  }
-  $'(ansi g)Redevelop origin repo git status:(ansi reset)'; git status; hr-line
-  # 推送可升级部分增量代码到另外仓库
-  git remote add gaia $redev-origin-git; git push gaia $dest-branch --force
 
   # 推送全量二开仓库
   cd $redev-dir; git remote add gaia $redev-git
@@ -88,6 +69,11 @@ def main [
   if (git diff-index --quiet HEAD | complete | get exit_code) == 1 {
     git commit -am $commit-msg
   }
+  let current = (git branch --show-current | str trim)
   $'(ansi g)Redevelop repo git status:(ansi reset)'; git status; hr-line
-  git push gaia $dest-branch --force
+  git push gaia $'($current):($checkout)' --force; hr-line
+  # 如果配置了需要映射到测试环境 develop 分支的分支名，并且与当前分支为同一分支
+  if $map-branch == $checkout {
+    git push gaia $'($current):develop' --force
+  }
 }
