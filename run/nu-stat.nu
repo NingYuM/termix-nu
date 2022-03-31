@@ -10,13 +10,11 @@
 
 def 'nu-sloc' [] {
     let stats = (
-        ls **/*.nu | each { |it| wc -l $it.name }
-            | detect columns -n
-            | rename lines file
-            | move file --before lines
-            | update lines {|s| $s.lines | into int }
-            | insert blank {|s| $s.lines - (open $s.file | lines | find --regex '\S' | length) }
-            | insert comments {|s| open $s.file | lines | find --regex '^\s*#' | length }
+        ls **/*.nu
+            | select name
+            | insert lines { |it| open $it.name | size | get lines }
+            | insert blank {|s| $s.lines - (open $s.name | lines | find --regex '\S' | length) }
+            | insert comments {|s| open $s.name | lines | find --regex '^\s*#' | length }
             | sort-by lines -r
     )
 
@@ -28,7 +26,7 @@ def 'nu-sloc' [] {
 
     $'(char nl)(ansi pr) SLOC Summary for Nushell (ansi reset)(char nl)'
     print { 'Total Lines': $lines, 'Blank Lines': $blank, Comments: $comments, 'Total Nu Scripts': $total, 'Avg Lines/Script': $avg }
-    $'Source file stat detail:'
+    $'(char nl)Source file stat detail:'
     print $stats
 }
 
