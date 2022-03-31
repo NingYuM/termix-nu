@@ -26,7 +26,7 @@ def 'nu-sloc' [] {
     let total = ($stats | length)
     let avg = ($lines / $total | math round)
 
-    $'(ansi pr) SLOC Summary for Nushell (ansi reset)'
+    $'(char nl)(ansi pr) SLOC Summary for Nushell (ansi reset)(char nl)'
     print { 'Total Lines': $lines, 'Blank Lines': $blank, Comments: $comments, 'Total Nu Scripts': $total, 'Avg Lines/Script': $avg }
     $'Source file stat detail:'
     print $stats
