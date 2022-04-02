@@ -85,6 +85,17 @@ def-env goto [] {
   cd $path
 }
 
+# load environment variables from the .envrc file.
+def-env load-direnv [] {
+  load-env (
+    open --raw .envrc
+      | lines
+      | where $it =~ 'export'
+      | parse 'export {key}={value}'
+      | reduce -f {} { |it, acc| $acc | insert $it.key ($it.value | str trim -c '"') }  # "
+  )
+}
+
 def "cargo search" [ query: string, --limit=10 ] {
   ^cargo search $query --limit $limit
   | lines
