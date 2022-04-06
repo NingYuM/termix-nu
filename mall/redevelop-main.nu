@@ -3,6 +3,7 @@
 # Author: hustcer
 # Created: 2022/03/31 10:50:56
 # 在本地或远程，比如编译期通过 Erda Actions 生成全量二开工程
+# 需要安装 Nushell， 最低版本 v0.61.0; 可以通过 brew 或者 winget 安装, REF: https://www.nushell.sh/book/installation.html;
 # Usage:
 # In local ~/redevelop directory:
 # nu redevelop-main.nu -t rn_b2c -c support/release-2.5 -k YOUR_TOKEN
