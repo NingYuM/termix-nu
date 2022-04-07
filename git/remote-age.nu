@@ -23,7 +23,7 @@ def 'git remote-age' [
 
   git ls-remote --heads --refs $alias
     | lines
-    | str substring 52,
+    | str substring '52,'
     | wrap name
     | upsert local { |it|  if (has-ref $it.name) { '   √' }}
     | upsert author { |it| git show $"remotes/($alias)/($it.name)" -s --format='%an' }

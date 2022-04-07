@@ -19,7 +19,7 @@ def 'git pull-all' [
   }
 
   git fetch $alias -p
-  let available = (git branch | into string | lines | str substring (2,))
+  let available = (git branch | into string | lines | str substring '2,')
   # `LANG=en_US git` 强制 git 输出语言切换为英文
   let ahead = (LANG=en_US git br -vv | lines | find ': ahead')
   let behind = (LANG=en_US git br -vv | lines | find ': behind')

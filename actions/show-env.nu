@@ -16,7 +16,7 @@ def 'show-env' [] {
   let yarnVer = (get-ver yarn 'yarn --version')
   let herdVer = (get-ver herd 'herd --version')
   let termixVer = (get-ver termix 'termix --version')
-  let nodeVer = (get-ver node '(node --version | str substring 1,)')
+  let nodeVer = (get-ver node '(node --version | str substring '1,')')
   let fnmVer = (get-ver fnm "fnm --version | str trim -b | str substring '4,'")
   let justVer = (get-ver just "just --version | str trim -b | str substring '5,'")
   let gitVer = (get-ver git "git --version | str trim -b | str substring '12,'")
