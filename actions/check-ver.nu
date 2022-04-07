@@ -16,7 +16,7 @@ def 'nu-ver' [] {
 # Check min just version and show upgrading tips to the user
 def 'just-ver' [] {
 
-  let currentVer = (just --version | str find-replace 'just' '' | str trim | first)
+  let currentVer = (just --version | str replace 'just' '' | str trim | first)
   let minVer = (get-conf minJustVer '1.1.0')
   upgrade-tip just $minVer $currentVer
 }
@@ -51,7 +51,7 @@ def 'termix-ver' [] {
       $'(ansi r)很抱歉，为了更好地为您提供服务请先更新 termix-nu 并重试...(ansi reset)(char nl)(char nl)'
       (query-ver $confName | ignore); exit 1 --now    # Query and update latest version again.
     }
-    if $hasForceUpgrade == false {
+    if (not $hasForceUpgrade) {
       query-ver $confName | ignore
     }
   } else {

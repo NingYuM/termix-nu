@@ -14,9 +14,9 @@ def 'git sync-branch' [
   cd $env.JUST_INVOKE_DIR
   # `git hash-object --stdin < /dev/null` will raise "fatal: could not open '<' for reading: No such file or directory" error
   # 一定要 trim 啊，否则后面可能匹配不到，哎呦……
-  let zero = (git hash-object -t tree /dev/null | str find-replace -a '[0-9a-f]' '0' | str trim)
-  let destBranch = ($remoteRef | str find-replace 'refs/heads/' '')
-  let localBranch = ($localRef | str find-replace 'refs/heads/' '')
+  let zero = (git hash-object -t tree /dev/null | str replace -a '[0-9a-f]' '0' | str trim)
+  let destBranch = ($remoteRef | str replace 'refs/heads/' '')
+  let localBranch = ($localRef | str replace 'refs/heads/' '')
   # Decide which branch to get `.termixrc` conf from ?
   let useConfBr = (get-conf useConfFromBranch)
   let confBr = (if $useConfBr == '_current_' { $destBranch } else { 'i' })

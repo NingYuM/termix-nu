@@ -34,7 +34,7 @@ def main [
   }
 
   let bizCheck = $bizType in ['b2c', 'b2b', 'scrm', 'sea', 'point']
-  if $bizCheck == false {
+  if (not $bizCheck) {
     $'(ansi r)You have input the wrong biz type, Please try again!(ansi reset)(char nl)'
     exit --now
   }

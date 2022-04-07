@@ -21,11 +21,11 @@ def 'working-hours' [
     $'(ansi r)Not enough parameters, make sure you have set the EMP_UC_COOKIE and EMP_PROJECT_CODE var in .env file, bye...(char nl)(ansi reset)'
     exit --now
   }
-  let userCookie = ($emp.cookie | str find-replace '_EMP_UC_COOKIE_' $empUserCookie)
+  let userCookie = ($emp.cookie | str replace '_EMP_UC_COOKIE_' $empUserCookie)
   let staffPayload = ($emp.staffPayload
-      | str find-replace '_last_day_' $sunday
-      | str find-replace '_first_day_' $monday
-      | str find-replace '_project_code_' $code
+      | str replace '_last_day_' $sunday
+      | str replace '_first_day_' $monday
+      | str replace '_project_code_' $code
     )
   # Week No of now: [(date now)] | dfr to-df | dfr get-week
   let staffs = (curl $emp.staffUrl -H $emp.type -H $userCookie -s --data-raw $staffPayload | str collect)
@@ -36,15 +36,15 @@ def 'working-hours' [
   # 此处把中文名字字段过滤掉，否则在Windows下数据传到后端接口会发生解析错误
   let staffPayload = ($staffs | query json 'res' | select id | to json -r)
   let timePayload = ($emp.timePayload
-      | str find-replace '_last_day_' $sunday
-      | str find-replace '_first_day_' $monday
-      | str find-replace '_staffs_' $staffPayload
+      | str replace '_last_day_' $sunday
+      | str replace '_first_day_' $monday
+      | str replace '_staffs_' $staffPayload
     )
 
   let leavePayload = ($emp.leavePayload
-      | str find-replace '_last_day_' $sunday
-      | str find-replace '_first_day_' $monday
-      | str find-replace '_staffs_' $staffPayload
+      | str replace '_last_day_' $sunday
+      | str replace '_first_day_' $monday
+      | str replace '_staffs_' $staffPayload
     )
 
   let allStaffs = ($staffs | query json 'res' | select id name | rename id Name)

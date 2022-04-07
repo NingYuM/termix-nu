@@ -93,7 +93,7 @@ def 'git-check' [
 ] {
   cd $dest
   let isGitInstalled = ((which git | length) > 0)
-  if $isGitInstalled == false {
+  if (not $isGitInstalled) {
     $'You should (ansi r)INSTALL git(ansi reset) first to run this command, bye...'
     exit --now
   }

@@ -20,7 +20,7 @@ def 'prune-synced-branches' [
   let useConfBr = (get-conf useConfFromBranch)
   let confBr = (if $useConfBr == '_current_' { $current } else { 'i' })
 
-  if (has-ref $'origin/($confBr)') == false {
+  if not (has-ref $'origin/($confBr)') {
     $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
     exit --now
   }
@@ -45,7 +45,7 @@ def 'prune-synced-branches' [
       git ls-remote --heads --refs $alias | detect columns -n | rename cid br | each { |branch|
         # Ignore the repos that don't have access permission
         if $branch != $nothing {
-          let brnm = ($branch.br | str find-replace 'refs/heads/' '')
+          let brnm = ($branch.br | str replace 'refs/heads/' '')
           let noUse = ($syncs | where repo == $alias && dest == $brnm | length) == 0
           if $noUse { $brnm }
         }
@@ -83,7 +83,7 @@ def 'prepare-repo' [
     print $'(ansi p)Updating remote repos to local...(ansi reset)'; hr-line
   } else {
     let gitUrl = if ($user != '' && $ak != '-') {
-      ($sampleRepo.git | str find-replace '//' $'//($user):($ak)@' )
+      ($sampleRepo.git | str replace '//' $'//($user):($ak)@' )
     } else { $sampleRepo.git }
     cd $repoPath; git clone $gitUrl $repoName
   }
@@ -91,7 +91,7 @@ def 'prepare-repo' [
   cd $destRepoPath;
   $repos | transpose name repo | flatten | each { |dest|
     let aliasExists = (git remote -v | detect columns -n | rename alias git | where alias == $dest.name | length) > 0
-    let gitDest = if ($user != '' && $ak != '-') { ($dest.git | str find-replace '//' $'//($user):($ak)@' ) } else { $dest.git }
+    let gitDest = if ($user != '' && $ak != '-') { ($dest.git | str replace '//' $'//($user):($ak)@' ) } else { $dest.git }
 
     if ($aliasExists) {
       git remote set-url $dest.name $gitDest

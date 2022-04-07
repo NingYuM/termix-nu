@@ -34,7 +34,7 @@ def 'release' [
   	exit --now
   }
   if ($update-log) {
-    git cliff --unreleased --tag ($releaseVer | str find-replace 'v' '') --prepend CHANGELOG.md;
+    git cliff --unreleased --tag ($releaseVer | str replace 'v' '') --prepend CHANGELOG.md;
     git commit CHANGELOG.md -m $'update CHANGELOG.md for ($releaseVer)'
   }
   # Delete tags that not exist in remote repo

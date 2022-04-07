@@ -22,7 +22,7 @@ def 'check-desc' [] {
   let descriptions = (git show $'($querySource):($descFile)' | from toml | to json)
   # Alternatively since nushell v0.40.0 you can use the following line, which is longer but more readable
   # git ls-remote --heads --refs origin | detect columns -n | rename cid name |
-  #     update name { get name | str find-replace 'refs/heads/' '' } | get name
+  #     update name { get name | str replace 'refs/heads/' '' } | get name
   let remoteBranches = (git ls-remote --heads --refs origin | lines | str substring '52,')
   let allDescribed = ($remoteBranches | where (no-desc $descriptions $it) | str collect | str trim | empty?)
 
@@ -61,7 +61,7 @@ def 'no-desc' [
   branch: string
 ] {
   # 处理分支名称包含‘.’的情况: `support/release-2.4`
-  let escapedBranch = ($branch | str find-replace -a '\.' '\.')
+  let escapedBranch = ($branch | str replace -a '\.' '\.')
   # ($descriptions | select $escapedBranch | compact | length) == 0
   let noDescription = ($descriptions | query json $'descriptions.($escapedBranch)' | empty?)
   echo ($noDescription && $branch != 'i')

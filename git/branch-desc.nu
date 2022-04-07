@@ -23,7 +23,7 @@ def 'branch-desc' [
   let descriptions = (git show $'($querySource):($descFile)' | from toml | to json)
   let queryBranch = (if ($branch | empty?) { (git branch --show-current | str trim) } else { $branch })
   # 处理分支名称包含‘.’的情况: `support/release-2.4`
-  let escapedBranch = ($queryBranch | str find-replace -a '\.' '\.')
+  let escapedBranch = ($queryBranch | str replace -a '\.' '\.')
   let desc = ($descriptions | query json $'descriptions.($escapedBranch)')
   let rules = ($descriptions | query json 'rules')
   $'(char nl)(ansi p)($queryBranch) (ansi reset)分支描述：(char nl)'

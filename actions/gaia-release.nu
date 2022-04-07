@@ -19,7 +19,7 @@ def 'gaia-release' [
   let gaiaSrcRepos = (open $_TERMIX_CONF | get gaiaSrcRepos)
   $'Using global repo path: (ansi p)($repoPath)(ansi reset)(char nl)'
 
-  $gaiaSrcRepos | find name --regex ($repos | str find-replace -a ',' '|') | each { |repo|
+  $gaiaSrcRepos | find name --regex ($repos | str replace -a ',' '|') | each { |repo|
     # 单一仓库完整路径
     let destRepoPath = ([$repoPath $repo.name] | path join)
     let dateSuffix = (date now | date format $_DATE_FMT)
