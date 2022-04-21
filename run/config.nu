@@ -293,7 +293,7 @@ let default_theme = {
   shape_nothing: light_cyan
 }
 
-let $config = {
+let-env config = {
   filesize_metric: false
   use_ls_colors: true
   rm_always_trash: false

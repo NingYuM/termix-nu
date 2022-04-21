@@ -13,7 +13,7 @@ let _UPGRADE_TAG = '$-FORCE-UPGRADE-$'
 let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
 
 # Global nushell configs
-let $config = {
+let-env config = {
   table_mode: light
 }
 
