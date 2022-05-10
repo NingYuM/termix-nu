@@ -5,7 +5,8 @@
 #   2. https://github.com/nushell/nushell/issues/4300 Config Settings
 #   3. https://github.com/nushell/nushell/blob/main/docs/How_To_Coloring_and_Theming.md
 
-use ~/github/terminus/termix-nu/run/zoxide-eq.nu [z, zi]
+# use ~/github/terminus/termix-nu/run/zoxide-eq.nu [z, zi]
+source ~/.zoxide.nu
 
 # ---------------------- Aliases -------------------------
 alias ll = exa -l
@@ -309,6 +310,16 @@ let-env config = {
   edit_mode: emacs # emacs, vi
   max_history_size: 10000
   log_level: trace
+  hooks: {
+    pre_prompt: [{
+      # print "pre-prompt hook invoked"
+      $nothing  # replace with source code to run before the prompt is shown
+    }]
+    pre_execution: [{
+      # print 'pre-execution hook invoked'
+      $nothing
+    }]
+  }
   menus: [
     # Configuration for default nushell menus
     # Note the lack of souce parameter
