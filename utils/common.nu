@@ -28,6 +28,7 @@ def 'get-env' [
   key: string       # The key to get it's env value
   default?: string  # The default value for an empty env
 ] {
+  # $env | get -i $key | default $default
   let hasEnv = (env | any? name == $key)
   if $hasEnv { $env | get $key } else { $default }
 }
