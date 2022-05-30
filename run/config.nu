@@ -17,6 +17,7 @@ alias t = just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .
 alias tokeid = (tokei | lines | skip 1 | str collect "\n" | detect columns | where Language !~ "=" && Language !~ "|" && Language !~ "-" && Language !~ "(" | into int Files Lines Code Comments Blanks)
 
 # ----------------------- ENV VARS ------------------------
+let-env EDITOR = 'hx'
 # Use nushell functions to define your right and left prompt
 let-env PROMPT_COMMAND_RIGHT = { '' }
 # The prompt indicators are environmental variables that represent
@@ -60,6 +61,13 @@ let-env NU_LIB_DIRS = [
 let-env NU_PLUGIN_DIRS = [
   ($nu.config-path | path dirname | path join 'plugins')
 ]
+
+# let-env PATH = (
+#   $env.PATH
+#     | prepend `/Applications/Sublime Text.app/Contents/SharedSupport/bin/`
+#     | prepend `/Applications/Sublime Merge.app/Contents/SharedSupport/bin/`
+#     | uniq
+# )
 
 # -------------------- Custom Commands -------------------------
 
