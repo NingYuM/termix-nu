@@ -29,8 +29,10 @@ def 'git sync-branch' [
   let ignored = (get-env SYNC_IGNORE_ALIAS '')
   # The following line not work: ^^^ Expected column path, found string
   # let matchBranch = ($pushConf | get branches | default '' $destBranch | select $destBranch | compact | length)
+  # 处理分支名称包含‘.’的情况: `support/release-2.4`
+  let escapedBranch = ($destBranch | str replace -a '\.' '\.')
   # 获取待同步目的仓库及目的分支映射
-  let dests = ($pushConf | query json $'branches.($destBranch)')
+  let dests = ($pushConf | query json $'branches.($escapedBranch)')
   # 如果没有任何同步配置直接退出
   if ($dests == $nothing) { exit --now }
 
