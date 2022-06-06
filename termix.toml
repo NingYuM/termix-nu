@@ -64,7 +64,7 @@ redevRepos = [
   { group = 'b2c', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-brand-oversea-redev' },
   # https://erda.cloud/terminus/dop/projects/691/apps/8321/repo
   { group = 'b2c', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-brand-oversea-redev-origin' },
-    # https://erda.cloud/terminus/dop/projects/691/apps/8316/repo
+  # https://erda.cloud/terminus/dop/projects/691/apps/8316/repo
   { group = 'mbr', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-mbr-redev' },
   # https://erda.cloud/terminus/dop/projects/691/apps/8317/repo
   { group = 'mbr', url = 'https://erda.cloud/terminus/dop/gaia-app-redev/gaia-mobile-mbr-redev-origin' },

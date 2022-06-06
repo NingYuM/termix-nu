@@ -161,7 +161,7 @@ def 'handle-exception' [
 
   # 未登录或者Cookie过期提示, use `do -i` to ignore 'error: Coercion error'
   do -i {
-    if (($res | query json 'status') == 401) {
+    if ($res | empty?) || ($res | query json 'status') == 401 {
       $'(ansi r)Your login COOKIE info is outdated or empty，please update it and try again!(char nl)(ansi reset)'
       exit --now
     }
