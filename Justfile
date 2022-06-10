@@ -141,7 +141,8 @@ git-proxy status=('on'): _setup
 emp showAll=('false'): _setup
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'actions', 'working-hours.nu') }}; \
-    working-hours --show-all={{showAll}}
+    let codes = (get-env EMP_PROJECT_CODE '' | split row ','); \
+    for code in $codes { working-hours $code --show-all={{showAll}} } | flatten | uniq
 
 # 给标品源码仓库打 Release Tag
 gaia-release version=('') repos=('mall,mobile,picker') delete=('false'): _setup

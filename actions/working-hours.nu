@@ -8,13 +8,13 @@
 #   https://emp.app.terminus.io/view/worktime_WorkTimeBO_DepartmentWorkTime
 
 def 'working-hours' [
+  code: string
   --show-all: any   # Set true to show all members even if the working hours filled correctly
 ] {
 
   let monday = (get-monday)
   let sunday = (get-sunday)
   let emp = (get-conf empWorkingHour)
-  let code = (get-env EMP_PROJECT_CODE '')
   # 先从环境变量里面查找用户在 emp Cookie 里面的登陆信息
   let empUserCookie = (get-env EMP_UC_COOKIE '')
   if ($code == '' || $empUserCookie == '') {
@@ -122,12 +122,16 @@ def 'handle-working-hours' [
 
   if ($result | empty?) { $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; exit --now }
 
-  ($result | upsert Gap {|it| $total * 8 - ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave) } |
-    upsert WARN { |it|
-      if ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8) {
-        $'(ansi r)('*' | str lpad -l 6 -c $'(char sp)')(ansi reset)'
-      }
-    } | sort-by WARN Gap Name)
+  let hourMap = (
+    $result | upsert Gap { |it| $total * 8 - ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave) }
+      | upsert WARN { |it|
+          if ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8) {
+            $'(ansi r)('*' | str lpad -l 6 -c $'(char sp)')(ansi reset)'
+          }
+        }
+      | sort-by WARN Gap Name
+    )
+  print $hourMap
 }
 
 # Get the beginning time of monday, like 2021-12-06 00:00:00
