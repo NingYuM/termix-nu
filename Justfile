@@ -81,6 +81,12 @@ git-age: _setup
     source {{ join(_termix, 'git', 'age.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git age {{JUST_INVOKE_DIR}}
 
+# Show insertions/deletions and number of files changed for each commit
+git-stat count=('20') author=('*'): _setup
+  @source {{ join(_termix, 'utils', 'common.nu') }}; \
+    source {{ join(_termix, 'git', 'git-stat.nu') }}; \
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git stat {{JUST_INVOKE_DIR}} --count={{count}} --author={{author}}
+
 # Listing the remote branches of a git repo and the day of the last commit
 git-remote-age remote=('origin')  showTag=('false'): _setup
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
