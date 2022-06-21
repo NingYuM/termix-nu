@@ -10,10 +10,10 @@
 version = 'v1.6.0'
 
 # Min nushell version required to run termix-nu commands
-minNuVer = '0.62.1'
+minNuVer = '0.64.0'
 
 # Min just version required to run termix-nu commands
-minJustVer = '1.1.2'
+minJustVer = '1.2.0'
 
 # 临时二开仓库存放目录, .env 里面 TERMIX_TMP_PATH 具有更高优先级
 termixTmpPath = '/Users/hustcer/.termix-nu'

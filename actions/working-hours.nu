@@ -27,7 +27,7 @@ def 'working-hours' [
       | str replace '_first_day_' $monday
       | str replace '_project_code_' $code
     )
-  # Week No of now: [(date now)] | dfr to-df | dfr get-week
+  # Week No of now: [(date now)] | to-df | get-week
   let staffs = (curl $emp.staffUrl -H $emp.type -H $userCookie -s --data-raw $staffPayload | str collect)
 
   handle-exception $staffs
@@ -85,9 +85,9 @@ def 'handle-working-hours' [
   $'(ansi reset)(char nl)'
   let week = [Mon, Tue, Wen, Thu, Fri, Sat, Sun]
   # 当前是一年中的第几周
-  let weekNo = ([(date now)] | dfr to-df | dfr get-week).0
+  let weekNo = ([(date now)] | to-df | get-week).0
   # 此刻是一周中的第几天，周一为第 0 天
-  let weekDay = ([(date now)] | dfr to-df | dfr get-weekday).0
+  let weekDay = ([(date now)] | to-df | get-weekday).0
   # 正常情况下一周工作 5 天
   let total = (if $weekDay >= 5 { 5 } else { $weekDay + 1 })
 
@@ -96,7 +96,7 @@ def 'handle-working-hours' [
 
   let hours = ($workingHours | upsert day { |work|
         let day = (($work.fillDate / 1000) | into string | into datetime -o 8)
-        let idx = ((([$day] | dfr to-df | dfr get-weekday).0 + 1) mod 7)
+        let idx = (([$day] | to-df | get-weekday).0 mod 7)
         echo ($week | select $idx).0
       } | upsert Hrs { |work|
         ($work.percentage * 8) | into int
@@ -137,7 +137,7 @@ def 'handle-working-hours' [
 # Get the beginning time of monday, like 2021-12-06 00:00:00
 def 'get-monday' [] {
   let today = (date to-table|select year month day)
-  let weekDay = ([(date now)] | dfr to-df | dfr get-weekday).0
+  let weekDay = ([(date now)] | to-df | get-weekday).0
   let duration = ($'($weekDay)day' | into duration)
   let beginOfToday = ($'($today.year.0)-($today.month.0)-($today.day.0)' | into datetime)
   echo (($beginOfToday - $duration) | date format $_TIME_FMT)
