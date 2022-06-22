@@ -1,6 +1,46 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.6.0] - 2022-06-22
+
+### Bug Fixes
+
+- Improve redevelop-all script
+- Mall/redevelop-main.nu
+- Update nu-stat script use `size` instead of `wc`
+- Fix emp auth check for working hours query
+- Add code syncing support for branches whose name contain `.`
+- Fix `pull-redev` command
+
+### Documentation
+
+- Add doc for `git-stat` command
+
+### Features
+
+- Add `get-locale` related script
+- Add mall/upload-locale.nu script
+- Add mall/clean-locale.nu script
+- Add mall/redevelop-all.nu script
+- Add mall/redevelop-main.nu script
+- Add run/nu-stat.nu of source line counter for nushell
+- Add command `load-direnv`
+- Update zoxide and other configs
+- Add multiple team support for `emp` command
+- Add `git stat` command to display modification stats for each commit
+- Add light theme releated config
+- Upgrade for nu v0.64
+
+### Miscellaneous Tasks
+
+- Adapt to nushell v0.61.0
+- Update config to nushell v0.61.1
+
+### Refactor
+
+- Simplify bool flags for scripts
+- Optimize plugin register for nushell v0.61.0
+
 ## [1.5.0] - 2022-03-26
 
 ### Bug Fixes
