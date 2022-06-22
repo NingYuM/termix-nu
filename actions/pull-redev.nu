@@ -37,8 +37,7 @@ def 'git pull-redev' [
     $'(char nl)Pull repo (ansi gb)($repoName)(ansi reset): (char nl)'
 
     cd $destRepoPath;
-    # FIXME: nushell bug for bool var or
-    if (has-ref $branch) == false && (has-ref $'origin/($branch)') == false {
+    if not ((has-ref $branch) || (has-ref $'origin/($branch)')) {
       $'Dest branch: ($branch) does not exist, bye...(char nl)'
       exit --now
     }
