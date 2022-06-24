@@ -7,7 +7,7 @@
 # 以扫描指定文件夹下的文案然后将输出结果上传；
 #
 # 需要全局安装了 @terminus/termix, 最低版本 v2.0.0;
-# 需要安装 Nushell， 最低版本 v0.61.0; 可以通过 brew 或者 winget 安装, REF: https://www.nushell.sh/book/installation.html;
+# 需要安装 Nushell， 最低版本 v0.65.0; 可以通过 brew 或者 winget 安装, REF: https://www.nushell.sh/book/installation.html;
 # 使用:
 #   nu upload-locale.nu b2c
 

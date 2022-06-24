@@ -94,6 +94,15 @@ def-env goto [] {
   cd $path
 }
 
+# Bump Nushell to a dev version
+def bump-dev [] {
+  let from-ver = (open cargo.toml | get package.version)
+  if $from-ver | str ends-with '.0' {
+    let $to-ver = ($from-ver | str replace '.0' '.1')
+    sd -f e -s $from-ver $to-ver (fd --type file | lines)
+  }
+}
+
 # load environment variables from the .envrc file.
 def-env load-direnv [] {
   load-env (
@@ -569,11 +578,15 @@ let-env config = {
       modifier: control
       keycode: char_r
       mode: emacs
-      event: [
-        { edit: clear }
-        { edit: insertString value: $"source '($nu.config-path)'" }
-        { send: Enter }
-      ]
+      event: {
+        send: executehostcommand,
+        cmd: $"source '($nu.config-path)'"
+      }
+      # event: [
+      #   { edit: clear }
+      #   { edit: insertString value: $"source '($nu.config-path)'" }
+      #   { send: Enter }
+      # ]
     }
     # Keybindings used to trigger the user defined menus
     {

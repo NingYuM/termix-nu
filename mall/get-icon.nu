@@ -5,7 +5,7 @@
 # 该命令会根据提供的 iconfont Symbol JS 地址更新图标到本地指定项目里
 #
 # 需要全局安装了 @terminus/termix, 最低版本 v1.2.16;
-# 需要安装 Nushell， 最低版本 v0.61.0; 可以通过 brew 或者 winget 安装, REF: https://www.nushell.sh/book/installation.html;
+# 需要安装 Nushell， 最低版本 v0.65.0; 可以通过 brew 或者 winget 安装, REF: https://www.nushell.sh/book/installation.html;
 # 使用:
 #   nu scripts/nu/get-icon.nu b2c //at.alicdn.com/t/font_1949908_fie05xdkkq7.js
 #   npm run icon:get b2c //at.alicdn.com/t/font_1949908_fie05xdkkq7.js

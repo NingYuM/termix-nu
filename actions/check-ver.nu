@@ -9,7 +9,7 @@
 def 'nu-ver' [] {
 
   let currentVer = (version).version
-  let minVer = (get-conf minNuVer '0.61.0')
+  let minVer = (get-conf minNuVer '0.65.0')
   upgrade-tip nushell $minVer $currentVer
 }
 

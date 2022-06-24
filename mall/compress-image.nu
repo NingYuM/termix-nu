@@ -4,7 +4,7 @@
 # Created: 2022/03/18 18:50:56
 # 使用 tinypng api 压缩本地图片;
 # 需要全局安装 @terminus/termix，最低版本 v1.2.1;
-# 需要安装 Nushell， 最低版本 v0.61.0; 可以通过 brew 或者 winget 安装, REF: https://www.nushell.sh/book/installation.html;
+# 需要安装 Nushell， 最低版本 v0.65.0; 可以通过 brew 或者 winget 安装, REF: https://www.nushell.sh/book/installation.html;
 # 当前压缩 ./src/images、./src/design/images 中的图片
 # 使用:
 #   nu compress-image.nu b2c

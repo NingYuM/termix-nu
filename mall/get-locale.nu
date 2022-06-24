@@ -4,7 +4,7 @@
 # Created: 2022/03/29 16:15:20
 # 从国际化文案管理平台下载最新的中英文文案到本地；
 # 需要全局安装了 @terminus/termix, 最低版本 v2.2.5;
-# 需要安装 Nushell， 最低版本 v0.61.0; 可以通过 brew 或者 winget 安装, REF: https://www.nushell.sh/book/installation.html;
+# 需要安装 Nushell， 最低版本 v0.65.0; 可以通过 brew 或者 winget 安装, REF: https://www.nushell.sh/book/installation.html;
 # 使用:
 #   nu get-locale.nu b2c
 

@@ -4,7 +4,7 @@
 # Created: 2022/03/18 13:50:56
 # 上传图片到CDN, 需要根目录下有 oss-conf.json 配置文件;
 # 并全局安装了 @terminus/termix, 最低版本 v1.2.1;
-# 需要安装 Nushell， 最低版本 v0.61.0; 可以通过 brew 或者 winget 安装, REF: https://www.nushell.sh/book/installation.html;
+# 需要安装 Nushell， 最低版本 v0.65.0; 可以通过 brew 或者 winget 安装, REF: https://www.nushell.sh/book/installation.html;
 # 使用:
 #   nu upload-image.nu b2c
 #   npm run image:upload b2c
