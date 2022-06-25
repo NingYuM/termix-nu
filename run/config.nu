@@ -97,7 +97,7 @@ def-env goto [] {
 # Bump Nushell to a dev version
 def bump-dev [] {
   let from-ver = (open cargo.toml | get package.version)
-  if $from-ver | str ends-with '.0' {
+  if ($from-ver | str ends-with '.0') {
     let $to-ver = ($from-ver | str replace '.0' '.1')
     sd -f e -s $from-ver $to-ver (fd --type file | lines)
   }
