@@ -37,7 +37,7 @@ def 'git pull-redev' [
     $'(char nl)Pull repo (ansi gb)($repoName)(ansi reset): (char nl)'
 
     cd $destRepoPath;
-    if not ((has-ref $branch) || (has-ref $'origin/($branch)')) {
+    if not ((has-ref $branch) || (has-ref origin/($branch))) {
       $'Dest branch: ($branch) does not exist, bye...(char nl)'
       exit --now
     }
@@ -50,7 +50,7 @@ def 'git pull-redev' [
     # 先从环境变量里面查找待比较的上一个标签的完整名称
     let prevTagName = (get-env REDEV_PREV_TAG '')
     # Check the tag status, if exists just recrete it.
-    if (has-ref $'refs/tags/($prevTagName)') {
+    if (has-ref refs/tags/($prevTagName)) {
       if $show-diff && (git --no-pager diff $prevTagName $branch --name-only | lines | length) > 0 {
         $'---------> Update since latest tag <---------:(char nl)(ansi y)'
         git --no-pager diff $prevTagName $branch --name-only

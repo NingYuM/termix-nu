@@ -44,7 +44,7 @@ def 'check-desc' [] {
       | query json 'descriptions'
       | transpose name description
       | get name
-      | each { |br| if (has-ref $'origin/($br)') == false { $br } }
+      | each { |br| if (has-ref origin/($br)) == false { $br } }
       | compact
   )
 
