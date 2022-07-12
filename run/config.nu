@@ -371,7 +371,6 @@ let-env config = {
   footer_mode: "25" # always, never, number_of_rows, auto
   table_mode: light # basic, compact, compact_double, light, thin, with_love, rounded, reinforced, heavy, none, other
   quick_completions: true  # set this to false to prevent auto-selecting completions when only one remains
-  animate_prompt: false # redraw the prompt every second
   float_precision: 2
   use_ansi_coloring: true
   filesize_format: "auto" # b, kb, kib, mb, mib, gb, gib, tb, tib, pb, pib, eb, eib, zb, zib, auto
