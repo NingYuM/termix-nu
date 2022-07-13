@@ -33,7 +33,7 @@ def 'check-desc' [] {
     ($remoteBranches
       | where (no-desc $descriptions $it)
       | wrap name
-      | upsert commit-by { |it| git show $'origin/($it.name)' -s --format='%an' }
+      | upsert commit-by { |it| git show $'origin/($it.name)' -s --format='%an' | str trim }
       | upsert last-commit { |it| git show $'origin/($it.name)' --no-patch --format=%ci | into datetime }
       | sort-by last-commit)
   }
@@ -49,7 +49,7 @@ def 'check-desc' [] {
   )
 
   if ($gone | length) > 0 {
-    $'(ansi p)  Branches that have a description but were(ansi r) removed from remote(ansi reset):(char nl)(char nl)(ansi reset)'
+    $'(ansi p)(char nl)  Branches that have a description but were(ansi r) removed from remote(ansi reset):(char nl)(char nl)(ansi reset)'
     $gone | wrap 'name'
   }
 

@@ -26,7 +26,7 @@ def 'git remote-age' [
     | str substring '52,'
     | wrap name
     | upsert local { |it|  if (has-ref $it.name) { '   √' }}
-    | upsert author { |it| git show $"remotes/($alias)/($it.name)" -s --format='%an' }
+    | upsert author { |it| git show $"remotes/($alias)/($it.name)" -s --format='%an' | str trim }
     | upsert last-commit { |it| git show $"remotes/($alias)/($it.name)" --no-patch --format=%ci | into datetime }
     | sort-by last-commit
 

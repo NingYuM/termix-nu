@@ -371,12 +371,26 @@ let-env config = {
   footer_mode: "25" # always, never, number_of_rows, auto
   table_mode: light # basic, compact, compact_double, light, thin, with_love, rounded, reinforced, heavy, none, other
   quick_completions: true  # set this to false to prevent auto-selecting completions when only one remains
+  completion_algorithm: "prefix"  # prefix, fuzzy
   float_precision: 2
+  buffer_editor: "emacs" # command that will be used to edit the current line buffer with ctr+e
   use_ansi_coloring: true
   filesize_format: "auto" # b, kb, kib, mb, mib, gb, gib, tb, tib, pb, pib, eb, eib, zb, zib, auto
   edit_mode: emacs # emacs, vi
   max_history_size: 10000
+  sync_history_on_enter: true # Enable to share the history between multiple sessions, else you have to close the session to persist history to file
+  shell_integration: true # enables terminal markers and a workaround to arrow keys stop working issue
+  disable_table_indexes: false # set to true to remove the index column from tables
   log_level: trace
+  cd_with_abbreviations: false # set to true to allow you to do things like cd s/o/f and nushell expand it to cd some/other/folder
+  # A strategy of managing table view in case of limited space.
+  table_trim: {
+    methodology: wrapping, # truncating
+    # A strategy which will be used by 'wrapping' methodology
+    wrapping_try_keep_words: true,
+    # A suffix which will be used with 'truncating' methodology
+    # truncating_suffix: "..."
+  }
   hooks: {
     pre_prompt: [{
       # print "pre-prompt hook invoked"
