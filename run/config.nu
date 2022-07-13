@@ -150,6 +150,8 @@ def 'nu-sloc' [] {
 }
 
 # -------------------------- Autocompletion ------------------------
+# Nushell Config File
+
 module completions {
   # Custom completions for external commands (those outside of Nushell)
   # Each completions has two parts: the form of the external command, including its flags and parameters
@@ -157,7 +159,7 @@ module completions {
   #
   # This is a simplified version of completions for git branches and git remotes
   def "nu-complete git branches" [] {
-    ^git branch | lines | each { |line| $line | str replace '\* ' '' | str trim }
+    ^git branch | lines | each { |line| $line | str replace '[\*\+] ' '' | str trim }
   }
 
   def "nu-complete git remotes" [] {
@@ -167,6 +169,56 @@ module completions {
   def "nu-complete git log" [] {
     ^git log --pretty=%h | lines | each { |line| $line | str trim }
   }
+
+  # Download objects and refs from another repository
+  export extern "git fetch" [
+    repository?: string@"nu-complete git remotes" # name of the repository to fetch
+    branch?: string@"nu-complete git branches" # name of the branch to fetch
+    --all                                         # Fetch all remotes
+    --append(-a)                                  # Append ref names and object names to .git/FETCH_HEAD
+    --atomic                                      # Use an atomic transaction to update local refs.
+    --depth: int                                  # Limit fetching to n commits from the tip
+    --deepen: int                                 # Limit fetching to n commits from the current shallow boundary
+    --shallow-since: string                       # Deepen or shorten the history by date
+    --shallow-exclude: string                     # Deepen or shorten the history by branch/tag
+    --unshallow                                   # Fetch all available history
+    --update-shallow                              # Update .git/shallow to accept new refs
+    --negotiation-tip: string                     # Specify which commit/glob to report while fetching
+    --negotiate-only                              # Do not fetch, only print common ancestors
+    --dry-run                                     # Show what would be done
+    --write-fetch-head                            # Write fetched refs in FETCH_HEAD (default)
+    --no-write-fetch-head                         # Do not write FETCH_HEAD
+    --force(-f)                                   # Always update the local branch
+    --keep(-k)                                    # Keep dowloaded pack
+    --multiple                                    # Allow several arguments to be specified
+    --auto-maintenance                            # Run 'git maintenance run --auto' at the end (default)
+    --no-auto-maintenance                         # Don't run 'git maintenance' at the end
+    --auto-gc                                     # Run 'git maintenance run --auto' at the end (default)
+    --no-auto-gc                                  # Don't run 'git maintenance' at the end
+    --write-commit-graph                          # Write a commit-graph after fetching
+    --no-write-commit-graph                       # Don't write a commit-graph after fetching
+    --prefetch                                    # Place all refs into the refs/prefetch/ namespace
+    --prune(-p)                                   # Remove obsolete remote-tracking references
+    --prune-tags(-P)                              # Remove any local tags that do not exist on the remote
+    --no-tags(-n)                                 # Disable automatic tag following
+    --refmap: string                              # Use this refspec to map the refs to remote-tracking branches
+    --tags(-t)                                    # Fetch all tags
+    --recurse-submodules: string                  # Fetch new commits of populated submodules (yes/on-demand/no)
+    --jobs(-j): int                               # Number of parallel children
+    --no-recurse-submodules                       # Disable recursive fetching of submodules
+    --set-upstream                                # Add upstream (tracking) reference
+    --submodule-prefix: string                    # Prepend to paths printed in informative messages
+    --upload-pack: string                         # Non-default path for remote command
+    --quiet(-q)                                   # Silence internally used git commands
+    --verbose(-v)                                 # Be verbose
+    --progress                                    # Report progress on stderr
+    --server-option(-o): string                   # Pass options for the server to handle
+    --show-forced-updates                         # Check if a branch is force-updated
+    --no-show-forced-updates                      # Don't check if a branch is force-updated
+    -4                                            # Use IPv4 addresses, ignore IPv6 addresses
+    -6                                            # Use IPv6 addresses, ignore IPv4 addresses
+    --help                                        # Display this help message
+  ]
 
   # Check out git branches and files
   export extern "git co" [
@@ -192,6 +244,7 @@ module completions {
     -b: string                                      # create and checkout a new branch
     -B: string                                      # create/reset and checkout a branch
     -l                                              # create reflog for new branch
+    --help                                          # Display this help message
   ]
 
   # Push changes
@@ -223,44 +276,15 @@ module completions {
     --tags                                          # push tags (can't be used with --all or --mirror)
     --thin                                          # use thin pack
     --verbose(-v)                                   # be more verbose
-  ]
-
-  # Switch between branches and commits
-  export extern "git switch" [
-    switch?: string@"nu-complete git branches"      # name of branch to switch to
-    --create(-c): string                            # create a new branch
-    --detach(-d): string@"nu-complete git log"      # switch to a commit in a detatched state
-    --force-create(-C): string                      # forces creation of new branch, if it exists then the existing branch will be reset to starting point
-    --force(-f)                                     # alias for --discard-changes
-    --guess                                         # if there is no local branch which matches then name but there is a remote one then this is checked out
-    --ignore-other-worktrees                        # switch even if the ref is held by another worktree
-    --merge(-m)                                     # attempts to merge changes when switching branches if there are local changes
-    --no-guess                                      # do not attempt to match remote branch names
-    --no-progress                                   # do not report progress
-    --no-recurse-submodules                         # do not update the contents of sub-modules
-    --no-track                                      # do not set "upstream" configuration
-    --orphan: string                                # create a new orphaned branch
-    --progress                                      # report progress status
-    --quiet(-q)                                     # suppress feedback messages
-    --recurse-submodules                            # update the contents of sub-modules
-    --track(-t)                                     # set "upstream" configuration
+    --help                                          # Display this help message
   ]
 }
 
 # Get just the extern definitions without the custom completion commands
 use completions *
 
-# def "nu-complete just cmd" [] {
-#     ^just --justfile ~/.justfile --summary | split row ' '
-# }
-
-# extern "just" [
-#   ' ': string@"nu-complete just cmd"
-#   -f: bool      # do a force push
-# ]
-
-# -------------------- Nushell Configs -------------------------
-# The default config record. This is where much of your global configuration is setup.
+# for more information on themes see
+# https://www.nushell.sh/book/coloring_and_theming.html
 let dark_theme = {
   # color for nushell primitives
   separator: white
@@ -291,7 +315,7 @@ let dark_theme = {
   shape_int: purple_bold
   shape_float: purple_bold
   shape_range: yellow_bold
-  shape_internalcall: cyna_bold
+  shape_internalcall: cyan_bold
   shape_external: cyan
   shape_externalarg: green_bold
   shape_literal: blue
@@ -299,6 +323,7 @@ let dark_theme = {
   shape_signature: green_bold
   shape_string: green
   shape_string_interpolation: cyan_bold
+  shape_datetime: cyan_bold
   shape_list: cyan_bold
   shape_table: blue_bold
   shape_record: cyan_bold
@@ -362,27 +387,32 @@ let light_theme = {
   shape_nothing: light_cyan
 }
 
+# The default config record. This is where much of your global configuration is setup.
 let-env config = {
   filesize_metric: false
+  table_mode: light # basic, compact, compact_double, light, thin, with_love, rounded, reinforced, heavy, none, other
   use_ls_colors: true
   rm_always_trash: false
   color_config: $dark_theme   # if you want a light theme, replace `$dark_theme` to `$light_theme`
   use_grid_icons: true
   footer_mode: "25" # always, never, number_of_rows, auto
-  table_mode: light # basic, compact, compact_double, light, thin, with_love, rounded, reinforced, heavy, none, other
   quick_completions: true  # set this to false to prevent auto-selecting completions when only one remains
+  partial_completions: true  # set this to false to prevent partial filling of the prompt
   completion_algorithm: "prefix"  # prefix, fuzzy
   float_precision: 2
-  buffer_editor: "emacs" # command that will be used to edit the current line buffer with ctr+e
+  # buffer_editor: "emacs" # command that will be used to edit the current line buffer with ctrl+o, if unset fallback to $env.EDITOR and $env.VISUAL
   use_ansi_coloring: true
   filesize_format: "auto" # b, kb, kib, mb, mib, gb, gib, tb, tib, pb, pib, eb, eib, zb, zib, auto
   edit_mode: emacs # emacs, vi
-  max_history_size: 10000
+  max_history_size: 10000 # Session has to be reloaded for this to take effect
   sync_history_on_enter: true # Enable to share the history between multiple sessions, else you have to close the session to persist history to file
+  history_file_format: "plaintext" # "sqlite" or "plaintext"
   shell_integration: true # enables terminal markers and a workaround to arrow keys stop working issue
   disable_table_indexes: false # set to true to remove the index column from tables
-  log_level: trace
   cd_with_abbreviations: false # set to true to allow you to do things like cd s/o/f and nushell expand it to cd some/other/folder
+  case_sensitive_completions: false # set to true to enable case-sensitive completions
+  enable_external_completion: true # set to false to prevent nushell looking into $env.PATH to find more suggestions, `false` recommended for WSL users as this look up my be very slow
+
   # A strategy of managing table view in case of limited space.
   table_trim: {
     methodology: wrapping, # truncating
@@ -391,15 +421,19 @@ let-env config = {
     # A suffix which will be used with 'truncating' methodology
     # truncating_suffix: "..."
   }
+
   hooks: {
     pre_prompt: [{
-      # print "pre-prompt hook invoked"
       $nothing  # replace with source code to run before the prompt is shown
     }]
     pre_execution: [{
-      # print 'pre-execution hook invoked'
-      $nothing
+      $nothing  # replace with source code to run before the repl input is run
     }]
+    env_change: {
+      PWD: [{|before, after|
+        $nothing  # replace with source code to run if the PWD environment is different since the last repl input
+      }]
+    }
   }
   menus: [
     # Configuration for default nushell menus
@@ -543,17 +577,19 @@ let-env config = {
     {
       name: history_menu
       modifier: control
-      keycode: char_x
+      keycode: char_r
       mode: emacs
-      event: {
-        until: [
-          { send: menu name: history_menu }
-          { send: menupagenext }
-        ]
-      }
+      event: { send: menu name: history_menu }
     }
     {
-      name: history_previous
+      name: next_page
+      modifier: control
+      keycode: char_x
+      mode: emacs
+      event: { send: menupagenext }
+    }
+    {
+      name: undo_or_previous_page
       modifier: control
       keycode: char_z
       mode: emacs
@@ -565,19 +601,41 @@ let-env config = {
       }
     }
     {
-      name: fzf
+      name: yank
       modifier: control
-      keycode: char_f
+      keycode: char_y
       mode: emacs
-      event: [
-        { edit: clear }
-        { edit: insertstring value: 'cd (ls | where type == dir | each {|it| $it.name} | str collect (char nl) | fzf | decode utf-8 | str trim)' }
-        { send: enter }
-      ]
-    },
+      event: {
+        until: [
+          {edit: pastecutbufferafter}
+        ]
+      }
+    }
+    {
+      name: unix-line-discard
+      modifier: control
+      keycode: char_u
+      mode: [emacs, vi_normal, vi_insert]
+      event: {
+        until: [
+          {edit: cutfromlinestart}
+        ]
+      }
+    }
+    {
+      name: kill-line
+      modifier: control
+      keycode: char_k
+      mode: [emacs, vi_normal, vi_insert]
+      event: {
+        until: [
+          {edit: cuttolineend}
+        ]
+      }
+    }
     {
       name: cargo_test
-      modifier: control
+      modifier: alt
       keycode: char_t
       mode: emacs
       event: [
@@ -589,7 +647,7 @@ let-env config = {
     {
       name: reload_config
       modifier: control
-      keycode: char_r
+      keycode: char_g
       mode: emacs
       event: {
         send: executehostcommand,
@@ -610,16 +668,16 @@ let-env config = {
       event: { send: menu name: commands_menu }
     }
     {
-      name: commands_menu
-      modifier: control
-      keycode: char_y
+      name: vars_menu
+      modifier: alt
+      keycode: char_o
       mode: [emacs, vi_normal, vi_insert]
       event: { send: menu name: vars_menu }
     }
     {
       name: commands_with_description
       modifier: control
-      keycode: char_u
+      keycode: char_s
       mode: [emacs, vi_normal, vi_insert]
       event: { send: menu name: commands_with_description }
     }
