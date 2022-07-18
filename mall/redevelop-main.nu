@@ -53,9 +53,10 @@ def main [
     git config --global user.email 'erda@terminus.io'
   }
   # 通过 Termix 生成标品二开仓库
-  termix redevelop redev-app --template $template --checkout $checkout --user='git' --access-token $token
-  if ('redev-app/origin' | path exists) == false {
-    '(ansi r)Redevelop repo generating failed! Bye...(ansi reset)'
+  let action = (termix redevelop redev-app --template $template --checkout $checkout --user='git' --access-token $token | complete)
+  print $action.stdout; print $action.stderr
+  if ('redev-app/origin' | path exists) == false || $action.exit_code != 0  {
+    $'(ansi r)Redevelop repo generating failed! Bye...(ansi reset)'
     exit 1 --now
   }
   # 清除生成的二开仓库里面的git信息
