@@ -39,7 +39,7 @@
 │   ├── [x] git-batch-reset.nu
 │   ├── [x] git-proxy.nu
 │   ├── [x] pull-all.nu
-│   ├── [x] remote-age.nu
+│   ├── [x] remote-branch.nu
 │   ├── [x] rename-branch.nu
 │   ├── [x] repo-transfer.nu
 │   ├── [x] sync-branch.nu
@@ -89,7 +89,7 @@
 │   ├── [x] git-batch-reset.nu
 │   ├── [-] git-proxy.nu
 │   ├── [x] pull-all.nu
-│   ├── [x] remote-age.nu
+│   ├── [x] remote-branch.nu
 │   ├── [x] rename-branch.nu
 │   ├── [x] repo-transfer.nu
 │   ├── [x] sync-branch.nu

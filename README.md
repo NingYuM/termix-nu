@@ -80,10 +80,10 @@ cargo +stable install nu --all-features --version 0.60.0
    ··· dir-batch-exec cmd +DIRS=('') # 在指定目录(支持'*'通配符)或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
    ··· emp showAll=('false')         # 查询电商前端团队本周工时填报情况
    ··· gaia-release version=('') repos=('mall,mobile,picker') delete=('false') # 给标品源码仓库打 Release Tag
-   ··· git-age                       # Listing the branches of a git repo and the time of the last commit
+   ··· git-branch                       # Listing the branches of a git repo and the time of the last commit
    ··· git-batch-exec cmd +branches=('') # 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用空格分隔
    ··· git-batch-reset n +branches=('') # 将指定Git分支硬回滚N个commit
-   ··· git-remote-age remote=('origin') showTag=('false') # Listing the remote branches of a git repo and the day of the last commit
+   ··· git-remote-branch remote=('origin') showTag=('false') # Listing the remote branches of a git repo and the day of the last commit
    ··· git-sync-branch localRef localOid remoteRef # 批量同步本地分支到远程指定分支,git pre-push hooks调用,请勿手工触发
    ··· go nav=('list')               # Quickly open the matched nav url in default browser, for mac only
    ··· ls-node minVer=('12') isLts=('false') # 查询已发布Node版本，支持指定最低版本号
@@ -291,27 +291,27 @@ t ls-node 12 true
 
 ---
 
-### 8. 查看本地 Git 仓库分支及最后提交时间{#git-age}
+### 8. 查看本地 Git 仓库分支及最后提交时间{#git-branch}
 
 **功能描述**: 查看本地 Git 仓库的分支及其最后提交时间, 按最后提交时间升序排序
 
-**命令格式**: `t git-age`
+**命令格式**: `t git-branch`
 
 **参数说明**: N/A
 
-**使用举例**: Run `t git-age` in a git repo.
+**使用举例**: Run `t git-branch` in a git repo.
 
 **输出样例**:
 
-![Git-Age Output](https://img.alicdn.com/imgextra/i1/O1CN01TSmh2F1ImH2PuFvU0_!!6000000000935-2-tps-476-190.png)
+![Git-Branch Output](https://img.alicdn.com/imgextra/i1/O1CN01TSmh2F1ImH2PuFvU0_!!6000000000935-2-tps-476-190.png)
 
 ---
 
-### 9. 显示 Git 仓库远程分支及其最后提交信息{#git-remote-age}
+### 9. 显示 Git 仓库远程分支及其最后提交信息{#git-remote-branch}
 
 **功能描述**: 显示当前 Git 仓库远程地址所有的分支及其最后提交信息
 
-**命令格式**: `t git-remote-age remote=('origin') showTag=('false')`
+**命令格式**: `t git-remote-branch remote=('origin') showTag=('false')`
 
 **参数说明**:
 
@@ -322,14 +322,14 @@ t ls-node 12 true
 
 ```bash
 # 执行该命令前先切换到一个Git仓库
-t git-remote-age
+t git-remote-branch
 # 显示远程分支及分支最后提交时间，同时显示已有Tag及其创建时间
-t git-remote-age origin true
+t git-remote-branch origin true
 ```
 
 **输出样例**:
 
-![Git-Remote-Age Output](https://img.alicdn.com/imgextra/i3/O1CN01Nif5F31Bun5nC7Fpl_!!6000000000006-2-tps-561-249.png)
+![Git-Remote-Branch Output](https://img.alicdn.com/imgextra/i3/O1CN01Nif5F31Bun5nC7Fpl_!!6000000000006-2-tps-561-249.png)
 
 ---
 

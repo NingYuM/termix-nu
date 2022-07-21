@@ -36,12 +36,12 @@ _query_plugin := if os_family() == 'windows' { 'nu_plugin_query.exe' } else { 'n
 _gstat_plugin := if os_family() == 'windows' { 'nu_plugin_gstat.exe' } else { 'nu_plugin_gstat' }
 
 # Just commands aliases
-# alias ag := git-age
 # alias pa := pull-all
 # alias rt := tag-redev
+# alias gb := git-branch
 # alias pr := pull-redev
-# alias ra := git-remote-age
 # alias lt := ls-redev-tags
+# alias rb := git-remote-branch
 
 # To pass arguments to a dependency, put the dependency
 # in parentheses along with the arguments, just like:
@@ -75,11 +75,12 @@ go nav=('list'): _setup
     go {{nav}}
 
 # Listing the branches of a git repo and the time of the last commit
-git-age: _setup
+git-branch: _setup
   @# The following two statement must be written in one line
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
-    source {{ join(_termix, 'git', 'age.nu') }}; \
-    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git age {{JUST_INVOKE_DIR}}
+    source {{ join(_termix, 'utils', 'git.nu') }}; \
+    source {{ join(_termix, 'git', 'branch.nu') }}; \
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git-branch {{JUST_INVOKE_DIR}}
 
 # Show insertions/deletions and number of files changed for each commit
 git-stat count=('20') author=('*'): _setup
@@ -87,12 +88,13 @@ git-stat count=('20') author=('*'): _setup
     source {{ join(_termix, 'git', 'git-stat.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git stat {{JUST_INVOKE_DIR}} --count={{count}} --author={{author}}
 
-# Listing the remote branches of a git repo and the day of the last commit
-git-remote-age remote=('origin')  showTag=('false'): _setup
+# Listing the remote branches of a git repo with the extra info
+git-remote-branch remote=('origin')  showTag=('false'): _setup
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
-    source {{ join(_termix, 'git', 'remote-age.nu') }}; \
+    source {{ join(_termix, 'utils', 'git.nu') }}; \
+    source {{ join(_termix, 'git', 'remote-branch.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; \
-    git remote-age {{JUST_INVOKE_DIR}} {{remote}} --show-tag={{showTag}}
+    git-remote-branch {{JUST_INVOKE_DIR}} {{remote}} --show-tag={{showTag}}
 
 # Show branch description from branch description file `d` of `i` branch
 desc branch=(`git branch --show-current`) showNotes=('false'): _setup

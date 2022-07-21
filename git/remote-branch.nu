@@ -2,14 +2,14 @@
 # Author: hustcer
 # Created: 2021/09/11 23:33:03
 # Usage:
-#   t git-remote-age
-#   t git-remote-age origin
-#   t git-remote-age origin true
+#   t git-remote-branch
+#   t git-remote-branch origin
+#   t git-remote-branch origin true
 
 # Creates a table listing the remote branches of
 # a git repository and the time of the last commit
-def 'git remote-age' [
-  repo: string          # The git repo to display branch ages
+def 'git-remote-branch' [
+  repo: string          # The git repo to display remote branch info
   alias: string         # The remote url alias for git repo
   --show-tag(-t): any   # Set to 'true' if you want to show all the tags, defined as `any` acutually `bool`
 ] {
@@ -21,14 +21,16 @@ def 'git remote-age' [
   git fetch $alias -p
   $'(char nl)Branches of (ansi gb)($repoName)(ansi reset) for remote ($alias)(char nl)'
 
-  git ls-remote --heads --refs $alias
+  let basic = (
+    git ls-remote --heads --refs $alias
     | lines
     | str substring '52,'
     | wrap name
     | upsert local { |it|  if (has-ref $it.name) { '   √' }}
     | upsert author { |it| git show $"remotes/($alias)/($it.name)" -s --format='%an' | str trim }
     | upsert last-commit { |it| git show $"remotes/($alias)/($it.name)" --no-patch --format=%ci | into datetime }
-    | sort-by last-commit
+  )
+  append-desc $basic
 
   if (! $show-tag) { exit --now }
 
@@ -39,4 +41,4 @@ def 'git remote-age' [
 }
 
 # $env | transpose
-# git remote-age $env.JUST_INVOKE_DIR $env.REMOTE_ALIAS
+# git-remote-branch $env.JUST_INVOKE_DIR $env.REMOTE_ALIAS

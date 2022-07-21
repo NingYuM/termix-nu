@@ -41,3 +41,29 @@ def 'get-sync-ref' [
     $syncFrom
   }
 }
+
+# Append the `has-desc` column to a git summary table to indicate if that branch has a description
+def 'append-desc' [
+  records: table    # The table to append a `has-desc` column witch must has a `name` column for the git branch name
+] {
+
+  let descFile = 'd.toml'
+  let localIExists = (has-ref i)
+  let remoteIExists = (has-ref origin/i)
+  if not ($localIExists || $remoteIExists) {
+    $records
+  } else {
+    # 本地 i 分支优先级高于远程
+    let querySource = (if ($localIExists) { 'i' } else { 'origin/i' })
+    let descriptions = (git show $'($querySource):($descFile)' | from toml | to json)
+    let summary = (
+      $records | insert has-desc { |it|
+        # 处理分支名称包含‘.’的情况: `support/release-2.4`
+        let escapedBranch = ($it.name | str replace -a '\.' '\.')
+        let desc = ($descriptions | query json $'descriptions.($escapedBranch)')
+        if ($desc | empty?) { '' } else { '   √' }
+      }
+    )
+    $summary | move has-desc --after author | sort-by last-commit
+  }
+}
