@@ -51,7 +51,7 @@ def 'append-desc' [
   let localIExists = (has-ref i)
   let remoteIExists = (has-ref origin/i)
   if not ($localIExists || $remoteIExists) {
-    $records
+    $records | sort-by last-commit
   } else {
     # 本地 i 分支优先级高于远程
     let querySource = (if ($localIExists) { 'i' } else { 'origin/i' })
