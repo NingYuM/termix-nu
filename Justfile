@@ -146,11 +146,11 @@ git-proxy status=('on'): _setup
     nu {{ join(_termix, 'git', 'git-proxy.nu') }}
 
 # 查询电商前端团队本周工时填报情况
-emp showAll=('false'): _setup
+emp showAll=('false') showPrev=('false'): _setup
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'actions', 'working-hours.nu') }}; \
     let codes = (get-env EMP_PROJECT_CODE '' | split row ','); \
-    for code in $codes { working-hours $code --show-all={{showAll}} } | flatten | uniq
+    for code in $codes { working-hours $code --show-all={{showAll}} --show-prev={{showPrev}} } | flatten | uniq
 
 # 给标品源码仓库打 Release Tag
 gaia-release version=('') repos=('mall,mobile,picker') delete=('false'): _setup
