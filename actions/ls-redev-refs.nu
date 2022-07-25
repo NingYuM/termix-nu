@@ -11,7 +11,7 @@ def 'git ls-redev-refs' [
   --show-branches: any      # Set true to show remote branches last commit info, defined as `any` acutually `bool`
 ] {
 
-  let repoPath = (get-tmp-path)
+  let repoPath = get-tmp-path
   let redevRepos = (open $_TERMIX_CONF | get redevRepos)
   let filteredRepos = ($redevRepos | where $',($group),' =~ $it.group)
 
@@ -24,7 +24,7 @@ def 'git ls-redev-refs' [
 
   $filteredRepos | each { |it|
     let url = (echo $it | get url)
-    let repoNameIdx = (($url | str index-of -e '/') + 1)
+    let repoNameIdx = ($url | str index-of -e '/') + 1
     let repoName = ($url | str substring $'($repoNameIdx),')
     # 单一二开仓库完整路径
     let destRepoPath = ([$repoPath $repoName] | path join)
@@ -37,7 +37,7 @@ def 'git ls-redev-refs' [
 
     if ($show-branches) {
       $'(char nl)Branches of repo (ansi gb)($repoName)(ansi reset): (char nl)'
-      git age $destRepoPath
+      git-branch $destRepoPath
     }
 
     $'(char nl)Tags of repo (ansi gb)($repoName)(ansi reset): (char nl)'

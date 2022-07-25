@@ -66,7 +66,7 @@ def 'working-hours' [
     )
 
   # Set a default leaving record
-  let leavingHours = (if ($leavingHours | compact | length) == 0 { [[beginTime, duration, staffId]; [0, 0, 0]] } else { $leavingHours })
+  let leavingHours = if ($leavingHours | compact | length) == 0 { [[beginTime, duration, staffId]; [0, 0, 0]] } else { $leavingHours }
 
   handle-working-hours $allStaffs $workingHours $leavingHours --show-all=$show-all --show-prev=$show-prev
 }
@@ -91,10 +91,10 @@ def 'handle-working-hours' [
   # 此刻是一周中的第几天，周一为第 0 天
   let weekDay = ([(date now)] | into df | get-weekday).0
   # 正常情况下一周工作 5 天
-  let total = (if ($weekDay >= 5 || $show-prev == true) { 5 } else { $weekDay + 1 })
+  let total = if ($weekDay >= 5 || $show-prev == true) { 5 } else { $weekDay + 1 }
 
   # Set a default working hour record
-  let workingHours = (if ($workingHours | compact | length) == 0 { [[fillDate, percentage, staffId]; [0, 0, 0]] } else { $workingHours })
+  let workingHours = if ($workingHours | compact | length) == 0 { [[fillDate, percentage, staffId]; [0, 0, 0]] } else { $workingHours }
 
   let hours = ($workingHours | upsert day { |work|
         let day = (($work.fillDate / 1000) | into string | into datetime -o 8)

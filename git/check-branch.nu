@@ -9,8 +9,8 @@ def 'check-branch' [] {
 
   git fetch origin -p
   let descFile = 'd.toml'
-  let localIExists = (has-ref i)
-  let remoteIExists = (has-ref origin/i)
+  let localIExists = has-ref i
+  let remoteIExists = has-ref origin/i
 
   if ($localIExists || $remoteIExists) == false {
     $'You do not have an i branch, branch description query failed, bye...(char nl)'
@@ -18,7 +18,7 @@ def 'check-branch' [] {
   }
   # 本地 i 分支优先级高于远程
   let repo = ($env.PWD | path basename | str trim)
-  let querySource = (if ($localIExists) { 'i' } else { 'origin/i' })
+  let querySource = if $localIExists { 'i' } else { 'origin/i' }
   let descriptions = (git show $'($querySource):($descFile)' | from toml | to json)
   # Alternatively since nushell v0.40.0 you can use the following line, which is longer but more readable
   # git ls-remote --heads --refs origin | detect columns -n | rename cid name |

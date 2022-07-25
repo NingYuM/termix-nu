@@ -15,7 +15,7 @@ def 'gaia-release' [
   --delete-tag(-d): any   # Set to 'true' if you want to delete the specified tag, defined as `any` acutually `bool`
 ] {
 
-  let repoPath = (get-tmp-path)
+  let repoPath = get-tmp-path
   let gaiaSrcRepos = (open $_TERMIX_CONF | get gaiaSrcRepos)
   $'Using global repo path: (ansi p)($repoPath)(ansi reset)(char nl)'
 
@@ -26,7 +26,7 @@ def 'gaia-release' [
     let releaseTag = (if ($repo.suffix | empty?) { $'($version)-($dateSuffix)' } else { $'($version)-($repo.suffix)-($dateSuffix)' })
     # let tagName = 'v1.0.0-2021.08.09'
     # 如果传入的是完整的带时间戳的 Tag 名就不用再重复加时间戳了
-    let tagName = (if ($version | str contains '-') { $version } else { $releaseTag })
+    let tagName = if ($version | str contains '-') { $version } else { $releaseTag }
     # 仓库存在则更新，不存在则 clone
     if ($destRepoPath | path exists) {
       cd $destRepoPath
@@ -39,11 +39,11 @@ def 'gaia-release' [
     # Delete tags that not exist in remote repo
     git fetch origin --prune '+refs/tags/*:refs/tags/*'
 
-    let tagExists = (has-ref $'refs/tags/($tagName)')
+    let tagExists = has-ref $'refs/tags/($tagName)'
     # Check the tag status, if exists just recrete it.
-    if ($tagExists) { git tag -d $tagName; git push origin --delete $tagName }
+    if $tagExists { git tag -d $tagName; git push origin --delete $tagName }
 
-    if ($delete-tag) {
+    if $delete-tag {
       print $'(ansi g)Tag delete successfully!(ansi reset)'
     } else {
       let tagComment = $'A new release for version: ($tagName) created by gaia-release command of termix-nu'

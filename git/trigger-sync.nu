@@ -35,15 +35,15 @@ def 'git trigger-sync' [
   }
 
   # Decide which branch to get `.termixrc` conf from ?
-  let useConfBr = (get-conf useConfFromBranch)
-  let confBr = (if $useConfBr == '_current_' { $selected } else { 'i' })
+  let useConfBr = get-conf useConfFromBranch
+  let confBr = if $useConfBr == '_current_' { $selected } else { 'i' }
 
   if (has-ref origin/($confBr)) == false {
     $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
     exit --now
   }
   let pushConf = (git show $'origin/($confBr):.termixrc' | from toml | to json)
-  let ignored = (get-env SYNC_IGNORE_ALIAS '')
+  let ignored = get-env SYNC_IGNORE_ALIAS ''
   # 处理分支名称包含‘.’的情况: `support/release-2.4`
   let escapedBranch = ($selected | str replace -a '\.' '\.')
   # 获取待同步目的仓库及目的分支映射
@@ -61,7 +61,7 @@ def 'git trigger-sync' [
   } else { exit --now }
 
   echo $syncDests | where SYNC == '   √' | each { |iter|
-    let syncFrom = (get-sync-ref $selected $iter)
+    let syncFrom = get-sync-ref $selected $iter
     let gitUrl = ($pushConf | query json $'repos.($iter.repo).git')
     let navUrl = ($pushConf | query json $'repos.($iter.repo).url')
 

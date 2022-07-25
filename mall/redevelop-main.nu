@@ -21,7 +21,7 @@ def 'hr-line' [ --blank-line(-b): bool ] {
 
 # Check if some command available in current shell
 def 'is-installed' [ app: string ] {
-  ((which $app | length) > 0)
+  (which $app | length) > 0
 }
 
 def 'has-ref' [
@@ -42,7 +42,7 @@ def main [
 ] {
   # We don't need herd image, a raw linux distro image with node installed is okay
   # npm config set registry https://registry.npm.terminus.io/
-  if (is-installed 'termix') == false {
+  if not (is-installed 'termix') {
     npm i -g @terminus/termix@latest
   }
   $'(ansi pr) Termix version: (termix --version | str trim) (ansi reset)'; hr-line

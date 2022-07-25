@@ -17,7 +17,7 @@ def 'release' [
 ] {
 
   cd $env.TERMIX_DIR
-  let releaseVer = (get-conf version)
+  let releaseVer = get-conf version
   let greatestVer = (git tag -l --sort=-v:refname | lines | select 0)
 
   if (has-ref $releaseVer) {
@@ -28,12 +28,12 @@ def 'release' [
   	$'The release version sould be greater than ($greatestVer), however, current release ver: ($releaseVer)(char nl)'
   	exit --now
   }
-  let statusCheck = (git status --porcelain)
+  let statusCheck = git status --porcelain
   if ($statusCheck | empty?) == false {
   	$'You have uncommit changes, please commit them and try `release` again!(char nl)'
   	exit --now
   }
-  if ($update-log) {
+  if $update-log {
     git cliff --unreleased --tag ($releaseVer | str replace 'v' '') --prepend CHANGELOG.md;
     git commit CHANGELOG.md -m $'update CHANGELOG.md for ($releaseVer)'
   }

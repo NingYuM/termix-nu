@@ -11,7 +11,7 @@
 
 # Check if some command available in current shell
 def 'is-installed' [ app: string ] {
-  ((which $app | length) > 0)
+  (which $app | length) > 0
 }
 
 def 'hr-line' [ --blank-line(-b): bool ] {

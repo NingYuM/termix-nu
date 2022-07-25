@@ -16,8 +16,8 @@ def 'ls-node-remote' [
 ] {
 
   # brew install fnm to install it, see: https://github.com/Schniz/fnm
-  let notInstalled = ((which fnm | length) == 0)
-  let minVersion = (if ($minVer | empty?) { 10 } else { ($minVer | str replace 'v' '' | into int) })
+  let notInstalled = (which fnm | length) == 0
+  let minVersion = if ($minVer | empty?) { 10 } else { ($minVer | str replace 'v' '' | into int) }
   if $notInstalled {
     $'You should install `fnm` and try again..., bye!'
     exit --now

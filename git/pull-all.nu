@@ -13,7 +13,7 @@ def 'git pull-all' [
   cd $repoDir
   let currentBranch = (git branch --show-current | str trim)
   # Save changes before switch to other branches
-  let statusCheck = (git status --porcelain)
+  let statusCheck = git status --porcelain
   if ($statusCheck | empty?) == false {
     git stash save 'Stash before running pull-all action'
   }
@@ -27,7 +27,7 @@ def 'git pull-all' [
     let pattern = $'($alias)/($br):'
     if ($behind | find -r $pattern | length) > 0 || ($ahead | find -r $pattern | length) > 0 {
       git checkout $br
-      let stat = (gstat)
+      let stat = gstat
       # Just pull if local repo is behind remote
       if ($stat.behind > 0 && $stat.ahead == 0) {
         print $'(ansi p)Start pulling ($br) branch...(ansi reset)'

@@ -184,7 +184,8 @@ tag-redev tag=('') branch=('master') group=('b2c,b2b,mbr,pik') delete=('false'):
 # Show Branches and Tags of redevelop related repos, 可以指定仓库分组多个分组之间用`,`隔开
 ls-redev-refs group=('b2c,b2b,mbr,pik') showBranch=('false'): _setup
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
-    source {{ join(_termix, 'git', 'age.nu') }}; \
+    source {{ join(_termix, 'utils', 'git.nu') }}; \
+    source {{ join(_termix, 'git', 'branch.nu') }}; \
     source {{ join(_termix, 'actions', 'ls-redev-refs.nu') }}; \
     git-check --check-repo=0 {{JUST_INVOKE_DIR}}; \
     git ls-redev-refs {{group}} --show-branches={{showBranch}}

@@ -44,10 +44,10 @@ def 'get-conf' [
 
 # Get TERMIX_TMP_PATH
 def 'get-tmp-path' [] {
-  let actionConf = (open $_TERMIX_CONF)
+  let actionConf = open $_TERMIX_CONF
   # 先从环境变量里面查找临时文件路径
-  let tmpDir = (get-env TERMIX_TMP_PATH '')
-  let tmpPath = (if ($tmpDir | empty?) { ($actionConf | get termixTmpPath) } else { $tmpDir })
+  let tmpDir = get-env TERMIX_TMP_PATH ''
+  let tmpPath = if ($tmpDir | empty?) { ($actionConf | get termixTmpPath) } else { $tmpDir }
   if ($tmpPath | path exists) == false {
     $'(ansi r)Path ($tmpPath) does not exist, please create it and try agian...(ansi reset)(char nl)(char nl)'
     exit --now
@@ -60,15 +60,15 @@ def 'get-ver' [
   app: string     # The CLI App to check
   verCmd: string  # The Nushell command to get it's version number
 ] {
-  let installed = ((which $app | length) > 0)
-  echo (if $installed { (nu -c $verCmd) } else { 'N/A' })
+  let installed = (which $app | length) > 0
+  echo (if $installed { (nu -c $verCmd | str trim) } else { 'N/A' })
 }
 
 # Check if a git repo has the specified ref: could be a branch or tag, etc.
 def 'has-ref' [
   ref: string   # The git ref to check
 ] {
-  let parse = (git rev-parse --verify -q $ref)
+  let parse = git rev-parse --verify -q $ref
   if ($parse | empty?) { false } else { true }
 }
 
@@ -93,7 +93,7 @@ def 'git-check' [
   --check-repo: int   # Check if current directory is a git repo
 ] {
   cd $dest
-  let isGitInstalled = ((which git | length) > 0)
+  let isGitInstalled = (which git | length) > 0
   if (not $isGitInstalled) {
     $'You should (ansi r)INSTALL git(ansi reset) first to run this command, bye...'
     exit --now

@@ -15,7 +15,7 @@ def 'git-remote-branch' [
 ] {
 
   cd $repo
-  let remoteUrl = (git remote get-url $alias)
+  let remoteUrl = git remote get-url $alias
   let nameIdx = ($remoteUrl | str index-of -e '/')
   let repoName = ($remoteUrl | str substring $'($nameIdx + 1),' | str trim)
   git fetch $alias -p

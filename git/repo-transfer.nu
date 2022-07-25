@@ -11,7 +11,7 @@ def 'git repo-transfer' [
   source: string   # The source repo git url
   dest: string     # The dest repo git url
 ] {
-  let tmpPath = (get-tmp-path)
+  let tmpPath = get-tmp-path
   cd $tmpPath
   $'(char nl)Sync git repo from ($source)(char nl)'
   $'to dest:      (ansi g)---> ($dest)(ansi reset)(char nl)'

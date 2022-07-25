@@ -48,13 +48,13 @@ def 'append-desc' [
 ] {
 
   let descFile = 'd.toml'
-  let localIExists = (has-ref i)
-  let remoteIExists = (has-ref origin/i)
+  let localIExists = has-ref i
+  let remoteIExists = has-ref origin/i
   if not ($localIExists || $remoteIExists) {
     $records | sort-by last-commit
   } else {
     # 本地 i 分支优先级高于远程
-    let querySource = (if ($localIExists) { 'i' } else { 'origin/i' })
+    let querySource = if $localIExists { 'i' } else { 'origin/i' }
     let descriptions = (git show $'($querySource):($descFile)' | from toml | to json)
     let summary = (
       $records | insert has-desc { |it|

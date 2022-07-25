@@ -17,8 +17,8 @@ def 'prune-synced-branches' [
   let current = (git branch --show-current | str trim)
 
   # Decide which branch to get `.termixrc` conf from ?
-  let useConfBr = (get-conf useConfFromBranch)
-  let confBr = (if $useConfBr == '_current_' { $current } else { 'i' })
+  let useConfBr = get-conf useConfFromBranch
+  let confBr = if $useConfBr == '_current_' { $current } else { 'i' }
 
   if not (has-ref $'origin/($confBr)') {
     $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
@@ -28,7 +28,7 @@ def 'prune-synced-branches' [
   let repos = ($pushConf | query json $'repos')
   # 获取待同步目的仓库及目的分支映射
   let branches = ($pushConf | query json $'branches')
-  let repoName = (prepare-repo $repos --user=$user --ak=$ak)
+  let repoName = prepare-repo $repos --user=$user --ak=$ak
   let syncs = ($branches | transpose branch dests | each { |sync|
     $sync.dests
   })
@@ -37,7 +37,7 @@ def 'prune-synced-branches' [
   $syncs | flatten | select repo dest | sort-by repo dest
 
   # Must change to the scopped directory before doing the following work
-  let repoPath = (get-tmp-path)
+  let repoPath = get-tmp-path
   cd $repoPath; cd $repoName
 
   $repos | transpose | rename alias | get alias | each { |alias|
@@ -55,7 +55,7 @@ def 'prune-synced-branches' [
     if (($cleanable | str trim) != '') {
       $'Possibly unused branches in (ansi g)($alias):(ansi reset)(char nl)(char nl)'
       $cleanable | lines | wrap branch-name
-      let url = ($repos|get $alias).url
+      let url = ($repos | get $alias).url
       print $'Visit repo url: ($url)'
       hr-line
     }
@@ -73,7 +73,7 @@ def 'prepare-repo' [
     exit --now
   }
 
-  let repoPath = (get-tmp-path)
+  let repoPath = get-tmp-path
   let sampleRepo = ($repos | first | transpose k repo | select 0).repo
   let repoName = ($'prune-($env.PWD | path basename)' | str trim)
   # 待清理仓库完整路径
@@ -99,7 +99,7 @@ def 'prepare-repo' [
       git remote add $dest.name $gitDest
     }
     # 更新远程仓库信息到本地
-    let output = (git fetch $dest.name -p)
+    let output = git fetch $dest.name -p
     if ($output | str trim | empty?) == false { print $output }
   }
   print 'Repo preparing done!'; hr-line

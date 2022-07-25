@@ -13,7 +13,7 @@ def 'git pull-redev' [
   --show-diff(-d): any      # Set to 'true' if you want to see the files changed since prev tag, defined as `any` acutually `bool`
 ] {
 
-  let repoPath = (get-tmp-path)
+  let repoPath = get-tmp-path
   let redevRepos = (open $_TERMIX_CONF | get redevRepos)
   let filteredRepos = ($redevRepos | where $',($group),' =~ $it.group)
   if ($filteredRepos | length) > 0 {
@@ -25,7 +25,7 @@ def 'git pull-redev' [
   # It's better to have a named param on blocks because $it can be consumed and lost.
   # Ref: https://github.com/nushell/nushell/issues/4060
   $filteredRepos | each { |repo|
-    let repoNameIdx = (($repo.url | str index-of -e '/') + 1)
+    let repoNameIdx = ($repo.url | str index-of -e '/') + 1
     let repoName = ($repo.url | str substring $'($repoNameIdx),')
     # 单一二开仓库完整路径
     let destRepoPath = ([$repoPath $repoName] | path join)
@@ -48,7 +48,7 @@ def 'git pull-redev' [
     git show --abbrev-commit --no-patch
 
     # 先从环境变量里面查找待比较的上一个标签的完整名称
-    let prevTagName = (get-env REDEV_PREV_TAG '')
+    let prevTagName = get-env REDEV_PREV_TAG ''
     # Check the tag status, if exists just recrete it.
     if (has-ref refs/tags/($prevTagName)) {
       if $show-diff && (git --no-pager diff $prevTagName $branch --name-only | lines | length) > 0 {
