@@ -104,10 +104,10 @@ desc branch=(`git branch --show-current`) showNotes=('false'): _setup
     branch-desc {{branch}} --show-notes={{showNotes}}
 
 # Check whether all remote branches have related description
-check-desc: _setup
+check-branch: _setup
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
-    source {{ join(_termix, 'git', 'check-desc.nu') }}; \
-    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; check-desc
+    source {{ join(_termix, 'git', 'check-branch.nu') }}; \
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; check-branch
 
 # Pull all local branches from remote repo
 pull-all: _setup

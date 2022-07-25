@@ -2,10 +2,10 @@
 # Author: hustcer
 # Created: 2021/11/17 11:50:20
 # Usage:
-#   t check-desc
+#   t check-branch
 
 # Check whether all remote branches have related description
-def 'check-desc' [] {
+def 'check-branch' [] {
 
   git fetch origin -p
   let descFile = 'd.toml'
@@ -49,8 +49,26 @@ def 'check-desc' [] {
   )
 
   if ($gone | length) > 0 {
-    $'(ansi p)(char nl)  Branches that have a description but were(ansi r) removed from remote(ansi reset):(char nl)(char nl)(ansi reset)'
+    $'(ansi p)(char nl)  Branches that have a description but were(ansi r) removed from remote(ansi reset):(char nl)(ansi reset)'
     $gone | wrap 'name'
+    char nl
+  }
+
+  let syncConf = (git show $'($querySource):.termixrc' | from toml | to json)
+  # 获取待同步目的仓库及目的分支映射
+  let syncs = ($syncConf | query json $'branches')
+  # 检查并显示所有有同步配置但是远程已经被删掉的分支
+  let gone = (
+    $syncs
+      | transpose name sync
+      | insert status { |br| if (has-ref origin/($br.name)) { true } else { 'Remote Removed' } }
+      | where status != true
+      | reject sync
+  )
+  if ($gone | length) > 0 {
+    $'(ansi p)(char nl)  Branches that have sync configs but were(ansi r) removed from remote(ansi reset):(char nl)(ansi reset)'
+    $gone
+    char nl
   }
 
 }

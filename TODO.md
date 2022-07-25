@@ -34,7 +34,7 @@
 ├── [x] git
 │   ├── [x] age.nu
 │   ├── [x] branch-desc.nu
-│   ├── [x] check-desc.nu
+│   ├── [x] check-branch.nu
 │   ├── [x] git-batch-exec.nu
 │   ├── [x] git-batch-reset.nu
 │   ├── [x] git-proxy.nu
@@ -84,7 +84,7 @@
 ├── [x] git
 │   ├── [x] age.nu
 │   ├── [x] branch-desc.nu
-│   ├── [x] check-desc.nu
+│   ├── [x] check-branch.nu
 │   ├── [x] git-batch-exec.nu
 │   ├── [x] git-batch-reset.nu
 │   ├── [-] git-proxy.nu
