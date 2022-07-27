@@ -3,7 +3,7 @@
 # Author: hustcer
 # Created: 2022/03/30 11:20:56
 # 在本地或远程比如编译期通过 Erda Actions 生成全量和增量二开工程
-# 需要安装 Nushell， 最低版本 v0.65.0; 可以通过 brew 或者 winget 安装, REF: https://www.nushell.sh/book/installation.html;
+# 需要安装 Nushell， 最低版本 v0.66.0; 可以通过 brew 或者 winget 安装, REF: https://www.nushell.sh/book/installation.html;
 # Usage:
 # In local ~/redevelop directory:
 # nu redevelop-all.nu -t rn_b2c -c support/release-2.4 -k YOUR_TOKEN
@@ -12,7 +12,6 @@
 #     --redev-git=https://erda.cloud/terminus/dop/gaia-app-redev/b2c-mobile-redev
 #     --redev-origin-git=https://erda.cloud/terminus/dop/gaia-app-redev/b2c-mobile-redev-origin
 # TODO:
-#   [ ] rm .husky/pre-push
 #   [ ] Check .dice in redevelop repo
 
 def 'hr-line' [ --blank-line(-b): bool ] {

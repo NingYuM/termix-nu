@@ -103,7 +103,7 @@ desc branch=(`git branch --show-current`) showNotes=('false'): _setup
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; \
     branch-desc {{branch}} --show-notes={{showNotes}}
 
-# Check whether all remote branches have related description
+# Check whether all remote branches have descriptions or whether synced branches exist in the remote repo
 check-branch: _setup
   @source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'git', 'check-branch.nu') }}; \

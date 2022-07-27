@@ -45,7 +45,7 @@ winget install Nushell.Nushell
 # Install the latest version of nushell, extra features included.
 cargo install nu --features=extra
 # Install nushell of the specified version
-cargo +stable install nu --all-features --version 0.60.0
+cargo +stable install nu --all-features --version 0.66.0
 ```
 
 ### `Just` & `nu` 更新提示
@@ -74,11 +74,11 @@ cargo +stable install nu --all-features --version 0.60.0
    ```bash
    ➜  $ just
    Available recipes:
-   ··· check-desc                    # Check whether all remote branches have related description
+   ··· check-branch                  # Check whether all remote branches have descriptions or whether synced branches exist in the remote repo
    ··· default                       # List available commands by default
    ··· desc branch=(`git branch --show-current`) showNotes=('false') # Show branch description from branch description file `d.toml` of `i` branch
    ··· dir-batch-exec cmd +DIRS=('') # 在指定目录(支持'*'通配符)或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
-   ··· emp showAll=('false')         # 查询电商前端团队本周工时填报情况
+   ··· emp showAll=('false') showPrev=('false') # 查询电商前端团队本周工时填报情况
    ··· gaia-release version=('') repos=('mall,mobile,picker') delete=('false') # 给标品源码仓库打 Release Tag
    ··· git-branch                       # Listing the branches of a git repo and the time of the last commit
    ··· git-batch-exec cmd +branches=('') # 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用空格分隔
@@ -538,22 +538,22 @@ t desc develop true
 
 ---
 
-### 18. Git 分支描述检查{#check-desc}
+### 18. Git 分支检查{#check-branch}
 
-**功能描述**: 基于前面一项所述分支描述规则，检查哪些 Git 分支没有添加对应描述信息
+**功能描述**: 基于前面一项所述分支描述规则，检查哪些 Git 分支没有添加对应描述信息, 以及哪些关联了同步配置的分支在远程仓库已经被删除
 
-**命令格式**: `t check-desc`
+**命令格式**: `t check-branch`
 
 **使用举例**:
 
 ```bash
-# 查看当前仓库哪些分支没有对应描述信息
-t check-desc
+# 查看当前仓库哪些分支没有对应描述信息, 以及哪些关联了同步配置的分支在远程仓库已经被删除
+t check-branch
 ```
 
 **输出样例**:
 
-![Just Check Desc Output](https://img.alicdn.com/imgextra/i3/O1CN01wxKoPt1il40LSxtzu_!!6000000004452-2-tps-675-275.png)
+![Just Check Branch Output](https://img.alicdn.com/imgextra/i3/O1CN01wxKoPt1il40LSxtzu_!!6000000004452-2-tps-675-275.png)
 
 ---
 
@@ -725,11 +725,12 @@ t brew-speed-up off
 
 **功能描述**: 查看团队成员当前 EMP 工时填报情况
 
-**命令格式**: `t emp showAll=('false')`
+**命令格式**: `t emp showAll=('false') showPrev=('false')`
 
 **配置说明**:
 
 - `showAll`: 可选参数，是否显示所有成员的填报情况，默认值为`false`，表示只显示当前未填满的成员；
+- `showPrev`: 可选参数，是否显示前一周的工时填报情况，默认值为`false`，表示显示本周工时填报明细；
 - `EMP_UC_COOKIE`: 必填, `.env`里面环境变量配置项, EMP `emp_stage_u_c_local` 对应的 Cookie Value, 貌似每周需要更新一次，否则会超时失效；
 - `EMP_PROJECT_CODE`: 必填, `.env`里面环境变量配置项, 可以在 EMP 查看部门工时页面的 `/api/trantor/func/worktime_GetStaffByBaseProjectFunc` 请求的 Request Payload 里面找到；
 - `EMP_WORKING_HOUR_TITLE`: 必填, `.env`里面环境变量配置项，控制台输出内容的标题，默认值为"本周工时填报"可以自己按需修改；
@@ -741,6 +742,8 @@ t brew-speed-up off
 t emp
 # 查看当前所有团队成员的工时填报情况，无论是否填满都显示
 t emp true
+# 查看所有团队成员的前一周工时填报情况，无论是否填满都显示
+t emp true true
 ```
 
 ---

@@ -3,7 +3,7 @@
 # Author: hustcer
 # Created: 2022/03/31 10:50:56
 # 在本地或远程，比如编译期通过 Erda Actions 生成全量二开工程
-# 需要安装 Nushell， 最低版本 v0.65.0; 可以通过 brew 或者 winget 安装, REF: https://www.nushell.sh/book/installation.html;
+# 需要安装 Nushell， 最低版本 v0.66.0; 可以通过 brew 或者 winget 安装, REF: https://www.nushell.sh/book/installation.html;
 # Usage:
 # In local ~/redevelop directory:
 # nu redevelop-main.nu -t rn_b2c -c support/release-2.5 -k YOUR_TOKEN
@@ -11,7 +11,6 @@
 #     --redev-git=https://erda.cloud/terminus/dop/gaia-app-redev/b2c-mobile-redev
 #     --test-branch=support/release-2.5
 # TODO:
-#   [ ] rm .husky/pre-push
 #   [ ] Check .dice in redevelop repo
 
 def 'hr-line' [ --blank-line(-b): bool ] {
@@ -66,7 +65,7 @@ def main [
   if ($'($redev-dir)/.git' | path exists) == false { git clone $redev-git $redev-dir }
   cd $redev-dir;
   # 如果二开仓库对应分支不存在则创建，存在则更新二开对应分支的代码
-  if has-ref $checkout { git checkout $checkout; git pull; } else { git checkout -b $checkout; }
+  if (has-ref $checkout) { git checkout $checkout; git pull; } else { git checkout -b $checkout; }
   cd ..
 
   # 删除二开全量仓库里面除了 .git 以外的内容，用新生成的二开内容替换，防止冲突

@@ -68,7 +68,8 @@ def 'get-ver' [
 def 'has-ref' [
   ref: string   # The git ref to check
 ] {
-  let parse = git rev-parse --verify -q $ref
+  # Brackets were required here, or error will occure
+  let parse = (git rev-parse --verify -q $ref)
   if ($parse | empty?) { false } else { true }
 }
 

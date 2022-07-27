@@ -11,7 +11,7 @@
 # 这部分文案会输出给用户，提示用户自己手工核对，自行决定是否删除；
 #
 # 需要全局安装了 @terminus/termix, 最低版本 v2.0.0;
-# 需要安装 Nushell， 最低版本 v0.65.0; 可以通过 brew 或者 winget 安装, REF: https://www.nushell.sh/book/installation.html;
+# 需要安装 Nushell， 最低版本 v0.66.0; 可以通过 brew 或者 winget 安装, REF: https://www.nushell.sh/book/installation.html;
 # 使用:
 #   nu clean-locale.nu b2c
 #   npm run locale:clean b2c
