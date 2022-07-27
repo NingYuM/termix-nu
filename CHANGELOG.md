@@ -3,27 +3,27 @@ All notable changes to this project will be documented in this file.
 
 ## [1.7.0] - 2022-07-27
 
-### Bug Fixes
-
-- Fix working hours and pull-redev for nu v0.65
-- Improve git-age/git-remote-age and check-desc output
-- Improve redevelop all script, exit if termix exec failed
-- Improve redevelop main script, exit if termix exec failed
-
 ### Features
 
 - Rename `git-age` to `git-branch` and `git-remote-age` to `git-remote-branch`
-- Add query previous working hours for `emp` command
+- Add query working hours of previous week support for `emp` command
 - Rename `check-desc` to `check-branch`, display removed branches who have syncing configs
+
+### Bug Fixes
+
+- Fix query working hours and `pull-redev` command for nu v0.65
+- Improve `git-age`/`git-remote-age` and `check-desc` command output
+- Improve redevelop all script, exit if termix exec failed
+- Improve redevelop main script, exit if termix exec failed
 
 ### Miscellaneous Tasks
 
-- Try to use base string somewhere
+- Try to use bare string if possible
 - Update config for nu v0.65.1
 - Update default config to the latest sample
-- Update git branch sorting when descs not available
-- Remove unnecessary brackets
-- Upgrade min nu version to v0.65, and min just version to v1.3.0, bump to v1.7.0
+- Update git branch sorting output when descriptions are not available
+- Remove unnecessary brackets if possible
+- Upgrade min nu version to v0.66, and min just version to v1.3.0, bump to v1.7.0
 
 # Changelog
 All notable changes to this project will be documented in this file.
