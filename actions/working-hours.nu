@@ -13,8 +13,8 @@ def 'working-hours' [
   --show-prev: any   # Set true to query working hours of previous week
 ] {
 
-  let monday = get-monday --prev=$show-prev
-  let sunday = get-sunday --prev=$show-prev
+  let monday = get-monday --prev=$show_prev
+  let sunday = get-sunday --prev=$show_prev
   let emp = get-conf empWorkingHour
   # 先从环境变量里面查找用户在 emp Cookie 里面的登陆信息
   let empUserCookie = get-env EMP_UC_COOKIE ''
@@ -68,7 +68,7 @@ def 'working-hours' [
   # Set a default leaving record
   let leavingHours = if ($leavingHours | compact | length) == 0 { [[beginTime, duration, staffId]; [0, 0, 0]] } else { $leavingHours }
 
-  handle-working-hours $allStaffs $workingHours $leavingHours --show-all=$show-all --show-prev=$show-prev
+  handle-working-hours $allStaffs $workingHours $leavingHours --show-all=$show_all --show-prev=$show_prev
 }
 
 # 显示工时统计信息
@@ -87,11 +87,11 @@ def 'handle-working-hours' [
   $'(ansi reset)(char nl)'
   let week = [Mon, Tue, Wen, Thu, Fri, Sat, Sun]
   # 当前是一年中的第几周
-  let weekNo = if $show-prev == true { ([((date now) - 7day)] | into df | get-week).0 } else { ([(date now)] | into df | get-week).0 }
+  let weekNo = if $show_prev == true { ([((date now) - 7day)] | into df | get-week).0 } else { ([(date now)] | into df | get-week).0 }
   # 此刻是一周中的第几天，周一为第 0 天
   let weekDay = ([(date now)] | into df | get-weekday).0
   # 正常情况下一周工作 5 天
-  let total = if ($weekDay >= 5 || $show-prev == true) { 5 } else { $weekDay + 1 }
+  let total = if ($weekDay >= 5 || $show_prev == true) { 5 } else { $weekDay + 1 }
 
   # Set a default working hour record
   let workingHours = if ($workingHours | compact | length) == 0 { [[fillDate, percentage, staffId]; [0, 0, 0]] } else { $workingHours }
@@ -118,7 +118,7 @@ def 'handle-working-hours' [
       } | reject id
     )
 
-  let result = (if $show-all { $allMembers } else {
+  let result = (if $show_all { $allMembers } else {
     ($allMembers | where { |it| $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8 })
   })
 

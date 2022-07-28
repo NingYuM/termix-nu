@@ -32,7 +32,7 @@ def 'git-remote-branch' [
   )
   append-desc $basic
 
-  if (! $show-tag) { exit --now }
+  if (! $show_tag) { exit --now }
 
   $'Tags of (ansi gb)($repoName)(ansi reset) for remote ($alias)'; hr-line
   # Git for Windows does't support sort by `creatordate` field?

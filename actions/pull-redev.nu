@@ -51,12 +51,12 @@ def 'git pull-redev' [
     let prevTagName = get-env REDEV_PREV_TAG ''
     # Check the tag status, if exists just recrete it.
     if (has-ref refs/tags/($prevTagName)) {
-      if $show-diff && (git --no-pager diff $prevTagName $branch --name-only | lines | length) > 0 {
+      if $show_diff && (git --no-pager diff $prevTagName $branch --name-only | lines | length) > 0 {
         $'---------> Update since latest tag <---------:(char nl)(ansi y)'
         git --no-pager diff $prevTagName $branch --name-only
       }
     } else {
-      if $show-diff {
+      if $show_diff {
         # 使用原生 echo 命令
         print $'(char nl) (ansi r)Tag: ($prevTagName) does not exist in repo: ($repoName) (ansi reset)(char nl)'
       }

@@ -43,7 +43,7 @@ def 'gaia-release' [
     # Check the tag status, if exists just recrete it.
     if $tagExists { git tag -d $tagName; git push origin --delete $tagName }
 
-    if $delete-tag {
+    if $delete_tag {
       print $'(ansi g)Tag delete successfully!(ansi reset)'
     } else {
       let tagComment = $'A new release for version: ($tagName) created by gaia-release command of termix-nu'

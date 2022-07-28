@@ -35,7 +35,7 @@ def 'git ls-redev-refs' [
       cd $repoPath; git clone $url
     }
 
-    if ($show-branches) {
+    if ($show_branches) {
       $'(char nl)Branches of repo (ansi gb)($repoName)(ansi reset): (char nl)'
       git-branch $destRepoPath
     }
