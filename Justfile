@@ -235,6 +235,6 @@ dir-batch-exec cmd +DIRS=(''): _setup
 # 从 Nu v0.61.0 开始插件只需注册一次即可
 _setup:
   @register -e json {{ join(NU_DIR, _query_plugin) }}; \
-    register -e json {{ join(NU_DIR, _gstat_plugin) }}; \
+    register -e msgpack {{ join(NU_DIR, _gstat_plugin) }}; \
     source {{ join(_termix, 'utils', 'common.nu') }}; \
     source {{ join(_termix, 'actions', 'check-ver.nu') }}; termix-ver; nu-ver; just-ver
