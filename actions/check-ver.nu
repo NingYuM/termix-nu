@@ -71,7 +71,7 @@ def 'query-ver' [
   # Check whether the latest release tag is a force upgrade
   let msg = git show --oneline --no-patch $latestVer
   let forceUpgrade = ($msg | str contains $_UPGRADE_TAG)
-  let config = { latestVer: $latestVer, checkDate: $checkDate, forceUpgrade: $forceUpgrade }
+  let config = { 'latestVer': $latestVer, 'checkDate': $checkDate, 'forceUpgrade': $forceUpgrade }
   $config | to json | save $conf
   echo $latestVer
 }
