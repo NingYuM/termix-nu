@@ -8,13 +8,13 @@
 let allNavs = (merge-navs)
 
 def 'go' [
-  nav-key?: string  # The nav key to go from `quickNavs` config in termix.toml
+  nav_key?: string  # The nav key to go from `quickNavs` config in termix.toml
 ] {
 
   # If the key of `just go` is blank or list, then show all the nav items
-  if ($nav-key == '' || $nav-key == 'list') { show-navs }
+  if ($nav_key == '' || $nav_key == 'list') { show-navs }
   # Find match from nav keys only
-  let matchs = ($allNavs | transpose | rename key url | select key | find -i -r $nav-key)
+  let matchs = ($allNavs | transpose | rename key url | select key | find -i -r $nav_key)
   # If no match item was found then show all the nav items
   if ($matchs | length) == 0 { show-navs }
 

@@ -12,7 +12,7 @@
 
 def 'hr-line' [ --blank-line(-b): bool ] {
   print $'(ansi g)---------------------------------------------------------------------------->(ansi reset)'
-  if $blank-line { char nl }
+  if $blank_line { char nl }
 }
 
 # Check if some command available in current shell
@@ -29,7 +29,7 @@ def main [
   --src-dir: string           # 源码仓库对应代码目录,比如对于 alias 为 git-checkout 的 git-checkout Action 可以传 ${git-checkout}
   --test-branch: string       # 需要映射到测试环境 develop 分支的源码仓库分支名
 ] {
-  cd $src-dir
+  cd $src_dir
   # We don't need herd image, a raw linux distro image with node installed is okay
   # npm config set registry https://registry.npm.terminus.io/
   if not (is-installed 'termix') {
@@ -43,7 +43,7 @@ def main [
     git config --global user.email 'erda@terminus.io'
   }
   # 如果部署分支为 develop 需要还原回原来对应的源码分支
-  let $checkref = if $checkout == 'develop' { $test-branch } else { $checkout }
+  let $checkref = if $checkout == 'develop' { $test_branch } else { $checkout }
   # 通过 Termix 生成标品二开仓库
   let action = (termix redevelop redev-app --template $template --checkout $checkref --user='git' --access-token $token | complete)
   print $action.stdout; print $action.stderr
@@ -62,8 +62,8 @@ def main [
 
   git commit -am $commit-msg; hr-line -b
   let repoUrl = if not ($token | empty?) {
-    ($deploy-repo | str replace 'https://' $'https://git:($token)@')
-  } else { $deploy-repo }
+    ($deploy_repo | str replace 'https://' $'https://git:($token)@')
+  } else { $deploy_repo }
   git remote add deploy $repoUrl
   let current = (git branch --show-current | str trim)
   $'(ansi g)Redevelop repo git status:(ansi reset)'; git status; hr-line

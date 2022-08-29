@@ -17,7 +17,7 @@ def 'is-installed' [ app: string ] {
 
 def 'hr-line' [ --blank-line(-b): bool ] {
   print $'(ansi g)---------------------------------------------------------------------------->(ansi reset)'
-  if $blank-line { char nl }
+  if $blank_line { char nl }
 }
 
 # 根据`业务类型`和 `Iconfont Symbol JS 地址` 生成图标配置文件, 两个入参必填

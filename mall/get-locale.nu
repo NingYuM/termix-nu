@@ -21,7 +21,7 @@ def 'is-installed' [ app: string ] {
 
 def 'hr-line' [ --blank-line(-b): bool ] {
   print $'(ansi g)---------------------------------------------------------------------------->(ansi reset)'
-  if $blank-line { char nl }
+  if $blank_line { char nl }
 }
 
 # 根据`业务类型`从国际化文案管理平台下载最新的中英文文案到本地；
