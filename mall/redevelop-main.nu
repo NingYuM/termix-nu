@@ -38,7 +38,7 @@ def main [
   $'(ansi pr) Termix version: (termix --version | str trim) (ansi reset)'; hr-line
   # Disable `initial branch name` hints from git
   git config --global init.defaultBranch master
-  if (git config --global --get user.name | empty?) {
+  if (git config --global --get user.name | is-empty) {
     git config --global user.name 'git'
     git config --global user.email 'erda@terminus.io'
   }
@@ -61,7 +61,7 @@ def main [
   let commit-msg = $"($src-msg), Redevelop from checkout:($checkout) by termix@(termix --version)"
 
   git commit -am $commit-msg; hr-line -b
-  let repoUrl = if not ($token | empty?) {
+  let repoUrl = if not ($token | is-empty) {
     ($deploy_repo | str replace 'https://' $'https://git:($token)@')
   } else { $deploy_repo }
   git remote add deploy $repoUrl

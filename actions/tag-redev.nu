@@ -20,7 +20,7 @@ def 'git tag-redev' [
   # 先从环境变量里面查找待创建的新标签的前缀
   let redevCurrentTag = get-env REDEV_CURRENT_TAG ''
   # 这个条件赋值表达式真复杂啊: 如果调用命令的时候传参了则覆盖.env文件里面的标签
-  let TAG = if ($currentBeTag | empty?) { $redevCurrentTag } else { $currentBeTag }
+  let TAG = if ($currentBeTag | is-empty) { $redevCurrentTag } else { $currentBeTag }
   # let tagName = 'v1.0.0-2021.08.09'
   # 如果传入的是完整的带时间戳的 Tag 名就不用再重复加时间戳了
   let tagName = if ($TAG | str contains '-') { $TAG } else { $'($TAG)-(date now | date format $_DATE_FMT)' }

@@ -14,7 +14,7 @@ def 'git pull-all' [
   let currentBranch = (git branch --show-current | str trim)
   # Save changes before switch to other branches
   let statusCheck = git status --porcelain
-  if ($statusCheck | empty?) == false {
+  if ($statusCheck | is-empty) == false {
     git stash save 'Stash before running pull-all action'
   }
 
@@ -41,5 +41,5 @@ def 'git pull-all' [
     }
   }
   git checkout $currentBranch
-  if ($statusCheck | empty?) == false { git stash pop }
+  if ($statusCheck | is-empty) == false { git stash pop }
 }

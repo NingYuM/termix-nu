@@ -48,8 +48,8 @@ def 'do-push' [
   # 当仓库不存在的时候截获标准错误流需要 `do -i {}`
   let push = (do -i { git push --mirror } | complete)
   # FIXME: Nu Bug: stdout redirect to stderr
-  if ! ($push.stderr | empty?) { print $push.stderr }
-  if ! ($push.stdout | empty?) { print $push.stdout }
+  if ! ($push.stderr | is-empty) { print $push.stderr }
+  if ! ($push.stdout | is-empty) { print $push.stdout }
   if $push.stderr =~ 'not found' {
     $'(ansi r)Error: The dest repo does not exist, please create it and try again, bye...(ansi reset)(char nl)'
   }

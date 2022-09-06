@@ -45,7 +45,7 @@ def 'merge-navs' [] {
   let confBr = if $useConfBr == '_current_' { (git branch --show-current | str trim) } else { 'i' }
 
   let termixrc = do -i { git show $'origin/($confBr):.termixrc' }
-  let specialNavs = if ($termixrc | empty?) { [] } else { ( $termixrc | from toml | to json | query json 'quickNavs') }
+  let specialNavs = if ($termixrc | is-empty) { [] } else { ( $termixrc | from toml | to json | query json 'quickNavs') }
   let allNavs = (if (($specialNavs | compact | length) == 0) {
     ($quickNavs | transpose | transpose -r)
   } else {

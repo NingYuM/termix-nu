@@ -29,7 +29,7 @@ def 'release' [
   	exit --now
   }
   let statusCheck = git status --porcelain
-  if ($statusCheck | empty?) == false {
+  if ($statusCheck | is-empty) == false {
   	$'You have uncommit changes, please commit them and try `release` again!(char nl)'
   	exit --now
   }

@@ -19,7 +19,7 @@ def 'git branch-rename' [
   remote?: string   # Remote alias name, 'origin' by default
 ] {
 
-  let remoteAlias = if ($remote | empty?) { 'origin' } else { $remote }
+  let remoteAlias = if ($remote | is-empty) { 'origin' } else { $remote }
   git fetch $remoteAlias -p
 
   let localSrcExists = has-ref $from
@@ -43,7 +43,7 @@ def 'git branch-rename' [
 
   let statusCheck = (git status --porcelain)
   # Stash here, if needed
-  if ($statusCheck | empty?) == false {
+  if ($statusCheck | is-empty) == false {
     git stash save 'Stash before running git-batch-exec'
   }
 
@@ -60,5 +60,5 @@ def 'git branch-rename' [
   git push $remoteAlias -u $to
   # Delete remote old branch if exists
   if ($remoteSrcExists) { git push $remoteAlias $':($from)' }
-  if ($statusCheck | empty?) == false { git stash pop }
+  if ($statusCheck | is-empty) == false { git stash pop }
 }

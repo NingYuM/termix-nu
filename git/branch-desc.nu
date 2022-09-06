@@ -21,7 +21,7 @@ def 'branch-desc' [
   # 本地 i 分支优先级高于远程
   let querySource = if ($localIExists) { 'i' } else { 'origin/i' }
   let descriptions = (git show $'($querySource):($descFile)' | from toml | to json)
-  let queryBranch = if ($branch | empty?) { (git branch --show-current | str trim) } else { $branch }
+  let queryBranch = if ($branch | is-empty) { (git branch --show-current | str trim) } else { $branch }
   # 处理分支名称包含‘.’的情况: `support/release-2.4`
   let escapedBranch = ($queryBranch | str replace -a '\.' '\.')
   let desc = ($descriptions | query json $'descriptions.($escapedBranch)')

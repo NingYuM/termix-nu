@@ -26,14 +26,14 @@ def 'git batch-exec' [
   # let available = (git for-each-ref --format='%(refname:short)' refs/heads | lines)
   # Fix `^^^^^ requires string input issue at 'lines'`
   let available = (git branch | into string | lines | str substring '2,')
-  let candidates = if ($branches | empty?) { $available } else { $dest }
+  let candidates = if ($branches | is-empty) { $available } else { $dest }
 
   $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi reset) on branches: (char nl)'
   echo ($candidates | wrap name)
 
   $"(char nl)Current branch: ($current)"
   let statusCheck = git status --porcelain
-  if ($statusCheck | empty?) == false {
+  if ($statusCheck | is-empty) == false {
     git stash save 'Stash before running git-batch-exec'
   }
 
@@ -48,5 +48,5 @@ def 'git batch-exec' [
     }
   }
   git checkout $current
-  if ($statusCheck | empty?) == false { git stash pop }
+  if ($statusCheck | is-empty) == false { git stash pop }
 }

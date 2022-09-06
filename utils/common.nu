@@ -29,7 +29,7 @@ def 'get-env' [
   default?: string  # The default value for an empty env
 ] {
   # $env | get -i $key | default $default
-  let hasEnv = (env | any? name == $key)
+  let hasEnv = (env | any name == $key)
   if $hasEnv { $env | get $key } else { $default }
 }
 
@@ -39,7 +39,7 @@ def 'get-conf' [
   default?: any     # The default value for an empty conf
 ] {
   let result = (open $_TERMIX_CONF | get $key)
-  if ($result | empty?) { $default } else { $result }
+  if ($result | is-empty) { $default } else { $result }
 }
 
 # Get TERMIX_TMP_PATH
@@ -47,7 +47,7 @@ def 'get-tmp-path' [] {
   let actionConf = open $_TERMIX_CONF
   # 先从环境变量里面查找临时文件路径
   let tmpDir = get-env TERMIX_TMP_PATH ''
-  let tmpPath = if ($tmpDir | empty?) { ($actionConf | get termixTmpPath) } else { $tmpDir }
+  let tmpPath = if ($tmpDir | is-empty) { ($actionConf | get termixTmpPath) } else { $tmpDir }
   if ($tmpPath | path exists) == false {
     $'(ansi r)Path ($tmpPath) does not exist, please create it and try agian...(ansi reset)(char nl)(char nl)'
     exit --now
@@ -70,7 +70,7 @@ def 'has-ref' [
 ] {
   # Brackets were required here, or error will occure
   let parse = (git rev-parse --verify -q $ref)
-  if ($parse | empty?) { false } else { true }
+  if ($parse | is-empty) { false } else { true }
 }
 
 # Compare two version number, return true if first one is lower then second one

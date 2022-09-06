@@ -27,7 +27,7 @@ def 'gaia-release' [
       # 单一仓库完整路径
       let destRepoPath = ([$repoPath $repo.name] | path join)
       let dateSuffix = (date now | date format $_DATE_FMT)
-      let releaseTag = (if ($repo.suffix | empty?) { $'($version)-($dateSuffix)' } else { $'($version)-($repo.suffix)-($dateSuffix)' })
+      let releaseTag = (if ($repo.suffix | is-empty) { $'($version)-($dateSuffix)' } else { $'($version)-($repo.suffix)-($dateSuffix)' })
       # let tagName = 'v1.0.0-2021.08.09'
       # 如果传入的是完整的带时间戳的 Tag 名就不用再重复加时间戳了
       let tagName = if ($version | str contains '-') { $version } else { $releaseTag }

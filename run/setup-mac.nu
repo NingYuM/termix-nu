@@ -26,7 +26,7 @@ def 'is-installed' [
   app: string     # The CLI App to check
 ] {
   let bin = ($termixConf | query json $'macCliApps.($app).bin')
-  let check = if ($bin | empty?) { $app } else { $bin }
+  let check = if ($bin | is-empty) { $app } else { $bin }
   let installed = (which $check | length) > 0
   echo $installed
 }

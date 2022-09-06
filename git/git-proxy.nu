@@ -47,7 +47,7 @@ def-env 'git-proxy' [
 }
 
 def 'unset-git-conf' [ name: string ] {
-  if not (git config --global --get $name | empty?) {
+  if not (git config --global --get $name | is-empty) {
     git config --global --unset $name
   }
 }

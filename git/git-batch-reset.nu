@@ -13,7 +13,7 @@ def 'git batch-reset' [
 ] {
 
   let dest = ($branches | str trim | split row ' ' | compact)
-  if ($branches | str trim | empty?) {
+  if ($branches | str trim | is-empty) {
     $'You did not specify any branches to do reset, bye...(char nl)'
     exit --now
   }
@@ -21,14 +21,14 @@ def 'git batch-reset' [
   cd $env.JUST_INVOKE_DIR
   let current = (git branch --show-current | str trim)
   let available = (git branch | into string | lines | str substring '2,')
-  let candidates = if ($branches | empty?) { $available } else { $dest }
+  let candidates = if ($branches | is-empty) { $available } else { $dest }
 
   $'(char nl)Start to (ansi r)reset ($count) commits(ansi reset) on branches: (char nl)'
   echo ($candidates | wrap name)
 
   $"(char nl)Current branch: ($current)"
   let statusCheck = (git status --porcelain)
-  if ($statusCheck | empty?) == false {
+  if ($statusCheck | is-empty) == false {
     git stash save 'Stash before running git-batch-reset'
   }
 
@@ -43,5 +43,5 @@ def 'git batch-reset' [
     }
   }
   git checkout $current
-  if ($statusCheck | empty?) == false { git stash pop }
+  if ($statusCheck | is-empty) == false { git stash pop }
 }

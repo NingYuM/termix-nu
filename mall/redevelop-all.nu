@@ -43,7 +43,7 @@ def main [
   $'(ansi pr) Termix version: (termix --version | str trim) (ansi reset)'; hr-line
   # Disable `initial branch name` hints from git
   git config --global init.defaultBranch master
-  if (git config --global --get user.name | empty?) {
+  if (git config --global --get user.name | is-empty) {
     git config --global user.name 'git'
     git config --global user.email 'erda@terminus.io'
   }

@@ -61,7 +61,7 @@ def 'append-desc' [
         # 处理分支名称包含‘.’的情况: `support/release-2.4`
         let escapedBranch = ($it.name | str replace -a '\.' '\.')
         let desc = ($descriptions | query json $'descriptions.($escapedBranch)')
-        if ($desc | empty?) { '' } else { '   √' }
+        if ($desc | is-empty) { '' } else { '   √' }
       }
     )
     $summary | move has-desc --after author | sort-by last-commit

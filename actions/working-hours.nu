@@ -122,7 +122,7 @@ def 'handle-working-hours' [
     ($allMembers | where { |it| $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8 })
   })
 
-  if ($result | empty?) { $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; exit --now }
+  if ($result | is-empty) { $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; exit --now }
 
   let hourMap = (
     $result | upsert Gap { |it| $total * 8 - ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave) }
@@ -173,7 +173,7 @@ def 'handle-exception' [
 
   # 未登录或者Cookie过期提示, use `do -i` to ignore 'error: Coercion error'
   do -i {
-    if ($res | empty?) || ($res | query json 'status') == 401 {
+    if ($res | is-empty) || ($res | query json 'status') == 401 {
       $'(ansi r)Your login COOKIE info is outdated or empty，please update it and try again!(char nl)(ansi reset)'
       exit --now
     }
