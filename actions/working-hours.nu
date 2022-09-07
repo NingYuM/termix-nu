@@ -7,7 +7,7 @@
 # Data Source
 #   https://emp.app.terminus.io/view/worktime_WorkTimeBO_DepartmentWorkTime
 
-def 'working-hours' [
+export def 'working-hours' [
   code: string
   --show-all: any   # Set true to show all members even if the working hours filled correctly
   --show-prev: any   # Set true to query working hours of previous week
@@ -140,6 +140,8 @@ def 'handle-working-hours' [
 def 'get-monday' [
   --prev: any
 ] {
+  # FIXME
+  let _TIME_FMT = '%Y-%m-%d %H:%M:%S'
   let today = (date to-table | select year month day)
   let weekDay = ([(date now)] | into df | get-weekday).0
   let duration = ($'($weekDay)day' | into duration)
@@ -152,6 +154,8 @@ def 'get-monday' [
 def 'get-sunday' [
   --prev: any
 ] {
+  # FIXME
+  let _TIME_FMT = '%Y-%m-%d %H:%M:%S'
   let sunday = (((get-monday) | into datetime) + 7day - 1sec)
   let sunday = if $prev == true { $sunday - 7day } else { $sunday }
   echo ($sunday | date format $_TIME_FMT)

@@ -5,7 +5,7 @@
 #   t git-stat
 
 # Show insertions/deletions and number of files changed for each commit
-def 'git stat' [
+export def 'git stat' [
   repo: path    # The repo path to show git stat
   --count(-c): int = 20
   --author(-a): string

@@ -6,13 +6,17 @@
 #   t tag-redev v2.2.0.9 master true
 
 # 给远程二开仓库批量打 Tag
-def 'git tag-redev' [
+export def 'git tag-redev' [
   tag: string               # Specify the tag you want to create
   branch: string            # Specify the branch to create a tag from
   group: string             # Specify the groups of repo to create a tag for
   --delete-tag(-d): any     # Set to 'true' if you want to delete the specified tag, defined as `any` acutually `bool`
 ] {
 
+  # FIXME
+  let _DATE_FMT = '%Y.%m.%d'
+  # FIXME
+  let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
   let currentBeTag = $tag
   let actionConf = open $_TERMIX_CONF
 

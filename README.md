@@ -45,7 +45,7 @@ winget install Nushell.Nushell
 # Install the latest version of nushell, extra features included.
 cargo install nu --features=extra
 # Install nushell of the specified version
-cargo +stable install nu --all-features --version 0.66.0
+cargo +stable install nu --all-features --version 0.68.0
 ```
 
 ### `Just` & `nu` 更新提示

@@ -6,11 +6,13 @@
 #   t ls-redev-refs true
 
 # Show Branches and Tags of redevelop related repos
-def 'git ls-redev-refs' [
+export def 'git ls-redev-refs' [
   group: string             # Specify the groups of repo to list their refs
   --show-branches: any      # Set true to show remote branches last commit info, defined as `any` acutually `bool`
 ] {
 
+  # FIXME
+  let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
   let repoPath = get-tmp-path
   let redevRepos = (open $_TERMIX_CONF | get redevRepos)
   let filteredRepos = ($redevRepos | where $',($group),' =~ $it.group)

@@ -6,7 +6,7 @@
 #   t desc master
 
 # Show branch description from branch description file `d` of `i` branch
-def 'branch-desc' [
+export def 'branch-desc' [
   branch: string        # The branch to query from description file
   --show-notes: any     # Set to 'ture' to show notes infomation, defined as `any` acutually `bool`
 ] {

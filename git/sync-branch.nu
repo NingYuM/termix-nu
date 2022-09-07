@@ -5,7 +5,7 @@
 #   This's a git push hook, don't call it manually
 
 # Sync local branches to remote according to .termixrc config file from remote repo
-def 'git sync-branch' [
+export def 'git sync-branch' [
   localRef: string   # Local git branch/ref to push
   localOid: string   # Local git commit object id
   remoteRef: string  # Remote git branch/ref to push to

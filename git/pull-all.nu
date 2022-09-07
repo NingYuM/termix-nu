@@ -5,7 +5,7 @@
 #   t pull-all
 
 # Pull all local branches from remote repo
-def 'git pull-all' [
+export def 'git pull-all' [
   repoDir: string   # The git repo dir to run pull action
   alias: string     # The remote url alias for git repo
 ] {

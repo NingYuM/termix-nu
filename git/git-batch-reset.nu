@@ -7,7 +7,7 @@
 
 # git reset --hard HEAD~3
 # 将指定Git分支硬回滚N个commit
-def 'git batch-reset' [
+export def 'git batch-reset' [
   count: int        # The commit count to reset for specified branches
   branches: string  # The branches to do reset, default all local branches
 ] {

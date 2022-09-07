@@ -11,11 +11,13 @@
 # Usage:
 # 	just release
 
-def 'release' [
+export def 'release' [
   --update-log: any      # Set to `true` do enable updating CHANGELOG.md, defined as `any` acutually `bool`
   --force-upgrade: any   # Add `$-FORCE-UPGRADE-$` to release tag commit message, defined as `any` acutually `bool`
 ] {
 
+  # FIXME
+  let _UPGRADE_TAG = '$-FORCE-UPGRADE-$'
   cd $env.TERMIX_DIR
   let releaseVer = get-conf version
   let greatestVer = (git tag -l --sort=-v:refname | lines | select 0)

@@ -5,26 +5,27 @@
 #   use source command to load it
 
 # Global date format
-let _DATE_FMT = '%Y.%m.%d'
-let _TIME_FMT = '%Y-%m-%d %H:%M:%S'
-let _UPGRADE_TAG = '$-FORCE-UPGRADE-$'
+# let _DATE_FMT = '%Y.%m.%d'
+# let _TIME_FMT = '%Y-%m-%d %H:%M:%S'
+# let _UPGRADE_TAG = '$-FORCE-UPGRADE-$'
+
+# FIXME
+export def _DATE_FMT [] { '%Y.%m.%d' }
+export def _TIME_FMT [] { '%Y-%m-%d %H:%M:%S' }
+export def _UPGRADE_TAG [] { '$-FORCE-UPGRADE-$' }
+export def _TERMIX_CONF [] { ([$env.TERMIX_DIR 'termix.toml'] | path join) }
 
 # Termix.toml config file path
-let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
-
-# Global nushell configs
-let-env config = {
-  table_mode: light
-}
+# let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
 
 # If current host is Windows
-def windows? [] {
+export def windows? [] {
   # Windows / Darwin
   (sys).host.name == 'Windows'
 }
 
 # Get the specified env key's value or ''
-def 'get-env' [
+export def 'get-env' [
   key: string       # The key to get it's env value
   default?: string  # The default value for an empty env
 ] {
@@ -34,16 +35,20 @@ def 'get-env' [
 }
 
 # Get the specified config from `termix.toml` by key
-def 'get-conf' [
+export def 'get-conf' [
   key: string       # The key to get it's value from termix.toml
   default?: any     # The default value for an empty conf
 ] {
+  # FIXME
+  let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
   let result = (open $_TERMIX_CONF | get $key)
   if ($result | is-empty) { $default } else { $result }
 }
 
 # Get TERMIX_TMP_PATH
-def 'get-tmp-path' [] {
+export def 'get-tmp-path' [] {
+  # FIXME
+  let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
   let actionConf = open $_TERMIX_CONF
   # 先从环境变量里面查找临时文件路径
   let tmpDir = get-env TERMIX_TMP_PATH ''
@@ -56,7 +61,7 @@ def 'get-tmp-path' [] {
 }
 
 # Check if a CLI App was installed, if true get the installed version, otherwise return 'N/A'
-def 'get-ver' [
+export def 'get-ver' [
   app: string     # The CLI App to check
   verCmd: string  # The Nushell command to get it's version number
 ] {
@@ -65,7 +70,7 @@ def 'get-ver' [
 }
 
 # Check if a git repo has the specified ref: could be a branch or tag, etc.
-def 'has-ref' [
+export def 'has-ref' [
   ref: string   # The git ref to check
 ] {
   # Brackets were required here, or error will occure
@@ -74,7 +79,7 @@ def 'has-ref' [
 }
 
 # Compare two version number, return true if first one is lower then second one
-def 'is-lower-ver' [
+export def 'is-lower-ver' [
   from: string,
   to: string,
 ] {
@@ -89,7 +94,7 @@ def 'is-lower-ver' [
 }
 
 # Check if git was installed and if current directory is a git repo
-def 'git-check' [
+export def 'git-check' [
   dest: string        # The dest dir to check
   --check-repo: int   # Check if current directory is a git repo
 ] {
@@ -110,7 +115,7 @@ def 'git-check' [
 }
 
 # Log some variables
-def 'log' [
+export def 'log' [
   name: string
   var: any
 ] {
@@ -119,11 +124,11 @@ def 'log' [
   $'(ansi g)------------------->  Debug End <---------------------(char nl)(ansi reset)'
 }
 
-def 'hr-line' [
+export def 'hr-line' [
   --blank-line(-b): bool
 ] {
   print $'(ansi g)---------------------------------------------------------------------------->(ansi reset)'
   if $blank_line { char nl }
 }
 
-def ! [b: expr] { if ($b) { false } else { true } }
+export def ! [b: expr] { if ($b) { false } else { true } }

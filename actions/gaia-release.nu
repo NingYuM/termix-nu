@@ -9,12 +9,16 @@
 # Usage:
 # 	just gaia-release
 
-def 'gaia-release' [
+export def 'gaia-release' [
   version: string         # Gaia FE release version
   repos: string           # The repos to creat a release tag, multi repo could be separated by ','
   --delete-tag(-d): any   # Set to 'true' if you want to delete the specified tag, defined as `any` acutually `bool`
 ] {
 
+  # FIXME
+  let _DATE_FMT = '%Y.%m.%d'
+  # FIXME
+  let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
   let repoPath = get-tmp-path
   let gaiaSrcRepos = (open $_TERMIX_CONF | get gaiaSrcRepos)
   $'Using global repo path: (ansi p)($repoPath)(ansi reset)(char nl)'

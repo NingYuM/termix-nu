@@ -7,7 +7,7 @@
 #   https://github.com/nushell/nushell/issues/4396
 
 # Transfer repo from source to dest
-def 'git repo-transfer' [
+export def 'git repo-transfer' [
   source: string   # The source repo git url
   dest: string     # The dest repo git url
 ] {

@@ -5,12 +5,11 @@
 # Usage:
 #   just go
 
-let allNavs = (merge-navs)
-
-def 'go' [
+export def 'go' [
   nav_key?: string  # The nav key to go from `quickNavs` config in termix.toml
 ] {
 
+  let allNavs = (merge-navs)
   # If the key of `just go` is blank or list, then show all the nav items
   if ($nav_key == '' || $nav_key == 'list') { show-navs }
   # Find match from nav keys only
@@ -30,14 +29,14 @@ def 'go' [
   }
 }
 
-def 'show-navs' [] {
+export def 'show-navs' [] {
   $'(ansi pb)(char nl)Available Nav Items:(char nl)(char nl)(ansi reset)'
-  $allNavs | transpose | rename key url
+  merge-navs | transpose | rename key url
   exit --now
 }
 
 # Merge all nav items from termix.toml and .termixrc
-def 'merge-navs' [] {
+export def 'merge-navs' [] {
   let quickNavs = get-conf quickNavs
   enter $env.JUST_INVOKE_DIR
   # Decide which branch to get `.termixrc` conf from ?

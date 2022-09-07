@@ -11,7 +11,7 @@
 - [x] gen_redevelop_main
 - [x] gen_redevelop_repos
 
-### Adapt to Nushell v0.60.0
+### Adapt to Nushell v0.68.0
 
 ```shell
 .
@@ -32,12 +32,13 @@
 │   ├── [x] upgrade
 │   └── [x] working-hours.nu
 ├── [x] git
-│   ├── [x] age.nu
+│   ├── [x] branch.nu
 │   ├── [x] branch-desc.nu
 │   ├── [x] check-branch.nu
 │   ├── [x] git-batch-exec.nu
 │   ├── [x] git-batch-reset.nu
 │   ├── [x] git-proxy.nu
+│   ├── [x] git-stat.nu
 │   ├── [x] pull-all.nu
 │   ├── [x] remote-branch.nu
 │   ├── [x] rename-branch.nu
@@ -61,7 +62,7 @@
     └── [x] git.nu
 ```
 
-### Adapt to Nushell v0.60.0 on Windows
+### Adapt to Nushell v0.68.0 on Windows
 
 ```shell
 .
