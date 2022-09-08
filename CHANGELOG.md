@@ -1,6 +1,28 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.8.0] - 2022-09-08
+
+### Bug Fixes
+
+- Fix some variable names for nu v0.66.1 or above
+- Fix `git-remote-branch` command
+- Fix `git-remote-branch` command
+- Fix error of run `git-proxy off` multiple times
+- Adapt to nu v0.68, make the $ on variables optional
+- Fix emp working hours query
+
+### Features
+
+- Upgrade mall/redevelop-main.nu script to deploy from generated redevelop source
+- Update tag-redev and gaia-release command, add enable field filter
+
+### Miscellaneous Tasks
+
+- Fix plugin register protocol
+- Rename variable name for flags
+- Adapted to Nu v0.68
+
 ## [1.7.0] - 2022-07-27
 
 ### Features
