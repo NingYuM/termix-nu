@@ -36,13 +36,19 @@ def-env 'git-proxy' [
     # if ('ALL_RROXY' in (env).name) { hide ALL_RROXY }
     # if ('http_proxy' in (env).name) { hide http_proxy }
     # if ('https_proxy' in (env).name) { hide https_proxy }
-    git config --global --unset http.proxy
-    git config --global --unset https.proxy
-    git config --global --unset socks.proxy
+    unset-git-conf http.proxy
+    unset-git-conf https.proxy
+    unset-git-conf socks.proxy
     $'(ansi p)Proxy turned off(ansi reset)(char nl)'
     $'(ansi p)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
     $'If you want to unset proxy for the terminal, please run: (char nl)'
     $'unset http_proxy https_proxy ALL_RROXY(char nl)(char nl)'
+  }
+}
+
+def 'unset-git-conf' [ name: string ] {
+  if not (git config --global --get $name | is-empty) {
+    git config --global --unset $name
   }
 }
 

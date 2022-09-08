@@ -7,12 +7,14 @@
 #   t pull-redev master true
 
 # 列出远程二开仓库 Tags
-def 'git pull-redev' [
+export def 'git pull-redev' [
   branch: string            # Specify the branch to pull
   group: string             # Specify the groups of repo to update
   --show-diff(-d): any      # Set to 'true' if you want to see the files changed since prev tag, defined as `any` acutually `bool`
 ] {
 
+  # FIXME
+  let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
   let repoPath = get-tmp-path
   let redevRepos = (open $_TERMIX_CONF | get redevRepos)
   let filteredRepos = ($redevRepos | where $',($group),' =~ $it.group)
@@ -51,12 +53,12 @@ def 'git pull-redev' [
     let prevTagName = get-env REDEV_PREV_TAG ''
     # Check the tag status, if exists just recrete it.
     if (has-ref refs/tags/($prevTagName)) {
-      if $show-diff && (git --no-pager diff $prevTagName $branch --name-only | lines | length) > 0 {
+      if $show_diff && (git --no-pager diff $prevTagName $branch --name-only | lines | length) > 0 {
         $'---------> Update since latest tag <---------:(char nl)(ansi y)'
         git --no-pager diff $prevTagName $branch --name-only
       }
     } else {
-      if $show-diff {
+      if $show_diff {
         # 使用原生 echo 命令
         print $'(char nl) (ansi r)Tag: ($prevTagName) does not exist in repo: ($repoName) (ansi reset)(char nl)'
       }

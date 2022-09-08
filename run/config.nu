@@ -26,11 +26,11 @@ let-env PROMPT_INDICATOR_VI_INSERT = ": "
 let-env PROMPT_INDICATOR_VI_NORMAL = "〉"
 let-env PROMPT_MULTILINE_INDICATOR = "::: "
 
-let posh-dir = (brew --prefix oh-my-posh | str trim)
-let posh-theme = $'($posh-dir)/share/oh-my-posh/themes/'
+let poshDir = (brew --prefix oh-my-posh | str trim)
+let poshTheme = $'($poshDir)/share/oh-my-posh/themes/'
 # Recomend themes: zash*/space/robbyrussel/powerline/powerlevel10k_lean*/material/half-life/lambda
 # Recomend double lines: amro/pure/spaceship
-let-env PROMPT_COMMAND = { oh-my-posh prompt print primary --config $'($posh-theme)/zash.omp.json' }
+let-env PROMPT_COMMAND = { oh-my-posh prompt print primary --config $'($poshTheme)/zash.omp.json' }
 let-env PROMPT_INDICATOR = $"(ansi y)$> (ansi reset)"
 
 # Specifies how environment variables are:
@@ -96,10 +96,10 @@ def-env goto [] {
 
 # Bump Nushell to a dev version
 def bump-dev [] {
-  let from-ver = (open cargo.toml | get package.version)
-  if ($from-ver | str ends-with '.0') {
-    let $to-ver = ($from-ver | str replace '.0' '.1')
-    sd -f e -s $from-ver $to-ver (fd --type file | lines)
+  let fromVer = (open cargo.toml | get package.version)
+  if ($fromVer | str ends-with '.0') {
+    let $toVer = ($fromVer | str replace '.0' '.1')
+    sd -f e -s $fromVer $toVer (fd --type file | lines)
   }
 }
 

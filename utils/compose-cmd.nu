@@ -3,9 +3,11 @@
 # Created: 2021/10/03 09:39:52
 
 # Compose command with the shell to execute it
-def 'compose-cmd' [
+export def 'compose-cmd' [
   cmd: string       # The command to compose
 ] {
+  # FIXME
+  let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
   let actionConf = (open $_TERMIX_CONF | to json)
   # 先从环境变量里面查找用于执行命令的 shell 及其相关配置
   let selectedShellOfEnv = get-env SHELL_TO_RUN_CMD 'sh'

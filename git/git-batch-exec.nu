@@ -10,7 +10,7 @@
 # git reset --hard HEAD~3
 # git show --abbrev-commit --no-patch
 # 在候选分支上批量执行特定操作,多个分支用空格分隔
-def 'git batch-exec' [
+export def 'git batch-exec' [
   cmd: string       # The command to execute for specified branches
   branches: string  # The branches to have command be executed, default all local branches
 ] {
@@ -26,14 +26,14 @@ def 'git batch-exec' [
   # let available = (git for-each-ref --format='%(refname:short)' refs/heads | lines)
   # Fix `^^^^^ requires string input issue at 'lines'`
   let available = (git branch | into string | lines | str substring '2,')
-  let candidates = if ($branches | empty?) { $available } else { $dest }
+  let candidates = if ($branches | is-empty) { $available } else { $dest }
 
   $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi reset) on branches: (char nl)'
   echo ($candidates | wrap name)
 
   $"(char nl)Current branch: ($current)"
   let statusCheck = git status --porcelain
-  if ($statusCheck | empty?) == false {
+  if ($statusCheck | is-empty) == false {
     git stash save 'Stash before running git-batch-exec'
   }
 
@@ -48,5 +48,5 @@ def 'git batch-exec' [
     }
   }
   git checkout $current
-  if ($statusCheck | empty?) == false { git stash pop }
+  if ($statusCheck | is-empty) == false { git stash pop }
 }

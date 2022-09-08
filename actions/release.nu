@@ -11,11 +11,13 @@
 # Usage:
 # 	just release
 
-def 'release' [
+export def 'release' [
   --update-log: any      # Set to `true` do enable updating CHANGELOG.md, defined as `any` acutually `bool`
   --force-upgrade: any   # Add `$-FORCE-UPGRADE-$` to release tag commit message, defined as `any` acutually `bool`
 ] {
 
+  # FIXME
+  let _UPGRADE_TAG = '$-FORCE-UPGRADE-$'
   cd $env.TERMIX_DIR
   let releaseVer = get-conf version
   let greatestVer = (git tag -l --sort=-v:refname | lines | select 0)
@@ -29,17 +31,17 @@ def 'release' [
   	exit --now
   }
   let statusCheck = git status --porcelain
-  if ($statusCheck | empty?) == false {
+  if ($statusCheck | is-empty) == false {
   	$'You have uncommit changes, please commit them and try `release` again!(char nl)'
   	exit --now
   }
-  if $update-log {
+  if $update_log {
     git cliff --unreleased --tag ($releaseVer | str replace 'v' '') --prepend CHANGELOG.md;
     git commit CHANGELOG.md -m $'update CHANGELOG.md for ($releaseVer)'
   }
   # Delete tags that not exist in remote repo
   git fetch origin --prune '+refs/tags/*:refs/tags/*'
   let commitMsg = $'A new release for version: ($releaseVer) created by Release command of termix-nu'
-  let tagMsg = if $force-upgrade { $'($commitMsg). ($_UPGRADE_TAG)' } else { $commitMsg }
+  let tagMsg = if $force_upgrade { $'($commitMsg). ($_UPGRADE_TAG)' } else { $commitMsg }
   git tag $releaseVer -am $tagMsg; git push origin --tags
 }

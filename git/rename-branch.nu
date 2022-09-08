@@ -13,13 +13,13 @@
 #   t rename-branch old-name new-name
 
 # Rename remote branch, and delete old branch after rename
-def 'git branch-rename' [
+export def 'git branch-rename' [
   from: string      # The old branch name to be renamed
   to: string        # The new branch name to rename to
   remote?: string   # Remote alias name, 'origin' by default
 ] {
 
-  let remoteAlias = if ($remote | empty?) { 'origin' } else { $remote }
+  let remoteAlias = if ($remote | is-empty) { 'origin' } else { $remote }
   git fetch $remoteAlias -p
 
   let localSrcExists = has-ref $from
@@ -43,7 +43,7 @@ def 'git branch-rename' [
 
   let statusCheck = (git status --porcelain)
   # Stash here, if needed
-  if ($statusCheck | empty?) == false {
+  if ($statusCheck | is-empty) == false {
     git stash save 'Stash before running git-batch-exec'
   }
 
@@ -60,5 +60,5 @@ def 'git branch-rename' [
   git push $remoteAlias -u $to
   # Delete remote old branch if exists
   if ($remoteSrcExists) { git push $remoteAlias $':($from)' }
-  if ($statusCheck | empty?) == false { git stash pop }
+  if ($statusCheck | is-empty) == false { git stash pop }
 }

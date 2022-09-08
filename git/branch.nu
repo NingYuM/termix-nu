@@ -5,7 +5,7 @@
 #   t git-branch
 
 # Creates a table listing the branches of a git repository and the day of the last commit
-def 'git-branch' [
+export def 'git-branch' [
   repo: path    # The repo path to show git branch info
 ] {
 

@@ -16,7 +16,7 @@ def 'is-installed' [ app: string ] {
 
 def 'hr-line' [ --blank-line(-b): bool ] {
   print $'(ansi g)---------------------------------------------------------------------------->(ansi reset)'
-  if $blank-line { char nl }
+  if $blank_line { char nl }
 }
 
 # 根据`业务类型` 上传指定业务类型图片到CDN, 入参必填

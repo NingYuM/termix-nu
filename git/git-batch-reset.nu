@@ -7,13 +7,13 @@
 
 # git reset --hard HEAD~3
 # 将指定Git分支硬回滚N个commit
-def 'git batch-reset' [
+export def 'git batch-reset' [
   count: int        # The commit count to reset for specified branches
   branches: string  # The branches to do reset, default all local branches
 ] {
 
   let dest = ($branches | str trim | split row ' ' | compact)
-  if ($branches | str trim | empty?) {
+  if ($branches | str trim | is-empty) {
     $'You did not specify any branches to do reset, bye...(char nl)'
     exit --now
   }
@@ -21,14 +21,14 @@ def 'git batch-reset' [
   cd $env.JUST_INVOKE_DIR
   let current = (git branch --show-current | str trim)
   let available = (git branch | into string | lines | str substring '2,')
-  let candidates = if ($branches | empty?) { $available } else { $dest }
+  let candidates = if ($branches | is-empty) { $available } else { $dest }
 
   $'(char nl)Start to (ansi r)reset ($count) commits(ansi reset) on branches: (char nl)'
   echo ($candidates | wrap name)
 
   $"(char nl)Current branch: ($current)"
   let statusCheck = (git status --porcelain)
-  if ($statusCheck | empty?) == false {
+  if ($statusCheck | is-empty) == false {
     git stash save 'Stash before running git-batch-reset'
   }
 
@@ -43,5 +43,5 @@ def 'git batch-reset' [
     }
   }
   git checkout $current
-  if ($statusCheck | empty?) == false { git stash pop }
+  if ($statusCheck | is-empty) == false { git stash pop }
 }

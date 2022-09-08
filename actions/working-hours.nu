@@ -7,14 +7,14 @@
 # Data Source
 #   https://emp.app.terminus.io/view/worktime_WorkTimeBO_DepartmentWorkTime
 
-def 'working-hours' [
+export def 'working-hours' [
   code: string
   --show-all: any   # Set true to show all members even if the working hours filled correctly
   --show-prev: any   # Set true to query working hours of previous week
 ] {
 
-  let monday = get-monday --prev=$show-prev
-  let sunday = get-sunday --prev=$show-prev
+  let monday = get-monday --prev=$show_prev
+  let sunday = get-sunday --prev=$show_prev
   let emp = get-conf empWorkingHour
   # 先从环境变量里面查找用户在 emp Cookie 里面的登陆信息
   let empUserCookie = get-env EMP_UC_COOKIE ''
@@ -68,7 +68,7 @@ def 'working-hours' [
   # Set a default leaving record
   let leavingHours = if ($leavingHours | compact | length) == 0 { [[beginTime, duration, staffId]; [0, 0, 0]] } else { $leavingHours }
 
-  handle-working-hours $allStaffs $workingHours $leavingHours --show-all=$show-all --show-prev=$show-prev
+  handle-working-hours $allStaffs $workingHours $leavingHours --show-all=$show_all --show-prev=$show_prev
 }
 
 # 显示工时统计信息
@@ -87,19 +87,19 @@ def 'handle-working-hours' [
   $'(ansi reset)(char nl)'
   let week = [Mon, Tue, Wen, Thu, Fri, Sat, Sun]
   # 当前是一年中的第几周
-  let weekNo = if $show-prev == true { ([((date now) - 7day)] | into df | get-week).0 } else { ([(date now)] | into df | get-week).0 }
+  let weekNo = if $show_prev == true { ([((date now) - 7day)] | into df | get-week).0 } else { ([(date now)] | into df | get-week).0 }
   # 此刻是一周中的第几天，周一为第 0 天
   let weekDay = ([(date now)] | into df | get-weekday).0
   # 正常情况下一周工作 5 天
-  let total = if ($weekDay >= 5 || $show-prev == true) { 5 } else { $weekDay + 1 }
+  let total = if ($weekDay >= 5 || $show_prev == true) { 5 } else { $weekDay + 1 }
 
   # Set a default working hour record
   let workingHours = if ($workingHours | compact | length) == 0 { [[fillDate, percentage, staffId]; [0, 0, 0]] } else { $workingHours }
 
   let hours = ($workingHours | upsert day { |work|
-        let day = (($work.fillDate / 1000) | into string | into datetime -o 8)
-        let idx = (([$day] | into df | get-weekday).0 mod 7)
-        echo ($week | select $idx).0
+        let day = ($work.fillDate | into string | into datetime) + 8hr
+        let idx = ([$day] | into df | get-weekday).0 mod 7
+        ($week | select $idx).0
       } | upsert Hrs { |work|
         ($work.percentage * 8) | into int
       } | select staffId day Hrs
@@ -118,11 +118,11 @@ def 'handle-working-hours' [
       } | reject id
     )
 
-  let result = (if $show-all { $allMembers } else {
+  let result = (if $show_all { $allMembers } else {
     ($allMembers | where { |it| $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8 })
   })
 
-  if ($result | empty?) { $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; exit --now }
+  if ($result | is-empty) { $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; exit --now }
 
   let hourMap = (
     $result | upsert Gap { |it| $total * 8 - ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave) }
@@ -140,6 +140,8 @@ def 'handle-working-hours' [
 def 'get-monday' [
   --prev: any
 ] {
+  # FIXME
+  let _TIME_FMT = '%Y-%m-%d %H:%M:%S'
   let today = (date to-table | select year month day)
   let weekDay = ([(date now)] | into df | get-weekday).0
   let duration = ($'($weekDay)day' | into duration)
@@ -152,6 +154,8 @@ def 'get-monday' [
 def 'get-sunday' [
   --prev: any
 ] {
+  # FIXME
+  let _TIME_FMT = '%Y-%m-%d %H:%M:%S'
   let sunday = (((get-monday) | into datetime) + 7day - 1sec)
   let sunday = if $prev == true { $sunday - 7day } else { $sunday }
   echo ($sunday | date format $_TIME_FMT)
@@ -173,7 +177,7 @@ def 'handle-exception' [
 
   # 未登录或者Cookie过期提示, use `do -i` to ignore 'error: Coercion error'
   do -i {
-    if ($res | empty?) || ($res | query json 'status') == 401 {
+    if ($res | is-empty) || ($res | query json 'status') == 401 {
       $'(ansi r)Your login COOKIE info is outdated or empty，please update it and try again!(char nl)(ansi reset)'
       exit --now
     }

@@ -7,7 +7,7 @@
 #   just trigger-sync feature/latest
 
 # Manually trigger code syncing to all related dests for specified branch
-def 'git trigger-sync' [
+export def 'git trigger-sync' [
   branch?: string   # Local git branch/ref to push
 ] {
 

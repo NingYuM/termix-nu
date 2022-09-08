@@ -5,7 +5,7 @@
 #   t check-branch
 
 # Check whether all remote branches have related description
-def 'check-branch' [] {
+export def 'check-branch' [] {
 
   git fetch origin -p
   let descFile = 'd.toml'
@@ -24,7 +24,7 @@ def 'check-branch' [] {
   # git ls-remote --heads --refs origin | detect columns -n | rename cid name |
   #     update name { get name | str replace 'refs/heads/' '' } | get name
   let remoteBranches = (git ls-remote --heads --refs origin | lines | str substring '52,')
-  let allDescribed = ($remoteBranches | where (no-desc $descriptions $it) | str collect | str trim | empty?)
+  let allDescribed = ($remoteBranches | where (no-desc $descriptions $it) | str collect | str trim | is-empty)
 
   if ($allDescribed) {
     $'(char nl) Well done! All Branches have been described in (ansi g)($repo)(ansi reset).(char nl)(char nl)'
@@ -81,6 +81,6 @@ def 'no-desc' [
   # 处理分支名称包含‘.’的情况: `support/release-2.4`
   let escapedBranch = ($branch | str replace -a '\.' '\.')
   # ($descriptions | select $escapedBranch | compact | length) == 0
-  let noDescription = ($descriptions | query json $'descriptions.($escapedBranch)' | empty?)
+  let noDescription = ($descriptions | query json $'descriptions.($escapedBranch)' | is-empty)
   echo ($noDescription && $branch != 'i')
 }

@@ -5,16 +5,15 @@
 # Usage:
 #   just go
 
-let allNavs = (merge-navs)
-
-def 'go' [
-  nav-key?: string  # The nav key to go from `quickNavs` config in termix.toml
+export def 'go' [
+  nav_key?: string  # The nav key to go from `quickNavs` config in termix.toml
 ] {
 
+  let allNavs = (merge-navs)
   # If the key of `just go` is blank or list, then show all the nav items
-  if ($nav-key == '' || $nav-key == 'list') { show-navs }
+  if ($nav_key == '' || $nav_key == 'list') { show-navs }
   # Find match from nav keys only
-  let matchs = ($allNavs | transpose | rename key url | select key | find -i -r $nav-key)
+  let matchs = ($allNavs | transpose | rename key url | select key | find -i -r $nav_key)
   # If no match item was found then show all the nav items
   if ($matchs | length) == 0 { show-navs }
 
@@ -30,14 +29,14 @@ def 'go' [
   }
 }
 
-def 'show-navs' [] {
+export def 'show-navs' [] {
   $'(ansi pb)(char nl)Available Nav Items:(char nl)(char nl)(ansi reset)'
-  $allNavs | transpose | rename key url
+  merge-navs | transpose | rename key url
   exit --now
 }
 
 # Merge all nav items from termix.toml and .termixrc
-def 'merge-navs' [] {
+export def 'merge-navs' [] {
   let quickNavs = get-conf quickNavs
   enter $env.JUST_INVOKE_DIR
   # Decide which branch to get `.termixrc` conf from ?
@@ -45,7 +44,7 @@ def 'merge-navs' [] {
   let confBr = if $useConfBr == '_current_' { (git branch --show-current | str trim) } else { 'i' }
 
   let termixrc = do -i { git show $'origin/($confBr):.termixrc' }
-  let specialNavs = if ($termixrc | empty?) { [] } else { ( $termixrc | from toml | to json | query json 'quickNavs') }
+  let specialNavs = if ($termixrc | is-empty) { [] } else { ( $termixrc | from toml | to json | query json 'quickNavs') }
   let allNavs = (if (($specialNavs | compact | length) == 0) {
     ($quickNavs | transpose | transpose -r)
   } else {

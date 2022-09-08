@@ -6,7 +6,7 @@
 #   t desc master
 
 # Show branch description from branch description file `d` of `i` branch
-def 'branch-desc' [
+export def 'branch-desc' [
   branch: string        # The branch to query from description file
   --show-notes: any     # Set to 'ture' to show notes infomation, defined as `any` acutually `bool`
 ] {
@@ -21,7 +21,7 @@ def 'branch-desc' [
   # 本地 i 分支优先级高于远程
   let querySource = if ($localIExists) { 'i' } else { 'origin/i' }
   let descriptions = (git show $'($querySource):($descFile)' | from toml | to json)
-  let queryBranch = if ($branch | empty?) { (git branch --show-current | str trim) } else { $branch }
+  let queryBranch = if ($branch | is-empty) { (git branch --show-current | str trim) } else { $branch }
   # 处理分支名称包含‘.’的情况: `support/release-2.4`
   let escapedBranch = ($queryBranch | str replace -a '\.' '\.')
   let desc = ($descriptions | query json $'descriptions.($escapedBranch)')
@@ -29,7 +29,7 @@ def 'branch-desc' [
   $'(char nl)(ansi p)($queryBranch) (ansi reset)分支描述：(char nl)'
   hr-line; $'(char nl)($desc)(char nl)'
 
-  if ($show-notes) {
+  if ($show_notes) {
     $rules | each -n { |rule|
       echo $'(ansi g)($rule.index + 1)(ansi reset). ($rule.item)'
     } | str collect $'(char nl)'; char nl

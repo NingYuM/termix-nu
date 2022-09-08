@@ -7,7 +7,7 @@
 #   just prune-synced-branches false
 
 # Clean possibly unused branches of synced dest repos
-def 'prune-synced-branches' [
+export def 'prune-synced-branches' [
   --user: string        # Git repo access user name
   --ak: string          # Git repo access token
   --dry-run(-d): any    # In dry-run mode no branch will be deleted, just show all deletable branches, defined as `any` acutually `bool`
@@ -68,7 +68,7 @@ def 'prepare-repo' [
   --user: string        # Git repo access user name
   --ak: string          # Git repo access token
 ] {
-  if ($repos | empty?) {
+  if ($repos | is-empty) {
     $'No dest repos to be cleaned, bye...(char nl)'
     exit --now
   }
@@ -100,7 +100,7 @@ def 'prepare-repo' [
     }
     # 更新远程仓库信息到本地
     let output = git fetch $dest.name -p
-    if ($output | str trim | empty?) == false { print $output }
+    if ($output | str trim | is-empty) == false { print $output }
   }
   print 'Repo preparing done!'; hr-line
   echo $repoName

@@ -6,15 +6,15 @@
 #   nu-ver
 
 # Check min nushell version and show upgrading tips to the user
-def 'nu-ver' [] {
+export def 'nu-ver' [] {
 
   let currentVer = (version).version
-  let minVer = get-conf minNuVer '0.66.0'
+  let minVer = get-conf minNuVer '0.68.0'
   upgrade-tip nushell $minVer $currentVer
 }
 
 # Check min just version and show upgrading tips to the user
-def 'just-ver' [] {
+export def 'just-ver' [] {
 
   let currentVer = (just --version | str replace 'just' '' | str trim | first)
   let minVer = get-conf minJustVer '1.3.0'
@@ -29,7 +29,9 @@ def 'just-ver' [] {
 #     [√] 当用户升级到最新版本后所有命令可以正常执行；
 #     [√] 当删除掉最新的强制更新版本 Release Tag 时用户端可以检测到并在不升级的情况下恢复正常使用；
 # Check latest termix-nu version and show upgrading tips if there is a new release
-def 'termix-ver' [] {
+export def 'termix-ver' [] {
+  # FIXME
+  let _DATE_FMT = _DATE_FMT
   let tmpPath = get-tmp-path
   let currentVer = get-conf version
   let confName = ([$tmpPath '.termix-conf'] | path join)
@@ -63,6 +65,10 @@ def 'termix-ver' [] {
 def 'query-ver' [
   conf: string,
 ] {
+  # FIXME
+  let _DATE_FMT = _DATE_FMT
+  # FIXME
+  let _UPGRADE_TAG = _UPGRADE_TAG
   # Update latest commits from remote to local, tags inclueded
   enter $env.TERMIX_DIR; git fetch origin -p
   let checkDate = (date now | date format $_DATE_FMT)
@@ -71,7 +77,7 @@ def 'query-ver' [
   # Check whether the latest release tag is a force upgrade
   let msg = git show --oneline --no-patch $latestVer
   let forceUpgrade = ($msg | str contains $_UPGRADE_TAG)
-  let config = { latestVer: $latestVer, checkDate: $checkDate, forceUpgrade: $forceUpgrade }
+  let config = { 'latestVer': $latestVer, 'checkDate': $checkDate, 'forceUpgrade': $forceUpgrade }
   $config | to json | save $conf
   echo $latestVer
 }

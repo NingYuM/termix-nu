@@ -8,7 +8,7 @@
 
 # Creates a table listing the remote branches of
 # a git repository and the time of the last commit
-def 'git-remote-branch' [
+export def 'git-remote-branch' [
   repo: string          # The git repo to display remote branch info
   alias: string         # The remote url alias for git repo
   --show-tag(-t): any   # Set to 'true' if you want to show all the tags, defined as `any` acutually `bool`
@@ -32,7 +32,7 @@ def 'git-remote-branch' [
   )
   append-desc $basic
 
-  if (! $show-tag) { exit --now }
+  if (! $show_tag) { exit --now }
 
   $'Tags of (ansi gb)($repoName)(ansi reset) for remote ($alias)'; hr-line
   # Git for Windows does't support sort by `creatordate` field?

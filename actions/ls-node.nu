@@ -10,14 +10,14 @@
 #   t ls-node v15
 #   t ls-node v15 true
 
-def 'ls-node-remote' [
+export def 'ls-node-remote' [
   minVer: string   # The node version you want to query
   isLts: bool      # Filter the node versions that are LTS
 ] {
 
   # brew install fnm to install it, see: https://github.com/Schniz/fnm
   let notInstalled = (which fnm | length) == 0
-  let minVersion = if ($minVer | empty?) { 10 } else { ($minVer | str replace 'v' '' | into int) }
+  let minVersion = if ($minVer | is-empty) { 10 } else { ($minVer | str replace 'v' '' | into int) }
   if $notInstalled {
     $'You should install `fnm` and try again..., bye!'
     exit --now

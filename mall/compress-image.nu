@@ -16,7 +16,7 @@ def 'is-installed' [ app: string ] {
 
 def 'hr-line' [ --blank-line(-b): bool ] {
   print $'(ansi g)---------------------------------------------------------------------------->(ansi reset)'
-  if $blank-line { char nl }
+  if $blank_line { char nl }
 }
 
 # 根据`业务类型` 使用 tinypng api 压缩指定业务类型的本地图片, 入参必填

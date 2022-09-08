@@ -5,7 +5,7 @@
 #   t show-env
 
 # Show locally installed cli app's version and env infomation
-def 'show-env' [] {
+export def 'show-env' [] {
   let termixDir = get-env TERMIX_DIR '(empty)'
   let shell = get-env SHELL_TO_RUN_CMD '(empty)'
   let justFile = get-env JUST_FILE_PATH '(empty)'
@@ -21,7 +21,7 @@ def 'show-env' [] {
   let justVer = get-ver just "just --version | str trim -b | str substring '5,'"
   let gitVer = get-ver git "git --version | str trim -b | str substring '12,'"
   let time = (date now | date format '%Y/%m/%d %H:%M:%S')
-  let gitProxy = if (git config --global --list | grep proxy | empty?) { 'Off' } else { 'On' }
+  let gitProxy = if (git config --global --list | grep proxy | is-empty) { 'Off' } else { 'On' }
 
   version | transpose | rename nu-ver value
 
