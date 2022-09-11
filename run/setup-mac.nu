@@ -38,7 +38,7 @@ def 'brew-inst' [
         [
             ($'($app) is installed ?' | str rpad -l 30 -c '.')
             (is-installed $app | into string)
-        ] | str collect
+        ] | str join
     }
 }
 

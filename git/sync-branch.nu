@@ -61,5 +61,5 @@ export def 'git sync-branch' [
       print $'You can check the result from: (ansi g)($navUrl)(ansi reset)'
       hr-line
     }
-  } | str collect
+  } | str join
 }

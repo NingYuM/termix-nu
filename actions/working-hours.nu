@@ -29,7 +29,7 @@ export def 'working-hours' [
       | str replace '_project_code_' $code
     )
   # Week No of now: [(date now)] | into df | get-week
-  let staffs = (curl $emp.staffUrl -H $emp.type -H $userCookie -s --data-raw $staffPayload | str collect)
+  let staffs = (curl $emp.staffUrl -H $emp.type -H $userCookie -s --data-raw $staffPayload | str join)
 
   handle-exception $staffs
 
@@ -49,8 +49,8 @@ export def 'working-hours' [
     )
 
   let allStaffs = ($staffs | query json 'res' | select id name | rename id Name)
-  let hours = (curl $emp.timeUrl -H $emp.type -H $emp.app -H $userCookie -s --data-raw $timePayload | str collect)
-  let leaves = (curl $emp.leaveUrl -H $emp.type -H $userCookie -s --data-raw $leavePayload | str collect)
+  let hours = (curl $emp.timeUrl -H $emp.type -H $emp.app -H $userCookie -s --data-raw $timePayload | str join)
+  let leaves = (curl $emp.leaveUrl -H $emp.type -H $userCookie -s --data-raw $leavePayload | str join)
   let workingHours = (
       $hours
         | query json 'res'

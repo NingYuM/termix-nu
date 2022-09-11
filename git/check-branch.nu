@@ -24,7 +24,7 @@ export def 'check-branch' [] {
   # git ls-remote --heads --refs origin | detect columns -n | rename cid name |
   #     update name { get name | str replace 'refs/heads/' '' } | get name
   let remoteBranches = (git ls-remote --heads --refs origin | lines | str substring '52,')
-  let allDescribed = ($remoteBranches | where (no-desc $descriptions $it) | str collect | str trim | is-empty)
+  let allDescribed = ($remoteBranches | where (no-desc $descriptions $it) | str join | str trim | is-empty)
 
   if ($allDescribed) {
     $'(char nl) Well done! All Branches have been described in (ansi g)($repo)(ansi reset).(char nl)(char nl)'

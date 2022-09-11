@@ -49,7 +49,7 @@ export def 'prune-synced-branches' [
           let noUse = ($syncs | where repo == $alias && dest == $brnm | length) == 0
           if $noUse { $brnm }
         }
-      } | str collect $'(char nl)'
+      } | str join $'(char nl)'
     )
 
     if (($cleanable | str trim) != '') {

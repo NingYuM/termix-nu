@@ -14,7 +14,7 @@ alias la = exa -la
 alias .. = cd ..
 alias ... = 'cd .. ; cd ..'
 alias t = just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .
-alias tokeid = (tokei | lines | skip 1 | str collect "\n" | detect columns | where Language !~ "=" && Language !~ "|" && Language !~ "-" && Language !~ "(" | into int Files Lines Code Comments Blanks)
+alias tokeid = (tokei | lines | skip 1 | str join "\n" | detect columns | where Language !~ "=" && Language !~ "|" && Language !~ "-" && Language !~ "(" | into int Files Lines Code Comments Blanks)
 
 # ----------------------- ENV VARS ------------------------
 let-env EDITOR = 'hx'
@@ -40,11 +40,11 @@ let-env PROMPT_INDICATOR = $"(ansi y)$> (ansi reset)"
 let-env ENV_CONVERSIONS = {
   "PATH": {
     from_string: { |s| $s | split row (char esep) }
-    to_string: { |v| $v | str collect (char esep) }
+    to_string: { |v| $v | str join (char esep) }
   }
   "Path": {
     from_string: { |s| $s | split row (char esep) }
-    to_string: { |v| $v | str collect (char esep) }
+    to_string: { |v| $v | str join (char esep) }
   }
 }
 

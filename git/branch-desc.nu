@@ -32,7 +32,7 @@ export def 'branch-desc' [
   if ($show_notes) {
     $rules | each -n { |rule|
       echo $'(ansi g)($rule.index + 1)(ansi reset). ($rule.item)'
-    } | str collect $'(char nl)'; char nl
+    } | str join $'(char nl)'; char nl
   }
 }
 
