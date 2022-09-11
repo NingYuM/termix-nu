@@ -94,13 +94,19 @@ def-env goto [] {
   cd $path
 }
 
-# Bump Nushell to a dev version
-def bump-dev [] {
+# Bump Nushell to new version
+def bump-ver [
+  --minor(-m): bool   # Bump minor version
+] {
   let fromVer = (open cargo.toml | get package.version)
-  if ($fromVer | str ends-with '.0') {
-    let $toVer = ($fromVer | str replace '.0' '.1')
-    sd -f e -s $fromVer $toVer (fd --type file | lines)
+  let $toVer = if $minor {
+    let to = ($fromVer | inc --minor)
+    # Reset patch version after bump minor version
+    ($to | split row '.' | first 2 | append 0 | str join '.')
+  } else {
+    $fromVer | inc --patch
   }
+  sd -f e -s $fromVer $toVer (fd --type file | lines)
 }
 
 # load environment variables from the .envrc file.
