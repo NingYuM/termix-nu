@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.9.0] - 2022-09-29
+
+### Miscellaneous Tasks
+
+- Change default history format to sqlit
+- Remove protocol for plugin register with nu 0.68.1
+- Change `str collect` to `str join` for nu 0.68.2+
+- Update bump version custom command
+
 ## [1.8.0] - 2022-09-08
 
 ### Bug Fixes
