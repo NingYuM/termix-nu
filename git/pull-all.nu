@@ -21,8 +21,8 @@ export def 'git pull-all' [
   git fetch $alias -p
   let available = (git branch | into string | lines | str substring '2,')
   # `LANG=en_US git` 强制 git 输出语言切换为英文
-  let ahead = (LANG=en_US git br -vv | lines | find ': ahead')
-  let behind = (LANG=en_US git br -vv | lines | find ': behind')
+  let ahead = (LANG=en_US git branch -vv | lines | find ': ahead')
+  let behind = (LANG=en_US git branch -vv | lines | find ': behind')
   $available | each { |br|
     let pattern = $'($alias)/($br):'
     if ($behind | find -r $pattern | length) > 0 || ($ahead | find -r $pattern | length) > 0 {
