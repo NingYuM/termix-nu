@@ -78,7 +78,7 @@ def 'query-ver' [
   let msg = git show --oneline --no-patch $latestVer
   let forceUpgrade = ($msg | str contains $_UPGRADE_TAG)
   let config = { 'latestVer': $latestVer, 'checkDate': $checkDate, 'forceUpgrade': $forceUpgrade }
-  $config | to json | save -f $conf
+  $config | to json | save $conf
   echo $latestVer
 }
 
