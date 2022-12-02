@@ -90,16 +90,17 @@ def 'upgrade-tip' [
 ] {
   if (is-lower-ver $current $min) {
     if ($cmd == 'termix-nu') {
-      $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
-      $' -----> Your ($cmd) is (ansi r)OUTDATED(ansi reset), latest ver: ($min) <----- (char nl)'
-      $'  Please run (ansi g)`just upgrade`(ansi reset) to upgrade to the latest version.(char nl)'
-      $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+      $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+      $'        -----> Your ($cmd) is (ansi r)OUTDATED(ansi reset), latest ver: (ansi p)($min)(ansi reset) <----- (char nl)'
+      $'         Please run (ansi g)`just upgrade`(ansi reset) to upgrade to the latest version.(char nl)'
+      $'(ansi lpr) You may need to run `brew update && brew upgrade nushell` to upgrade nu, too. (ansi reset)'
+      $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
     } else {
-      $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
-      $'  Min required ($cmd) ver: (ansi r)($min)(ansi reset), current ($cmd) ver: ($current)(char nl)'
-      $'  ------------> Your ($cmd) is (ansi r)OUTDATED(ansi reset) <------------ (char nl)'
-      $'  Please run (ansi g)`brew upgrade ($cmd)`(ansi reset) to upgrade to the latest.(char nl)'
-      $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+      $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+      $'      Min required ($cmd) ver: (ansi r)($min)(ansi reset), current ($cmd) ver: ($current)(char nl)'
+      $'        ------------> Your ($cmd) is (ansi r)OUTDATED(ansi reset) <------------ (char nl)'
+      $'(ansi lpr)    Please run `brew update && brew upgrade ($cmd)` to upgrade to the latest.    (ansi reset)(char nl)'
+      $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
       exit --now
     }
   }
