@@ -29,7 +29,7 @@ export def 'git trigger-sync' [
       | upsert remote { |it| $it.remote | into int }
   )
   # 如果本地分支超前于远程分支直接push就可以了，会自动触发批量同步
-  if ($diff.remote.0 == 0 && $diff.local.0 > 0) {
+  if ($diff.remote.0 == 0 and $diff.local.0 > 0) {
     git push origin $selected
     exit --now
   }
@@ -66,7 +66,7 @@ export def 'git trigger-sync' [
     let navUrl = ($pushConf | query json $'repos.($iter.repo).url')
 
     if $syncFrom == $nothing {} else { do-sync $syncFrom $gitUrl $iter }
-    if ($navUrl != '' && $syncFrom != $nothing) {
+    if ($navUrl != '' and $syncFrom != $nothing) {
       print $'You can check the result from: (ansi g)($navUrl)(ansi reset)'
       hr-line
     }

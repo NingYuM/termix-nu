@@ -14,7 +14,7 @@ alias la = exa -la
 alias .. = cd ..
 alias ... = 'cd .. ; cd ..'
 alias t = just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .
-alias tokeid = (tokei | lines | skip 1 | str join "\n" | detect columns | where Language !~ "=" && Language !~ "|" && Language !~ "-" && Language !~ "(" | into int Files Lines Code Comments Blanks)
+alias tokeid = (tokei | lines | skip 1 | str join "\n" | detect columns | where Language !~ "=" and Language !~ "|" and Language !~ "-" and Language !~ "(" | into int Files Lines Code Comments Blanks)
 
 # ----------------------- ENV VARS ------------------------
 let-env EDITOR = 'hx'

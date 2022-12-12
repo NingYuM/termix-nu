@@ -50,7 +50,7 @@ def main [
   # 通过 Termix 生成标品二开仓库
   let action = (termix redevelop redev-app --template $template --checkout $checkout --user='git' --access-token $token | complete)
   print $action.stdout; print $action.stderr
-  if ('redev-app/origin' | path exists) == false || $action.exit_code != 0 {
+  if ('redev-app/origin' | path exists) == false or $action.exit_code != 0 {
     $'(ansi r)Redevelop repo generating failed! Bye...(ansi reset)'
     exit 1 --now
   }

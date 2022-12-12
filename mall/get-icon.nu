@@ -25,7 +25,7 @@ def main [
   bizType?: string,        # 业务类型: b2c|b2b|scrm|sea|point
   iconFontURL?: string,    # Iconfont Symbol JS 地址, 比如: //at.alicdn.com/t/font_1949908_fie05xdkkq7.js
 ] {
-  if ($bizType == $nothing || $iconFontURL == $nothing) {
+  if ($bizType == $nothing or $iconFontURL == $nothing) {
     $'(char nl)Usage: nu get-icon.nu (ansi r)<bizType> <iconFontURL>(ansi reset)'; hr-line
     $'(ansi g)Description: (ansi reset)根据`业务类型`和 `Iconfont Symbol JS 地址` 生成图标配置文件, 两个入参必填'
     $'(ansi g)Supported bizTypes: (ansi reset)b2c / b2b / scrm / sea / point'

@@ -15,7 +15,7 @@ export def 'compose-cmd' [
   # '------------------ Before ------------------'; char nl
   # 'Selected shell from .env: '; echo $selectedShellOfEnv; char nl
   # $'Shell options: ($shellOption)'; char nl
-  if ($selectedShellOfEnv != '' && $shellOption != '') {
+  if ($selectedShellOfEnv != '' and $shellOption != '') {
     # $'Run command with ($selectedShellOfEnv) from .env conf:(char nl)'
     # Output / return composed command
     echo $"($selectedShellOfEnv) ($shellOption) "($cmd)""

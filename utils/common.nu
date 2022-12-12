@@ -30,7 +30,7 @@ export def 'get-env' [
   default?: string  # The default value for an empty env
 ] {
   # $env | get -i $key | default $default
-  let hasEnv = (env | any name == $key)
+  let hasEnv = (env | any { |it| $it.name == $key })
   if $hasEnv { $env | get $key } else { $default }
 }
 

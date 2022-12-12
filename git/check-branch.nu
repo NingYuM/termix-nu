@@ -12,7 +12,7 @@ export def 'check-branch' [] {
   let localIExists = has-ref i
   let remoteIExists = has-ref origin/i
 
-  if ($localIExists || $remoteIExists) == false {
+  if ($localIExists or $remoteIExists) == false {
     $'You do not have an i branch, branch description query failed, bye...(char nl)'
     exit --now
   }
@@ -82,5 +82,5 @@ def 'no-desc' [
   let escapedBranch = ($branch | str replace -a '\.' '\.')
   # ($descriptions | select $escapedBranch | compact | length) == 0
   let noDescription = ($descriptions | query json $'descriptions.($escapedBranch)' | is-empty)
-  echo ($noDescription && $branch != 'i')
+  echo ($noDescription and $branch != 'i')
 }

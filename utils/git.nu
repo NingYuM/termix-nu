@@ -14,7 +14,7 @@ export def 'do-sync' [
   let force = (get-env FORCE '0' | into int)
   let forcePush = (get-env FORCE_PUSH '0' | into int)
   let hasLock = (do -i { $repo | get lock }) != $nothing
-  if ($forcePush == 1 || $force == 1 || $hasLock) {
+  if ($forcePush == 1 or $force == 1 or $hasLock) {
     # You MUST use '--no-verify' to prevent infinit loops!!!
     git push --no-verify --force $gitUrl $'($syncFrom):refs/heads/($repo.dest)'
   } else {
@@ -50,7 +50,7 @@ export def 'append-desc' [
   let descFile = 'd.toml'
   let localIExists = has-ref i
   let remoteIExists = has-ref origin/i
-  if not ($localIExists || $remoteIExists) {
+  if not ($localIExists or $remoteIExists) {
     $records | sort-by last-commit
   } else {
     # 本地 i 分支优先级高于远程

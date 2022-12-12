@@ -57,7 +57,7 @@ export def 'git sync-branch' [
     } else {
       if $syncFrom == $nothing {} else { do-sync $syncFrom $gitUrl $iter }
     }
-    if ($navUrl != '' && $syncFrom != $nothing) {
+    if ($navUrl != '' and $syncFrom != $nothing) {
       print $'You can check the result from: (ansi g)($navUrl)(ansi reset)'
       hr-line
     }
