@@ -142,7 +142,7 @@ def 'get-monday' [
 ] {
   # FIXME
   let _TIME_FMT = '%Y-%m-%d %H:%M:%S'
-  let today = (date to-table | select year month day)
+  let today = (date now | date to-table | select year month day)
   let weekDay = ([(date now)] | into df | get-weekday).0
   let duration = ($'($weekDay)day' | into duration)
   let beginOfToday = ($'($today.year.0)-($today.month.0)-($today.day.0)' | into datetime)

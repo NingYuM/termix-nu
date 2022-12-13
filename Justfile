@@ -191,6 +191,7 @@ ls-redev-refs group=('b2c,b2b,mbr,pik') showBranch=('false'): _setup
     git ls-redev-refs {{group}} --show-branches={{showBranch}}
 
 # 批量同步本地分支到远程指定分支,git pre-push hooks调用,请勿手工触发
+[private]
 git-sync-branch localRef localOid remoteRef: _setup
   @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
     overlay use {{ join(_termix, 'utils', 'git.nu') }}; \
