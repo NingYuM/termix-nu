@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Fix `pull-all` command, use git branch instead of git br
+- Fix `pull-all` command, use `git branch` instead of `git br`
 - Fix config saving for nu v0.72
 
 ### Features
