@@ -74,7 +74,7 @@ def 'prepare-repo' [
   }
 
   let repoPath = get-tmp-path
-  let sampleRepo = ($repos | first | transpose k repo | select 0).repo
+  let sampleRepo = ($repos | values | first)
   let repoName = ($'prune-($env.PWD | path basename)' | str trim)
   # 待清理仓库完整路径
   let destRepoPath = ([$repoPath $repoName] | path join)
