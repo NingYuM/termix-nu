@@ -1,6 +1,29 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.11.0] - 2022-12-26
+
+### Bug Fixes
+
+- Fix `pull-all` command, use git branch instead of git br
+- Fix config saving for nu v0.72
+
+### Features
+
+- Update upgrade tips
+- Update nushell config file, add carapace completer support
+
+### Miscellaneous Tasks
+
+- Fix config, re-register plugins needed for v0.71+
+- Adapt to nu v0.72
+- Update config file for nu v0.72
+- Update min nu version to v0.72 and min just version to v1.9, bump version to v1.10.0
+- Adapt to nu version v0.73
+- Fix emp command for nu v0.73
+- Bump v1.11.0
+- Fix `prune-synced-branches` for nu v0.73.1
+
 ## [1.10.0] - 2022-12-02
 
 ### Bug Fixes
