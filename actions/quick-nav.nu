@@ -13,12 +13,12 @@ export def 'go' [
   # If the key of `just go` is blank or list, then show all the nav items
   if ($nav_key == '' or $nav_key == 'list') { show-navs }
   # Find match from nav keys only
-  let matchs = ($allNavs | transpose | rename key url | select key | find -i -r $nav_key)
+  let matches = ($allNavs | transpose | rename key url | select key | find -i -r $nav_key)
   # If no match item was found then show all the nav items
-  if ($matchs | length) == 0 { show-navs }
+  if ($matches | length) == 0 { show-navs }
 
   # Found match item
-  let navKey = ($matchs | get key).0
+  let navKey = ($matches | get key).0
   let url = ($allNavs | get $navKey).0
   if ($url | str starts-with 'http') {
     $'Going to open matched url: (ansi g)($url)(ansi reset) in default browser...(char nl)'

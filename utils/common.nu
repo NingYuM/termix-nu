@@ -54,7 +54,7 @@ export def 'get-tmp-path' [] {
   let tmpDir = get-env TERMIX_TMP_PATH ''
   let tmpPath = if ($tmpDir | is-empty) { ($actionConf | get termixTmpPath) } else { $tmpDir }
   if ($tmpPath | path exists) == false {
-    $'(ansi r)Path ($tmpPath) does not exist, please create it and try agian...(ansi reset)(char nl)(char nl)'
+    $'(ansi r)Path ($tmpPath) does not exist, please create it and try again...(ansi reset)(char nl)(char nl)'
     exit --now
   }
   echo $tmpPath
@@ -73,7 +73,7 @@ export def 'get-ver' [
 export def 'has-ref' [
   ref: string   # The git ref to check
 ] {
-  # Brackets were required here, or error will occure
+  # Brackets were required here, or error will occur
   let parse = (git rev-parse --verify -q $ref)
   if ($parse | is-empty) { false } else { true }
 }

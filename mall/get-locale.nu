@@ -60,7 +60,7 @@ def main [
   let DESIGN_EN_DIR = 'client/design/locale/en/messages.json'
 
   if $bizType not-in $I18 {
-    $'Locale ID for biz type: ($bizType) has not been configured, please try agian...'
+    $'Locale ID for biz type: ($bizType) has not been configured, please try again...'
     exit --now
   }
 

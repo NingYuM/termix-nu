@@ -4,7 +4,7 @@
 # Usage:
 #   t show-env
 
-# Show locally installed cli app's version and env infomation
+# Show locally installed cli app's version and env information
 export def 'show-env' [] {
   let termixDir = get-env TERMIX_DIR '(empty)'
   let shell = get-env SHELL_TO_RUN_CMD '(empty)'

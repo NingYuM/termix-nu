@@ -32,7 +32,7 @@ def 'is-installed' [
 }
 
 def 'brew-inst' [
-    apps: string    # The cli apps to install, seperated by ','
+    apps: string    # The cli apps to install, separated by ','
 ] {
     $apps | split row ',' | each { |app|
         [

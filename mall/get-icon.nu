@@ -47,7 +47,7 @@ def main [
   }
 
   $'Running fetch icons from ($iconFontURL) for (ansi p)($bizType)(ansi reset)...'
-  # The following does NOT work currrently
+  # The following does NOT work currently
   # termix icon --output=$'./mall-($bizType)/client/fonts' $iconFontURL
   termix icon $'--output=./mall-($bizType)/client/fonts' $iconFontURL
 }

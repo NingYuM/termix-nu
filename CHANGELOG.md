@@ -125,7 +125,7 @@ All notable changes to this project will be documented in this file.
 - Update zoxide and other configs
 - Add multiple team support for `emp` command
 - Add `git stat` command to display modification stats for each commit
-- Add light theme releated config
+- Add light theme related config
 - Upgrade for nu v0.64
 
 ### Miscellaneous Tasks
@@ -149,7 +149,7 @@ All notable changes to this project will be documented in this file.
 - Adapt `gaia-release` for nu v0.59+
 - Change bool flags from string to bool, fix plugin import for windows
 - `git-age`, `git-remote-age`, `show-env` commands for Windows
-- Fix table laout broken for `ls-redev-refs`, `check-desc` on windows, fix `go` command
+- Fix table layout broken for `ls-redev-refs`, `check-desc` on windows, fix `go` command
 - Adapt `emp` command again to v0.59+
 - Remove unnecessary hack for windows by using latest main branch
 - Fix `emp` command for windows with nu v0.59+
@@ -175,7 +175,7 @@ All notable changes to this project will be documented in this file.
 
 - Add pull-all for local ahead support
 - Add config file for nu 0.60, fix `check-desc` command
-- Add `!` commnad for common
+- Add `!` command for common
 - Update termix-nu related docs
 - Add get-icon.nu script for gaia-mobile
 - Add mall/upload-image.nu script
@@ -223,7 +223,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Fix empty working-hours execption for `t emp`
+- Fix empty working-hours exception for `t emp`
 
 ### Documentation
 
@@ -273,7 +273,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Fix empty working-hours execption for `t emp`
+- Fix empty working-hours exception for `t emp`
 
 ### Documentation
 

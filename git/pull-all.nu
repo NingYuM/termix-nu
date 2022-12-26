@@ -35,7 +35,7 @@ export def 'git pull-all' [
       }
       # If local is behind remote and have commits at the same time, do a reset, may be DANGEROUS
       if ($stat.behind > 0 and $stat.ahead > 0) {
-        print $'(ansi p)Start reseting ($alias)/($br) branch...(ansi reset)'
+        print $'(ansi p)Start resetting ($alias)/($br) branch...(ansi reset)'
         git reset --hard $'($alias)/($br)'; hr-line
       }
     }

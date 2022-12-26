@@ -25,7 +25,7 @@ set positional-arguments := true
 # Use `just --evaluate` to show env vars
 
 _termix := env_var('TERMIX_DIR')
-# Used to handle the path seperator issue
+# Used to handle the path separator issue
 JUST_FILE_PATH := justfile()
 NU_DIR := parent_directory(`(which nu).path.0`)
 _s := if os_family() == 'windows' { '\' } else { '/' }

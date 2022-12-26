@@ -52,7 +52,7 @@ export def 'git sync-branch' [
     let navUrl = ($pushConf | query json $'repos.($iter.repo).url')
     if $localOid == $zero {
       print $'Remove remote branch (ansi p)($iter.dest) of repo ($iter.repo)(ansi reset) -->(char nl)'
-      # You MUST use '--no-verify' to prevent infinit loops!!!
+      # You MUST use '--no-verify' to prevent infinite loops!!!
       git push --no-verify $gitUrl $':($iter.dest)'
     } else {
       if $syncFrom == $nothing {} else { do-sync $syncFrom $gitUrl $iter }

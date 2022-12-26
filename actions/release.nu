@@ -27,7 +27,7 @@ export def 'release' [
   	exit --now
   }
   if (is-lower-ver $releaseVer $greatestVer) {
-  	$'The release version sould be greater than ($greatestVer), however, current release ver: ($releaseVer)(char nl)'
+  	$'The release version should be greater than ($greatestVer), however, current release ver: ($releaseVer)(char nl)'
   	exit --now
   }
   let statusCheck = git status --porcelain

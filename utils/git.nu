@@ -15,7 +15,7 @@ export def 'do-sync' [
   let forcePush = (get-env FORCE_PUSH '0' | into int)
   let hasLock = (do -i { $repo | get lock }) != $nothing
   if ($forcePush == 1 or $force == 1 or $hasLock) {
-    # You MUST use '--no-verify' to prevent infinit loops!!!
+    # You MUST use '--no-verify' to prevent infinite loops!!!
     git push --no-verify --force $gitUrl $'($syncFrom):refs/heads/($repo.dest)'
   } else {
     git push --no-verify $gitUrl $'($syncFrom):refs/heads/($repo.dest)'

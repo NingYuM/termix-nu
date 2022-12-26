@@ -28,8 +28,8 @@ let-env PROMPT_MULTILINE_INDICATOR = "::: "
 
 let poshDir = (brew --prefix oh-my-posh | str trim)
 let poshTheme = $'($poshDir)/share/oh-my-posh/themes/'
-# Recomend themes: zash*/space/robbyrussel/powerline/powerlevel10k_lean*/material/half-life/lambda
-# Recomend double lines: amro/pure/spaceship
+# Recommend themes: zash*/space/robbyrussel/powerline/powerlevel10k_lean*/material/half-life/lambda
+# Recommend double lines: amro/pure/spaceship
 let-env PROMPT_COMMAND = { oh-my-posh prompt print primary --config $'($poshTheme)/zash.omp.json' }
 let-env PROMPT_INDICATOR = $"(ansi y)$> (ansi reset)"
 
@@ -356,7 +356,7 @@ let-env config = {
   }
   menus: [
     # Configuration for default nushell menus
-    # Note the lack of souce parameter
+    # Note the lack of source parameter
     {
       name: completion_menu
       only_buffer_difference: false
