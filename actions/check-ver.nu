@@ -9,7 +9,7 @@
 export def 'nu-ver' [] {
 
   let currentVer = (version).version
-  let minVer = get-conf minNuVer '0.72.0'
+  let minVer = get-conf minNuVer '0.73.0'
   upgrade-tip nushell $minVer $currentVer
 }
 
@@ -47,7 +47,7 @@ export def 'termix-ver' [] {
 
     # Parse conf as JSON and check forceUpgrade column
     let hasForceUpgrade = ($conf | query json forceUpgrade) != $nothing
-    let forceUpgrade = (if $hasForceUpgrade { ($conf | query json 'forceUpgrade') && (is-lower-ver $currentVer $latestVer)} else { false })
+    let forceUpgrade = (if $hasForceUpgrade { ($conf | query json 'forceUpgrade') and (is-lower-ver $currentVer $latestVer)} else { false })
     # Quit command right now if it's a force upgrade
     if ($forceUpgrade) {
       $'(ansi r)很抱歉，为了更好地为您提供服务请先更新 termix-nu 并重试...(ansi reset)(char nl)(char nl)'

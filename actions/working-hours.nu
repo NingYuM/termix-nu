@@ -18,7 +18,7 @@ export def 'working-hours' [
   let emp = get-conf empWorkingHour
   # 先从环境变量里面查找用户在 emp Cookie 里面的登陆信息
   let empUserCookie = get-env EMP_UC_COOKIE ''
-  if ($code == '' || $empUserCookie == '') {
+  if ($code == '' or $empUserCookie == '') {
     $'(ansi r)Not enough parameters, make sure you have set the EMP_UC_COOKIE and EMP_PROJECT_CODE var in .env file, bye...(char nl)(ansi reset)'
     exit --now
   }
@@ -91,7 +91,7 @@ def 'handle-working-hours' [
   # 此刻是一周中的第几天，周一为第 0 天
   let weekDay = ([(date now)] | into df | get-weekday).0
   # 正常情况下一周工作 5 天
-  let total = if ($weekDay >= 5 || $show_prev == true) { 5 } else { $weekDay + 1 }
+  let total = if ($weekDay >= 5 or $show_prev == true) { 5 } else { $weekDay + 1 }
 
   # Set a default working hour record
   let workingHours = if ($workingHours | compact | length) == 0 { [[fillDate, percentage, staffId]; [0, 0, 0]] } else { $workingHours }
@@ -142,7 +142,7 @@ def 'get-monday' [
 ] {
   # FIXME
   let _TIME_FMT = '%Y-%m-%d %H:%M:%S'
-  let today = (date to-table | select year month day)
+  let today = (date now | date to-table | select year month day)
   let weekDay = ([(date now)] | into df | get-weekday).0
   let duration = ($'($weekDay)day' | into duration)
   let beginOfToday = ($'($today.year.0)-($today.month.0)-($today.day.0)' | into datetime)
@@ -166,7 +166,7 @@ def 'get-hr-per-staff' [
   weekDay: string
   hours: any
 ] {
-  let hour = ($hours | where staffId == $id && day == $weekDay)
+  let hour = ($hours | where staffId == $id and day == $weekDay)
   if ($hour | length) == 0 { 0 } else { ($hour | select 0).0.Hrs }
 }
 
@@ -177,7 +177,7 @@ def 'handle-exception' [
 
   # 未登录或者Cookie过期提示, use `do -i` to ignore 'error: Coercion error'
   do -i {
-    if ($res | is-empty) || ($res | query json 'status') == 401 {
+    if ($res | is-empty) or ($res | query json 'status') == 401 {
       $'(ansi r)Your login COOKIE info is outdated or empty，please update it and try again!(char nl)(ansi reset)'
       exit --now
     }

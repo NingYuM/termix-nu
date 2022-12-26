@@ -46,7 +46,7 @@ export def 'prune-synced-branches' [
         # Ignore the repos that don't have access permission
         if $branch != $nothing {
           let brnm = ($branch.br | str replace 'refs/heads/' '')
-          let noUse = ($syncs | where repo == $alias && dest == $brnm | length) == 0
+          let noUse = ($syncs | where repo == $alias and dest == $brnm | length) == 0
           if $noUse { $brnm }
         }
       } | str join $'(char nl)'
@@ -74,7 +74,7 @@ def 'prepare-repo' [
   }
 
   let repoPath = get-tmp-path
-  let sampleRepo = ($repos | first | transpose k repo | select 0).repo
+  let sampleRepo = ($repos | values | first)
   let repoName = ($'prune-($env.PWD | path basename)' | str trim)
   # 待清理仓库完整路径
   let destRepoPath = ([$repoPath $repoName] | path join)
@@ -82,7 +82,7 @@ def 'prepare-repo' [
   if ($destRepoPath | path exists) {
     print $'(ansi p)Updating remote repos to local...(ansi reset)'; hr-line
   } else {
-    let gitUrl = if ($user != '' && $ak != '-') {
+    let gitUrl = if ($user != '' and $ak != '-') {
       ($sampleRepo.git | str replace '//' $'//($user):($ak)@' )
     } else { $sampleRepo.git }
     cd $repoPath; git clone $gitUrl $repoName
@@ -91,7 +91,7 @@ def 'prepare-repo' [
   cd $destRepoPath;
   $repos | transpose name repo | flatten | each { |dest|
     let aliasExists = (git remote -v | detect columns -n | rename alias git | where alias == $dest.name | length) > 0
-    let gitDest = if ($user != '' && $ak != '-') { ($dest.git | str replace '//' $'//($user):($ak)@' ) } else { $dest.git }
+    let gitDest = if ($user != '' and $ak != '-') { ($dest.git | str replace '//' $'//($user):($ak)@' ) } else { $dest.git }
 
     if ($aliasExists) {
       git remote set-url $dest.name $gitDest

@@ -36,7 +36,7 @@ export def 'ls-node-remote' [
     )} | upsert isLTS { |node| ($node.Version | str contains '(') }
   )
   if $isLts {
-    # ($vRow | where {|node| $node.NO >= $minVersion && $node.isLTS } | select Version)
+    # ($vRow | where {|node| $node.NO >= $minVersion and $node.isLTS } | select Version)
     echo ($vRow | where NO >= $minVersion | where isLTS == true | select Version)
   } else {
     echo ($vRow | where NO >= $minVersion | select Version)

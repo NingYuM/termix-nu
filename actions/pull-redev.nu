@@ -39,7 +39,7 @@ export def 'git pull-redev' [
     $'(char nl)Pull repo (ansi gb)($repoName)(ansi reset): (char nl)'
 
     cd $destRepoPath;
-    if not ((has-ref $branch) || (has-ref origin/($branch))) {
+    if not ((has-ref $branch) or (has-ref origin/($branch))) {
       $'Dest branch: ($branch) does not exist, bye...(char nl)'
       exit --now
     }
@@ -53,7 +53,7 @@ export def 'git pull-redev' [
     let prevTagName = get-env REDEV_PREV_TAG ''
     # Check the tag status, if exists just recrete it.
     if (has-ref refs/tags/($prevTagName)) {
-      if $show_diff && (git --no-pager diff $prevTagName $branch --name-only | lines | length) > 0 {
+      if $show_diff and (git --no-pager diff $prevTagName $branch --name-only | lines | length) > 0 {
         $'---------> Update since latest tag <---------:(char nl)(ansi y)'
         git --no-pager diff $prevTagName $branch --name-only
       }
