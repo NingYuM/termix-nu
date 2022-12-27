@@ -3,7 +3,7 @@
 # Author: hustcer
 # Created: 2022/03/30 11:20:56
 # 在本地或远程比如编译期通过 Erda Actions 生成全量和增量二开工程
-# 需要安装 Nushell， 最低版本 v0.66.0; 可以通过 brew 或者 winget 安装, REF: https://www.nushell.sh/book/installation.html;
+# 需要安装 Nushell， 最低版本 v0.73.0; 可以通过 brew 或者 winget 安装, REF: https://www.nushell.sh/book/installation.html;
 # Usage:
 # In local ~/redevelop directory:
 # nu redevelop-all.nu -t rn_b2c -c support/release-2.4 -k YOUR_TOKEN
@@ -12,6 +12,7 @@
 #     --redev-git=https://erda.cloud/terminus/dop/gaia-app-redev/b2c-mobile-redev
 #     --redev-origin-git=https://erda.cloud/terminus/dop/gaia-app-redev/b2c-mobile-redev-origin
 # TODO:
+#   [ ] rm .husky/pre-push
 #   [ ] Check .dice in redevelop repo
 
 def 'hr-line' [ --blank-line(-b): bool ] {
@@ -21,7 +22,7 @@ def 'hr-line' [ --blank-line(-b): bool ] {
 
 # Check if some command available in current shell
 def 'is-installed' [ app: string ] {
-  (which $app | length) > 0
+  ((which $app | length) > 0)
 }
 
 # 创建二开仓库并推送到 erda.cloud, 需要用到的环境变量: GIT_TOKEN, COMMIT_MSG, GIT_TOKEN 为流水线编译时环境变量, COMMIT_MSG 为Commit相关信息
@@ -37,7 +38,7 @@ def main [
 ] {
   # We don't need herd image, a raw linux distro image with node installed is okay
   # npm config set registry https://registry.npm.terminus.io/
-  if not (is-installed 'termix') {
+  if (is-installed 'termix') == false {
     npm i -g @terminus/termix@latest
   }
   $'(ansi pr) Termix version: (termix --version | str trim) (ansi reset)'; hr-line
@@ -49,7 +50,7 @@ def main [
   }
   # 通过 Termix 生成标品二开仓库
   let action = (termix redevelop redev-app --template $template --checkout $checkout --user='git' --access-token $token | complete)
-  print $action.stdout; print $action.stderr
+  print $action.stdout; if 'stderr' in $action { print $action.stderr }
   if ('redev-app/origin' | path exists) == false or $action.exit_code != 0 {
     $'(ansi r)Redevelop repo generating failed! Bye...(ansi reset)'
     exit 1 --now
@@ -72,11 +73,11 @@ def main [
   cp -r redev-app/origin/* $redev_origin_dir; cd $redev_origin_dir
   git add --ignore-removal .
 
-  let src-msg = if 'COMMIT_MSG' in (env).name { $env.COMMIT_MSG } else { 'Test redevelop locally' }
-  let commit-msg = $"($src-msg), Redevelop from checkout:($checkout) by termix@(termix --version)"
+  let src_msg = if 'COMMIT_MSG' in (env).name { $env.COMMIT_MSG } else { 'Test redevelop locally' }
+  let commit_msg = $"($src_msg), Redevelop from checkout:($checkout) by termix@(termix --version)"
   # https://stackoverflow.com/questions/8123674/how-to-git-commit-nothing-without-an-error
   if (git diff-index --quiet HEAD | complete | get exit_code) == 1 {
-    git commit -am $commit-msg
+    git commit -am $commit_msg
   }
   $'(ansi g)Redevelop origin repo git status:(ansi reset)'; git status; hr-line
   # 推送可升级部分增量代码到另外仓库
@@ -87,7 +88,7 @@ def main [
   # https://stackoverflow.com/questions/492558/removing-multiple-files-from-a-git-repo-that-have-already-been-deleted-from-disk
   git add --ignore-removal .
   if (git diff-index --quiet HEAD | complete | get exit_code) == 1 {
-    git commit -am $commit-msg
+    git commit -am $commit_msg
   }
   $'(ansi g)Redevelop repo git status:(ansi reset)'; git status; hr-line
   git push gaia $dest_branch --force
