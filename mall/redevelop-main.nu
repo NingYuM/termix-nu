@@ -3,7 +3,7 @@
 # Author: hustcer
 # Created: 2022/03/31 10:50:56
 # 在本地或远程，比如编译期通过 Erda Actions 生成全量二开工程, 将其添加到新建的 orphan 分支上并推至源码仓库
-# 需要安装 Nushell， 最低版本 v0.66.0; 可以通过 brew 或者 winget 安装, REF: https://www.nushell.sh/book/installation.html;
+# 需要安装 Nushell， 最低版本 v0.73.0; 可以通过 brew 或者 winget 安装, REF: https://www.nushell.sh/book/installation.html;
 # Usage:
 # In local ~/redevelop directory:
 # nu redevelop-main.nu -t rn_b2c -c support/iter3 -k YOUR_TOKEN
@@ -46,7 +46,7 @@ def main [
   let $checkref = if $checkout == 'develop' { $test_branch } else { $checkout }
   # 通过 Termix 生成标品二开仓库
   let action = (termix redevelop redev-app --template $template --checkout $checkref --user='git' --access-token $token | complete)
-  print $action.stdout; print $action.stderr
+  print $action.stdout; if 'stderr' in $action { print $action.stderr }
   if ('redev-app/origin' | path exists) == false or $action.exit_code != 0  {
     $'(ansi r)Redevelop repo generating failed! Bye...(ansi reset)'
     exit 1 --now
@@ -57,10 +57,10 @@ def main [
   mv redev-app/* .
   git add --ignore-removal .
 
-  let src-msg = if 'COMMIT_MSG' in (env).name { $env.COMMIT_MSG } else { 'Test redevelop locally' }
-  let commit-msg = $"($src-msg), Redevelop from checkout:($checkout) by termix@(termix --version)"
+  let src_msg = if 'COMMIT_MSG' in (env).name { $env.COMMIT_MSG } else { 'Test redevelop locally' }
+  let commit_msg = $"($src_msg), Redevelop from checkout:($checkout) by termix@(termix --version)"
 
-  git commit -am $commit-msg; hr-line -b
+  git commit -am $commit_msg; hr-line -b
   let repoUrl = if not ($token | is-empty) {
     ($deploy_repo | str replace 'https://' $'https://git:($token)@')
   } else { $deploy_repo }
