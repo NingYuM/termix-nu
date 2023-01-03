@@ -51,22 +51,26 @@ export def 'working-hours' [
   let allStaffs = ($staffs | query json 'res' | select id name | rename id Name)
   let hours = (curl $emp.timeUrl -H $emp.type -H $emp.app -H $userCookie -s --data-raw $timePayload | str join)
   let leaves = (curl $emp.leaveUrl -H $emp.type -H $userCookie -s --data-raw $leavePayload | str join)
-  let workingHours = (
-      $hours
-        | query json 'res'
+  let workingHours = ($hours | query json 'res')
+  let workingHours = if ($workingHours | is-empty) { null } else {(
+      $workingHours
         | default 0.00 percentage
         | select percentage fillDate staff
         | upsert staffId { |it| $it.staff.id }
         | reject staff
-    )
+    )}
 
-  let leavingHours = (
-      $leaves | query json 'res'| select beginTime duration staff
-        | upsert staffId {|staff| $staff.staff.id } | reject staff
-    )
+  let leavingHours = ($leaves | query json 'res')
 
   # Set a default leaving record
-  let leavingHours = if ($leavingHours | compact | length) == 0 { [[beginTime, duration, staffId]; [0, 0, 0]] } else { $leavingHours }
+  let leavingHours = if ($leavingHours | is-empty) { [[beginTime, duration, staffId]; [0, 0, 0]] } else {
+      (
+        $leavingHours
+          | select beginTime duration staff
+          | upsert staffId {|staff| $staff.staff.id }
+          | reject staff
+      )
+    }
 
   handle-working-hours $allStaffs $workingHours $leavingHours --show-all=$show_all --show-prev=$show_prev
 }
