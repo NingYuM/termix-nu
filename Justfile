@@ -233,9 +233,22 @@ dir-batch-exec cmd +DIRS=(''): _setup
     overlay use {{ join(_termix, 'actions', 'dir-batch-exec.nu') }}; \
     dir-batch-exec "{{cmd}}" "{{DIRS}}" --parent={{JUST_INVOKE_DIR}}
 
+# 版本检查前置操作
+_setup: _register_plugins
+  @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
+    overlay use {{ join(_termix, 'actions', 'check-ver.nu') }}; \
+    termix-ver; nu-ver; just-ver
+
 # 从 Nu v0.61.0 开始插件只需注册一次即可
-_setup:
-  @register {{ join(NU_DIR, _query_plugin) }}; \
-    register {{ join(NU_DIR, _gstat_plugin) }}; \
-    overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
-    overlay use {{ join(_termix, 'actions', 'check-ver.nu') }}; termix-ver; nu-ver; just-ver
+_register_plugins:
+  #!/usr/bin/env nu
+  let gstatExists = not ($nu.scope.commands | where name == 'gstat' | is-empty)
+  let queryExists = not ($nu.scope.commands | where name == 'query json' | is-empty)
+  if not $queryExists {
+    let queryPlugin = (ls '{{join(NU_DIR, _query_plugin)}}' | get name | get 0)
+    nu -c $"register ($queryPlugin)"
+  }
+  if not $gstatExists {
+    let gstatPlugin = (ls '{{join(NU_DIR, _gstat_plugin)}}' | get name | get 0)
+    nu -c $"register ($gstatPlugin)"
+  }
