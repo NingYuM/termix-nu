@@ -7,13 +7,13 @@
 #   3. VS Code 插件推荐: Even Better TOML;
 
 # Termix-nu version
-version = 'v1.11.0'
+version = 'v1.12.0'
 
 # Min nushell version required to run termix-nu commands
-minNuVer = '0.73.0'
+minNuVer = '0.74.0'
 
 # Min just version required to run termix-nu commands
-minJustVer = '1.9.0'
+minJustVer = '1.11.0'
 
 # 临时二开仓库存放目录, .env 里面 TERMIX_TMP_PATH 具有更高优先级
 termixTmpPath = '/Users/hustcer/.termix-nu'
