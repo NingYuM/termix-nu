@@ -1,6 +1,20 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.12.0] - 2023-01-13
+
+### Bug Fixes
+
+- Fix mall/redevelop-all.nu script for nu v0.73
+- Fix mall/redevelop-main.nu script for nu v0.73
+- Fix `emp` command with empty response of working hours or leaving records case
+- Fix plugin register for nushell v0.74
+- Fix tilde expansion issue for nu v0.75
+
+### Opt
+
+- Optimize plugin register for nu v0.74
+
 ## [1.11.0] - 2022-12-26
 
 ### Bug Fixes
