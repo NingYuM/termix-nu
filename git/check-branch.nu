@@ -5,7 +5,7 @@
 #   t check-branch
 
 # Check whether all remote branches have related description
-export def 'check-branch' [] {
+export def main [] {
 
   git fetch origin -p
   let descFile = 'd.toml'

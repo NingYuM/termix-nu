@@ -9,7 +9,7 @@
 # Usage:
 # 	just brew-speed-up
 
-export def 'brew-speed-up' [
+export def main [
   status: string  # set to `off` to disable brew speed up
 ] {
   let BREW_MIRROR = 'https://mirrors.aliyun.com/homebrew/brew.git'

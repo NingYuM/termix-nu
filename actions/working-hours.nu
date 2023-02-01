@@ -7,7 +7,7 @@
 # Data Source
 #   https://emp.app.terminus.io/view/worktime_WorkTimeBO_DepartmentWorkTime
 
-export def 'working-hours' [
+export def main [
   code: string
   --show-all: any   # Set true to show all members even if the working hours filled correctly
   --show-prev: any   # Set true to query working hours of previous week

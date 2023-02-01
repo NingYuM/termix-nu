@@ -3,7 +3,7 @@
 # Created: 2021/10/03 09:39:52
 
 # Compose command with the shell to execute it
-export def 'compose-cmd' [
+export def 'compose-command' [
   cmd: string       # The command to compose
 ] {
   # FIXME

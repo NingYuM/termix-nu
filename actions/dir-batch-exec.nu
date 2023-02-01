@@ -8,7 +8,7 @@
 #   t dir-batch-exec 'pwd; git remote -v; git push origin master; git push origin --tags'
 
 # 在指定目录或者当前目录的所有子目录里执行指定命令,多个目录用空格分隔
-export def 'dir-batch-exec' [
+export def main [
   cmd: string           # The command to execute in directories
   dirs: string          # The directories to execute the command
   --parent(-p): string  # If no dirs specified, run the command in all subdirs of specified parent dir
@@ -17,7 +17,7 @@ export def 'dir-batch-exec' [
   let dest = ($dirs | str trim | split row ' '| compact | each { |it| [$parent $it] | path join })
   let children = (ls $parent | where type == dir | get name)
   let destDirs = (if ($dirs | is-empty) { $children } else { $dest })
-  let cmdToExec = compose-cmd $cmd
+  let cmdToExec = compose-command $cmd
   $destDirs | where ($it | path exists) | each { |it|
     cd $it
     $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi reset) in dir ($it):(char nl)'

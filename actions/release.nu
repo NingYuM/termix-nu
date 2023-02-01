@@ -11,7 +11,7 @@
 # Usage:
 # 	just release
 
-export def 'release' [
+export def main [
   --update-log: any      # Set to `true` do enable updating CHANGELOG.md, defined as `any` acutually `bool`
   --force-upgrade: any   # Add `$-FORCE-UPGRADE-$` to release tag commit message, defined as `any` acutually `bool`
 ] {

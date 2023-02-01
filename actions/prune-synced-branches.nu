@@ -7,7 +7,7 @@
 #   just prune-synced-branches false
 
 # Clean possibly unused branches of synced dest repos
-export def 'prune-synced-branches' [
+export def main [
   --user: string        # Git repo access user name
   --ak: string          # Git repo access token
   --dry-run(-d): any    # In dry-run mode no branch will be deleted, just show all deletable branches, defined as `any` acutually `bool`
