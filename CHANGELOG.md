@@ -1,6 +1,23 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.13.0] - 2023-02-01
+
+### Bug Fixes
+
+- Fix home env var for Windows
+
+### Features
+
+- Update nushell config, enable fuzzy search for history
+
+### Miscellaneous Tasks
+
+- Update nushell config file
+- Update nushell cursor shape config
+- Bump version v1.13 for nu v0.75
+- Adapt to nu v0.75
+
 ## [1.12.0] - 2023-01-13
 
 ### Bug Fixes
