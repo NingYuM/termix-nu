@@ -155,6 +155,15 @@ def 'nu-sloc' [] {
   print $stats
 }
 
+# Check how many downloads nushell has had
+def nudown [] {
+    http get https://api.github.com/repos/nushell/nushell/releases
+      | get assets
+      | flatten
+      | select name download_count created_at
+      | update created_at { get created_at | into datetime | date format '%m/%d/%Y %H:%M:%S' }
+}
+
 # -------------------------- Autocompletion ------------------------
 # Nushell Config File
 
@@ -663,3 +672,4 @@ let-env config = {
   ]
 }
 
+let-env PATH = ($env.PATH | each {|r| $r | split row (char esep)} | flatten | uniq | str collect (char esep))
