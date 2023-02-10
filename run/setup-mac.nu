@@ -36,7 +36,7 @@ def 'brew-inst' [
 ] {
     $apps | split row ',' | each { |app|
         [
-            ($'($app) is installed ?' | str rpad -l 30 -c '.')
+            ($'($app) is installed ?' | fill -a l -w 30 -c '.')
             (is-installed $app | into string)
         ] | str join
     }

@@ -28,7 +28,7 @@ export def main [
       | str replace '_first_day_' $monday
       | str replace '_project_code_' $code
     )
-  # Week No of now: [(date now)] | into df | get-week
+  # Week No of now: [(date now)] | dfr into-df | dfr get-week
   let staffs = (curl $emp.staffUrl -H $emp.type -H $userCookie -s --data-raw $staffPayload | str join)
 
   handle-exception $staffs
@@ -91,9 +91,9 @@ def 'handle-working-hours' [
   $'(ansi reset)(char nl)'
   let week = [Mon, Tue, Wen, Thu, Fri, Sat, Sun]
   # 当前是一年中的第几周
-  let weekNo = if $show_prev == true { ([((date now) - 7day)] | into df | get-week).0 } else { ([(date now)] | into df | get-week).0 }
+  let weekNo = if $show_prev == true { ([((date now) - 7day)] | dfr into-df | dfr get-week).0 } else { ([(date now)] | dfr into-df | dfr get-week).0 }
   # 此刻是一周中的第几天，周一为第 0 天
-  let weekDay = ([(date now)] | into df | get-weekday).0
+  let weekDay = ([(date now)] | dfr into-df | dfr get-weekday).0
   # 正常情况下一周工作 5 天
   let total = if ($weekDay >= 5 or $show_prev == true) { 5 } else { $weekDay + 1 }
 
@@ -102,7 +102,7 @@ def 'handle-working-hours' [
 
   let hours = ($workingHours | upsert day { |work|
         let day = ($work.fillDate | into string | into datetime) + 8hr
-        let idx = ([$day] | into df | get-weekday).0 mod 7
+        let idx = ([$day] | dfr into-df | dfr get-weekday).0 mod 7
         ($week | select $idx).0
       } | upsert Hrs { |work|
         ($work.percentage * 8) | into int
@@ -132,7 +132,7 @@ def 'handle-working-hours' [
     $result | upsert Gap { |it| $total * 8 - ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave) }
       | upsert WARN { |it|
           if ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8) {
-            $'(ansi r)('*' | str lpad -l 6 -c $'(char sp)')(ansi reset)'
+            $'(ansi r)('*' | fill -a r -w 6 -c $'(char sp)')(ansi reset)'
           }
         }
       | sort-by WARN Gap Name
@@ -147,7 +147,7 @@ def 'get-monday' [
   # FIXME
   let _TIME_FMT = '%Y-%m-%d %H:%M:%S'
   let today = (date now | date to-table | select year month day)
-  let weekDay = ([(date now)] | into df | get-weekday).0
+  let weekDay = ([(date now)] | dfr into-df | dfr get-weekday).0
   let duration = ($'($weekDay)day' | into duration)
   let beginOfToday = ($'($today.year.0)-($today.month.0)-($today.day.0)' | into datetime)
   let beginOfToday = if $prev == true { $beginOfToday - 7day } else { $beginOfToday }
