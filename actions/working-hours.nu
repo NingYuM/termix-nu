@@ -95,13 +95,13 @@ def 'handle-working-hours' [
   # 此刻是一周中的第几天，周一为第 0 天
   let weekDay = ([(date now)] | dfr into-df | dfr get-weekday).0
   # 正常情况下一周工作 5 天
-  let total = if ($weekDay >= 5 or $show_prev == true) { 5 } else { $weekDay + 1 }
+  let total = if ($weekDay >= 5 or $show_prev == true) { 5 } else { $weekDay }
 
   # Set a default working hour record
   let workingHours = if ($workingHours | compact | length) == 0 { [[fillDate, percentage, staffId]; [0, 0, 0]] } else { $workingHours }
 
   let hours = ($workingHours | upsert day { |work|
-        let day = ($work.fillDate | into string | into datetime) + 8hr
+        let day = ($work.fillDate | into string | into datetime)
         let idx = ([$day] | dfr into-df | dfr get-weekday).0 mod 7
         ($week | select $idx).0
       } | upsert Hrs { |work|
@@ -147,8 +147,8 @@ def 'get-monday' [
   # FIXME
   let _TIME_FMT = '%Y-%m-%d %H:%M:%S'
   let today = (date now | date to-table | select year month day)
-  let weekDay = ([(date now)] | dfr into-df | dfr get-weekday).0
-  let duration = ($'($weekDay)day' | into duration)
+  let pastDays = ([(date now)] | dfr into-df | dfr get-weekday).0 - 1
+  let duration = ($'($pastDays)day' | into duration)
   let beginOfToday = ($'($today.year.0)-($today.month.0)-($today.day.0)' | into datetime)
   let beginOfToday = if $prev == true { $beginOfToday - 7day } else { $beginOfToday }
   echo (($beginOfToday - $duration) | date format $_TIME_FMT)
