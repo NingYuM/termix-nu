@@ -1,6 +1,21 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.15.0] - 2023-02-23
+
+### Bug Fixes
+
+- Adapt to nu v0.75.1+
+- Fix `emp` command for nu v0.76, after dataframe commands changed
+
+### Features
+
+- Bump to v1.15.0
+
+### Miscellaneous Tasks
+
+- Update nu install command
+
 ## [1.13.0] - 2023-02-01
 
 ### Bug Fixes
