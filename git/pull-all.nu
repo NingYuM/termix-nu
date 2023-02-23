@@ -39,7 +39,7 @@ export def 'git pull-all' [
         git reset --hard $'($alias)/($br)'; hr-line
       }
     }
-  }
+  } | ignore
   git checkout $currentBranch
   if ($statusCheck | is-empty) == false { git stash pop }
 }

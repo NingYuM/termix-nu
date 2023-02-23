@@ -60,7 +60,7 @@ export def 'git trigger-sync' [
     echo $syncDests | upsert lock {|it| if ('lock' in $it) { $it.lock } else { '-' }} | move lock --before SYNC
   } else { exit --now }
 
-  echo $syncDests | where SYNC == '   √' | each { |iter|
+  $syncDests | where SYNC == '   √' | each { |iter|
     let syncFrom = get-sync-ref $selected $iter
     let gitUrl = ($pushConf | query json $'repos.($iter.repo).git')
     let navUrl = ($pushConf | query json $'repos.($iter.repo).url')
@@ -70,5 +70,5 @@ export def 'git trigger-sync' [
       print $'You can check the result from: (ansi g)($navUrl)(ansi reset)'
       hr-line
     }
-  }
+  } | ignore
 }
