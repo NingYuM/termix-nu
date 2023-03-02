@@ -23,6 +23,8 @@ export def 'git pull-all' [
   # `LANG=en_US git` 强制 git 输出语言切换为英文
   let ahead = (LANG=en_US git branch -vv | lines | find ': ahead')
   let behind = (LANG=en_US git branch -vv | lines | find ': behind')
+
+  # $env.config.table.show_empty = false
   $available | each { |br|
     let pattern = $'($alias)/($br):'
     if ($behind | find -r $pattern | length) > 0 or ($ahead | find -r $pattern | length) > 0 {
@@ -39,7 +41,7 @@ export def 'git pull-all' [
         git reset --hard $'($alias)/($br)'; hr-line
       }
     }
-  } | ignore
+  }
   git checkout $currentBranch
   if ($statusCheck | is-empty) == false { git stash pop }
 }

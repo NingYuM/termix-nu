@@ -70,5 +70,5 @@ export def 'git trigger-sync' [
       print $'You can check the result from: (ansi g)($navUrl)(ansi reset)'
       hr-line
     }
-  } | ignore
+  }
 }

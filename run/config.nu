@@ -170,8 +170,10 @@ def nudown [] {
 # -------------------------- Autocompletion ------------------------
 # Nushell Config File
 
-# for more information on themes see
+# For more information on defining custom themes, see
 # https://www.nushell.sh/book/coloring_and_theming.html
+# And here is the theme collection
+# https://github.com/nushell/nu_scripts/tree/main/themes
 let dark_theme = {
   # color for nushell primitives
   separator: white
@@ -182,7 +184,23 @@ let dark_theme = {
   int: white
   filesize: white
   duration: white
-  date: white
+  date: { (date now) - $in |
+      if $in < 1hr {
+        'red3b'
+      } else if $in < 6hr {
+        'orange3'
+      } else if $in < 1day {
+        'yellow3b'
+      } else if $in < 3day {
+        'chartreuse2b'
+      } else if $in < 1wk {
+        'green3b'
+      } else if $in < 6wk {
+        'darkturquoise'
+      } else if $in < 52wk {
+        'deepskyblue3b'
+      } else { 'dark_gray' }
+    }
   range: white
   float: white
   string: white
@@ -235,7 +253,23 @@ let light_theme = {
   int: dark_gray
   filesize: dark_gray
   duration: dark_gray
-  date: dark_gray
+  date: { (date now) - $in |
+    if $in < 1hr {
+      'red3b'
+    } else if $in < 6hr {
+      'orange3'
+    } else if $in < 1day {
+      'yellow3b'
+    } else if $in < 3day {
+      'chartreuse2b'
+    } else if $in < 1wk {
+      'green3b'
+    } else if $in < 6wk {
+      'darkturquoise'
+    } else if $in < 52wk {
+      'deepskyblue3b'
+    } else { 'dark_gray' }
+  }
   range: dark_gray
   float: dark_gray
   string: dark_gray
@@ -297,10 +331,11 @@ let-env config = {
   table: {
     mode: light                 # basic, compact, compact_double, light, thin, with_love, rounded, reinforced, heavy, none, other
     index_mode: always          # "always" show indexes, "never" show indexes, "auto" = show indexes when a table has "index" column
+    show_empty: true            # show 'empty list' and 'empty record' placeholders for command output
     trim: {
-      methodology: wrapping     # wrapping or truncating
+      methodology: wrapping             # wrapping or truncating
+      truncating_suffix: "..."          # A suffix used by the 'truncating' methodology
       wrapping_try_keep_words: true     # A strategy used by the 'wrapping' methodology
-      truncating_suffix: "..."  # A suffix used by the 'truncating' methodology
     }
   }
   # A 'explore' utility config
@@ -388,7 +423,7 @@ let-env config = {
   color_config: $dark_theme     # if you want a light theme, replace `$dark_theme` to `$light_theme`
   use_grid_icons: true
   footer_mode: "25"             # always, never, number_of_rows, auto
-  float_precision: 2
+  float_precision: 2            # the precision for displaying floats in tables
   # buffer_editor: "emacs"      # command that will be used to edit the current line buffer with ctrl+o, if unset fallback to $env.EDITOR and $env.VISUAL
   use_ansi_coloring: true
   edit_mode: emacs              # emacs, vi
