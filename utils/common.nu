@@ -74,7 +74,7 @@ export def 'has-ref' [
   ref: string   # The git ref to check
 ] {
   # Brackets were required here, or error will occur
-  let parse = (git rev-parse --verify -q $ref)
+  let parse = do -i { (git rev-parse --verify -q $ref) }
   if ($parse | is-empty) { false } else { true }
 }
 
