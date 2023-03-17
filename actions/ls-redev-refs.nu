@@ -18,11 +18,11 @@ export def 'git ls-redev-refs' [
   let filteredRepos = ($redevRepos | where $',($group),' =~ $it.group)
 
   if ($filteredRepos | length) > 0 {
-    $'(ansi p)Found the following matched repos:(ansi reset)(char nl)(char nl)'; $filteredRepos
+    print $'(ansi p)Found the following matched repos:(ansi reset)(char nl)(char nl)'; $filteredRepos
   } else {
-    $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'; exit --now
+    print $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'; exit --now
   }
-  $'(ansi p)---------------> List remote refs <--------------- (char nl)(ansi reset)'
+  print $'(ansi p)---------------> List remote refs <--------------- (char nl)(ansi reset)'
 
   $filteredRepos | each { |it|
     let url = (echo $it | get url)
@@ -38,11 +38,11 @@ export def 'git ls-redev-refs' [
     }
 
     if ($show_branches) {
-      $'(char nl)Branches of repo (ansi gb)($repoName)(ansi reset): (char nl)'
+      print $'(char nl)Branches of repo (ansi gb)($repoName)(ansi reset): (char nl)'
       git-branch $destRepoPath
     }
 
-    $'(char nl)Tags of repo (ansi gb)($repoName)(ansi reset): (char nl)'
+    print $'(char nl)Tags of repo (ansi gb)($repoName)(ansi reset): (char nl)'
     # git ls-remote --tags $url | grep -v '{}'
     cd $destRepoPath
     # Git for Windows does't support sort by `creatordate` field?

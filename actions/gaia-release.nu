@@ -21,7 +21,7 @@ export def main [
   let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
   let repoPath = get-tmp-path
   let gaiaSrcRepos = (open $_TERMIX_CONF | get gaiaSrcRepos)
-  $'Using global repo path: (ansi p)($repoPath)(ansi reset)(char nl)'
+  print $'Using global repo path: (ansi p)($repoPath)(ansi reset)(char nl)'
 
   $gaiaSrcRepos
     | find name --regex ($repos | str replace -a ',' '|')

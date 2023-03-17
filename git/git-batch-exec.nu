@@ -28,10 +28,10 @@ export def 'git batch-exec' [
   let available = (git branch | into string | lines | str substring '2,')
   let candidates = if ($branches | is-empty) { $available } else { $dest }
 
-  $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi reset) on branches: (char nl)'
-  echo ($candidates | wrap name)
+  print $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi reset) on branches: (char nl)'
+  print ($candidates | wrap name)
 
-  $"(char nl)Current branch: ($current)"
+  print $"(char nl)Current branch: ($current)"
   let statusCheck = git status --porcelain
   if ($statusCheck | is-empty) == false {
     git stash save 'Stash before running git-batch-exec'
@@ -44,7 +44,7 @@ export def 'git batch-exec' [
       nu -c $cmdToExec
       hr-line
     } else {
-      $'Branch (ansi r)($branch) (ansi reset)not available...(char nl)'
+      print $'Branch (ansi r)($branch) (ansi reset)not available...(char nl)'
     }
   }
   git checkout $current

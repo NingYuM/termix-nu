@@ -29,15 +29,15 @@ export def 'git branch-rename' [
   let remoteDestExists = has-ref $'($remoteAlias)/($to)'
   # Check if remote dest already exists.
   if ($remoteDestExists) {
-    $'Dest branch (ansi r)($remote)/($to)(ansi reset) already exists in the remote, please use another new name...(char nl)'
+    print $'Dest branch (ansi r)($remote)/($to)(ansi reset) already exists in the remote, please use another new name...(char nl)'
     exit --now
   }
   if ($localDestExists) {
-    $'Dest branch (ansi r)($to)(ansi reset) already exists in local, please use another new name...(char nl)'
+    print $'Dest branch (ansi r)($to)(ansi reset) already exists in local, please use another new name...(char nl)'
     exit --now
   }
   if ($remoteSrcExists or $localSrcExists) == false {
-    $'Branch (ansi r)($from) (ansi reset)does not exist in both remote and local, bye...(char nl)'
+    print $'Branch (ansi r)($from) (ansi reset)does not exist in both remote and local, bye...(char nl)'
     exit --now
   }
 
@@ -52,7 +52,7 @@ export def 'git branch-rename' [
   if ($localSrcExists) {
     git checkout $from
   } else {
-    $'Branch (ansi r)($from) (ansi reset)not exist in local, will pull from remote...(char nl)'
+    print $'Branch (ansi r)($from) (ansi reset)not exist in local, will pull from remote...(char nl)'
     git checkout $'($remoteAlias)/($from)' -b $from
   }
   # Rename, push to remote and ...

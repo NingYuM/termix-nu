@@ -9,9 +9,9 @@ let termixConf = (open 'termix.toml' | to json)
 
 def 'setup-mac' [] {
     if (is-installed brew) {
-        $'Prepare to use `brew` to install CLI apps...(char nl)(char nl)'
+        print $'Prepare to use `brew` to install CLI apps...(char nl)(char nl)'
     } else {
-        $'You should install `brew` and try again..., bye!(char nl)'
+        print $'You should install `brew` and try again..., bye!(char nl)'
         exit --now
     }
 

@@ -13,7 +13,7 @@ export def main [] {
   let remoteIExists = has-ref origin/i
 
   if ($localIExists or $remoteIExists) == false {
-    $'You do not have an i branch, branch description query failed, bye...(char nl)'
+    print $'You do not have an i branch, branch description query failed, bye...(char nl)'
     exit --now
   }
   # 本地 i 分支优先级高于远程
@@ -27,10 +27,10 @@ export def main [] {
   let allDescribed = ($remoteBranches | where (no-desc $descriptions $it) | str join | str trim | is-empty)
 
   if ($allDescribed) {
-    $'(char nl) Well done! All Branches have been described in (ansi g)($repo)(ansi reset).(char nl)(char nl)'
+    print $'(char nl) Well done! All Branches have been described in (ansi g)($repo)(ansi reset).(char nl)(char nl)'
   } else {
-    $'(ansi p)(char nl)  Branches that do not have a description in (ansi g)($repo)(ansi reset): (char nl)(ansi reset)'
-    ($remoteBranches
+    print $'(ansi p)(char nl)  Branches that do not have a description in (ansi g)($repo)(ansi reset): (char nl)(ansi reset)'
+    print ($remoteBranches
       | where (no-desc $descriptions $it)
       | wrap name
       | upsert commit-by { |it| git show $'origin/($it.name)' -s --format='%an' | str trim }
@@ -49,8 +49,8 @@ export def main [] {
   )
 
   if ($gone | length) > 0 {
-    $'(ansi p)(char nl)  Branches that have a description but were(ansi r) removed from remote(ansi reset):(char nl)(ansi reset)'
-    $gone | wrap 'name'
+    print $'(ansi p)(char nl)  Branches that have a description but were(ansi r) removed from remote(ansi reset):(char nl)(ansi reset)'
+    print ($gone | wrap 'name')
     char nl
   }
 
@@ -66,8 +66,8 @@ export def main [] {
       | reject sync
   )
   if ($gone | length) > 0 {
-    $'(ansi p)(char nl)  Branches that have sync configs but were(ansi r) removed from remote(ansi reset):(char nl)(ansi reset)'
-    $gone
+    print $'(ansi p)(char nl)  Branches that have sync configs but were(ansi r) removed from remote(ansi reset):(char nl)(ansi reset)'
+    print $gone
     char nl
   }
 

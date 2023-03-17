@@ -19,7 +19,7 @@ export def 'git-remote-branch' [
   let nameIdx = ($remoteUrl | str index-of -e '/')
   let repoName = ($remoteUrl | str substring $'($nameIdx + 1),' | str trim)
   git fetch $alias -p
-  $'(char nl)Branches of (ansi gb)($repoName)(ansi reset) for remote ($alias)(char nl)'
+  print $'(char nl)Branches of (ansi gb)($repoName)(ansi reset) for remote ($alias)(char nl)'
 
   let basic = (
     git ls-remote --heads --refs $alias
@@ -34,7 +34,7 @@ export def 'git-remote-branch' [
 
   if (! $show_tag) { exit --now }
 
-  $'Tags of (ansi gb)($repoName)(ansi reset) for remote ($alias)'; hr-line
+  print $'Tags of (ansi gb)($repoName)(ansi reset) for remote ($alias)'; hr-line
   # Git for Windows does't support sort by `creatordate` field?
   let sort = if (windows?) { '--sort=-v:refname' } else { '--sort=-creatordate' }
   git tag --format=%(align:1,30)%(color:green)%(refname:strip=2)%(end)%09%09%(color:yellow)%(creatordate:iso) $sort

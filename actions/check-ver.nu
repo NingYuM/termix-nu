@@ -50,7 +50,7 @@ export def 'termix-ver' [] {
     let forceUpgrade = (if $hasForceUpgrade { ($conf | query json 'forceUpgrade') and (is-lower-ver $currentVer $latestVer)} else { false })
     # Quit command right now if it's a force upgrade
     if ($forceUpgrade) {
-      $'(ansi r)很抱歉，为了更好地为您提供服务请先更新 termix-nu 并重试...(ansi reset)(char nl)(char nl)'
+      print $'(ansi r)很抱歉，为了更好地为您提供服务请先更新 termix-nu 并重试...(ansi reset)(char nl)(char nl)'
       (query-ver $confName | ignore); exit 1 --now    # Query and update latest version again.
     }
     if (not $hasForceUpgrade) {
@@ -90,17 +90,17 @@ def 'upgrade-tip' [
 ] {
   if (is-lower-ver $current $min) {
     if ($cmd == 'termix-nu') {
-      $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
-      $'        -----> Your ($cmd) is (ansi r)OUTDATED(ansi reset), latest ver: (ansi p)($min)(ansi reset) <----- (char nl)'
-      $'         Please run (ansi g)`just upgrade`(ansi reset) to upgrade to the latest version.(char nl)'
-      $'(ansi lpr) You may need to run `brew update && brew upgrade nushell` to upgrade nu, too. (ansi reset)'
-      $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+      print $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+      print $'        -----> Your ($cmd) is (ansi r)OUTDATED(ansi reset), latest ver: (ansi p)($min)(ansi reset) <----- (char nl)'
+      print $'         Please run (ansi g)`just upgrade`(ansi reset) to upgrade to the latest version.(char nl)'
+      print $'(ansi lpr) You may need to run `brew update && brew upgrade nushell` to upgrade nu, too. (ansi reset)'
+      print $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
     } else {
-      $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
-      $'      Min required ($cmd) ver: (ansi r)($min)(ansi reset), current ($cmd) ver: ($current)(char nl)'
-      $'        ------------> Your ($cmd) is (ansi r)OUTDATED(ansi reset) <------------ (char nl)'
-      $'(ansi lpr)    Please run `brew update && brew upgrade ($cmd)` to upgrade to the latest.    (ansi reset)(char nl)'
-      $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+      print $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+      print $'      Min required ($cmd) ver: (ansi r)($min)(ansi reset), current ($cmd) ver: ($current)(char nl)'
+      print $'        ------------> Your ($cmd) is (ansi r)OUTDATED(ansi reset) <------------ (char nl)'
+      print $'(ansi lpr)    Please run `brew update && brew upgrade ($cmd)` to upgrade to the latest.    (ansi reset)(char nl)'
+      print $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
       exit --now
     }
   }

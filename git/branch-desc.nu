@@ -15,7 +15,7 @@ export def main [
   let localIExists = has-ref i
   let remoteIExists = has-ref origin/i
   if ($localIExists or $remoteIExists) == false {
-    $'You do not have an i branch, branch description query failed, bye...(char nl)'
+    print $'You do not have an i branch, branch description query failed, bye...(char nl)'
     exit --now
   }
   # 本地 i 分支优先级高于远程
@@ -26,13 +26,14 @@ export def main [
   let escapedBranch = ($queryBranch | str replace -a '\.' '\.')
   let desc = ($descriptions | query json $'descriptions.($escapedBranch)')
   let rules = ($descriptions | query json 'rules')
-  $'(char nl)(ansi p)($queryBranch) (ansi reset)分支描述：(char nl)'
-  hr-line; $'(char nl)($desc)(char nl)'
+  print $'(char nl)(ansi p)($queryBranch) (ansi reset)分支描述：(char nl)'
+  hr-line
+  print $'(char nl)($desc)(char nl)'
 
   if ($show_notes) {
-    $rules | each -n { |rule|
-      echo $'(ansi g)($rule.index + 1)(ansi reset). ($rule.item)'
-    } | str join $'(char nl)'; char nl
+    $rules | enumerate | each {|rule|
+      print $'(ansi g)($rule.index + 1)(ansi reset). ($rule.item)'
+    } | str join (char nl)
   }
 }
 

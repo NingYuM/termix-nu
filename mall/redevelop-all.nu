@@ -41,7 +41,7 @@ def main [
   if (is-installed 'termix') == false {
     npm i -g @terminus/termix@latest
   }
-  $'(ansi pr) Termix version: (termix --version | str trim) (ansi reset)'; hr-line
+  print $'(ansi pr) Termix version: (termix --version | str trim) (ansi reset)'; hr-line
   # Disable `initial branch name` hints from git
   git config --global init.defaultBranch master
   if (git config --global --get user.name | is-empty) {
@@ -50,9 +50,10 @@ def main [
   }
   # 通过 Termix 生成标品二开仓库
   let action = (termix redevelop redev-app --template $template --checkout $checkout --user='git' --access-token $token | complete)
-  print $action.stdout; if 'stderr' in $action { print $action.stderr }
+  print $action.stdout
+  if 'stderr' in $action { print $action.stderr }
   if ('redev-app/origin' | path exists) == false or $action.exit_code != 0 {
-    $'(ansi r)Redevelop repo generating failed! Bye...(ansi reset)'
+    print $'(ansi r)Redevelop repo generating failed! Bye...(ansi reset)'
     exit 1 --now
   }
   # 清除生成的二开仓库里面的git信息
@@ -61,7 +62,7 @@ def main [
   cp -r $'($redev_dir)/.git' $'($redev_dir)/../.git-back'
   rm -rf $redev_dir; mkdir $redev_dir
   mv $'($redev_dir)/../.git-back' $'($redev_dir)/.git'
-  $'Empty repo done! Redevelop repo contents:'; ls -a $redev_dir
+  print $'Empty repo done! Redevelop repo contents:'; ls -a $redev_dir
   cp -r redev-app/* $redev_dir
 
   # Origin 为可升级部分代码，需要单独另放一个仓库里面
@@ -69,7 +70,8 @@ def main [
   cp -r $'($redev_origin_dir)/.git' $'($redev_origin_dir)/../.git-back'
   rm -rf $redev_origin_dir; mkdir $redev_origin_dir
   mv $'($redev_origin_dir)/../.git-back' $'($redev_origin_dir)/.git'
-  $'Empty repo done! Redevelop origin dir contents:'; ls -a $redev_origin_dir
+  print $'Empty repo done! Redevelop origin dir contents:'
+  ls -a $redev_origin_dir
   cp -r redev-app/origin/* $redev_origin_dir; cd $redev_origin_dir
   git add --ignore-removal .
 
@@ -79,7 +81,7 @@ def main [
   if (git diff-index --quiet HEAD | complete | get exit_code) == 1 {
     git commit -am $commit_msg
   }
-  $'(ansi g)Redevelop origin repo git status:(ansi reset)'; git status; hr-line
+  print $'(ansi g)Redevelop origin repo git status:(ansi reset)'; git status; hr-line
   # 推送可升级部分增量代码到另外仓库
   git remote add gaia $redev_origin_git; git push gaia $dest_branch --force
 
@@ -90,6 +92,6 @@ def main [
   if (git diff-index --quiet HEAD | complete | get exit_code) == 1 {
     git commit -am $commit_msg
   }
-  $'(ansi g)Redevelop repo git status:(ansi reset)'; git status; hr-line
+  print $'(ansi g)Redevelop repo git status:(ansi reset)'; git status; hr-line
   git push gaia $dest_branch --force
 }

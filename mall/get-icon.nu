@@ -26,27 +26,27 @@ def main [
   iconFontURL?: string,    # Iconfont Symbol JS 地址, 比如: //at.alicdn.com/t/font_1949908_fie05xdkkq7.js
 ] {
   if ($bizType == $nothing or $iconFontURL == $nothing) {
-    $'(char nl)Usage: nu get-icon.nu (ansi r)<bizType> <iconFontURL>(ansi reset)'; hr-line
-    $'(ansi g)Description: (ansi reset)根据`业务类型`和 `Iconfont Symbol JS 地址` 生成图标配置文件, 两个入参必填'
-    $'(ansi g)Supported bizTypes: (ansi reset)b2c / b2b / scrm / sea / point'
-    $'请确保参数输入无误并重试!(char nl)'
+    print $'(char nl)Usage: nu get-icon.nu (ansi r)<bizType> <iconFontURL>(ansi reset)'; hr-line
+    print $'(ansi g)Description: (ansi reset)根据`业务类型`和 `Iconfont Symbol JS 地址` 生成图标配置文件, 两个入参必填'
+    print $'(ansi g)Supported bizTypes: (ansi reset)b2c / b2b / scrm / sea / point'
+    print $'请确保参数输入无误并重试!(char nl)'
     exit --now
   }
 
   let bizCheck = $bizType in ['b2c', 'b2b', 'scrm', 'sea', 'point']
   if (not $bizCheck) {
-    $'(ansi r)You have input the wrong biz type, Please try again!(ansi reset)(char nl)'
+    print $'(ansi r)You have input the wrong biz type, Please try again!(ansi reset)(char nl)'
     exit --now
   }
 
   if (is-installed 'termix') {
-    $'Current termix version: (ansi g)(termix --version | str trim)(ansi reset)'; hr-line
+    print $'Current termix version: (ansi g)(termix --version | str trim)(ansi reset)'; hr-line
   } else {
-    $'(ansi r)Command `termix` could not be found, Please install it by `npm i -g @terminus/termix@latest`, and try again!(ansi reset)'
+    print $'(ansi r)Command `termix` could not be found, Please install it by `npm i -g @terminus/termix@latest`, and try again!(ansi reset)'
     exit --now
   }
 
-  $'Running fetch icons from ($iconFontURL) for (ansi p)($bizType)(ansi reset)...'
+  print $'Running fetch icons from ($iconFontURL) for (ansi p)($bizType)(ansi reset)...'
   # The following does NOT work currently
   # termix icon --output=$'./mall-($bizType)/client/fonts' $iconFontURL
   termix icon $'--output=./mall-($bizType)/client/fonts' $iconFontURL

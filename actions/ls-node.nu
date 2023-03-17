@@ -19,7 +19,7 @@ export def 'ls-node-remote' [
   let notInstalled = (which fnm | length) == 0
   let minVersion = if ($minVer | is-empty) { 10 } else { ($minVer | str replace 'v' '' | into int) }
   if $notInstalled {
-    $'You should install `fnm` and try again..., bye!'
+    print $'You should install `fnm` and try again..., bye!'
     exit --now
   }
 
@@ -37,8 +37,8 @@ export def 'ls-node-remote' [
   )
   if $isLts {
     # ($vRow | where {|node| $node.NO >= $minVersion and $node.isLTS } | select Version)
-    echo ($vRow | where NO >= $minVersion | where isLTS == true | select Version)
+    print ($vRow | where NO >= $minVersion | where isLTS == true | select Version)
   } else {
-    echo ($vRow | where NO >= $minVersion | select Version)
+    print ($vRow | where NO >= $minVersion | select Version)
   }
 }

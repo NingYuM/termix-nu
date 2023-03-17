@@ -19,9 +19,13 @@ export def 'git pull-redev' [
   let redevRepos = (open $_TERMIX_CONF | get redevRepos)
   let filteredRepos = ($redevRepos | where $',($group),' =~ $it.group)
   if ($filteredRepos | length) > 0 {
-    $'(ansi p)Found the following matched repos:(ansi reset)(char nl)(char nl)'; $filteredRepos
-  } else { $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'; exit --now }
-  $'Pull remote redevelop repos in directory (ansi g)($repoPath)(ansi reset):(char nl)'
+    print $'(ansi p)Found the following matched repos:(ansi reset)(char nl)(char nl)'
+    print $filteredRepos
+  } else {
+    print $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'
+    exit --now
+  }
+  print $'Pull remote redevelop repos in directory (ansi g)($repoPath)(ansi reset):(char nl)'
 
   # 此处迭代变量不要采用默认的 `$it`, 否则会出错，坑爹啊……
   # It's better to have a named param on blocks because $it can be consumed and lost.
@@ -36,17 +40,17 @@ export def 'git pull-redev' [
       cd $repoPath; git clone -b $branch $repo.url
     }
     hr-line
-    $'(char nl)Pull repo (ansi gb)($repoName)(ansi reset): (char nl)'
+    print $'(char nl)Pull repo (ansi gb)($repoName)(ansi reset): (char nl)'
 
     cd $destRepoPath;
     if not ((has-ref $branch) or (has-ref origin/($branch))) {
-      $'Dest branch: ($branch) does not exist, bye...(char nl)'
+      print $'Dest branch: ($branch) does not exist, bye...(char nl)'
       exit --now
     }
     git checkout $branch; git pull
     # 强制更新远程的Tag到本地
     git fetch origin --tags --force
-    $'(char nl)Last commit of (ansi gb)($repoName)(ansi reset): (char nl)'
+    print $'(char nl)Last commit of (ansi gb)($repoName)(ansi reset): (char nl)'
     git show --abbrev-commit --no-patch
 
     # 先从环境变量里面查找待比较的上一个标签的完整名称
@@ -54,7 +58,7 @@ export def 'git pull-redev' [
     # Check the tag status, if exists just recrete it.
     if (has-ref refs/tags/($prevTagName)) {
       if $show_diff and (git --no-pager diff $prevTagName $branch --name-only | lines | length) > 0 {
-        $'---------> Update since latest tag <---------:(char nl)(ansi y)'
+        print $'---------> Update since latest tag <---------:(char nl)(ansi y)'
         git --no-pager diff $prevTagName $branch --name-only
       }
     } else {

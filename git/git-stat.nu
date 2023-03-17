@@ -10,7 +10,7 @@ export def 'git stat' [
   --count(-c): int = 20
   --author(-a): string
 ] {
-  $'(ansi p)(char nl)Modification stat info for each commit: (ansi reset)(char nl)'
+  print $'(ansi p)(char nl)Modification stat info for each commit: (ansi reset)(char nl)'
   cd $repo
   let log = if $author == '*' {
     (git log '--pretty=%h %aN' --no-merges -n $count)

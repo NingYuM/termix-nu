@@ -23,16 +23,16 @@ export def main [
   let greatestVer = (git tag -l --sort=-v:refname | lines | select 0)
 
   if (has-ref $releaseVer) {
-  	$'The version ($releaseVer) already exists, Please choose another version.(char nl)'
+  	print $'The version ($releaseVer) already exists, Please choose another version.(char nl)'
   	exit --now
   }
   if (is-lower-ver $releaseVer $greatestVer) {
-  	$'The release version should be greater than ($greatestVer), however, current release ver: ($releaseVer)(char nl)'
+  	print $'The release version should be greater than ($greatestVer), however, current release ver: ($releaseVer)(char nl)'
   	exit --now
   }
   let statusCheck = git status --porcelain
   if ($statusCheck | is-empty) == false {
-  	$'You have uncommit changes, please commit them and try `release` again!(char nl)'
+  	print $'You have uncommit changes, please commit them and try `release` again!(char nl)'
   	exit --now
   }
   if $update_log {

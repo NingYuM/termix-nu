@@ -35,7 +35,7 @@ def main [
   if not (is-installed 'termix') {
     npm i -g @terminus/termix@latest
   }
-  $'(ansi pr) Termix version: (termix --version | str trim) (ansi reset)'; hr-line
+  print $'(ansi pr) Termix version: (termix --version | str trim) (ansi reset)'; hr-line
   # Disable `initial branch name` hints from git
   git config --global init.defaultBranch master
   if (git config --global --get user.name | is-empty) {
@@ -48,7 +48,7 @@ def main [
   let action = (termix redevelop redev-app --template $template --checkout $checkref --user='git' --access-token $token | complete)
   print $action.stdout; if 'stderr' in $action { print $action.stderr }
   if ('redev-app/origin' | path exists) == false or $action.exit_code != 0  {
-    $'(ansi r)Redevelop repo generating failed! Bye...(ansi reset)'
+    print $'(ansi r)Redevelop repo generating failed! Bye...(ansi reset)'
     exit 1 --now
   }
   # 切换到一个空的 orphan 分支，用于保存生成的全量二开代码，方便后续排查问题
@@ -66,8 +66,8 @@ def main [
   } else { $deploy_repo }
   git remote add deploy $repoUrl
   let current = (git branch --show-current | str trim)
-  $'(ansi g)Redevelop repo git status:(ansi reset)'; git status; hr-line
+  print $'(ansi g)Redevelop repo git status:(ansi reset)'; git status; hr-line
   git remote -v
-  $'Current branch: (ansi g)($current)(ansi reset)'
+  print $'Current branch: (ansi g)($current)(ansi reset)'
   git push deploy $current -f
 }

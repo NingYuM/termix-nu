@@ -24,37 +24,37 @@ def main [
   bizType?: string,        # 业务类型: b2c|b2b|scrm|sea|point
 ] {
   if ($bizType == $nothing) {
-    $'(char nl)Usage: nu upload-image.nu (ansi r)<bizType>(ansi reset)'; hr-line
-    $'(ansi g)Description: (ansi reset)根据`业务类型`上传图片到CDN, 需要根目录下有 oss-conf.json 配置文件;'
-    $'(ansi g)Supported bizTypes: (ansi reset)b2c / b2b / scrm / sea / point'
-    $'请确保参数输入无误并重试!(char nl)'
+    print $'(char nl)Usage: nu upload-image.nu (ansi r)<bizType>(ansi reset)'; hr-line
+    print $'(ansi g)Description: (ansi reset)根据`业务类型`上传图片到CDN, 需要根目录下有 oss-conf.json 配置文件;'
+    print $'(ansi g)Supported bizTypes: (ansi reset)b2c / b2b / scrm / sea / point'
+    print $'请确保参数输入无误并重试!(char nl)'
     exit --now
   }
 
   let bizCheck = $bizType in ['b2c', 'b2b', 'scrm', 'sea', 'point']
   if (not $bizCheck) {
-    $'(ansi r)You have input the wrong biz type, Please try again!(ansi reset)(char nl)'
+    print $'(ansi r)You have input the wrong biz type, Please try again!(ansi reset)(char nl)'
     exit --now
   }
 
   let OSS_CONF = './oss-conf.json'
   if ($OSS_CONF | path exists) == false {
-    $"Oss config file (ansi r)'oss-conf.json' not found!(ansi reset) Please add it and try again!"
+    print $"Oss config file (ansi r)'oss-conf.json' not found!(ansi reset) Please add it and try again!"
     exit --now
   }
   # Check mall-$bizType dir exists
   if ($'mall-($bizType)' | path exists) == false {
-    $'[ERR] This directory: (ansi r)mall-($bizType) does not exist!(ansi reset) Bye~~'; exit --now
+    print $'[ERR] This directory: (ansi r)mall-($bizType) does not exist!(ansi reset) Bye~~'; exit --now
   }
 
   if (is-installed 'termix') {
-    $'Current termix version: (ansi g)(termix --version | str trim)(ansi reset)'; hr-line
+    print $'Current termix version: (ansi g)(termix --version | str trim)(ansi reset)'; hr-line
   } else {
-    $'(ansi r)Command `termix` could not be found, Please install it by `npm i -g @terminus/termix@latest`, and try again!(ansi reset)'
+    print $'(ansi r)Command `termix` could not be found, Please install it by `npm i -g @terminus/termix@latest`, and try again!(ansi reset)'
     exit --now
   }
 
-  $'Running upload images for (ansi p)($bizType)(ansi reset)...'
+  print $'Running upload images for (ansi p)($bizType)(ansi reset)...'
   let OUTPUT = $'mall-($bizType)/cdn-images.json'
   # Remove mall-$bizType/cdn-images.json config file
   rm $OUTPUT

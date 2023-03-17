@@ -9,7 +9,7 @@ export def 'git-branch' [
   repo: path    # The repo path to show git branch info
 ] {
 
-  $'(ansi p)(char nl)Last commit info of local branches: (ansi reset)(char nl)'
+  print $'(ansi p)(char nl)Last commit info of local branches: (ansi reset)(char nl)'
   cd $repo
   let basic = (
     git branch

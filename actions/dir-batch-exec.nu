@@ -20,7 +20,7 @@ export def main [
   let cmdToExec = compose-command $cmd
   $destDirs | where ($it | path exists) | each { |it|
     cd $it
-    $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi reset) in dir ($it):(char nl)'
+    print $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi reset) in dir ($it):(char nl)'
     nu -c $cmdToExec
     hr-line
   }

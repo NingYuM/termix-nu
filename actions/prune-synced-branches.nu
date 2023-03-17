@@ -21,7 +21,7 @@ export def main [
   let confBr = if $useConfBr == '_current_' { $current } else { 'i' }
 
   if not (has-ref $'origin/($confBr)') {
-    $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
+    print $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
     exit --now
   }
   let pushConf = (git show $'origin/($confBr):.termixrc' | from toml | to json)
@@ -33,8 +33,8 @@ export def main [
     $sync.dests
   })
 
-  $'(ansi p)All available syncing configs:(ansi reset)(char nl)'
-  $syncs | flatten | select repo dest | sort-by repo dest
+  print $'(ansi p)All available syncing configs:(ansi reset)(char nl)'
+  print ($syncs | flatten | select repo dest | sort-by repo dest)
 
   # Must change to the scopped directory before doing the following work
   let repoPath = get-tmp-path
@@ -47,14 +47,14 @@ export def main [
         if $branch != $nothing {
           let brnm = ($branch.br | str replace 'refs/heads/' '')
           let noUse = ($syncs | where repo == $alias and dest == $brnm | length) == 0
-          if $noUse { $brnm }
+          if $noUse { print $brnm }
         }
       } | str join $'(char nl)'
     )
 
     if (($cleanable | str trim) != '') {
-      $'Possibly unused branches in (ansi g)($alias):(ansi reset)(char nl)(char nl)'
-      $cleanable | lines | wrap branch-name
+      print $'Possibly unused branches in (ansi g)($alias):(ansi reset)(char nl)(char nl)'
+      print ($cleanable | lines | wrap branch-name)
       let url = ($repos | get $alias).url
       print $'Visit repo url: ($url)'
       hr-line
@@ -69,7 +69,7 @@ def 'prepare-repo' [
   --ak: string          # Git repo access token
 ] {
   if ($repos | is-empty) {
-    $'No dest repos to be cleaned, bye...(char nl)'
+    print $'No dest repos to be cleaned, bye...(char nl)'
     exit --now
   }
 

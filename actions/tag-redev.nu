@@ -33,10 +33,14 @@ export def 'git tag-redev' [
   let redevRepos = ($actionConf | get redevRepos)
   let filteredRepos = ($redevRepos | where $',($group),' =~ $it.group | where enable == true)
   if ($filteredRepos | length) > 0 {
-    $'(ansi p)Found the following matched repos:(ansi reset)(char nl)(char nl)'; $filteredRepos
-  } else { $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'; exit --now }
+    print $'(ansi p)Found the following matched repos:(ansi reset)(char nl)(char nl)'
+    print $filteredRepos
+  } else {
+    print $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'
+    exit --now
+  }
 
-  $'Delete tag ($tagName) ---> (ansi r)($delete_tag)(ansi reset)(char nl)'
+  print $'Delete tag ($tagName) ---> (ansi r)($delete_tag)(ansi reset)(char nl)'
   # 不存在则创建临时路径
   if ($repoPath | path exists) == false { mkdir $repoPath }
   # 保存当前路径方便后期跳回

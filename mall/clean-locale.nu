@@ -41,37 +41,37 @@ def main [
   bizType?: string,        # 业务类型: b2c|b2b|sea
 ] {
   if ($bizType == $nothing) {
-    $'(char nl)Usage: nu clean-locale.nu (ansi r)<bizType>(ansi reset)'; hr-line
-    $'(ansi g)Description: (ansi reset)根据`业务类型`从本地清除指定业务类型文件夹下多余的国际化文案'
-    $'(ansi g)Supported bizTypes: (ansi reset)b2c / b2b / sea'
-    $'请确保参数输入无误并重试!(char nl)'
+    print $'(char nl)Usage: nu clean-locale.nu (ansi r)<bizType>(ansi reset)'; hr-line
+    print $'(ansi g)Description: (ansi reset)根据`业务类型`从本地清除指定业务类型文件夹下多余的国际化文案'
+    print $'(ansi g)Supported bizTypes: (ansi reset)b2c / b2b / sea'
+    print $'请确保参数输入无误并重试!(char nl)'
     exit --now
   }
 
   let bizCheck = $bizType in ['b2c', 'b2b', 'sea']
   if (not $bizCheck) {
-    $'(ansi r)You have input the wrong biz type, Please try again!(ansi reset)(char nl)'
+    print $'(ansi r)You have input the wrong biz type, Please try again!(ansi reset)(char nl)'
     exit --now
   }
 
   # Check mall-$bizType dir exists
   if ($'mall-($bizType)' | path exists) == false {
-    $'[ERR] This directory: (ansi r)mall-($bizType) does not exist!(ansi reset) Bye~~'; exit --now
+    print $'[ERR] This directory: (ansi r)mall-($bizType) does not exist!(ansi reset) Bye~~'; exit --now
   }
 
   if (is-installed 'termix') {
-    $'Current termix version: (ansi g)(termix --version | str trim)(ansi reset)'; hr-line
+    print $'Current termix version: (ansi g)(termix --version | str trim)(ansi reset)'; hr-line
   } else {
-    $'(ansi r)Command `termix` could not be found, Please install it by `npm i -g @terminus/termix@latest`, and try again!(ansi reset)'
+    print $'(ansi r)Command `termix` could not be found, Please install it by `npm i -g @terminus/termix@latest`, and try again!(ansi reset)'
     exit --now
   }
 
   if $bizType not-in $I18 {
-    $'Locale ID for biz type: ($bizType) has not been configured, please try again...'
+    print $'Locale ID for biz type: ($bizType) has not been configured, please try again...'
     exit --now
   }
 
-  $'Running clean locale for (ansi p)($bizType)(ansi reset)...'
+  print $'Running clean locale for (ansi p)($bizType)(ansi reset)...'
   let PID = ($I18 | get $bizType).PID
   let DESIGN_PID = ($I18 | get $bizType).DESIGN_PID
   termix locale-clean $'--pid=($PID)' --strict $'mall-common,mall-($bizType)'

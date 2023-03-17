@@ -17,7 +17,7 @@ def-env 'git-proxy' [
 
     let proxy = (if $proxies == '' { [] } else { ($proxies | detect columns -n).column8 })
     if ($proxy | length) == 0 {
-      $'(ansi r)(char nl)Can not find Ali proxy, please start it and try again, bype...(ansi reset)(char nl)(char nl)'
+      print $'(ansi r)(char nl)Can not find Ali proxy, please start it and try again, bype...(ansi reset)(char nl)(char nl)'
       exit --now
     }
 
@@ -28,10 +28,10 @@ def-env 'git-proxy' [
     git config --global http.proxy $'socks5://($proxy)'
     git config --global https.proxy $'socks5://($proxy)'
     git config --global socks.proxy $'socks5h://($proxy)'
-    $'(ansi g)Proxy turned on at: ($proxy)(ansi reset)(char nl)'
-    $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
-    $'If you want to set proxy for the terminal, please run: (char nl)'
-    $'export http_proxy=socks5://($proxy) https_proxy=socks5://($proxy) ALL_RROXY=socks://($proxy)(char nl)(char nl)'
+    print $'(ansi g)Proxy turned on at: ($proxy)(ansi reset)(char nl)'
+    print $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+    print $'If you want to set proxy for the terminal, please run: (char nl)'
+    print $'export http_proxy=socks5://($proxy) https_proxy=socks5://($proxy) ALL_RROXY=socks://($proxy)(char nl)(char nl)'
   } else {
     # if ('ALL_RROXY' in (env).name) { hide ALL_RROXY }
     # if ('http_proxy' in (env).name) { hide http_proxy }
@@ -39,10 +39,10 @@ def-env 'git-proxy' [
     unset-git-conf http.proxy
     unset-git-conf https.proxy
     unset-git-conf socks.proxy
-    $'(ansi p)Proxy turned off(ansi reset)(char nl)'
-    $'(ansi p)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
-    $'If you want to unset proxy for the terminal, please run: (char nl)'
-    $'unset http_proxy https_proxy ALL_RROXY(char nl)(char nl)'
+    print $'(ansi p)Proxy turned off(ansi reset)(char nl)'
+    print $'(ansi p)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+    print $'If you want to unset proxy for the terminal, please run: (char nl)'
+    print $'unset http_proxy https_proxy ALL_RROXY(char nl)(char nl)'
   }
 }
 

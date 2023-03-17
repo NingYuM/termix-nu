@@ -29,9 +29,9 @@ export def 'get-env' [
   key: string       # The key to get it's env value
   default?: string  # The default value for an empty env
 ] {
-  # $env | get -i $key | default $default
-  let hasEnv = (env | any { |it| $it.name == $key })
-  if $hasEnv { $env | get $key } else { $default }
+  $env | get -i $key | default $default
+  # let hasEnv = (env | any { |it| $it.name == $key })
+  # if $hasEnv { $env | get $key } else { $default }
 }
 
 # Get the specified config from `termix.toml` by key
@@ -54,7 +54,7 @@ export def 'get-tmp-path' [] {
   let tmpDir = get-env TERMIX_TMP_PATH ''
   let tmpPath = if ($tmpDir | is-empty) { ($actionConf | get termixTmpPath) } else { $tmpDir }
   if ($tmpPath | path exists) == false {
-    $'(ansi r)Path ($tmpPath) does not exist, please create it and try again...(ansi reset)(char nl)(char nl)'
+    print $'(ansi r)Path ($tmpPath) does not exist, please create it and try again...(ansi reset)(char nl)(char nl)'
     exit --now
   }
   echo $tmpPath
@@ -101,14 +101,14 @@ export def 'git-check' [
   cd $dest
   let isGitInstalled = (which git | length) > 0
   if (not $isGitInstalled) {
-    $'You should (ansi r)INSTALL git(ansi reset) first to run this command, bye...'
+    print $'You should (ansi r)INSTALL git(ansi reset) first to run this command, bye...'
     exit --now
   }
   # If we don't need repo check just quit now
   if ($check_repo != 0) {
     let checkRepo = (do -i { git rev-parse --is-inside-work-tree } | complete)
     if ! ($checkRepo.stdout =~ 'true') {
-      $'Current directory is (ansi r)NOT(ansi reset) a git repo, bye...(char nl)'
+      print $'Current directory is (ansi r)NOT(ansi reset) a git repo, bye...(char nl)'
       exit --now
     }
   }
@@ -119,9 +119,9 @@ export def 'log' [
   name: string
   var: any
 ] {
-  $'(ansi g)-----------------> Debug Begin: ($name) <-----------------(ansi reset)'
-  echo $var
-  $'(ansi g)------------------->  Debug End <---------------------(char nl)(ansi reset)'
+  print $'(ansi g)-----------------> Debug Begin: ($name) <-----------------(ansi reset)'
+  print $var
+  print $'(ansi g)------------------->  Debug End <---------------------(char nl)(ansi reset)'
 }
 
 export def 'hr-line' [

@@ -14,7 +14,7 @@ export def 'git batch-reset' [
 
   let dest = ($branches | str trim | split row ' ' | compact)
   if ($branches | str trim | is-empty) {
-    $'You did not specify any branches to do reset, bye...(char nl)'
+    print $'You did not specify any branches to do reset, bye...(char nl)'
     exit --now
   }
 
@@ -23,10 +23,10 @@ export def 'git batch-reset' [
   let available = (git branch | into string | lines | str substring '2,')
   let candidates = if ($branches | is-empty) { $available } else { $dest }
 
-  $'(char nl)Start to (ansi r)reset ($count) commits(ansi reset) on branches: (char nl)'
-  echo ($candidates | wrap name)
+  print $'(char nl)Start to (ansi r)reset ($count) commits(ansi reset) on branches: (char nl)'
+  print ($candidates | wrap name)
 
-  $"(char nl)Current branch: ($current)"
+  print $"(char nl)Current branch: ($current)"
   let statusCheck = (git status --porcelain)
   if ($statusCheck | is-empty) == false {
     git stash save 'Stash before running git-batch-reset'
@@ -39,7 +39,7 @@ export def 'git batch-reset' [
       git checkout $br
       print (do { (nu -c $'^git reset --hard HEAD~($count)') })
     } else {
-      echo $'Branch (ansi r)($br) (ansi reset)not available...(char nl)'
+      print $'Branch (ansi r)($br) (ansi reset)not available...(char nl)'
     }
   }
   git checkout $current

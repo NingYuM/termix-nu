@@ -21,17 +21,17 @@ export def 'go' [
   let navKey = ($matches | get key).0
   let url = ($allNavs | get $navKey).0
   if ($url | str starts-with 'http') {
-    $'Going to open matched url: (ansi g)($url)(ansi reset) in default browser...(char nl)'
+    print $'Going to open matched url: (ansi g)($url)(ansi reset) in default browser...(char nl)'
     # Use powershell command to open url in default browser for Windows
     if (windows?) { ^powershell -c $'Start-Process ($url)' } else { ^open $url }
   } else {
-    $'(ansi r)Invalid nav url, bye...(char nl)(ansi reset)'
+    print $'(ansi r)Invalid nav url, bye...(char nl)(ansi reset)'
   }
 }
 
 export def 'show-navs' [] {
-  $'(ansi pb)(char nl)Available Nav Items:(char nl)(char nl)(ansi reset)'
-  merge-navs | transpose | rename key url
+  print $'(ansi pb)(char nl)Available Nav Items:(char nl)(char nl)(ansi reset)'
+  print (merge-navs | transpose | rename key url)
   exit --now
 }
 

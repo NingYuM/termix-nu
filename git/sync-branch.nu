@@ -22,7 +22,7 @@ export def 'git sync-branch' [
   let confBr = if $useConfBr == '_current_' { $destBranch } else { 'i' }
 
   if (has-ref $'origin/($confBr)') == false {
-    $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
+    print $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
     exit --now
   }
   let pushConf = (git show $'origin/($confBr):.termixrc' | from toml | to json)
@@ -42,8 +42,8 @@ export def 'git sync-branch' [
 
   # 如果没有找到对应分支的 push hook 配置则直接退出
   if ($syncDests | length) > 0 {
-    $'(char nl)Found the following matched dests from (ansi g)`origin/($confBr):.termixrc`(ansi reset):(char nl)'
-    echo $syncDests | upsert lock {|it| if ('lock' in $it) { $it.lock } else { '-' }} | move lock --before SYNC
+    print $'(char nl)Found the following matched dests from (ansi g)`origin/($confBr):.termixrc`(ansi reset):(char nl)'
+    print ($syncDests | upsert lock {|it| if ('lock' in $it) { $it.lock } else { '-' }} | move lock --before SYNC)
   } else { exit --now }
 
   echo $syncDests | where SYNC == '   √' | each { |iter|

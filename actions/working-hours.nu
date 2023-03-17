@@ -19,7 +19,7 @@ export def main [
   # 先从环境变量里面查找用户在 emp Cookie 里面的登陆信息
   let empUserCookie = get-env EMP_UC_COOKIE ''
   if ($code == '' or $empUserCookie == '') {
-    $'(ansi r)Not enough parameters, make sure you have set the EMP_UC_COOKIE and EMP_PROJECT_CODE var in .env file, bye...(char nl)(ansi reset)'
+    print $'(ansi r)Not enough parameters, make sure you have set the EMP_UC_COOKIE and EMP_PROJECT_CODE var in .env file, bye...(char nl)(ansi reset)'
     exit --now
   }
   let userCookie = ($emp.cookie | str replace '_EMP_UC_COOKIE_' $empUserCookie)
@@ -33,7 +33,7 @@ export def main [
 
   handle-exception $staffs
 
-  $'(char nl)Query working hours from ($monday) to ($sunday) --->'
+  print $'(char nl)Query working hours from ($monday) to ($sunday) --->'
   # 此处把中文名字字段过滤掉，否则在Windows下数据传到后端接口会发生解析错误
   let staffPayload = ($staffs | query json 'res' | select id | to json -r)
   let timePayload = ($emp.timePayload
@@ -86,9 +86,9 @@ def 'handle-working-hours' [
 
   let title = get-env EMP_WORKING_HOUR_TITLE '本周工时填报'
   # echo ($data | reject id isDeleted week year createdAt updatedAt updatedBy createdBy)
-  $'(char nl)  (ansi p)'
-  $'-------------------------> ($title) <-------------------------'
-  $'(ansi reset)(char nl)'
+  print $'(char nl)  (ansi p)'
+  print $'-------------------------> ($title) <-------------------------'
+  print $'(ansi reset)(char nl)'
   let week = [Mon, Tue, Wen, Thu, Fri, Sat, Sun]
   # 当前是一年中的第几周
   let weekNo = if $show_prev == true { ([((date now) - 7day)] | dfr into-df | dfr get-week).0 } else { ([(date now)] | dfr into-df | dfr get-week).0 }
@@ -126,7 +126,7 @@ def 'handle-working-hours' [
     ($allMembers | where { |it| $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8 })
   })
 
-  if ($result | is-empty) { $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; exit --now }
+  if ($result | is-empty) { print $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; exit --now }
 
   let hourMap = (
     $result | upsert Gap { |it| $total * 8 - ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave) }
@@ -182,11 +182,11 @@ def 'handle-exception' [
   # 未登录或者Cookie过期提示, use `do -i` to ignore 'error: Coercion error'
   do -i {
     if ($res | is-empty) or ($res | query json 'status') == 401 {
-      $'(ansi r)Your login COOKIE info is outdated or empty，please update it and try again!(char nl)(ansi reset)'
+      print $'(ansi r)Your login COOKIE info is outdated or empty，please update it and try again!(char nl)(ansi reset)'
       exit --now
     }
     if (($res | query json 'status') == 500) {
-      $'(ansi r)Backend internal server error，please try again later!(char nl)(ansi reset)'
+      print $'(ansi r)Backend internal server error，please try again later!(char nl)(ansi reset)'
       exit --now
     }
   }

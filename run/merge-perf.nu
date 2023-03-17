@@ -15,12 +15,12 @@
 #   Range (min … max):    70.7 ms …  73.2 ms    38 runs
 #
 
-$'Performance of merge two files in cat of bash:(char nl)'
+print $'Performance of merge two files in cat of bash:(char nl)'
 hyperfine -m 20 'cat ./git/git-batch-exec.nu ./utils/compose-cmd.nu > run/.git-batch-exec-compose.nu'
 char nl
 ^ls -la run
-$'-----------------------------------------------------------'
+print $'-----------------------------------------------------------'
 
-$'Performance of merge two files in open and save of nu:(char nl)'
+print $'Performance of merge two files in open and save of nu:(char nl)'
 hyperfine -m 20 'nu run/merge.nu'
 ^ls -la run
