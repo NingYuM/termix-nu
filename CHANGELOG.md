@@ -1,6 +1,21 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.16.0] - 2023-03-21
+
+### Bug Fixes
+
+- Fix str trim for nu v0.77
+- Update `has-ref` git util helper
+- Fix `emp` and `prune-synced-branches` command
+
+### Miscellaneous Tasks
+
+- Add ignore patch for nu v0.76
+- Update nushell config for v0.76.1
+- Adapt to nu v0.77.1+, use `print` explicitly
+- Bump version v1.16.0
+
 ## [1.15.0] - 2023-02-23
 
 ### Bug Fixes
