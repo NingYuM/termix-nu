@@ -41,16 +41,17 @@ export def main [
   cd $repoPath; cd $repoName
 
   $repos | transpose | rename alias | get alias | each { |alias|
-    let cleanable = (
+    let remoteBranches = (do -i { git ls-remote --heads --refs $alias } | complete)
+    let cleanable = if $remoteBranches.exit_code == 0 { (
       git ls-remote --heads --refs $alias | detect columns -n | rename cid br | each { |branch|
         # Ignore the repos that don't have access permission
         if $branch != $nothing {
           let brnm = ($branch.br | str replace 'refs/heads/' '')
           let noUse = ($syncs | where repo == $alias and dest == $brnm | length) == 0
-          if $noUse { print $brnm }
+          if $noUse { $brnm }
         }
       } | str join $'(char nl)'
-    )
+    ) } else { '' }
 
     if (($cleanable | str trim) != '') {
       print $'Possibly unused branches in (ansi g)($alias):(ansi reset)(char nl)(char nl)'
@@ -99,8 +100,9 @@ def 'prepare-repo' [
       git remote add $dest.name $gitDest
     }
     # 更新远程仓库信息到本地
-    let output = git fetch $dest.name -p
-    if ($output | str trim | is-empty) == false { print $output }
+    let output = (do -i { git fetch $dest.name -p } | complete)
+    if ($output.exit_code == 0) { print -n ($output.stdout | str trim) }
+    if ($output.exit_code == 128) { print $'(ansi y)WARN:(ansi reset) --- No permission for ($dest.name): ($dest.git)' }
   }
   print 'Repo preparing done!'; hr-line
   echo $repoName

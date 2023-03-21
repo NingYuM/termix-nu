@@ -23,7 +23,7 @@ export def main [] {
   let time = (date now | date format '%Y/%m/%d %H:%M:%S')
   let gitProxy = if (git config --global --list | grep proxy | is-empty) { 'Off' } else { 'On' }
 
-  char nl; print (version | transpose | rename nu-ver value); char nl
+  char nl; print (version | transpose | rename nu-key value)
 
   # FIXME: Table layout will be broken on Windows if using `echo` here
   print [
@@ -46,5 +46,4 @@ export def main [] {
     ['JUST_INVOKE_DIR', $justInvokeDir]
     ['Current Time', $time]
   ]
-  char nl
 }

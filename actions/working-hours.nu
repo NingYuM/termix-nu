@@ -101,7 +101,7 @@ def 'handle-working-hours' [
   let workingHours = if ($workingHours | compact | length) == 0 { [[fillDate, percentage, staffId]; [0, 0, 0]] } else { $workingHours }
 
   let hours = ($workingHours | upsert day { |work|
-        let day = ($work.fillDate | into string | into datetime)
+        let day = ($work.fillDate * 1000_000 | into datetime)
         let idx = ([$day] | dfr into-df | dfr get-weekday).0 mod 7
         ($week | select $idx).0
       } | upsert Hrs { |work|

@@ -51,7 +51,6 @@ export def main [] {
   if ($gone | length) > 0 {
     print $'(ansi p)(char nl)  Branches that have a description but were(ansi r) removed from remote(ansi reset):(char nl)(ansi reset)'
     print ($gone | wrap 'name')
-    char nl
   }
 
   let syncConf = (git show $'($querySource):.termixrc' | from toml | to json)
@@ -68,7 +67,6 @@ export def main [] {
   if ($gone | length) > 0 {
     print $'(ansi p)(char nl)  Branches that have sync configs but were(ansi r) removed from remote(ansi reset):(char nl)(ansi reset)'
     print $gone
-    char nl
   }
 
 }
