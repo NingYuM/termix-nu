@@ -19,7 +19,7 @@ alias tokeid = (tokei | lines | skip 1 | str join "\n" | detect columns | where 
 # ----------------------- ENV VARS ------------------------
 let-env EDITOR = 'hx'
 # Use nushell functions to define your right and left prompt
-let-env PROMPT_COMMAND_RIGHT = { '' }
+let-env PROMPT_COMMAND_RIGHT = {|| '' }
 # The prompt indicators are environmental variables that represent
 # the state of the prompt
 let-env PROMPT_INDICATOR_VI_INSERT = ": "
@@ -30,7 +30,7 @@ let poshDir = (brew --prefix oh-my-posh | str trim)
 let poshTheme = $'($poshDir)/share/oh-my-posh/themes/'
 # Recommend themes: zash*/space/robbyrussel/powerline/powerlevel10k_lean*/material/half-life/lambda
 # Recommend double lines: amro/pure/spaceship
-let-env PROMPT_COMMAND = { oh-my-posh prompt print primary --config $'($poshTheme)/zash.omp.json' }
+let-env PROMPT_COMMAND = {|| oh-my-posh prompt print primary --config $'($poshTheme)/zash.omp.json' }
 let-env PROMPT_INDICATOR = $"(ansi y)$> (ansi reset)"
 
 # Specifies how environment variables are:
@@ -164,7 +164,7 @@ def nudown [] {
       | get assets
       | flatten
       | select name download_count created_at
-      | update created_at { get created_at | into datetime | date format '%m/%d/%Y %H:%M:%S' }
+      | update created_at {|| get created_at | into datetime | date format '%m/%d/%Y %H:%M:%S' }
 }
 
 # -------------------------- Autocompletion ------------------------
@@ -184,7 +184,7 @@ let dark_theme = {
   int: white
   filesize: white
   duration: white
-  date: { (date now) - $in |
+  date: {|| (date now) - $in |
       if $in < 1hr {
         'red3b'
       } else if $in < 6hr {
@@ -253,7 +253,7 @@ let light_theme = {
   int: dark_gray
   filesize: dark_gray
   duration: dark_gray
-  date: { (date now) - $in |
+  date: {|| (date now) - $in |
     if $in < 1hr {
       'red3b'
     } else if $in < 6hr {
@@ -432,10 +432,10 @@ let-env config = {
   render_right_prompt_on_last_line: false   # true or false to enable or disable right prompt to be rendered on last line of the prompt.
 
   hooks: {
-    pre_prompt: [{
+    pre_prompt: [{||
       $nothing                  # replace with source code to run before the prompt is shown
     }]
-    pre_execution: [{
+    pre_execution: [{||
       $nothing                  # replace with source code to run before the repl input is run
     }]
     env_change: {
@@ -443,7 +443,7 @@ let-env config = {
         $nothing                # replace with source code to run if the PWD environment is different since the last repl input
       }]
     }
-    display_output: {
+    display_output: {||
       if (term size).columns >= 100 { table -e } else { table }
     }
   }

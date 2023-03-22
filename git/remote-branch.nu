@@ -30,7 +30,7 @@ export def 'git-remote-branch' [
     | upsert author { |it| git show $"remotes/($alias)/($it.name)" -s --format='%an' | str trim }
     | upsert last-commit { |it| git show $"remotes/($alias)/($it.name)" --no-patch --format=%ci | into datetime }
   )
-  append-desc $basic
+  print (append-desc $basic)
 
   if (! $show_tag) { exit --now }
 

@@ -32,7 +32,7 @@ export def main [
 
   if ($show_notes) {
     $rules | enumerate | each {|rule|
-      print $'(ansi g)($rule.index + 1)(ansi reset). ($rule.item)'
+      print $'(ansi g)($rule.index + 1 | fill --alignment right -w 2)(ansi reset). ($rule.item)'
     } | str join (char nl)
   }
 }

@@ -20,5 +20,5 @@ export def 'git-branch' [
       | upsert author { |it| git show $it.name -s --format='%an' | str trim }
       | upsert last-commit {|it| git show $it.name --no-patch --format=%ci | into datetime }
   )
-  append-desc $basic
+  print (append-desc $basic)
 }
