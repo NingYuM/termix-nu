@@ -140,7 +140,7 @@ def 'nu-sloc' [] {
   let stats = (
     ls **/*.nu
       | select name
-      | insert lines { |it| open $it.name | size | get lines }
+      | insert lines {|it| open $it.name | size | get lines }
       | insert blank {|s| $s.lines - (open $s.name | lines | find --regex '\S' | length) }
       | insert comments {|s| open $s.name | lines | find --regex '^\s*#' | length }
       | sort-by lines -r
