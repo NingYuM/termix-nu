@@ -22,11 +22,11 @@ export def 'git branch-rename' [
   let remoteAlias = if ($remote | is-empty) { 'origin' } else { $remote }
   git fetch $remoteAlias -p
 
-  let localSrcExists = has-ref $from
-  let remoteSrcExists = has-ref $'($remoteAlias)/($from)'
+  let localSrcExists = (has-ref $from)
+  let remoteSrcExists = (has-ref $'($remoteAlias)/($from)')
   # Check and warn user if the dest branch exists in local
-  let localDestExists = has-ref $to
-  let remoteDestExists = has-ref $'($remoteAlias)/($to)'
+  let localDestExists = (has-ref $to)
+  let remoteDestExists = (has-ref $'($remoteAlias)/($to)')
   # Check if remote dest already exists.
   if ($remoteDestExists) {
     print $'Dest branch (ansi r)($remote)/($to)(ansi reset) already exists in the remote, please use another new name...(char nl)'

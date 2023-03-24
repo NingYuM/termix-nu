@@ -9,7 +9,7 @@
 export def 'nu-ver' [] {
 
   let currentVer = (version).version
-  let minVer = get-conf minNuVer '0.75.0'
+  let minVer = (get-conf minNuVer '0.77.0')
   upgrade-tip nushell $minVer $currentVer
 }
 
@@ -17,7 +17,7 @@ export def 'nu-ver' [] {
 export def 'just-ver' [] {
 
   let currentVer = (just --version | str replace 'just' '' | str trim)
-  let minVer = get-conf minJustVer '1.13.0'
+  let minVer = (get-conf minJustVer '1.13.0')
   upgrade-tip just $minVer $currentVer
 }
 
@@ -32,12 +32,12 @@ export def 'just-ver' [] {
 export def 'termix-ver' [] {
   # FIXME
   let _DATE_FMT = _DATE_FMT
-  let tmpPath = get-tmp-path
-  let currentVer = get-conf version
+  let tmpPath = (get-tmp-path)
+  let currentVer = (get-conf version)
   let confName = ([$tmpPath '.termix-conf'] | path join)
   let checkDate = (date now | date format $_DATE_FMT)
   if ($confName | path exists) {
-    let conf = open -r $confName
+    let conf = (open -r $confName)
     let latestVer = ($conf | query json 'latestVer')
     if ($conf | query json 'checkDate') == $checkDate {
       upgrade-tip termix-nu $latestVer $currentVer
@@ -75,9 +75,10 @@ def 'query-ver' [
   # Get latest release tag name
   let latestVer = (git tag -l --sort=-v:refname | lines | select 0).0
   # Check whether the latest release tag is a force upgrade
-  let msg = git show --oneline --no-patch $latestVer
+  let msg = (git show --oneline --no-patch $latestVer)
   let forceUpgrade = ($msg | str contains $_UPGRADE_TAG)
   let config = { 'latestVer': $latestVer, 'checkDate': $checkDate, 'forceUpgrade': $forceUpgrade }
+  log '$conf' $conf
   $config | to json | save -f $conf
   echo $latestVer
 }

@@ -20,7 +20,7 @@ export def 'git batch-exec' [
   # fix: 'fatal: not a git repository (or any of the parent directories): .git'
   cd $env.JUST_INVOKE_DIR
   let current = (git branch --show-current | str trim)
-  let cmdToExec = compose-command $cmd
+  let cmdToExec = (compose-command $cmd)
 
   # 如果有远程分支不存在会出错
   # let available = (git for-each-ref --format='%(refname:short)' refs/heads | lines)
@@ -32,7 +32,7 @@ export def 'git batch-exec' [
   print ($candidates | wrap name)
 
   print $"(char nl)Current branch: ($current)"
-  let statusCheck = git status --porcelain
+  let statusCheck = (git status --porcelain)
   if ($statusCheck | is-empty) == false {
     git stash save 'Stash before running git-batch-exec'
   }

@@ -49,9 +49,9 @@ export def 'get-conf' [
 export def 'get-tmp-path' [] {
   # FIXME
   let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
-  let actionConf = open $_TERMIX_CONF
+  let actionConf = (open $_TERMIX_CONF)
   # 先从环境变量里面查找临时文件路径
-  let tmpDir = get-env TERMIX_TMP_PATH ''
+  let tmpDir = (get-env TERMIX_TMP_PATH '')
   let tmpPath = if ($tmpDir | is-empty) { ($actionConf | get termixTmpPath) } else { $tmpDir }
   if ($tmpPath | path exists) == false {
     print $'(ansi r)Path ($tmpPath) does not exist, please create it and try again...(ansi reset)(char nl)(char nl)'
@@ -74,7 +74,7 @@ export def 'has-ref' [
   ref: string   # The git ref to check
 ] {
   # Brackets were required here, or error will occur
-  let parse = do -i { (git rev-parse --verify -q $ref) }
+  let parse = (do -i { (git rev-parse --verify -q $ref) })
   if ($parse | is-empty) { false } else { true }
 }
 
@@ -107,7 +107,7 @@ export def 'git-check' [
   # If we don't need repo check just quit now
   if ($check_repo != 0) {
     let checkRepo = (do -i { git rev-parse --is-inside-work-tree } | complete)
-    if ! ($checkRepo.stdout =~ 'true') {
+    if not ($checkRepo.stdout =~ 'true') {
       print $'Current directory is (ansi r)NOT(ansi reset) a git repo, bye...(char nl)'
       exit --now
     }

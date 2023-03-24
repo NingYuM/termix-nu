@@ -11,7 +11,7 @@ export def 'git repo-transfer' [
   source: string   # The source repo git url
   dest: string     # The dest repo git url
 ] {
-  let tmpPath = get-tmp-path
+  let tmpPath = (get-tmp-path)
   cd $tmpPath
   print $'(char nl)Sync git repo from ($source)(char nl)'
   print $'to dest:      (ansi g)---> ($dest)(ansi reset)(char nl)'
@@ -48,8 +48,8 @@ def 'do-push' [
   # 当仓库不存在的时候截获标准错误流需要 `do -i {}`
   let push = (do -i { git push --mirror } | complete)
   # FIXME: Nu Bug: stdout redirect to stderr
-  if ! ($push.stderr | is-empty) { print $push.stderr }
-  if ! ($push.stdout | is-empty) { print $push.stdout }
+  if not ($push.stderr | is-empty) { print $push.stderr }
+  if not ($push.stdout | is-empty) { print $push.stdout }
   if $push.stderr =~ 'not found' {
     print $'(ansi r)Error: The dest repo does not exist, please create it and try again, bye...(ansi reset)(char nl)'
   }

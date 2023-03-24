@@ -19,7 +19,7 @@ export def main [
   let _DATE_FMT = '%Y.%m.%d'
   # FIXME
   let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
-  let repoPath = get-tmp-path
+  let repoPath = (get-tmp-path)
   let gaiaSrcRepos = (open $_TERMIX_CONF | get gaiaSrcRepos)
   print $'Using global repo path: (ansi p)($repoPath)(ansi reset)(char nl)'
 
@@ -47,7 +47,7 @@ export def main [
       # Delete tags that not exist in remote repo
       git fetch origin --prune '+refs/tags/*:refs/tags/*'
 
-      let tagExists = has-ref $'refs/tags/($tagName)'
+      let tagExists = (has-ref $'refs/tags/($tagName)')
       # Check the tag status, if exists just recrete it.
       if $tagExists { git tag -d $tagName; git push origin --delete $tagName }
 

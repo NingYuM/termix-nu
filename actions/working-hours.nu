@@ -13,11 +13,11 @@ export def main [
   --show-prev: any   # Set true to query working hours of previous week
 ] {
 
-  let monday = get-monday --prev=$show_prev
-  let sunday = get-sunday --prev=$show_prev
-  let emp = get-conf empWorkingHour
+  let monday = (get-monday --prev=$show_prev)
+  let sunday = (get-sunday --prev=$show_prev)
+  let emp = (get-conf empWorkingHour)
   # 先从环境变量里面查找用户在 emp Cookie 里面的登陆信息
-  let empUserCookie = get-env EMP_UC_COOKIE ''
+  let empUserCookie = (get-env EMP_UC_COOKIE '')
   if ($code == '' or $empUserCookie == '') {
     print $'(ansi r)Not enough parameters, make sure you have set the EMP_UC_COOKIE and EMP_PROJECT_CODE var in .env file, bye...(char nl)(ansi reset)'
     exit --now
@@ -84,7 +84,7 @@ def 'handle-working-hours' [
   --show-prev: any
 ] {
 
-  let title = get-env EMP_WORKING_HOUR_TITLE '本周工时填报'
+  let title = (get-env EMP_WORKING_HOUR_TITLE '本周工时填报')
   # echo ($data | reject id isDeleted week year createdAt updatedAt updatedBy createdBy)
   print $'(char nl)  (ansi p)'
   print $'-------------------------> ($title) <-------------------------'

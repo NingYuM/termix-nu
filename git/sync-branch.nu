@@ -18,7 +18,7 @@ export def 'git sync-branch' [
   let destBranch = ($remoteRef | str replace 'refs/heads/' '')
   let localBranch = ($localRef | str replace 'refs/heads/' '')
   # Decide which branch to get `.termixrc` conf from ?
-  let useConfBr = get-conf useConfFromBranch
+  let useConfBr = (get-conf useConfFromBranch)
   let confBr = if $useConfBr == '_current_' { $destBranch } else { 'i' }
 
   if (has-ref $'origin/($confBr)') == false {
@@ -26,7 +26,7 @@ export def 'git sync-branch' [
     exit --now
   }
   let pushConf = (git show $'origin/($confBr):.termixrc' | from toml | to json)
-  let ignored = get-env SYNC_IGNORE_ALIAS ''
+  let ignored = (get-env SYNC_IGNORE_ALIAS '')
   # The following line not work: ^^^ Expected column path, found string
   # let matchBranch = ($pushConf | get branches | default '' $destBranch | select $destBranch | compact | length)
   # 处理分支名称包含‘.’的情况: `support/release-2.4`
@@ -47,7 +47,7 @@ export def 'git sync-branch' [
   } else { exit --now }
 
   echo $syncDests | where SYNC == '   √' | each { |iter|
-    let syncFrom = get-sync-ref $localBranch $iter
+    let syncFrom = (get-sync-ref $localBranch $iter)
     let gitUrl = ($pushConf | query json $'repos.($iter.repo).git')
     let navUrl = ($pushConf | query json $'repos.($iter.repo).url')
     if $localOid == $zero {

@@ -15,7 +15,7 @@ export def 'git pull-redev' [
 
   # FIXME
   let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
-  let repoPath = get-tmp-path
+  let repoPath = (get-tmp-path)
   let redevRepos = (open $_TERMIX_CONF | get redevRepos)
   let filteredRepos = ($redevRepos | where $',($group),' =~ $it.group)
   if ($filteredRepos | length) > 0 {
@@ -54,7 +54,7 @@ export def 'git pull-redev' [
     git show --abbrev-commit --no-patch
 
     # 先从环境变量里面查找待比较的上一个标签的完整名称
-    let prevTagName = get-env REDEV_PREV_TAG ''
+    let prevTagName = (get-env REDEV_PREV_TAG '')
     # Check the tag status, if exists just recrete it.
     if (has-ref refs/tags/($prevTagName)) {
       if $show_diff and (git --no-pager diff $prevTagName $branch --name-only | lines | length) > 0 {

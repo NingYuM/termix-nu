@@ -17,7 +17,7 @@ export def main [
   let current = (git branch --show-current | str trim)
 
   # Decide which branch to get `.termixrc` conf from ?
-  let useConfBr = get-conf useConfFromBranch
+  let useConfBr = (get-conf useConfFromBranch)
   let confBr = if $useConfBr == '_current_' { $current } else { 'i' }
 
   if not (has-ref $'origin/($confBr)') {
@@ -28,7 +28,7 @@ export def main [
   let repos = ($pushConf | query json $'repos')
   # 获取待同步目的仓库及目的分支映射
   let branches = ($pushConf | query json $'branches')
-  let repoName = prepare-repo $repos --user=$user --ak=$ak
+  let repoName = (prepare-repo $repos --user=$user --ak=$ak)
   let syncs = ($branches | transpose branch dests | each { |sync|
     $sync.dests
   })
@@ -37,7 +37,7 @@ export def main [
   print ($syncs | flatten | select repo dest | sort-by repo dest)
 
   # Must change to the scopped directory before doing the following work
-  let repoPath = get-tmp-path
+  let repoPath = (get-tmp-path)
   cd $repoPath; cd $repoName
 
   $repos | transpose | rename alias | get alias | each { |alias|
@@ -74,7 +74,7 @@ def 'prepare-repo' [
     exit --now
   }
 
-  let repoPath = get-tmp-path
+  let repoPath = (get-tmp-path)
   let sampleRepo = ($repos | values | first)
   let repoName = ($'prune-($env.PWD | path basename)' | str trim)
   # 待清理仓库完整路径

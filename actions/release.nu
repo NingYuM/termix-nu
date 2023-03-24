@@ -19,7 +19,7 @@ export def main [
   # FIXME
   let _UPGRADE_TAG = '$-FORCE-UPGRADE-$'
   cd $env.TERMIX_DIR
-  let releaseVer = get-conf version
+  let releaseVer = (get-conf version)
   let greatestVer = (git tag -l --sort=-v:refname | lines | select 0)
 
   if (has-ref $releaseVer) {
@@ -30,7 +30,7 @@ export def main [
   	print $'The release version should be greater than ($greatestVer), however, current release ver: ($releaseVer)(char nl)'
   	exit --now
   }
-  let statusCheck = git status --porcelain
+  let statusCheck = (git status --porcelain)
   if ($statusCheck | is-empty) == false {
   	print $'You have uncommit changes, please commit them and try `release` again!(char nl)'
   	exit --now
@@ -43,5 +43,6 @@ export def main [
   git fetch origin --prune '+refs/tags/*:refs/tags/*'
   let commitMsg = $'A new release for version: ($releaseVer) created by Release command of termix-nu'
   let tagMsg = if $force_upgrade { $'($commitMsg). ($_UPGRADE_TAG)' } else { $commitMsg }
-  git tag $releaseVer -am $tagMsg; git push origin --tags
+  git tag $releaseVer -am $tagMsg
+  git push origin --tags
 }

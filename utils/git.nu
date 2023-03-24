@@ -48,8 +48,8 @@ export def 'append-desc' [
 ] {
 
   let descFile = 'd.toml'
-  let localIExists = has-ref i
-  let remoteIExists = has-ref origin/i
+  let localIExists = (has-ref i)
+  let remoteIExists = (has-ref origin/i)
   if not ($localIExists or $remoteIExists) {
     $records | sort-by last-commit
   } else {

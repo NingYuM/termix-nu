@@ -17,7 +17,7 @@ export def main [
   let dest = ($dirs | str trim | split row ' '| compact | each { |it| [$parent $it] | path join })
   let children = (ls $parent | where type == dir | get name)
   let destDirs = (if ($dirs | is-empty) { $children } else { $dest })
-  let cmdToExec = compose-command $cmd
+  let cmdToExec = (compose-command $cmd)
   $destDirs | where ($it | path exists) | each { |it|
     cd $it
     print $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi reset) in dir ($it):(char nl)'

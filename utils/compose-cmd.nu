@@ -10,7 +10,7 @@ export def 'compose-command' [
   let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
   let actionConf = (open $_TERMIX_CONF | to json)
   # 先从环境变量里面查找用于执行命令的 shell 及其相关配置
-  let selectedShellOfEnv = get-env SHELL_TO_RUN_CMD 'sh'
+  let selectedShellOfEnv = (get-env SHELL_TO_RUN_CMD 'sh')
   let shellOption = ($actionConf | query json $'shellToRunCmd.($selectedShellOfEnv)')
   # '------------------ Before ------------------'; char nl
   # 'Selected shell from .env: '; echo $selectedShellOfEnv; char nl

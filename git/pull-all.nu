@@ -13,7 +13,7 @@ export def 'git pull-all' [
   cd $repoDir
   let currentBranch = (git branch --show-current | str trim)
   # Save changes before switch to other branches
-  let statusCheck = git status --porcelain
+  let statusCheck = (git status --porcelain)
   if ($statusCheck | is-empty) == false {
     git stash save 'Stash before running pull-all action'
   }
