@@ -29,7 +29,7 @@ export def 'git pull-all' [
     let pattern = $'($alias)/($br):'
     if ($behind | find -r $pattern | length) > 0 or ($ahead | find -r $pattern | length) > 0 {
       git checkout $br
-      let stat = gstat
+      let stat = (gstat)
       # Just pull if local repo is behind remote
       if ($stat.behind > 0 and $stat.ahead == 0) {
         print $'(ansi p)Start pulling ($br) branch...(ansi reset)'
