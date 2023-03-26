@@ -38,13 +38,13 @@ def-env 'git-proxy' [
     # let-env http_proxy = 'http://127.0.0.1:10809'; let-env https_proxy = 'http://127.0.0.1:10809'; let-env ALL_RROXY = 'http://127.0.0.1:10809'
     let proxy = ($proxy).0
     if $isWindows {
-      let-env ALL_RROXY = $'http://($proxy)'
-      let-env http_proxy = $'http://($proxy)'
-      let-env https_proxy = $'http://($proxy)'
       git config --global http.proxy $'http://($proxy)'
       git config --global https.proxy $'http://($proxy)'
       git config --global socks.proxy $'http://($proxy)'
       print $'(ansi g)Proxy turned on at: ($proxy)(ansi reset)(char nl)'
+      print $'If you want to set proxy for the terminal, please run: (char nl)'
+      print $"let-env ALL_RROXY = $'http://($proxy)';let-env http_proxy = $'http://($proxy)';let-env https_proxy = $'http://($proxy)'(char nl)"
+      echo $"let-env ALL_RROXY = $'http://($proxy)';let-env http_proxy = $'http://($proxy)';let-env https_proxy = $'http://($proxy)'" | clip
       exit --now
     }
     git config --global http.proxy $'socks5://($proxy)'
@@ -64,7 +64,12 @@ def-env 'git-proxy' [
     print $'(ansi p)Proxy turned off(ansi reset)(char nl)'
     print $'(ansi p)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
     print $'If you want to unset proxy for the terminal, please run: (char nl)'
-    print $'unset http_proxy https_proxy ALL_RROXY(char nl)(char nl)'
+    if $isWindows {
+      print $'hide-env http_proxy https_proxy ALL_RROXY(char nl)(char nl)'
+      echo 'hide-env http_proxy https_proxy ALL_RROXY' | clip
+    } else {
+      print $'unset http_proxy https_proxy ALL_RROXY(char nl)(char nl)'
+    }
   }
 }
 
