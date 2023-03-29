@@ -114,7 +114,7 @@ check-branch: _setup
 pull-all: _setup
   @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
     overlay use {{ join(_termix, 'git', 'pull-all.nu') }}; \
-    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git pull-all {{JUST_INVOKE_DIR}} "origin"
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git pull-all {{JUST_INVOKE_DIR}} 'origin'
 
 # Rename remote branch, and delete old branch after rename
 rename-branch from=('') to=('') remote=('origin'): _setup
@@ -132,7 +132,7 @@ show-env: _setup
 ls-node minVer=('12') isLts=('false'): _setup
   @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
     overlay use {{ join(_termix, 'actions', 'ls-node.nu') }}; \
-    ls-node-remote {{minVer}} {{isLts}}
+    ls-node-remote '{{minVer}}' {{isLts}}
 
 # 开启或者关闭 Brew 国内镜像加速
 brew-speed-up status=('on'): _setup
@@ -180,7 +180,7 @@ tag-redev tag=('') branch=('master') group=('b2c,b2b,mbr,pik') delete=('false'):
   @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
     overlay use {{ join(_termix, 'actions', 'tag-redev.nu') }}; \
     git-check --check-repo=0 {{JUST_INVOKE_DIR}}; \
-    git tag-redev "{{tag}}" {{branch}} {{group}} --delete-tag={{delete}}
+    git tag-redev '{{tag}}' {{branch}} {{group}} --delete-tag={{delete}}
 
 # Show Branches and Tags of redevelop related repos, 可以指定仓库分组多个分组之间用`,`隔开
 ls-redev-refs group=('b2c,b2b,mbr,pik') showBranch=('false'): _setup
@@ -218,13 +218,13 @@ git-batch-exec cmd +branches=(''): _setup
   @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
     overlay use {{ join(_termix, 'utils', 'compose-cmd.nu') }}; \
     overlay use {{ join(_termix, 'git', 'git-batch-exec.nu') }}; \
-    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git batch-exec "{{cmd}}" "{{branches}}"
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git batch-exec '{{cmd}}' '{{branches}}'
 
 # 将指定Git分支硬回滚N个commit
 git-batch-reset n +branches=(''): _setup
   @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
     overlay use {{ join(_termix, 'git', 'git-batch-reset.nu') }}; \
-    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git batch-reset {{n}} "{{branches}}"
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git batch-reset {{n}} '{{branches}}'
 
 # 拼接复用 utils 里面定义的公用方法: https://github.com/nushell/nushell/issues/2990
 # 在指定目录(支持'*'通配符)或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
