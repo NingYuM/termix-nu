@@ -16,7 +16,8 @@ def-env 'git-proxy' [
   # Get something like: `127.0.0.1:10809`
   # let proxyAddr = (netstat -ano | findstr $xrayPID | findstr LISTENING | detect columns -n | sort-by column1 -r | get 0 | get column1)
   let isWindows = (sys).host.name == 'Windows'
-  let proxies = if $isWindows { (tasklist | findstr xray) } else { (lsof -i -n -P | grep AliMgrSoc | grep LISTEN) }
+  # On macOS, we typically use ClashX or AliMgrSoc to proxy the traffic
+  let proxies = if $isWindows { (tasklist | findstr xray) } else { (lsof -i -n -P | grep -E 'ClashX|AliMgrSoc' | grep LISTEN) }
 
   if ($status == 'on') {
 
@@ -30,21 +31,26 @@ def-env 'git-proxy' [
       }
     })
     if ($proxy | length) == 0 {
-      print $'(ansi r)(char nl)Can not find Ali or v2ray proxy, please start it and try again, bype...(ansi reset)(char nl)(char nl)'
+      print $'(ansi r)(char nl)Can not find Ali, ClashX or v2ray proxy, please start it and try again, bype...(ansi reset)(char nl)(char nl)'
       exit --now
     }
 
     # set http_proxy=http://127.0.0.1:10809; set http_proxys=http://127.0.0.1:10809; set ALL_RROXY=http://127.0.0.1:10809
     # let-env http_proxy = 'http://127.0.0.1:10809'; let-env https_proxy = 'http://127.0.0.1:10809'; let-env ALL_RROXY = 'http://127.0.0.1:10809'
+    # The first proxy in grep result should be http proxy
     let proxy = ($proxy).0
-    if $isWindows {
+    let isClashX = ($proxies | lines | first) =~ 'ClashX'
+    if $isWindows or $isClashX {
       git config --global http.proxy $'http://($proxy)'
       git config --global https.proxy $'http://($proxy)'
       git config --global socks.proxy $'http://($proxy)'
       print $'(ansi g)Proxy turned on at: ($proxy)(ansi reset)(char nl)'
-      print $'If you want to set proxy for the terminal, please run: (char nl)'
-      print $"let-env ALL_RROXY = $'http://($proxy)';let-env http_proxy = $'http://($proxy)';let-env https_proxy = $'http://($proxy)'(char nl)"
-      echo $"let-env ALL_RROXY = $'http://($proxy)';let-env http_proxy = $'http://($proxy)';let-env https_proxy = $'http://($proxy)'" | clip
+      print $'If you want to set proxy for the terminal, please run the following line in NuShell:'
+      print $"(ansi g)load-env {http_proxy: 'http://($proxy)', https_proxy: 'http://($proxy)', ALL_RROXY: 'http://($proxy)'}(ansi reset)(char nl)"
+      if not $isWindows {
+        print $'If you want to set proxy for the terminal, please run the following line in bash, zsh, sh, etc.:'
+        print $"(ansi g)export http_proxy=http://($proxy) https_proxy=http://($proxy) ALL_RROXY=http://($proxy)(ansi reset)(char nl)"
+      }
       exit --now
     }
     git config --global http.proxy $'socks5://($proxy)'
@@ -68,7 +74,8 @@ def-env 'git-proxy' [
       print $'hide-env http_proxy https_proxy ALL_RROXY(char nl)(char nl)'
       echo 'hide-env http_proxy https_proxy ALL_RROXY' | clip
     } else {
-      print $'unset http_proxy https_proxy ALL_RROXY(char nl)(char nl)'
+      print $'For NuShell: (ansi g)hide-env http_proxy https_proxy ALL_RROXY(ansi reset)(char nl)'
+      print $'For bash, zsh, sh, etc.: (ansi g)unset http_proxy https_proxy ALL_RROXY(ansi reset)(char nl)'
     }
   }
 }
