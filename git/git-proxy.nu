@@ -17,7 +17,8 @@ def-env 'git-proxy' [
   # let proxyAddr = (netstat -ano | findstr $xrayPID | findstr LISTENING | detect columns -n | sort-by column1 -r | get 0 | get column1)
   let isWindows = (sys).host.name == 'Windows'
   # On macOS, we typically use ClashX or AliMgrSoc to proxy the traffic
-  let proxies = if $isWindows { (tasklist | findstr xray) } else { (lsof -i -n -P | grep -E 'ClashX|AliMgrSoc' | grep LISTEN) }
+  # On windows the proxy could be Clash for Windows or v2ray
+  let proxies = if $isWindows { (tasklist | findstr 'xray clash') } else { (lsof -i -n -P | grep -E 'ClashX|AliMgrSoc' | grep LISTEN) }
 
   if ($status == 'on') {
 
