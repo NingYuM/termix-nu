@@ -134,6 +134,16 @@ ls-node minVer=('12') isLts=('false'): _setup
     overlay use {{ join(_termix, 'actions', 'ls-node.nu') }}; \
     ls-node-remote '{{minVer}}' {{isLts}}
 
+# 按时间顺序列出所有的 git tags
+ls-tags: _setup
+  @let isWindows = (sys).host.name == 'Windows'; \
+    let sort = if $isWindows { '--sort=-v:refname' } else { '--sort=-creatordate' }; print (char nl); \
+    git tag --format='%(refname:strip=2)%09%(creatordate:iso)' $sort \
+      | detect columns -n \
+      | rename tag date time \
+      | upsert time {|e| $'($e.date) ($e.time)' } \
+      | select tag time
+
 # 开启或者关闭 Brew 国内镜像加速
 brew-speed-up status=('on'): _setup
   @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
