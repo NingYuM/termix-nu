@@ -16,10 +16,10 @@ export def main [] {
   let yarnVer = (get-ver yarn 'yarn --version')
   let herdVer = (get-ver herd 'herd --version')
   let termixVer = (get-ver termix 'termix --version')
-  let nodeVer = (get-ver node '(node --version | str substring '1,')')
-  let fnmVer = (get-ver fnm "fnm --version | str trim | str substring '4,'")
-  let justVer = (get-ver just "just --version | str trim | str substring '5,'")
-  let gitVer = (get-ver git "git --version | str trim | str substring '12,'")
+  let nodeVer = (get-ver node '(node --version | str substring 1..)')
+  let fnmVer = (get-ver fnm "fnm --version | str trim | str substring 4..")
+  let justVer = (get-ver just "just --version | str trim | str substring 5..")
+  let gitVer = (get-ver git "git --version | str trim | str substring 12..")
   let time = (date now | date format '%Y/%m/%d %H:%M:%S')
   let gitProxy = if (git config --global --list | grep proxy | is-empty) { 'Off' } else { 'On' }
 

@@ -14,7 +14,7 @@ export def 'git-branch' [
   let basic = (
     git branch
       | lines
-      | str substring '2,'
+      | str substring 2..
       | wrap name
       | upsert remote { |it| if (has-ref origin/($it.name)) { '   √' } else { '' } }
       | upsert author { |it| git show $it.name -s --format='%an' | str trim }

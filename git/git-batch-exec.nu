@@ -25,7 +25,7 @@ export def 'git batch-exec' [
   # 如果有远程分支不存在会出错
   # let available = (git for-each-ref --format='%(refname:short)' refs/heads | lines)
   # Fix `^^^^^ requires string input issue at 'lines'`
-  let available = (git branch | into string | lines | str substring '2,')
+  let available = (git branch | into string | lines | str substring 2..)
   let candidates = if ($branches | is-empty) { $available } else { $dest }
 
   print $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi reset) on branches: (char nl)'

@@ -31,7 +31,7 @@ export def 'ls-node-remote' [
         | first
         | split row '.'
         | first
-        | str substring '1,'
+        | str substring 1..
         | into int
     )} | upsert isLTS { |node| ($node.Version | str contains '(') }
   )

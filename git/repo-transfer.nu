@@ -17,7 +17,7 @@ export def 'git repo-transfer' [
   print $'to dest:      (ansi g)---> ($dest)(ansi reset)(char nl)'
   hr-line
   let nameIndexStart = ($source | str index-of -e '/')
-  let repoName = $'($source | str substring $'($nameIndexStart + 1),')-sync'
+  let repoName = $'($source | str substring ($nameIndexStart + 1)..)-sync'
   let exists = ([$tmpPath $repoName] | path join | path exists)
 
   if $exists {

@@ -27,7 +27,7 @@ export def 'git ls-redev-refs' [
   $filteredRepos | each { |it|
     let url = (echo $it | get url)
     let repoNameIdx = ($url | str index-of -e '/') + 1
-    let repoName = ($url | str substring $'($repoNameIdx),')
+    let repoName = ($url | str substring $repoNameIdx..)
     # 单一二开仓库完整路径
     let destRepoPath = ([$repoPath $repoName] | path join)
     # 仓库存在则更新，不存在则 clone

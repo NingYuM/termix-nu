@@ -49,7 +49,7 @@ export def 'git tag-redev' [
   $filteredRepos | each { |repo|
 
     let repoNameIdx = ($repo.url | str index-of -e '/') + 1
-    let repoName = ($repo.url | str substring $'($repoNameIdx),')
+    let repoName = ($repo.url | str substring $repoNameIdx..)
     # 单一二开仓库完整路径
     let destRepoPath = ([$repoPath $repoName] | path join)
     # 仓库存在则更新，不存在则 clone

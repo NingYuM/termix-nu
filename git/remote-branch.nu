@@ -17,14 +17,14 @@ export def 'git-remote-branch' [
   cd $repo
   let remoteUrl = (git remote get-url $alias)
   let nameIdx = ($remoteUrl | str index-of -e '/')
-  let repoName = ($remoteUrl | str substring $'($nameIdx + 1),' | str trim)
+  let repoName = ($remoteUrl | str substring ($nameIdx + 1).. | str trim)
   git fetch $alias -p
   print $'(char nl)Branches of (ansi gb)($repoName)(ansi reset) for remote ($alias)(char nl)'
 
   let basic = (
     git ls-remote --heads --refs $alias
     | lines
-    | str substring '52,'
+    | str substring 52..
     | wrap name
     | upsert local { |it|  if (has-ref $it.name) { '   √' }}
     | upsert author { |it| git show $"remotes/($alias)/($it.name)" -s --format='%an' | str trim }
