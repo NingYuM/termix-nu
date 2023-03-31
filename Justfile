@@ -164,6 +164,7 @@ emp showAll=('false') showPrev=('false'): _setup
     $codes | each { |code| working-hours $code --show-all={{showAll}} --show-prev={{showPrev}} } | flatten | uniq
 
 # 给标品源码仓库打 Release Tag
+[private]
 gaia-release version=('') repos=('mall,mobile,picker') delete=('false'): _setup
   @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
     overlay use {{ join(_termix, 'actions', 'gaia-release.nu') }}; \
@@ -177,6 +178,7 @@ repo-transfer from=('') to=(''): _setup
 
 # t pull-redev true
 # 更新远程二开仓库代码到本地, 可以指定分支和仓库分组多个分组之间用`,`隔开
+[private]
 pull-redev branch=('master') group=('b2c,b2b,mbr,pik') diff=('false'): _setup
   @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
     overlay use {{ join(_termix, 'actions', 'pull-redev.nu') }}; \
@@ -186,6 +188,7 @@ pull-redev branch=('master') group=('b2c,b2b,mbr,pik') diff=('false'): _setup
 # Use tag=('v2.0.2') to set default $1
 # delete: 是否删除当前日期对应的二开标签，且不重新打标, 只有为true的时候才删除，其他情况会重新打标
 # 给远程二开仓库批量打 Tag, 可以指定分支和仓库分组多个分组之间用`,`隔开
+[private]
 tag-redev tag=('') branch=('master') group=('b2c,b2b,mbr,pik') delete=('false'): _setup
   @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
     overlay use {{ join(_termix, 'actions', 'tag-redev.nu') }}; \
@@ -193,6 +196,7 @@ tag-redev tag=('') branch=('master') group=('b2c,b2b,mbr,pik') delete=('false'):
     git tag-redev '{{tag}}' {{branch}} {{group}} --delete-tag={{delete}}
 
 # Show Branches and Tags of redevelop related repos, 可以指定仓库分组多个分组之间用`,`隔开
+[private]
 ls-redev-refs group=('b2c,b2b,mbr,pik') showBranch=('false'): _setup
   @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
     overlay use {{ join(_termix, 'utils', 'git.nu') }}; \
@@ -217,6 +221,7 @@ trigger-sync branch=(`git branch --show-current`): _setup
     git trigger-sync {{branch}}
 
 # Clean possibly unused branches of synced dest repos
+[private]
 prune-synced-branches dryRun=('true') user=('git') ak=('-'): _setup
   @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
     overlay use {{ join(_termix, 'actions', 'prune-synced-branches.nu') }}; \
@@ -231,6 +236,7 @@ git-batch-exec cmd +branches=(''): _setup
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git batch-exec '{{cmd}}' '{{branches}}'
 
 # 将指定Git分支硬回滚N个commit
+[private]
 git-batch-reset n +branches=(''): _setup
   @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
     overlay use {{ join(_termix, 'git', 'git-batch-reset.nu') }}; \
