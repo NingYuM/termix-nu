@@ -599,7 +599,7 @@ let-env config = {
               | each { |it| $it.command }
               | uniq
               | reverse
-              | str collect (char -i 0)
+              | str join (char -i 0)
               | fzf --read0 --layout=reverse --height=40% -q (commandline)
               | decode utf-8
               | str trim
@@ -710,4 +710,4 @@ let-env config = {
   ]
 }
 
-let-env PATH = ($env.PATH | each {|r| $r | split row (char esep)} | flatten | uniq | str collect (char esep))
+let-env PATH = ($env.PATH | each {|r| $r | split row (char esep)} | flatten | uniq | str join (char esep))
