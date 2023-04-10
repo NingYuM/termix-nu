@@ -1,6 +1,29 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.17.0] - 2023-04-10
+
+### Bug Fixes
+
+- Git-proxy for windows
+
+### Features
+
+- Add proxy support for v2ray
+- Update `git-proxy` command add ClashX support, works on mac
+- Add `ls-tags` command
+- Hide some rarely used commands most of them are gaia or gaia redev related
+
+### Miscellaneous Tasks
+
+- Adapt to nu v0.78
+- Adapted to nu v0.78 fix `expected operator` error
+- Bump version v1.17.0
+- Fix `git-proxy` for clash4win
+- Adapted to nushell v0.78
+- Fix config for nu v0.78
+- Update min nushell version to v0.78
+
 ## [1.16.0] - 2023-03-21
 
 ### Bug Fixes
