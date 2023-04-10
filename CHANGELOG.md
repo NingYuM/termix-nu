@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Git-proxy for windows
+- Fix `git-proxy` for windows
 
 ### Features
 
@@ -16,13 +16,8 @@ All notable changes to this project will be documented in this file.
 
 ### Miscellaneous Tasks
 
-- Adapt to nu v0.78
+- Adapted to Nushell v0.78, set min required Nushell version to v0.78
 - Adapted to nu v0.78 fix `expected operator` error
-- Bump version v1.17.0
-- Fix `git-proxy` for clash4win
-- Adapted to nushell v0.78
-- Fix config for nu v0.78
-- Update min nushell version to v0.78
 
 ## [1.16.0] - 2023-03-21
 
