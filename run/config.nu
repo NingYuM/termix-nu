@@ -86,6 +86,17 @@ def cargo-ile [] {
 
 def cargo-ta  [] { cargo test --all --all-features }
 
+def nu-backup-main [] { cp -r ~/.cargo/bin/nu* ~/Applications/nu-main/ }
+def nu-restore-main [] { cp -r ~/Applications/nu-main/* ~/.cargo/bin/; print $'Please restart Nu session...' }
+def nu-use-latest [] { cp -r ~/Applications/nu-latest/* ~/.cargo/bin/; print $'Please restart Nu session...' }
+def nu-fetch-latest [] {
+  cd ~/Applications/nu-latest/
+  curl -s https://api.github.com/repos/nushell/nushell/releases/latest | grep browser_download_url | cut -d '"' -f 4 | grep x86_64-apple-darwin  | aria2c -i -
+  mkdir nu-latest; tar xvf nu-*.tar.gz --directory=nu-latest
+  cp -r nu-latest/**/* .; rm -rf nu-*
+  $'(char nl)Update to Nu: (ansi g)(./nu --version)(ansi reset)'
+}
+
 def cargo-clippy [] {
   cargo clippy --all --all-features -- -D warnings -D clippy::unwrap_used -A clippy::needless_collect
 }
