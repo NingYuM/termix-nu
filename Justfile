@@ -134,10 +134,9 @@ ls-node minVer=('12') isLts=('false'): _setup
     overlay use {{ join(_termix, 'actions', 'ls-node.nu') }}; \
     ls-node-remote '{{minVer}}' {{isLts}}
 
-# 按时间顺序列出所有的 git tags
-ls-tags: _setup
-  @let isWindows = (sys).host.name == 'Windows'; \
-    let sort = if $isWindows { '--sort=-v:refname' } else { '--sort=-creatordate' }; print (char nl); \
+# 按时间顺序列出所有的 git tags, 默认按 `time` 排序，可选按 `tag` 排序：ls-tags tag
+ls-tags by=('time'): _setup
+  @let sort = if ('{{by}}' != 'time') { '--sort=-v:refname' } else { '--sort=-creatordate' }; print (char nl); \
     git tag --format='%(refname:strip=2)%09%(creatordate:iso)' $sort \
       | detect columns -n \
       | rename tag date time \
