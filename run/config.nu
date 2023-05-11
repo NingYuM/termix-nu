@@ -126,6 +126,13 @@ def bump-ver [
   sd -f e -s $fromVer $toVer (fd --type file | lines)
 }
 
+def gh-pr [repo: string = 'nushell/nushell'] {
+  gh -R $repo pr list --json url,number,author,title
+    | from json
+    | each { |i| $"- [($i.number)]\(($i.url)\) ($i.title) \(@($i.author.login)\)" }
+    | reverse
+}
+
 # load environment variables from the .envrc file.
 def-env load-direnv [] {
   load-env (

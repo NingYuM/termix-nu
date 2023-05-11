@@ -146,4 +146,9 @@ export def 'hr-line' [
   if $blank_line { char nl }
 }
 
-export def ! [b: expr] { if ($b) { false } else { true } }
+# parallel { print "Oh" } { print "Ah" } { print "Eeh" }
+export def parallel [...closures] {
+  $closures | par-each {
+    |c| do $c
+  }
+}
