@@ -1,3 +1,6 @@
+# Nushell Config File
+#
+# version = 0.79.1
 
 # source ~/.config/nushell/config.nu
 # Ref:
@@ -186,141 +189,171 @@ def nudown [] {
 # And here is the theme collection
 # https://github.com/nushell/nu_scripts/tree/main/themes
 let dark_theme = {
-  # color for nushell primitives
-  separator: white
-  leading_trailing_space_bg: { attr: n } # no fg, no bg, attr none effectively turns this off
-  header: green_bold
-  empty: blue
-  bool: white
-  int: white
-  filesize: white
-  duration: white
-  date: { (date now) - $in |
+    # color for nushell primitives
+    separator: white
+    leading_trailing_space_bg: { attr: n } # no fg, no bg, attr none effectively turns this off
+    header: green_bold
+    empty: blue
+    # Closures can be used to choose colors for specific values.
+    # The value (in this case, a bool) is piped into the closure.
+    bool: { if $in { 'light_cyan' } else { 'light_gray' } }
+    int: white
+    filesize: {|e|
+      if $e == 0b {
+        'white'
+      } else if $e < 1mb {
+        'cyan'
+      } else { 'blue' }
+    }
+    duration: white
+    date: { (date now) - $in |
       if $in < 1hr {
-        'red3b'
+        'purple'
       } else if $in < 6hr {
-        'orange3'
+        'red'
       } else if $in < 1day {
-        'yellow3b'
+        'yellow'
       } else if $in < 3day {
-        'chartreuse2b'
+        'green'
       } else if $in < 1wk {
-        'green3b'
+        'light_green'
       } else if $in < 6wk {
-        'darkturquoise'
+        'cyan'
       } else if $in < 52wk {
-        'deepskyblue3b'
+        'blue'
       } else { 'dark_gray' }
     }
-  range: white
-  float: white
-  string: white
-  nothing: white
-  binary: white
-  cellpath: white
-  row_index: green_bold
-  record: white
-  list: white
-  block: white
-  hints: dark_gray
+    range: white
+    float: white
+    string: white
+    nothing: white
+    binary: white
+    cellpath: white
+    row_index: green_bold
+    record: white
+    list: white
+    block: white
+    hints: dark_gray
 
-  # shapes are used to change the cli syntax highlighting
-  shape_garbage: { fg: "#FFFFFF" bg: "#FF0000" attr: b}
-  shape_binary: purple_bold
-  shape_bool: light_cyan
-  shape_int: purple_bold
-  shape_float: purple_bold
-  shape_range: yellow_bold
-  shape_internalcall: cyan_bold
-  shape_external: cyan
-  shape_externalarg: green_bold
-  shape_literal: blue
-  shape_operator: yellow
-  shape_signature: green_bold
-  shape_string: green
-  shape_string_interpolation: cyan_bold
-  shape_datetime: cyan_bold
-  shape_list: cyan_bold
-  shape_table: blue_bold
-  shape_record: cyan_bold
-  shape_block: blue_bold
-  shape_filepath: cyan
-  shape_directory: cyan
-  shape_globpattern: cyan_bold
-  shape_variable: purple
-  shape_flag: blue_bold
-  shape_custom: green
-  shape_nothing: light_cyan
-  shape_matching_brackets: { attr: u }
+    shape_and: purple_bold
+    shape_binary: purple_bold
+    shape_block: blue_bold
+    shape_bool: light_cyan
+    shape_closure: green_bold
+    shape_custom: green
+    shape_datetime: cyan_bold
+    shape_directory: cyan
+    shape_external: cyan
+    shape_externalarg: green_bold
+    shape_filepath: cyan
+    shape_flag: blue_bold
+    shape_float: purple_bold
+    # shapes are used to change the cli syntax highlighting
+    shape_garbage: { fg: white bg: red attr: b}
+    shape_globpattern: cyan_bold
+    shape_int: purple_bold
+    shape_internalcall: cyan_bold
+    shape_list: cyan_bold
+    shape_literal: blue
+    shape_match_pattern: green
+    shape_matching_brackets: { attr: u }
+    shape_nothing: light_cyan
+    shape_operator: yellow
+    shape_or: purple_bold
+    shape_pipe: purple_bold
+    shape_range: yellow_bold
+    shape_record: cyan_bold
+    shape_redirection: purple_bold
+    shape_signature: green_bold
+    shape_string: green
+    shape_string_interpolation: cyan_bold
+    shape_table: blue_bold
+    shape_variable: purple
+    shape_vardecl: purple
 }
 
 let light_theme = {
-  # color for nushell primitives
-  separator: dark_gray
-  leading_trailing_space_bg: { attr: n } # no fg, no bg, attr none effectively turns this off
-  header: green_bold
-  empty: blue
-  bool: dark_gray
-  int: dark_gray
-  filesize: dark_gray
-  duration: dark_gray
-  date: { (date now) - $in |
-    if $in < 1hr {
-      'red3b'
-    } else if $in < 6hr {
-      'orange3'
-    } else if $in < 1day {
-      'yellow3b'
-    } else if $in < 3day {
-      'chartreuse2b'
-    } else if $in < 1wk {
-      'green3b'
-    } else if $in < 6wk {
-      'darkturquoise'
-    } else if $in < 52wk {
-      'deepskyblue3b'
-    } else { 'dark_gray' }
-  }
-  range: dark_gray
-  float: dark_gray
-  string: dark_gray
-  nothing: dark_gray
-  binary: dark_gray
-  cellpath: dark_gray
-  row_index: green_bold
-  record: white
-  list: white
-  block: white
-  hints: dark_gray
+    # color for nushell primitives
+    separator: dark_gray
+    leading_trailing_space_bg: { attr: n } # no fg, no bg, attr none effectively turns this off
+    header: green_bold
+    empty: blue
+    # Closures can be used to choose colors for specific values.
+    # The value (in this case, a bool) is piped into the closure.
+    bool: { if $in { 'dark_cyan' } else { 'dark_gray' } }
+    int: dark_gray
+    filesize: {|e|
+      if $e == 0b {
+        'dark_gray'
+      } else if $e < 1mb {
+        'cyan_bold'
+      } else { 'blue_bold' }
+    }
+    duration: dark_gray
+    date: { (date now) - $in |
+      if $in < 1hr {
+        'purple'
+      } else if $in < 6hr {
+        'red'
+      } else if $in < 1day {
+        'yellow'
+      } else if $in < 3day {
+        'green'
+      } else if $in < 1wk {
+        'light_green'
+      } else if $in < 6wk {
+        'cyan'
+      } else if $in < 52wk {
+        'blue'
+      } else { 'dark_gray' }
+    }
+    range: dark_gray
+    float: dark_gray
+    string: dark_gray
+    nothing: dark_gray
+    binary: dark_gray
+    cellpath: dark_gray
+    row_index: green_bold
+    record: white
+    list: white
+    block: white
+    hints: dark_gray
 
-  # shapes are used to change the cli syntax highlighting
-  shape_garbage: { fg: "#FFFFFF" bg: "#FF0000" attr: b}
-  shape_binary: purple_bold
-  shape_bool: light_cyan
-  shape_int: purple_bold
-  shape_float: purple_bold
-  shape_range: yellow_bold
-  shape_internalcall: cyan_bold
-  shape_external: cyan
-  shape_externalarg: green_bold
-  shape_literal: blue
-  shape_operator: yellow
-  shape_signature: green_bold
-  shape_string: green
-  shape_string_interpolation: cyan_bold
-  shape_datetime: cyan_bold
-  shape_list: cyan_bold
-  shape_table: blue_bold
-  shape_record: cyan_bold
-  shape_block: blue_bold
-  shape_filepath: cyan
-  shape_directory: cyan
-  shape_globpattern: cyan_bold
-  shape_variable: purple
-  shape_flag: blue_bold
-  shape_custom: green
-  shape_nothing: light_cyan
-  shape_matching_brackets: { attr: u }
+    shape_and: purple_bold
+    shape_binary: purple_bold
+    shape_block: blue_bold
+    shape_bool: light_cyan
+    shape_closure: green_bold
+    shape_custom: green
+    shape_datetime: cyan_bold
+    shape_directory: cyan
+    shape_external: cyan
+    shape_externalarg: green_bold
+    shape_filepath: cyan
+    shape_flag: blue_bold
+    shape_float: purple_bold
+    # shapes are used to change the cli syntax highlighting
+    shape_garbage: { fg: white bg: red attr: b}
+    shape_globpattern: cyan_bold
+    shape_int: purple_bold
+    shape_internalcall: cyan_bold
+    shape_list: cyan_bold
+    shape_literal: blue
+    shape_match_pattern: green
+    shape_matching_brackets: { attr: u }
+    shape_nothing: light_cyan
+    shape_operator: yellow
+    shape_or: purple_bold
+    shape_pipe: purple_bold
+    shape_range: yellow_bold
+    shape_record: cyan_bold
+    shape_redirection: purple_bold
+    shape_signature: green_bold
+    shape_string: green
+    shape_string_interpolation: cyan_bold
+    shape_table: blue_bold
+    shape_variable: purple
+    shape_vardecl: purple
 }
 
 let carapace_completer = {|spans|
@@ -329,6 +362,8 @@ let carapace_completer = {|spans|
 
 # The default config record. This is where much of your global configuration is setup.
 let-env config = {
+  # true or false to enable or disable the welcome banner at startup
+  show_banner: true
   ls: {
     use_ls_colors: true         # use the LS_COLORS environment variable to colorize output
     clickable_links: true       # enable or disable clickable links. Your terminal has to support links.
@@ -342,7 +377,7 @@ let-env config = {
   table: {
     mode: light                 # basic, compact, compact_double, light, thin, with_love, rounded, reinforced, heavy, none, other
     index_mode: always          # "always" show indexes, "never" show indexes, "auto" = show indexes when a table has "index" column
-    show_empty: true            # show 'empty list' and 'empty record' placeholders for command output
+    show_empty: false           # show 'empty list' and 'empty record' placeholders for command output
     trim: {
       methodology: wrapping             # wrapping or truncating
       truncating_suffix: "..."          # A suffix used by the 'truncating' methodology
@@ -400,7 +435,7 @@ let-env config = {
     }
 
     config: {
-      cursor_color: {bg: 'yellow' fg: 'black' }
+      cursor_color: { bg: 'yellow' fg: 'black' }
 
       # border_color: white
       # list_color: green
@@ -410,12 +445,13 @@ let-env config = {
     max_size: 10000             # Session has to be reloaded for this to take effect
     sync_on_enter: true         # Enable to share history between multiple sessions, else you have to close the session to write history to file
     file_format: "sqlite"       # "sqlite" or "plaintext"
+    history_isolation: false    # true enables history isolation, false disables it. true will allow the history to be isolated to the current session. false will allow the history to be shared across all sessions.
   }
   completions: {
-    case_sensitive: false       # set to true to enable case-sensitive completions
     quick: true                 # set this to false to prevent auto-selecting completions when only one remains
     partial: true               # set this to false to prevent partial filling of the prompt
     algorithm: "prefix"         # prefix or fuzzy
+    case_sensitive: false       # set to true to enable case-sensitive completions
     external: {
       enable: true              # set to false to prevent nushell looking into $env.PATH to find more suggestions, `false` recommended for WSL users as this look up my be very slow
       max_results: 100          # setting it lower can improve completion performance at the cost of omitting some options
@@ -427,9 +463,9 @@ let-env config = {
     format: "auto"              # b, kb, kib, mb, mib, gb, gib, tb, tib, pb, pib, eb, eib, zb, zib, auto
   }
   cursor_shape: {
-    emacs: line                 # block, underscore, line (line is the default)
-    vi_insert: block            # block, underscore, line (block is the default)
-    vi_normal: underscore       # block, underscore, line  (underscore is the default)
+    emacs: line                 # block, underscore, line, blink_block, blink_underscore, blink_line (line is the default)
+    vi_insert: block            # block, underscore, line , blink_block, blink_underscore, blink_line (block is the default)
+    vi_normal: underscore       # block, underscore, line, blink_block, blink_underscore, blink_line (underscore is the default)
   }
   color_config: $dark_theme     # if you want a light theme, replace `$dark_theme` to `$light_theme`
   use_grid_icons: true
@@ -437,9 +473,9 @@ let-env config = {
   float_precision: 2            # the precision for displaying floats in tables
   # buffer_editor: "emacs"      # command that will be used to edit the current line buffer with ctrl+o, if unset fallback to $env.EDITOR and $env.VISUAL
   use_ansi_coloring: true
+  bracketed_paste: true         # enable bracketed paste, currently useless on windows
   edit_mode: emacs              # emacs, vi
   shell_integration: true       # enables terminal markers and a workaround to arrow keys stop working issue
-  show_banner: true             # true or false to enable or disable the banner
   render_right_prompt_on_last_line: false   # true or false to enable or disable right prompt to be rendered on last line of the prompt.
 
   hooks: {
@@ -456,6 +492,9 @@ let-env config = {
     }
     display_output: {
       if (term size).columns >= 100 { table -e } else { table }
+    }
+    command_not_found: {
+      null                      # replace with source code to return an error message when a command is not found
     }
   }
   menus: [
