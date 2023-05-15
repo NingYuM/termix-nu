@@ -32,7 +32,7 @@ export def 'go' [
 export def 'show-navs' [] {
   print $'(ansi pb)(char nl)Available Nav Items:(char nl)(char nl)(ansi reset)'
   print (merge-navs | transpose | rename key url)
-  exit --now
+  exit 0
 }
 
 # Merge all nav items from termix.toml and .termixrc

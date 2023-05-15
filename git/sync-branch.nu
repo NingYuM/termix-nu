@@ -23,7 +23,7 @@ export def 'git sync-branch' [
 
   if (has-ref $'origin/($confBr)') == false {
     print $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
-    exit --now
+    exit 0
   }
   let pushConf = (git show $'origin/($confBr):.termixrc' | from toml | to json)
   let ignored = (get-env SYNC_IGNORE_ALIAS '')
@@ -34,7 +34,7 @@ export def 'git sync-branch' [
   # 获取待同步目的仓库及目的分支映射
   let dests = ($pushConf | query json $'branches.($escapedBranch)')
   # 如果没有任何同步配置直接退出
-  if ($dests == $nothing) { exit --now }
+  if ($dests == $nothing) { exit 0 }
 
   let syncDests = ($dests | upsert SYNC {||
       get repo | each { |it| if ($',($ignored),' =~ $',($it),') { '   x' } else { '   √' } }
@@ -44,7 +44,7 @@ export def 'git sync-branch' [
   if ($syncDests | length) > 0 {
     print $'(char nl)Found the following matched dests from (ansi g)`origin/($confBr):.termixrc`(ansi reset):(char nl)'
     print ($syncDests | upsert lock {|it| if ('lock' in $it) { $it.lock } else { '-' }} | move lock --before SYNC)
-  } else { exit --now }
+  } else { exit 0 }
 
   echo $syncDests | where SYNC == '   √' | each { |iter|
     let syncFrom = (get-sync-ref $localBranch $iter)

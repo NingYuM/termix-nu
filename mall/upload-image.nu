@@ -28,30 +28,30 @@ def main [
     print $'(ansi g)Description: (ansi reset)根据`业务类型`上传图片到CDN, 需要根目录下有 oss-conf.json 配置文件;'
     print $'(ansi g)Supported bizTypes: (ansi reset)b2c / b2b / scrm / sea / point'
     print $'请确保参数输入无误并重试!(char nl)'
-    exit --now
+    exit 7
   }
 
   let bizCheck = $bizType in ['b2c', 'b2b', 'scrm', 'sea', 'point']
   if (not $bizCheck) {
     print $'(ansi r)You have input the wrong biz type, Please try again!(ansi reset)(char nl)'
-    exit --now
+    exit 7
   }
 
   let OSS_CONF = './oss-conf.json'
   if ($OSS_CONF | path exists) == false {
     print $"Oss config file (ansi r)'oss-conf.json' not found!(ansi reset) Please add it and try again!"
-    exit --now
+    exit 3
   }
   # Check mall-$bizType dir exists
   if ($'mall-($bizType)' | path exists) == false {
-    print $'[ERR] This directory: (ansi r)mall-($bizType) does not exist!(ansi reset) Bye~~'; exit --now
+    print $'[ERR] This directory: (ansi r)mall-($bizType) does not exist!(ansi reset) Bye~~'; exit 3
   }
 
   if (is-installed 'termix') {
     print $'Current termix version: (ansi g)(termix --version | str trim)(ansi reset)'; hr-line
   } else {
     print $'(ansi r)Command `termix` could not be found, Please install it by `npm i -g @terminus/termix@latest`, and try again!(ansi reset)'
-    exit --now
+    exit 2
   }
 
   print $'Running upload images for (ansi p)($bizType)(ansi reset)...'

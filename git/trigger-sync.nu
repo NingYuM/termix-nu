@@ -19,7 +19,7 @@ export def 'git trigger-sync' [
   # Remote branch does not exit
   if (has-ref origin/($selected)) == false {
     git push origin $selected -u
-    exit --now
+    exit 0
   }
   let diff = (
     git rev-list --left-right $'($selected)...origin/($selected)' --count
@@ -31,7 +31,7 @@ export def 'git trigger-sync' [
   # 如果本地分支超前于远程分支直接push就可以了，会自动触发批量同步
   if ($diff.remote.0 == 0 and $diff.local.0 > 0) {
     git push origin $selected
-    exit --now
+    exit 0
   }
 
   # Decide which branch to get `.termixrc` conf from ?
@@ -40,7 +40,7 @@ export def 'git trigger-sync' [
 
   if (has-ref origin/($confBr)) == false {
     print $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
-    exit --now
+    exit 0
   }
   let pushConf = (git show $'origin/($confBr):.termixrc' | from toml | to json)
   let ignored = (get-env SYNC_IGNORE_ALIAS '')
@@ -49,7 +49,7 @@ export def 'git trigger-sync' [
   # 获取待同步目的仓库及目的分支映射
   let dests = ($pushConf | query json $'branches.($escapedBranch)')
   # 如果没有任何同步配置直接退出
-  if ($dests == $nothing) { exit --now }
+  if ($dests == $nothing) { exit 0 }
 
   let syncDests = ($dests | upsert SYNC {||
       get repo | each { |it| if ($',($ignored),' =~ $',($it),') { '   x' } else { '   √' } }
@@ -58,7 +58,7 @@ export def 'git trigger-sync' [
   if (($syncDests | length) > 0) {
     print $'(char nl)Found the following matched dests from (ansi g)`origin/($confBr):.termixrc`(ansi reset):(char nl)'
     print ($syncDests | upsert lock {|it| if ('lock' in $it) { $it.lock } else { '-' }} | move lock --before SYNC)
-  } else { exit --now }
+  } else { exit 0 }
 
   $syncDests | where SYNC == '   √' | each { |iter|
     let syncFrom = (get-sync-ref $selected $iter)

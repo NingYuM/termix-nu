@@ -33,25 +33,25 @@ def main [
     print $'(ansi g)Description: (ansi reset)根据`业务类型`从国际化文案管理平台下载最新的中英文文案到本地'
     print $'(ansi g)Supported bizTypes: (ansi reset)b2c / b2b / scrm / sea / point'
     print $'请确保参数输入无误并重试!(char nl)'
-    exit --now
+    exit 7
   }
 
   let bizCheck = $bizType in ['b2c', 'b2b', 'scrm', 'sea', 'point']
   if $bizCheck == false {
     print $'(ansi r)You have input the wrong biz type, Please try again!(ansi reset)(char nl)'
-    exit --now
+    exit 7
   }
 
   # Check mall-$bizType dir exists
   if ($'mall-($bizType)' | path exists) == false {
-    print $'[ERR] This directory: (ansi r)mall-($bizType) does not exist!(ansi reset) Bye~~'; exit --now
+    print $'[ERR] This directory: (ansi r)mall-($bizType) does not exist!(ansi reset) Bye~~'; exit 3
   }
 
   if (is-installed 'termix') {
     print $'Current termix version: (ansi g)(termix --version | str trim)(ansi reset)'; hr-line
   } else {
     print $'(ansi r)Command `termix` could not be found, Please install it by `npm i -g @terminus/termix@latest`, and try again!(ansi reset)'
-    exit --now
+    exit 2
   }
 
   let ZH_DIR = 'client/locale/zh/messages.json'
@@ -61,7 +61,7 @@ def main [
 
   if $bizType not-in $I18 {
     print $'Locale ID for biz type: ($bizType) has not been configured, please try again...'
-    exit --now
+    exit 3
   }
 
   print $'Running get locale for (ansi p)($bizType)(ansi reset)...'

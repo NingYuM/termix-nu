@@ -22,7 +22,7 @@ export def main [
 
   if not (has-ref $'origin/($confBr)') {
     print $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
-    exit --now
+    exit 3
   }
   let pushConf = (git show $'origin/($confBr):.termixrc' | from toml | to json)
   let repos = ($pushConf | query json $'repos')
@@ -71,7 +71,7 @@ def 'prepare-repo' [
 ] {
   if ($repos | is-empty) {
     print $'No dest repos to be cleaned, bye...(char nl)'
-    exit --now
+    exit 3
   }
 
   let repoPath = (get-tmp-path)

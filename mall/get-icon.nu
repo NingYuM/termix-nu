@@ -30,20 +30,20 @@ def main [
     print $'(ansi g)Description: (ansi reset)根据`业务类型`和 `Iconfont Symbol JS 地址` 生成图标配置文件, 两个入参必填'
     print $'(ansi g)Supported bizTypes: (ansi reset)b2c / b2b / scrm / sea / point'
     print $'请确保参数输入无误并重试!(char nl)'
-    exit --now
+    exit 7
   }
 
   let bizCheck = $bizType in ['b2c', 'b2b', 'scrm', 'sea', 'point']
   if (not $bizCheck) {
     print $'(ansi r)You have input the wrong biz type, Please try again!(ansi reset)(char nl)'
-    exit --now
+    exit 7
   }
 
   if (is-installed 'termix') {
     print $'Current termix version: (ansi g)(termix --version | str trim)(ansi reset)'; hr-line
   } else {
     print $'(ansi r)Command `termix` could not be found, Please install it by `npm i -g @terminus/termix@latest`, and try again!(ansi reset)'
-    exit --now
+    exit 2
   }
 
   print $'Running fetch icons from ($iconFontURL) for (ansi p)($bizType)(ansi reset)...'

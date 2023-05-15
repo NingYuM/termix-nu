@@ -9,6 +9,15 @@
 # let _TIME_FMT = '%Y-%m-%d %H:%M:%S'
 # let _UPGRADE_TAG = '$-FORCE-UPGRADE-$'
 
+# All available exit codes:
+#   0: Success
+#   1: Outdated
+#   2: Missing binary
+#   3: Missing dependency
+#   5: Condition not satisfied
+#   6: Server error
+#   7: Invalid parameter
+
 # FIXME
 export def _DATE_FMT [] { '%Y.%m.%d' }
 export def _TIME_FMT [] { '%Y-%m-%d %H:%M:%S' }
@@ -55,7 +64,7 @@ export def 'get-tmp-path' [] {
   let tmpPath = if ($tmpDir | is-empty) { ($actionConf | get termixTmpPath) } else { $tmpDir }
   if ($tmpPath | path exists) == false {
     print $'(ansi r)Path ($tmpPath) does not exist, please create it and try again...(ansi reset)(char nl)(char nl)'
-    exit --now
+    exit 3
   }
   echo $tmpPath
 }
@@ -117,14 +126,14 @@ export def 'git-check' [
   let isGitInstalled = (which git | length) > 0
   if (not $isGitInstalled) {
     print $'You should (ansi r)INSTALL git(ansi reset) first to run this command, bye...'
-    exit --now
+    exit 2
   }
   # If we don't need repo check just quit now
   if ($check_repo != 0) {
     let checkRepo = (do -i { git rev-parse --is-inside-work-tree } | complete)
     if not ($checkRepo.stdout =~ 'true') {
       print $'Current directory is (ansi r)NOT(ansi reset) a git repo, bye...(char nl)'
-      exit --now
+      exit 5
     }
   }
 }

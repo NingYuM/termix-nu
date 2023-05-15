@@ -51,7 +51,7 @@ export def 'termix-ver' [] {
     # Quit command right now if it's a force upgrade
     if ($forceUpgrade) {
       print $'(ansi r)很抱歉，为了更好地为您提供服务请先更新 termix-nu 并重试...(ansi reset)(char nl)(char nl)'
-      (query-ver $confName | ignore); exit 1 --now    # Query and update latest version again.
+      (query-ver $confName | ignore); exit 1    # Query and update latest version again.
     }
     if (not $hasForceUpgrade) {
       query-ver $confName | ignore
@@ -101,7 +101,7 @@ def 'upgrade-tip' [
       print $'        ------------> Your ($cmd) is (ansi r)OUTDATED(ansi reset) <------------ (char nl)'
       print $'(ansi lpr)    Please run `brew update && brew upgrade ($cmd)` to upgrade to the latest.    (ansi reset)(char nl)'
       print $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
-      exit --now
+      exit 1
     }
   }
 }

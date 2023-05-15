@@ -23,7 +23,7 @@ export def 'git pull-redev' [
     print $filteredRepos
   } else {
     print $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'
-    exit --now
+    exit 3
   }
   print $'Pull remote redevelop repos in directory (ansi g)($repoPath)(ansi reset):(char nl)'
 
@@ -45,7 +45,7 @@ export def 'git pull-redev' [
     cd $destRepoPath;
     if not ((has-ref $branch) or (has-ref origin/($branch))) {
       print $'Dest branch: ($branch) does not exist, bye...(char nl)'
-      exit --now
+      exit 3
     }
     git checkout $branch; git pull
     # 强制更新远程的Tag到本地

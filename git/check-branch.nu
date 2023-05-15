@@ -14,7 +14,7 @@ export def main [] {
 
   if ($localIExists or $remoteIExists) == false {
     print $'You do not have an i branch, branch description query failed, bye...(char nl)'
-    exit --now
+    exit 3
   }
   # 本地 i 分支优先级高于远程
   let repo = ($env.PWD | path basename | str trim)

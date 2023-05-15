@@ -54,7 +54,7 @@ def main [
   if 'stderr' in $action { print $action.stderr }
   if ('redev-app/origin' | path exists) == false or $action.exit_code != 0 {
     print $'(ansi r)Redevelop repo generating failed! Bye...(ansi reset)'
-    exit 1 --now
+    exit 1
   }
   # 清除生成的二开仓库里面的git信息
   rm -rf redev-app/.git

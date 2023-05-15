@@ -20,7 +20,7 @@ export def main [
   let empUserCookie = (get-env EMP_UC_COOKIE '')
   if ($code == '' or $empUserCookie == '') {
     print $'(ansi r)Not enough parameters, make sure you have set the EMP_UC_COOKIE and EMP_PROJECT_CODE var in .env file, bye...(char nl)(ansi reset)'
-    exit --now
+    exit 3
   }
   let userCookie = ($emp.cookie | str replace '_EMP_UC_COOKIE_' $empUserCookie)
   let staffPayload = ($emp.staffPayload
@@ -126,7 +126,7 @@ def 'handle-working-hours' [
     ($allMembers | where { |it| $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8 })
   })
 
-  if ($result | is-empty) { print $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; exit --now }
+  if ($result | is-empty) { print $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; exit 0 }
 
   let hourMap = (
     $result | upsert Gap { |it| $total * 8 - ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave) }
@@ -183,11 +183,11 @@ def 'handle-exception' [
   do -i {
     if ($res | is-empty) or ($res | query json 'status') == 401 {
       print $'(ansi r)Your login COOKIE info is outdated or empty，please update it and try again!(char nl)(ansi reset)'
-      exit --now
+      exit 3
     }
     if (($res | query json 'status') == 500) {
       print $'(ansi r)Backend internal server error，please try again later!(char nl)(ansi reset)'
-      exit --now
+      exit 6
     }
   }
 }

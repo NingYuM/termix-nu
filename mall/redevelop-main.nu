@@ -49,7 +49,7 @@ def main [
   print $action.stdout; if 'stderr' in $action { print $action.stderr }
   if ('redev-app/origin' | path exists) == false or $action.exit_code != 0  {
     print $'(ansi r)Redevelop repo generating failed! Bye...(ansi reset)'
-    exit 1 --now
+    exit 1
   }
   # 切换到一个空的 orphan 分支，用于保存生成的全量二开代码，方便后续排查问题
   git switch --orphan $'redev/($checkout)'

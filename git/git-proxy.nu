@@ -33,7 +33,7 @@ def-env 'git-proxy' [
     })
     if ($proxy | length) == 0 {
       print $'(ansi r)(char nl)Can not find Ali, ClashX or v2ray proxy, please start it and try again, bype...(ansi reset)(char nl)(char nl)'
-      exit --now
+      exit 3
     }
 
     # set http_proxy=http://127.0.0.1:10809; set http_proxys=http://127.0.0.1:10809; set ALL_RROXY=http://127.0.0.1:10809
@@ -52,7 +52,7 @@ def-env 'git-proxy' [
         print $'If you want to set proxy for the terminal, please run the following line in bash, zsh, sh, etc.:'
         print $"(ansi g)export http_proxy=http://($proxy) https_proxy=http://($proxy) ALL_RROXY=http://($proxy)(ansi reset)(char nl)"
       }
-      exit --now
+      exit 0
     }
     git config --global http.proxy $'socks5://($proxy)'
     git config --global https.proxy $'socks5://($proxy)'

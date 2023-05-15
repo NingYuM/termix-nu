@@ -30,15 +30,15 @@ export def 'git branch-rename' [
   # Check if remote dest already exists.
   if ($remoteDestExists) {
     print $'Dest branch (ansi r)($remote)/($to)(ansi reset) already exists in the remote, please use another new name...(char nl)'
-    exit --now
+    exit 5
   }
   if ($localDestExists) {
     print $'Dest branch (ansi r)($to)(ansi reset) already exists in local, please use another new name...(char nl)'
-    exit --now
+    exit 5
   }
   if ($remoteSrcExists or $localSrcExists) == false {
     print $'Branch (ansi r)($from) (ansi reset)does not exist in both remote and local, bye...(char nl)'
-    exit --now
+    exit 5
   }
 
   let statusCheck = (git status --porcelain)

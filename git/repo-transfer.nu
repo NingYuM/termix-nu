@@ -31,7 +31,7 @@ export def 'git repo-transfer' [
       do-push $dest
     } else {
       print $'(ansi r)Path ($tmpPath)/($repoName) already exists(ansi reset), Please remove it and try again...(char nl)'
-      exit --now
+      exit 5
     }
   } else {
     print $'Cloning code to: (ansi g)($tmpPath)/($repoName)(ansi reset)(char nl)'

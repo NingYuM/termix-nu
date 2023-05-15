@@ -37,7 +37,7 @@ export def 'git tag-redev' [
     print $filteredRepos
   } else {
     print $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'
-    exit --now
+    exit 3
   }
 
   print $'Delete tag ($tagName) ---> (ansi r)($delete_tag)(ansi reset)(char nl)'

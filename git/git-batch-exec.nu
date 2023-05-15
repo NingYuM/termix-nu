@@ -15,7 +15,7 @@ export def 'git batch-exec' [
   branches: string  # The branches to have command be executed, default all local branches
 ] {
 
-  # echo $cmd; echo $branches; exit --now
+  # echo $cmd; echo $branches; exit 0
   let dest = ($branches | str trim | split row ' ' | compact)
   # fix: 'fatal: not a git repository (or any of the parent directories): .git'
   cd $env.JUST_INVOKE_DIR

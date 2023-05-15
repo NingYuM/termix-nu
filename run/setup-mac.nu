@@ -12,7 +12,7 @@ def 'setup-mac' [] {
         print $'Prepare to use `brew` to install CLI apps...(char nl)(char nl)'
     } else {
         print $'You should install `brew` and try again..., bye!(char nl)'
-        exit --now
+        exit 2
     }
 
     # brew update

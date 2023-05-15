@@ -20,7 +20,7 @@ export def 'ls-node-remote' [
   let minVersion = if ($minVer | is-empty) { 10 } else { ($minVer | str replace 'v' '' | into int) }
   if $notInstalled {
     print $'You should install `fnm` and try again..., bye!'
-    exit --now
+    exit 2
   }
 
   let vers = (fnm ls-remote | lines | str trim | wrap Version)
