@@ -26,6 +26,7 @@ export def 'git repo-transfer' [
     let prevFetchUrl = (git remote get-url origin | str trim)
     if ($prevFetchUrl == $source) {
       print $'Repo ($repoName) already exists, just sync code from source to dest.(char nl)'
+      # git remote update
       git fetch origin -p
       git remote set-url origin --push $dest
       do-push $dest

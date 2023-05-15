@@ -133,6 +133,15 @@ def gh-pr [repo: string = 'nushell/nushell'] {
     | reverse
 }
 
+# Show top files by size in current git repo of current directory
+def topf [n: int = 20] {
+  git ls-files
+    | lines
+    | each {|it| {name: $it, size: (ls $it | get size | get 0) } }
+    | sort-by size -r
+    | first $n
+}
+
 # load environment variables from the .envrc file.
 def-env load-direnv [] {
   load-env (
