@@ -12,13 +12,10 @@ All notable changes to this project will be documented in this file.
 
 ### Miscellaneous Tasks
 
-- Update changelog
 - Adapted to nushell v0.78.1+
-- Fix config
 - Optimize semver comparing algorithm
-- Bump ver to v1.18
 - Update nushell config file to v0.79.1
-- Fix exit --now breaking change for v0.80
+- Fix `exit --now `breaking change for v0.80
 - Fix git/remote-branch.nu
 - Update min nu ver to v0.80
 
