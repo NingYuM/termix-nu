@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Fix nudown command
+- Fix `nudown` command
 - Add a small patch for nushell #9265 issue
 
 ### Miscellaneous Tasks
