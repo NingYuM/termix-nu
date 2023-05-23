@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.19.0] - 2023-05-23
+
+### Bug Fixes
+
+- Fix nudown command
+- Add a small patch for nushell #9265 issue
+
+### Miscellaneous Tasks
+
+- Update tags from origin
+
 ## [1.18.0] - 2023-05-17
 
 ### Features
