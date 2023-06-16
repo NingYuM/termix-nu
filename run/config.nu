@@ -79,6 +79,10 @@ def 'env exists?' [] { $in in (env).name }  # ' Just hack for syntax highlight
 def sum [] { reduce {|acc, item| $acc + $item } }
 def ver [] { (version | transpose key value | to md --pretty) }
 
+def nun [] {
+  http get https://api.github.com/repos/nushell/nightly/releases | sort-by -r created_at | select name tag_name id created_at
+}
+
 def cargo-ile [] {
   fd -I shadow.rs | lines | each { |it| rm $it } | flatten
   if not ((pwd | path basename | str trim) == 'nushell') { z nushell }
