@@ -260,7 +260,7 @@ _setup: _register_plugins
 # 从 Nu v0.61.0 开始插件只需注册一次即可
 _register_plugins:
   #!/usr/bin/env nu
-  let gstatExists = not ($nu.scope.commands | where name == 'gstat' | is-empty)
-  let queryExists = not ($nu.scope.commands | where name == 'query json' | is-empty)
+  let gstatExists = not (scope commands | where name == 'gstat' | is-empty)
+  let queryExists = not (scope commands | where name == 'query json' | is-empty)
   if not $queryExists { register {{ join(NU_DIR, _query_plugin) }} }
   if not $gstatExists { register {{ join(NU_DIR, _gstat_plugin) }} }
