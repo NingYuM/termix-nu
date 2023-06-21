@@ -87,8 +87,8 @@ def cargo-ile [] {
   fd -I shadow.rs | lines | each { |it| rm $it } | flatten
   if not ((pwd | path basename | str trim) == 'nushell') { z nushell }
   # cargo install --features=extra --path .
-  if ('rust-toolchain.toml' | path exists) { rm rust-toolchain.toml }
-  sh ./install-all.sh
+  # if ('rust-toolchain.toml' | path exists) { rm rust-toolchain.toml }
+  sh ./scripts/install-all.sh
 }
 
 def cargo-ta  [] { cargo test --all --all-features }
