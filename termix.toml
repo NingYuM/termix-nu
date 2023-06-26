@@ -102,28 +102,10 @@ staffPayload = '[{"beginDate":"_first_day_","endDate":"_last_day_","baseProjectT
 
 # 快捷导航
 [quickNavs]
-base = 'https://erda.cloud/terminus/dop/projects/213/apps/4280/repo'
-docs = 'https://erda.cloud/terminus/dop/projects/213/apps/7542/repo'
+nusid = 'https://erda.cloud/terminus/dop/projects/1124/apps/11147/pipeline/obsoleted'
+terpd = 'https://erda.cloud/terminus/dop/projects/1158/apps/11338/pipeline/obsoleted'
+fe-docs = 'https://erda.cloud/terminus/dop/projects/213/apps/7542/repo'
 nusi-mobile = 'https://erda.cloud/terminus/dop/projects/170/apps/4419/repo'
-src-mall = 'https://erda.cloud/terminus/dop/projects/385/apps/6123/repo'
-src-mobile = 'https://erda.cloud/terminus/dop/projects/385/apps/6125/repo'
-src-picker = 'https://erda.cloud/terminus/dop/projects/385/apps/6388/repo'
-mix-sea = 'https://erda.cloud/terminus/dop/projects/420/apps/7190/repo'
-mix-mall = 'https://erda.cloud/terminus/dop/projects/420/apps/6701/repo'
-mix-mobile = 'https://erda.cloud/terminus/dop/projects/420/apps/6699/repo'
-mix-m-sea = 'https://erda.cloud/terminus/dop/projects/420/apps/7400/repo'
-mix-m-point = 'https://erda.cloud/terminus/dop/projects/420/apps/7807/repo'
-mix-b2b = 'https://erda.cloud/terminus/dop/projects/420/apps/7522/repo'
-mix-srm = 'https://erda.cloud/terminus/dop/projects/420/apps/7523/repo'
-mix-m-b2b = 'https://erda.cloud/terminus/dop/projects/420/apps/7839/repo'
-mix-m-srm = 'https://erda.cloud/terminus/dop/projects/420/apps/8088/repo'
-mix-m-mbr = 'https://erda.cloud/terminus/dop/projects/420/apps/7591/repo'
-bbc-mall = 'https://erda.cloud/terminus/dop/projects/394/apps/6124/repo'
-bbc-sea = 'https://erda.cloud/terminus/dop/projects/394/apps/6674/repo'
-bbc-mobile = 'https://erda.cloud/terminus/dop/projects/394/apps/6113/repo'
-bbc-m-sea = 'https://erda.cloud/terminus/dop/projects/394/apps/6675/repo'
-bbc-picker = 'https://erda.cloud/terminus/dop/projects/394/apps/6387/repo'
-mix-picker = 'https://erda.cloud/terminus/dop/projects/420/apps/7403/repo'
 
 # Set currentSelected to change the shell to execute the command
 # 'SHELL_TO_RUN_CMD' var in .env has higher priority
