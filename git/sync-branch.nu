@@ -36,7 +36,7 @@ export def 'git sync-branch' [
   # 如果没有任何同步配置直接退出
   if ($dests == $nothing) { exit 0 }
 
-  let syncDests = ($dests | upsert SYNC {||
+  let syncDests = ($dests | upsert SYNC {
       get repo | each { |it| if ($',($ignored),' =~ $',($it),') { '   x' } else { '   √' } }
     } | upsert source $localBranch | move source --before dest | sort-by SYNC)
 
