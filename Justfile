@@ -249,12 +249,10 @@ dir-batch-exec cmd +DIRS=(''): _setup
     overlay use {{ join(_termix, 'actions', 'dir-batch-exec.nu') }}; \
     dir-batch-exec "{{cmd}}" "{{DIRS}}" --parent={{JUST_INVOKE_DIR}}
 
-# FIXME: https://github.com/nushell/nushell/issues/9265, Remove env setting after fixed
 # 版本检查前置操作
 _setup: _register_plugins
   @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
     overlay use {{ join(_termix, 'actions', 'check-ver.nu') }}; \
-    let-env DIRS_POSITION = 0; let-env DIRS_LIST = [($env.PWD | path expand)]; \
     termix-ver; nu-ver; just-ver
 
 # 从 Nu v0.61.0 开始插件只需注册一次即可
