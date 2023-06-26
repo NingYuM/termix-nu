@@ -17,6 +17,8 @@ alias la = exa -la
 alias .. = cd ..
 alias ... = do { cd ..; cd .. }
 alias t = just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .
+alias nuc = print (help commands | where command_type != custom and command_type != alias | reject signatures search_terms)
+alias nucc = print (help commands | where command_type != custom and command_type != alias | length)
 alias tokeid = print (tokei | lines | skip 1 | str join "\n" | detect columns | where {|it| $it.Language !~ "=" and $it.Language !~ "-" and (not ($it.Files | is-empty)) } | into int Files Lines Code Comments Blanks)
 
 # ----------------------- ENV VARS ------------------------
