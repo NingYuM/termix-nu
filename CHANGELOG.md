@@ -1,6 +1,26 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.20.0] - 2023-06-28
+
+### Bug Fixes
+
+- Remove Nu env patch for issue #9265
+
+### Features
+
+- Add `nun` custom command for nu config
+- Add `nuc` and `nucc` command alias for Nushell config
+
+### Miscellaneous Tasks
+
+- Update config for nu v0.82 and update quick navs
+- Upgrade min required Nushell version to v0.82
+
+### Breaking
+
+- Adapt to Nushell v0.82
+
 ## [1.19.0] - 2023-05-23
 
 ### Bug Fixes
