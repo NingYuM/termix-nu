@@ -9,9 +9,9 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
-- Add Erda pipeline run and query feature
-- Read erda pipeline config from .termixrc to run the CICDs
-- Output pipeline detail url while create and run it
+- Add Erda pipeline `run` and `query` feature
+- Read Erda pipeline config from `.termixrc` to run the CICDs
+- Output pipeline detail url while creating and running it
 - Check if the pipeline config exists before running it
 
 ### Miscellaneous Tasks
