@@ -48,7 +48,7 @@ export def main [
       git fetch origin --prune '+refs/tags/*:refs/tags/*'
 
       let tagExists = (has-ref $'refs/tags/($tagName)')
-      # Check the tag status, if exists just recrete it.
+      # Check the tag status, if exists just recreate it.
       if $tagExists { git tag -d $tagName; git push origin --delete $tagName }
 
       if $delete_tag {

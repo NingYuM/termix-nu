@@ -63,7 +63,7 @@ export def 'git tag-redev' [
     cd $destRepoPath;
     # Delete tags that not exist in remote repo
     git fetch origin --prune '+refs/tags/*:refs/tags/*'
-    # Check the tag status, if exists just recrete it.
+    # Check the tag status, if exists just recreate it.
     if (has-ref $'refs/tags/($tagName)') {
       git tag -d $tagName; git push origin --delete $tagName
       print $'Tag: (ansi p)($tagName)(ansi reset) delete successfully!(char nl)'

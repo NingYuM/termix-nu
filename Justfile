@@ -75,6 +75,18 @@ go nav=('list'): _setup
     overlay use {{ join(_termix, 'actions', 'quick-nav.nu') }}; \
     go {{nav}}
 
+# Initialize and run an Erda pipeline
+deploy env=('dev'): _setup
+  @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
+    overlay use {{ join(_termix, 'actions', 'pipeline.nu') }}; \
+    erda-deploy run
+
+# Query the Erda pipeline running status by CICD id
+deploy-query id: _setup
+  @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
+    overlay use {{ join(_termix, 'actions', 'pipeline.nu') }}; \
+    erda-deploy query --cid={{id}}
+
 # Listing the branches of a git repo and the time of the last commit
 git-branch: _setup
   @# The following two statement must be written in one line
