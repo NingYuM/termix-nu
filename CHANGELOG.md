@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.23.0] - 2023-06-29
+
+### Bug Fixes
+
+- Fix pipeline query result return URL
+
 ## [1.22.0] - 2023-06-29
 
 ### Miscellaneous Tasks
