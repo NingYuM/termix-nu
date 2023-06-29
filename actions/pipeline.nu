@@ -20,14 +20,13 @@ def-env try-load-envs [dest: string = 'dev'] {
     let pipeline = ($repoConf.erda | get -i $dest)
     if ($pipeline | is-empty) {
       print $'Please set the App configs for (ansi r)erda.($dest)(ansi reset) in (ansi r)origin/i:.termixrc(ansi reset) first...'; exit 1
-    } else {
-      load-env {
-        ERDA_APP_ID: $pipeline.appid,
-        ERDA_BRANCH: $pipeline.branch,
-        ERDA_PROJECT_ID: $pipeline.pid,
-        ERDA_APP_NAME: $pipeline.appName,
-        ERDA_PIPELINE:$pipeline.pipeline,
-      }
+    }
+    load-env {
+      ERDA_APP_ID: $pipeline.appid,
+      ERDA_BRANCH: $pipeline.branch,
+      ERDA_PROJECT_ID: $pipeline.pid,
+      ERDA_APP_NAME: $pipeline.appName,
+      ERDA_PIPELINE:$pipeline.pipeline,
     }
     return
   }
@@ -48,11 +47,10 @@ def create-cicd [aid: int, appName: string, branch: string, pipeline: string, --
   if $ci.success {
     print $'(ansi g)Initialize CICD successfully...(ansi reset)'
     return $ci.data.id
-  } else {
-    print $'(ansi r)Initialize CICD failed, Please try again ...(ansi reset)'
-    print ($ci | table -e)
-    exit 1
   }
+  print $'(ansi r)Initialize CICD failed, Please try again ...(ansi reset)'
+  print ($ci | table -e)
+  exit 1
 }
 
 # 执行指定 ID 的流水线
