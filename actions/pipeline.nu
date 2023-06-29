@@ -52,11 +52,13 @@ def create-cicd [aid: int, appName: string, branch: string, pipeline: string, --
 }
 
 # 执行指定 ID 的流水线
-def run-cicd [id: int, --auth: string] {
+def run-cicd [id: int, appid: int, pid: int, --auth: string] {
 	let runUrl = $'https://erda.cloud/api/terminus/cicds/($id)/actions/run'
 	let run = (curl --silent -H $auth -X POST $runUrl | from json)
+  let url = $'https://erda.cloud/terminus/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
 	if $run.success {
 		print $'CICD started, You can query the pipeline running status with id: (ansi g)($id)(ansi reset)'
+    print $'Or visit ($url) for more details'
 	}
 }
 
@@ -111,7 +113,7 @@ export def main [
 	match $operation {
 		run | r => {
 			let cicdid = (create-cicd --auth $auth $appid $appName $branch $pipeline)
-			run-cicd --auth $auth ($cicdid | into int)
+			run-cicd --auth $auth ($cicdid | into int) $appid $pid
 		}
 		query | q => {
 			if ($cid | is-empty) {
