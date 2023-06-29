@@ -18,7 +18,9 @@ def-env try-load-envs [dest: string = 'dev'] {
 	if (has-ref origin/i) {
 		let repoConf = (git show 'origin/i:.termixrc' | from toml)
 		let pipeline = ($repoConf.erda | get -i $dest)
-		if not ($pipeline | is-empty) {
+		if ($pipeline | is-empty) {
+      print $'Please set the App configs for (ansi r)erda.($dest)(ansi reset) in (ansi r)origin/i:.termixrc(ansi reset) first...'; exit 1
+    } else {
 			load-env {
 				ERDA_APP_ID: $pipeline.appid,
 				ERDA_BRANCH: $pipeline.branch,
