@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.22.0] - 2023-06-29
+
+### Miscellaneous Tasks
+
+- Remove unnecessary ERDA_TOKEN env var for Erda pipelines
+
 ## [1.21.0] - 2023-06-29
 
 ### Bug Fixes
