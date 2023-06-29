@@ -43,6 +43,8 @@ _gstat_plugin := if os_family() == 'windows' { 'nu_plugin_gstat.exe' } else { 'n
 # alias pr := pull-redev
 # alias lt := ls-redev-tags
 # alias rb := git-remote-branch
+alias dp := deploy
+alias dq := deploy-query
 
 # To pass arguments to a dependency, put the dependency
 # in parentheses along with the arguments, just like:
@@ -75,11 +77,11 @@ go nav=('list'): _setup
     overlay use {{ join(_termix, 'actions', 'quick-nav.nu') }}; \
     go {{nav}}
 
-# Initialize and run an Erda pipeline
+# Initialize and run an Erda pipeline, the env can be `dev`, `test`, etc., and default will be `dev`
 deploy env=('dev'): _setup
   @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
     overlay use {{ join(_termix, 'actions', 'pipeline.nu') }}; \
-    erda-deploy run
+    erda-deploy run {{env}}
 
 # Query the Erda pipeline running status by CICD id
 deploy-query id: _setup

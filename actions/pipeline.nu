@@ -12,6 +12,24 @@ def check-envs [] {
     }
 }
 
+# Try to load environment variables from .termixrc file on i branch
+def-env try-load-envs [dest: string = 'dev'] {
+    cd $env.JUST_INVOKE_DIR
+    if (has-ref origin/i) {
+        let repoConf = (git show 'origin/i:.termixrc' | from toml)
+        let pipeline = ($repoConf.erda | get -i $dest)
+        if not ($pipeline | is-empty) {
+            load-env {
+                ERDA_APP_ID: $pipeline.appid,
+                ERDA_BRANCH: $pipeline.branch,
+                ERDA_PROJECT_ID: $pipeline.pid,
+                ERDA_APP_NAME: $pipeline.appName,
+                ERDA_PIPELINE:'.erda/pipelines/nusi.yml',
+            }
+        }
+    }
+}
+
 # 创建 CICD 流水线并返回其对应 ID
 def create-cicd [aid: int, appName: string, branch: string, pipeline: string, --auth: string] {
     let cicdUrl = 'https://erda.cloud/api/terminus/cicds'
@@ -71,9 +89,11 @@ def query-cicd [id: int, appid: int, pid: int, --auth: string] {
 
 # 创建 Erda 流水线并执行，同时可以查询流水线执行结果
 export def main [
-    type: string,       # 目前支持两种操作类型，run 和 query, run 用于创建并执行 CICD, query 用于查询 CICD 执行结果
-    --cid(-i): int,     # 当操作为 query 时必须指定，用于查询 CICD 执行结果
+    operation: string,      # 目前支持两种操作类型，run 和 query, run 用于创建并执行 CICD, query 用于查询 CICD 执行结果
+    dest?: string = 'dev',  # 当操作为 run 时必须指定，用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, query 时无需指定, 默认为 dev
+    --cid(-i): int,         # 当操作为 query 时必须指定，用于查询 CICD 执行结果
 ] {
+    try-load-envs $dest
     ['ERDA_SESSION', 'ERDA_TOKEN', 'ERDA_PROJECT_ID', 'ERDA_APP_ID', 'ERDA_APP_NAME', 'ERDA_PIPELINE', 'ERDA_BRANCH'] | check-envs
     # 以下为应用级别配置，应用的所有开发者保持一致，可以放在代码仓库里面
     let pid = $env.ERDA_PROJECT_ID
@@ -88,7 +108,7 @@ export def main [
 
     # 个人全局身份验证信息，如果过期请重新获取并更新
     let auth = $'cookie: u_c_erda_cloud=($token);OPENAPISESSION=($session)'
-    match $type {
+    match $operation {
         run | r => {
             let cicdid = (create-cicd --auth $auth $appid $appName $branch $pipeline)
             run-cicd --auth $auth ($cicdid | into int)
@@ -101,7 +121,7 @@ export def main [
             query-cicd --auth $auth $cid $appid $pid
         }
         _ => {
-            print $'Unsupported operation: (ansi r)($type)(ansi reset), should be (ansi g)run(ansi reset) or (ansi g)query(ansi reset)'
+            print $'Unsupported operation: (ansi r)($operation)(ansi reset), should be (ansi g)run(ansi reset) or (ansi g)query(ansi reset)'
             exit 1
         }
     }
@@ -109,8 +129,9 @@ export def main [
 
 # 创建 Erda 流水线并执行，同时可以查询流水线执行结果
 export def erda-deploy [
-    type: string,       # 目前支持两种操作类型，run 和 query, run 用于创建并执行 CICD, query 用于查询 CICD 执行结果
-    --cid(-i): int,     # 当操作为 query 时必须指定，用于查询 CICD 执行结果
+    operation: string,      # 目前支持两种操作类型，run 和 query, run 用于创建并执行 CICD, query 用于查询 CICD 执行结果
+    dest?: string = 'dev',  # 当操作为 run 时必须指定，用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, query 时无需指定, 默认为 dev
+    --cid(-i): int,         # 当操作为 query 时必须指定，用于查询 CICD 执行结果
 ] {
-    if ($cid | is-empty) { main $type } else { main query --cid $cid }
+    if ($cid | is-empty) { main $operation $dest } else { main query --cid $cid }
 }
