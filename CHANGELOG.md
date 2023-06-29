@@ -1,6 +1,26 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.21.0] - 2023-06-29
+
+### Bug Fixes
+
+- Make sure origin/i branch exits before deploy or query pipeline
+
+### Features
+
+- Add Erda pipeline run and query feature
+- Read erda pipeline config from .termixrc to run the CICDs
+- Output pipeline detail url while create and run it
+- Check if the pipeline config exists before running it
+
+### Miscellaneous Tasks
+
+- Add Erda auth env config examples
+- Bump version to v1.21.0
+- Fix code indention for actions/pipeline.nu
+- Refactor code
+
 ## [1.20.0] - 2023-06-28
 
 ### Bug Fixes
