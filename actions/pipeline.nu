@@ -29,7 +29,9 @@ def-env try-load-envs [dest: string = 'dev'] {
         ERDA_PIPELINE:$pipeline.pipeline,
       }
     }
+    return
   }
+  print $'No (ansi r)origin/i(ansi reset) branch exits, please create it before running this script...'; exit 1
 }
 
 # 创建 CICD 流水线并返回其对应 ID
