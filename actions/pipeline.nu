@@ -24,7 +24,7 @@ def-env try-load-envs [dest: string = 'dev'] {
                 ERDA_BRANCH: $pipeline.branch,
                 ERDA_PROJECT_ID: $pipeline.pid,
                 ERDA_APP_NAME: $pipeline.appName,
-                ERDA_PIPELINE:'.erda/pipelines/nusi.yml',
+                ERDA_PIPELINE:$pipeline.pipeline,
             }
         }
     }
