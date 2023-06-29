@@ -2,6 +2,9 @@
 # Author: hustcer
 # Created: 2023/06/28 15:33:15
 # Description: 创建 Erda 流水线并执行，同时可以查询流水线执行结果
+#   可以 deploy 的 dest 可以为 dev、test、staging、prod 等，对应的流水线配置文件为 .termixrc 中的 erda.dev、erda.test、erda.staging、erda.prod, etc.
+#   执行流水线时要求在仓库的 i 分支上的 .termixrc 文件中配置了对应 dest 的 pid、appid、branch、appName、pipeline 信息
+#   查询流水线结果时要求流水线ID正确，其他信息不作要求
 
 # Check if the required environment variable was set, quit if not
 def check-envs [] {
@@ -68,7 +71,7 @@ def run-cicd [id: int, appid: int, pid: int, --auth: string] {
 }
 
 # 根据流水线 ID 查询流水线执行结果
-def query-cicd [id: int, appid: int, pid: int, --auth: string] {
+def query-cicd [id: int, --auth: string] {
   let queryUrl = $'https://erda.cloud/api/terminus/pipelines/($id)'
   let query = (curl --silent -H $auth $queryUrl | from json)
   if ($query | describe) == 'string' {
@@ -89,7 +92,8 @@ def query-cicd [id: int, appid: int, pid: int, --auth: string] {
     Begin: $query.data.timeBegin
     End: $timeEnd
     Duration: ($'($query.data.costTimeSec)sec' | into duration)
-    URL: $'https://erda.cloud/terminus/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
+    # 此处之所以没有直接用 $appid & $pid 是因为可能存在在 A 应用仓库中查询 B 应用的流水线执行结果的情况，故而以返回数据为准
+    URL: $'https://erda.cloud/terminus/dop/projects/($query.data.projectID)/apps/($query.data.applicationID)/pipeline/obsoleted?pipelineID=($id)'
   }
   print $'(char nl)(ansi pb)Current Running Status of CICD ($id):(ansi reset)'
   print '----------------------------------------------------------'
@@ -127,7 +131,7 @@ export def main [
         print $'Please specify the id of the CICD to query with --cid'
         exit 1
       }
-      query-cicd --auth $auth $cid $appid $pid
+      query-cicd --auth $auth $cid
     }
     _ => {
       print $'Unsupported operation: (ansi r)($operation)(ansi reset), should be (ansi g)run(ansi reset) or (ansi g)query(ansi reset)'
