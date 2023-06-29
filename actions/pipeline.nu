@@ -44,6 +44,9 @@ def create-cicd [aid: int, appName: string, branch: string, pipeline: string, --
   print $'Initialize CICD for (ansi pb)($appName)(ansi reset) with (ansi g)($pipeline)(ansi reset) from (ansi g)($branch)(ansi reset) branch'
   # Query the id of newly created CICD
   let ci = (curl --silent -H $auth --data-raw $'($cicd | to json)' $cicdUrl | from json)
+  if ($ci | describe) == 'string' {
+    print $'Initialize CICD failed with message: (ansi r)($ci)(ansi reset)'; exit 1
+  }
   if $ci.success {
     print $'(ansi g)Initialize CICD successfully...(ansi reset)'
     return $ci.data.id
@@ -68,6 +71,9 @@ def run-cicd [id: int, appid: int, pid: int, --auth: string] {
 def query-cicd [id: int, appid: int, pid: int, --auth: string] {
   let queryUrl = $'https://erda.cloud/api/terminus/pipelines/($id)'
   let query = (curl --silent -H $auth $queryUrl | from json)
+  if ($query | describe) == 'string' {
+    print $'Query CICD failed with message: (ansi r)($query)(ansi reset)'; exit 1
+  }
   if (not $query.success ) {
     print $'Query CICD failed with error message: (ansi r)($query.err.msg)(ansi reset)'; exit 1
   }
@@ -98,7 +104,7 @@ export def main [
   --cid(-i): int,         # 当操作为 query 时必须指定，用于查询 CICD 执行结果
 ] {
   try-load-envs $dest
-  ['ERDA_SESSION', 'ERDA_TOKEN', 'ERDA_PROJECT_ID', 'ERDA_APP_ID', 'ERDA_APP_NAME', 'ERDA_PIPELINE', 'ERDA_BRANCH'] | check-envs
+  ['ERDA_SESSION', 'ERDA_PROJECT_ID', 'ERDA_APP_ID', 'ERDA_APP_NAME', 'ERDA_PIPELINE', 'ERDA_BRANCH'] | check-envs
   # 以下为应用级别配置，应用的所有开发者保持一致，可以放在代码仓库里面
   let pid = $env.ERDA_PROJECT_ID
   let appid = $env.ERDA_APP_ID
@@ -106,12 +112,11 @@ export def main [
   let pipeline = $env.ERDA_PIPELINE
   let branch = $env.ERDA_BRANCH
 
-  # 以下为用户级别配置，每个开发者根据自己的情况配置, 请注意保密，建议放在本地环境变量里面
-  let token = $env.ERDA_TOKEN
+  # 用户级别配置，每个开发者根据自己的情况配置, 请注意保密，建议放在本地环境变量里面
   let session = $env.ERDA_SESSION
 
   # 个人全局身份验证信息，如果过期请重新获取并更新
-  let auth = $'cookie: u_c_erda_cloud=($token);OPENAPISESSION=($session)'
+  let auth = $'cookie: OPENAPISESSION=($session)'
   match $operation {
     run | r => {
       let cicdid = (create-cicd --auth $auth $appid $appName $branch $pipeline)
