@@ -5,6 +5,7 @@
 #  [x] 执行流水线要求在仓库目录下，且要有 i 分支 & .termixrc 文件里面的配置正确
 #  [x] `t dp -l` 列出所有可用的执行目标
 #  [x] 查询流水线可以在任意目录下执行，不一定要在仓库目录下，只要流水线 ID 正确即可
+#  [ ] 执行新流水线之前可以查询是否有正在运行的流水线，如果有默认终止，也可以加上 -f 强制执行
 # Description: 创建 Erda 流水线并执行，同时可以查询流水线执行结果
 #   可以 deploy 的 dest 可以为 dev、test、staging、prod 等，对应的流水线配置文件为 .termixrc 中的 erda.dev、erda.test、erda.staging、erda.prod, etc.
 #   执行流水线时要求在仓库的 i 分支上的 .termixrc 文件中配置了对应 dest 的 pid、appid、branch、appName、pipeline 信息
