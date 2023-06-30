@@ -1,6 +1,10 @@
 #!/usr/bin/env nu
 # Author: hustcer
 # Created: 2023/06/28 15:33:15
+# TODO:
+#  [x] 执行流水线要求在仓库目录下，且要有 i 分支 & .termixrc 文件里面的配置正确
+#  [x] `t dp -l` 列出所有可用的执行目标
+#  [ ] 查询流水线可以在任意目录下执行，不一定要在仓库目录下，只要流水线 ID 正确即可
 # Description: 创建 Erda 流水线并执行，同时可以查询流水线执行结果
 #   可以 deploy 的 dest 可以为 dev、test、staging、prod 等，对应的流水线配置文件为 .termixrc 中的 erda.dev、erda.test、erda.staging、erda.prod, etc.
 #   执行流水线时要求在仓库的 i 分支上的 .termixrc 文件中配置了对应 dest 的 pid、appid、branch、appName、pipeline 信息
@@ -15,11 +19,13 @@ def check-envs [] {
   }
 }
 
-# Try to load environment variables from .termixrc file on i branch
-def-env try-load-envs [dest: string = 'dev'] {
+# Try to load environment variables from .termixrc file on i branch, or list available deploy targets
+def-env pipeline-prepare [dest: string = 'dev', --list: bool] {
   cd $env.JUST_INVOKE_DIR
   if (has-ref origin/i) {
     let repoConf = (git show 'origin/i:.termixrc' | from toml)
+    let targets = ($repoConf.erda | columns | str join ", ")
+    if $list { print $'Available deploy targets in origin/i:.termixrc are: (ansi pb)($targets)(ansi reset)'; exit 0 }
     let pipeline = ($repoConf.erda | get -i $dest)
     if ($pipeline | is-empty) {
       print $'Please set the App configs for (ansi r)erda.($dest)(ansi reset) in (ansi r)origin/i:.termixrc(ansi reset) first...'; exit 1
@@ -38,7 +44,8 @@ def-env try-load-envs [dest: string = 'dev'] {
 
 # 创建 CICD 流水线并返回其对应 ID
 def create-cicd [aid: int, appName: string, branch: string, pipeline: string, --auth: string] {
-  let cicdUrl = 'https://erda.cloud/api/terminus/cicds'
+  let erdaHost = 'https://erda.cloud'
+  let cicdUrl = $'($erdaHost)/api/terminus/cicds'
   let cicd = {
     appID: $aid,
     branch: $branch,
@@ -61,9 +68,10 @@ def create-cicd [aid: int, appName: string, branch: string, pipeline: string, --
 
 # 执行指定 ID 的流水线
 def run-cicd [id: int, appid: int, pid: int, --auth: string] {
-  let runUrl = $'https://erda.cloud/api/terminus/cicds/($id)/actions/run'
+  let erdaHost = 'https://erda.cloud'
+  let runUrl = $'($erdaHost)/api/terminus/cicds/($id)/actions/run'
   let run = (curl --silent -H $auth -X POST $runUrl | from json)
-  let url = $'https://erda.cloud/terminus/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
+  let url = $'($erdaHost)/terminus/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
   if $run.success {
     print $'CICD started, You can query the pipeline running status with id: (ansi g)($id)(ansi reset)'
     print $'Or visit ($url) for more details'
@@ -72,7 +80,8 @@ def run-cicd [id: int, appid: int, pid: int, --auth: string] {
 
 # 根据流水线 ID 查询流水线执行结果
 def query-cicd [id: int, --auth: string] {
-  let queryUrl = $'https://erda.cloud/api/terminus/pipelines/($id)'
+  let erdaHost = 'https://erda.cloud'
+  let queryUrl = $'($erdaHost)/api/terminus/pipelines/($id)'
   let query = (curl --silent -H $auth $queryUrl | from json)
   if ($query | describe) == 'string' {
     print $'Query CICD failed with message: (ansi r)($query)(ansi reset)'; exit 1
@@ -93,7 +102,7 @@ def query-cicd [id: int, --auth: string] {
     End: $timeEnd
     Duration: ($'($query.data.costTimeSec)sec' | into duration)
     # 此处之所以没有直接用 $appid & $pid 是因为可能存在在 A 应用仓库中查询 B 应用的流水线执行结果的情况，故而以返回数据为准
-    URL: $'https://erda.cloud/terminus/dop/projects/($query.data.projectID)/apps/($query.data.applicationID)/pipeline/obsoleted?pipelineID=($id)'
+    URL: $'($erdaHost)/terminus/dop/projects/($query.data.projectID)/apps/($query.data.applicationID)/pipeline/obsoleted?pipelineID=($id)'
   }
   print $'(char nl)(ansi pb)Current Running Status of CICD ($id):(ansi reset)'
   print '----------------------------------------------------------'
@@ -106,8 +115,9 @@ export def main [
   operation: string,      # 目前支持两种操作类型，run 和 query, run 用于创建并执行 CICD, query 用于查询 CICD 执行结果
   dest?: string = 'dev',  # 当操作为 run 时必须指定，用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, query 时无需指定, 默认为 dev
   --cid(-i): int,         # 当操作为 query 时必须指定，用于查询 CICD 执行结果
+  --list(-l): bool,       # 当操作为 deploy 时生效，用于列出所有可用的执行目标
 ] {
-  try-load-envs $dest
+  if $list { pipeline-prepare $dest --list } else { pipeline-prepare $dest }
   ['ERDA_SESSION', 'ERDA_PROJECT_ID', 'ERDA_APP_ID', 'ERDA_APP_NAME', 'ERDA_PIPELINE', 'ERDA_BRANCH'] | check-envs
   # 以下为应用级别配置，应用的所有开发者保持一致，可以放在代码仓库里面
   let pid = $env.ERDA_PROJECT_ID
@@ -145,6 +155,8 @@ export def erda-deploy [
   operation: string,      # 目前支持两种操作类型，run 和 query, run 用于创建并执行 CICD, query 用于查询 CICD 执行结果
   dest?: string = 'dev',  # 当操作为 run 时必须指定，用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, query 时无需指定, 默认为 dev
   --cid(-i): int,         # 当操作为 query 时必须指定，用于查询 CICD 执行结果
+  --list(-l): bool,       # 当操作为 deploy 时生效，用于列出所有可用的执行目标
 ] {
-  if ($cid | is-empty) { main $operation $dest } else { main query --cid $cid }
+  if not ($cid | is-empty) { main query --cid $cid; return }
+  if $list { main $operation $dest --list } else { main $operation $dest }
 }

@@ -77,11 +77,11 @@ go nav=('list'): _setup
     overlay use {{ join(_termix, 'actions', 'quick-nav.nu') }}; \
     go {{nav}}
 
-# Initialize and run an Erda pipeline, the env can be `dev`, `test`, etc., and default will be `dev`
-deploy env=('dev'): _setup
+# Initialize and run an Erda pipeline, the target can be query by `dp -l`, and default will be `dev`
+deploy target=('dev'): _setup
   @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
     overlay use {{ join(_termix, 'actions', 'pipeline.nu') }}; \
-    erda-deploy run {{env}}
+    erda-deploy run {{target}}
 
 # Query the Erda pipeline running status by CICD id
 deploy-query id: _setup
