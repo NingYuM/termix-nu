@@ -5,12 +5,12 @@
 #  [x] 执行流水线要求在仓库目录下，且要有 i 分支 & .termixrc 文件里面的配置正确
 #  [x] `t dp -l` 列出所有可用的执行目标
 #  [x] 查询流水线可以在任意目录下执行，不一定要在仓库目录下，只要流水线 ID 正确即可
-#  [ ] 执行新流水线之前可以查询是否有正在运行的流水线，如果有默认终止，也可以加上 -f 强制执行
-#  [ ] 查询流水线的时候如果没有传入流水线ID，可以列出所有正在运行的流水线的概要，如果只有一个则直接显示其详情
+#  [x] 执行新流水线之前可以查询是否有正在运行的流水线，如果有则停止执行，也可以加上 -f 强制执行
 # Description: 创建 Erda 流水线并执行，同时可以查询流水线执行结果
 #   可以 deploy 的 dest 可以为 dev、test、staging、prod 等，对应的流水线配置文件为 .termixrc 中的 erda.dev、erda.test、erda.staging、erda.prod, etc.
 #   执行流水线时要求在仓库的 i 分支上的 .termixrc 文件中配置了对应 dest 的 pid、appid、branch、appName、pipeline 信息
 #   查询流水线结果时要求流水线ID正确，其他信息不作要求
+#   https://erda.cloud/api/terminus/cicds?branches=develop&appID=11147&ymlNames=11147%2FTEST%2Fdevelop%2F.erda%2Fpipelines%2Fnusi.yml%2C%2F.erda%2Fpipelines%2Fnusi.yml&pageNo=1&pageSize=10
 
 def erda-host [] { 'https://erda.cloud' }
 
@@ -40,6 +40,7 @@ def-env pipeline-prepare [operation: string, dest: string = 'dev', --list: bool]
       print $'Please set the App configs for (ansi r)erda.($dest)(ansi reset) in (ansi r)origin/i:.termixrc(ansi reset) first...'; exit 1
     }
     load-env {
+      ERDA_ENV: $pipeline.env,
       ERDA_APP_ID: $pipeline.appid,
       ERDA_BRANCH: $pipeline.branch,
       ERDA_PROJECT_ID: $pipeline.pid,
@@ -49,6 +50,43 @@ def-env pipeline-prepare [operation: string, dest: string = 'dev', --list: bool]
     return
   }
   print $'No (ansi r)origin/i(ansi reset) branch exits, please create it before running this script...'; exit 1
+}
+
+# 检查是否有正在执行的流水线，如果有则显示其概要信息并退出
+def check-cicd [aid: int, appName: string, branch: string, pipeline: string, --auth: string] {
+  # Possible env values: DEV,TEST,STAGING,PROD
+  let cicd = {
+    appID: $aid, branches: $branch, ymlNames: $'($aid)/($env.ERDA_ENV)/($branch)/($pipeline)', sources: 'dice', pageNo: 1, pageSize: 10
+  }
+  let cicdUrl = $'(erda-host)/api/terminus/cicds?($cicd | url build-query)'
+  print $'Checking running CICDs for (ansi pb)($appName)(ansi reset) with (ansi g)($pipeline)(ansi reset) from (ansi g)($branch)(ansi reset) branch'
+
+  # Query the id of newly created CICD
+  let ci = (curl --silent -H $auth $cicdUrl | from json)
+  if ($ci | describe) == 'string' { print $'Checking CICD failed with message: (ansi r)($ci)(ansi reset)'; exit 1 }
+  # Possible pipeline status: Running,Success,Failed,StopByUser
+  if $ci.success {
+    let running = ($ci.data.pipelines | where status == 'Running')
+    if ($running | length) == 0 { return }
+    print $'There are (ansi pb)($running | length)(ansi reset) running pipelines, please wait with patience or re-run with `-f` flag.'
+    print $'------------------------------------------------------------------------------------(char nl)'
+    print (
+      $running
+        | select id commit status normalLabels extra timeBegin timeUpdated
+        | update commit {|it| $it.commit | str substring 0..9 }
+        | upsert comment {|it| $it.normalLabels.commitDetail | from json | get -i comment | str trim }
+        | upsert commiter {|it| $it.extra.submitUser.name }
+        | update status {|it| $'(ansi pb)($it.status)(ansi reset)' }
+        | upsert runner {|it| $it.extra.runUser.name }
+        | upsert begin {|it| $it.timeBegin | into datetime | date humanize }
+        | upsert updated {|it| $it.timeUpdated | into datetime | date humanize }
+        | reject extra timeBegin timeUpdated normalLabels
+    )
+    exit 0
+  }
+  print $'(ansi r)Checking CICD failed, Please try again ...(ansi reset)'
+  print ($ci | table -e)
+  exit 1
 }
 
 # 创建 CICD 流水线并返回其对应 ID
@@ -111,10 +149,11 @@ export def main [
   operation: string,      # 目前支持两种操作类型，run 和 query, run 用于创建并执行 CICD, query 用于查询 CICD 执行结果
   dest?: string = 'dev',  # 当操作为 run 时必须指定，用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, query 时无需指定, 默认为 dev
   --cid(-i): int,         # 当操作为 query 时必须指定，用于查询 CICD 执行结果
-  --list(-l): bool,       # 当操作为 deploy 时生效，用于列出所有可用的执行目标
+  --list(-l): bool,       # 当操作为 run 时生效，用于列出所有可用的执行目标
+  --force(-f): bool,      # 当操作为 run 时生效，即便已经有正在运行的流水线也会强制执行
 ] {
   if $list { pipeline-prepare $operation $dest --list } else { pipeline-prepare $operation $dest }
-  ['ERDA_SESSION', 'ERDA_PROJECT_ID', 'ERDA_APP_ID', 'ERDA_APP_NAME', 'ERDA_PIPELINE', 'ERDA_BRANCH'] | check-envs $operation
+  ['ERDA_SESSION', 'ERDA_ENV', 'ERDA_PROJECT_ID', 'ERDA_APP_ID', 'ERDA_APP_NAME', 'ERDA_PIPELINE', 'ERDA_BRANCH'] | check-envs $operation
 
   # 用户级别配置，每个开发者根据自己的情况配置, 请注意保密，建议放在本地环境变量里面
   let session = $env.ERDA_SESSION
@@ -129,6 +168,7 @@ export def main [
       let pid = $env.ERDA_PROJECT_ID
       let appName = $env.ERDA_APP_NAME
       let pipeline = $env.ERDA_PIPELINE
+      if not $force { check-cicd --auth $auth $appid $appName $branch $pipeline }
       let cicdid = (create-cicd --auth $auth $appid $appName $branch $pipeline)
       run-cicd --auth $auth ($cicdid | into int) $appid $pid
     }
@@ -148,7 +188,8 @@ export def erda-deploy [
   operation: string,      # 目前支持两种操作类型，run 和 query, run 用于创建并执行 CICD, query 用于查询 CICD 执行结果
   dest?: string = 'dev',  # 当操作为 run 时必须指定，用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, query 时无需指定, 默认为 dev
   --cid(-i): any,         # 当操作为 query 时必须指定，用于查询 CICD 执行结果
-  --list(-l): bool,       # 当操作为 deploy 时生效，用于列出所有可用的执行目标
+  --list(-l): bool,       # 当操作为 run 时生效，用于列出所有可用的执行目标
+  --force(-f): bool,      # 当操作为 run 时生效，即便已经有正在运行的流水线也会强制执行
 ] {
   if not ($cid | is-empty) {
     if ($cid | describe) != 'int' {
@@ -156,5 +197,7 @@ export def erda-deploy [
     }
     main query --cid $cid; return
   }
-  if $list { main $operation $dest --list } else { main $operation $dest }
+  if $list { main $operation $dest --list } else {
+    if $force { main $operation $dest --force } else { main $operation $dest }
+  }
 }
