@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.25.0] - 2023-06-30
+
+### Features
+
+- Add query deploy targets by `t dp -l` support
+- Enable query pipeline running status from any directory
+
+### Miscellaneous Tasks
+
+- Bump version to v1.25.0
+
 ## [1.23.0] - 2023-06-29
 
 ### Bug Fixes
