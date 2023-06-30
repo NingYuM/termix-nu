@@ -45,7 +45,7 @@ def-env pipeline-prepare [operation: string, dest: string = 'dev', --list: bool]
       ERDA_BRANCH: $pipeline.branch,
       ERDA_PROJECT_ID: $pipeline.pid,
       ERDA_APP_NAME: $pipeline.appName,
-      ERDA_PIPELINE:$pipeline.pipeline,
+      ERDA_PIPELINE: $pipeline.pipeline,
     }
     return
   }
@@ -56,7 +56,8 @@ def-env pipeline-prepare [operation: string, dest: string = 'dev', --list: bool]
 def check-cicd [aid: int, appName: string, branch: string, pipeline: string, --auth: string] {
   # Possible env values: DEV,TEST,STAGING,PROD
   let cicd = {
-    appID: $aid, branches: $branch, ymlNames: $'($aid)/($env.ERDA_ENV)/($branch)/($pipeline)', sources: 'dice', pageNo: 1, pageSize: 10
+    ymlNames: $'($aid)/($env.ERDA_ENV)/($branch)/($pipeline)',
+    appID: $aid, branches: $branch, sources: 'dice', pageNo: 1, pageSize: 10
   }
   let cicdUrl = $'(erda-host)/api/terminus/cicds?($cicd | url build-query)'
   print $'Checking running CICDs for (ansi pb)($appName)(ansi reset) with (ansi g)($pipeline)(ansi reset) from (ansi g)($branch)(ansi reset) branch'
@@ -68,7 +69,7 @@ def check-cicd [aid: int, appName: string, branch: string, pipeline: string, --a
   if $ci.success {
     let running = ($ci.data.pipelines | where status == 'Running')
     if ($running | length) == 0 { return }
-    print $'There are (ansi pb)($running | length)(ansi reset) running pipelines, please wait with patience or re-run with `-f` flag.'
+    print $'There are running pipelines, please wait with patience or re-run with `-f` flag.'
     print $'------------------------------------------------------------------------------------(char nl)'
     print (
       $running
