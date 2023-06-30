@@ -4,15 +4,18 @@
 # TODO:
 #  [x] 执行流水线要求在仓库目录下，且要有 i 分支 & .termixrc 文件里面的配置正确
 #  [x] `t dp -l` 列出所有可用的执行目标
-#  [ ] 查询流水线可以在任意目录下执行，不一定要在仓库目录下，只要流水线 ID 正确即可
+#  [x] 查询流水线可以在任意目录下执行，不一定要在仓库目录下，只要流水线 ID 正确即可
 # Description: 创建 Erda 流水线并执行，同时可以查询流水线执行结果
 #   可以 deploy 的 dest 可以为 dev、test、staging、prod 等，对应的流水线配置文件为 .termixrc 中的 erda.dev、erda.test、erda.staging、erda.prod, etc.
 #   执行流水线时要求在仓库的 i 分支上的 .termixrc 文件中配置了对应 dest 的 pid、appid、branch、appName、pipeline 信息
 #   查询流水线结果时要求流水线ID正确，其他信息不作要求
 
 # Check if the required environment variable was set, quit if not
-def check-envs [] {
-  let emptys = ($in | filter {|it| $env | get -i $it | is-empty })
+def check-envs [operation: string] {
+  let envs = $in
+  # 部署需要配置全部环境变量，查询操作只需要配置 ERDA_SESSION
+  let envs = (match $operation { run|r => $envs, _ => ['ERDA_SESSION'] })
+  let emptys = ($envs | filter {|it| $env | get -i $it | is-empty })
   if ($emptys | length) > 0 {
     print $'Please set (ansi r)($emptys | str join ',')(ansi reset) in your environment first...'
     exit 1
@@ -20,8 +23,10 @@ def check-envs [] {
 }
 
 # Try to load environment variables from .termixrc file on i branch, or list available deploy targets
-def-env pipeline-prepare [dest: string = 'dev', --list: bool] {
+def-env pipeline-prepare [operation: string, dest: string = 'dev', --list: bool] {
   cd $env.JUST_INVOKE_DIR
+  # 查询无需加载其他环境变量，也不需要 .termixrc 文件
+  if $operation in ['query', 'q'] { return }
   if (has-ref origin/i) {
     let repoConf = (git show 'origin/i:.termixrc' | from toml)
     let targets = ($repoConf.erda | columns | str join ", ")
@@ -117,14 +122,8 @@ export def main [
   --cid(-i): int,         # 当操作为 query 时必须指定，用于查询 CICD 执行结果
   --list(-l): bool,       # 当操作为 deploy 时生效，用于列出所有可用的执行目标
 ] {
-  if $list { pipeline-prepare $dest --list } else { pipeline-prepare $dest }
-  ['ERDA_SESSION', 'ERDA_PROJECT_ID', 'ERDA_APP_ID', 'ERDA_APP_NAME', 'ERDA_PIPELINE', 'ERDA_BRANCH'] | check-envs
-  # 以下为应用级别配置，应用的所有开发者保持一致，可以放在代码仓库里面
-  let pid = $env.ERDA_PROJECT_ID
-  let appid = $env.ERDA_APP_ID
-  let appName = $env.ERDA_APP_NAME
-  let pipeline = $env.ERDA_PIPELINE
-  let branch = $env.ERDA_BRANCH
+  if $list { pipeline-prepare $operation $dest --list } else { pipeline-prepare $operation $dest }
+  ['ERDA_SESSION', 'ERDA_PROJECT_ID', 'ERDA_APP_ID', 'ERDA_APP_NAME', 'ERDA_PIPELINE', 'ERDA_BRANCH'] | check-envs $operation
 
   # 用户级别配置，每个开发者根据自己的情况配置, 请注意保密，建议放在本地环境变量里面
   let session = $env.ERDA_SESSION
@@ -133,6 +132,12 @@ export def main [
   let auth = $'cookie: OPENAPISESSION=($session)'
   match $operation {
     run | r => {
+      # 以下为应用级别配置，应用的所有开发者保持一致，可以放在代码仓库里面
+      let appid = $env.ERDA_APP_ID
+      let branch = $env.ERDA_BRANCH
+      let pid = $env.ERDA_PROJECT_ID
+      let appName = $env.ERDA_APP_NAME
+      let pipeline = $env.ERDA_PIPELINE
       let cicdid = (create-cicd --auth $auth $appid $appName $branch $pipeline)
       run-cicd --auth $auth ($cicdid | into int) $appid $pid
     }
