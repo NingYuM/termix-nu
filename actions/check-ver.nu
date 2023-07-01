@@ -31,7 +31,7 @@ export def 'just-ver' [] {
 # Check latest termix-nu version and show upgrading tips if there is a new release
 export def 'termix-ver' [] {
   # FIXME
-  let _DATE_FMT = _DATE_FMT
+  let _DATE_FMT = (_DATE_FMT)
   let tmpPath = (get-tmp-path)
   let currentVer = (get-conf version)
   let confName = ([$tmpPath '.termix-conf'] | path join)
@@ -66,9 +66,9 @@ def 'query-ver' [
   conf: string,
 ] {
   # FIXME
-  let _DATE_FMT = _DATE_FMT
+  let _DATE_FMT = (_DATE_FMT)
   # FIXME
-  let _UPGRADE_TAG = _UPGRADE_TAG
+  let _UPGRADE_TAG = (_UPGRADE_TAG)
   # Update latest commits from remote to local, tags inclueded
   enter $env.TERMIX_DIR; git fetch origin -p; git pull --tags
   let checkDate = (date now | date format $_DATE_FMT)
