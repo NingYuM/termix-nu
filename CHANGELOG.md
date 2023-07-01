@@ -1,18 +1,6 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [1.26.0] - 2023-07-01
-
-### Features
-
-- Check if there is any running pipeline before running it
-- Use `--force` or `-f` to run a pipeline even if there is already one in running
-- Enable set default value for `deploy` command
-
-### Refactor
-
-- Some code refactor, extract Erda host environment variable, etc.
-
 ## [1.25.0] - 2023-06-30
 
 ### Features
