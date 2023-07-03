@@ -76,7 +76,7 @@ def check-cicd [aid: int, appName: string, branch: string, pipeline: string, --a
         | select id commit status normalLabels extra timeBegin timeUpdated
         | update commit {|it| $it.commit | str substring 0..9 }
         | upsert comment {|it| $it.normalLabels.commitDetail | from json | get -i comment | str trim }
-        | upsert commiter {|it| $it.extra.submitUser.name }
+        | upsert commiter {|it| $it.normalLabels.commitDetail | from json | get -i author }
         | update status {|it| $'(ansi pb)($it.status)(ansi reset)' }
         | upsert runner {|it| $it.extra.runUser.name }
         | upsert begin {|it| $it.timeBegin | into datetime | date humanize }
