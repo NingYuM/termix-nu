@@ -14,7 +14,7 @@
 #   查询流水线结果时要求流水线ID正确，其他信息不作要求
 # Usage:
 #   t dp -l
-#   t dp; t dp dev; t tp test -f
+#   t dp; t dp dev; t dp test -f
 #   t dq 997636681239659
 #   t dq --cid 997636681239659
 #   t dq; t dq test
@@ -28,12 +28,11 @@ def all-envs [] { ['ERDA_SESSION', 'ERDA_ENV', 'ERDA_PROJECT_ID', 'ERDA_APP_ID',
 
 # Check if the required environment variable was set, quit if not
 def check-envs [type: string] {
-  let envs = $in
   # 部署需要配置全部环境变量，根据Pipeline ID查询操作只需要配置 ERDA_SESSION
-  let envs = (match $type { all => $envs, _ => ['ERDA_SESSION'] })
-  let emptys = ($envs | filter {|it| $env | get -i $it | is-empty })
-  if ($emptys | length) > 0 {
-    print $'Please set (ansi r)($emptys | str join ',')(ansi reset) in your environment first...'
+  let envs = (match $type { all => (all-envs), _ => ['ERDA_SESSION'] })
+  let empties = ($envs | filter {|it| $env | get -i $it | is-empty })
+  if ($empties | length) > 0 {
+    print $'Please set (ansi r)($empties | str join ',')(ansi reset) in your environment first...'
     exit 1
   }
 }
@@ -41,7 +40,7 @@ def check-envs [type: string] {
 # Try to load environment variables from .termixrc file on i branch, or list available deploy targets
 def-env pipeline-prepare [operation: string, dest: string = 'dev', --list: bool] {
   cd $env.JUST_INVOKE_DIR
-  # 查询无需加载其他环境变量，也不需要 .termixrc 文件
+  # 根据流水线 ID 查询无需加载其他环境变量，也不需要 .termixrc 文件
   if $operation in ['query', 'q'] { return }
   if (has-ref origin/i) {
     let repoConf = (git show 'origin/i:.termixrc' | from toml)
@@ -105,7 +104,7 @@ def format-pipeline-data [pipelines: list] {
 def query-latest-cicd [dest: string, --auth: string] {
   print $'Querying latest CICDs for (ansi pb)($dest)(ansi reset):'; hr-line
   pipeline-prepare query-latest $dest
-  all-envs | check-envs all
+  check-envs all
   let ci = query-cicd --auth $auth $env.ERDA_APP_ID $env.ERDA_APP_NAME $env.ERDA_BRANCH $env.ERDA_PIPELINE 10
   let pipelines = (format-pipeline-data $ci.data.pipelines)
   print ($pipelines | table -e)
@@ -115,23 +114,24 @@ def query-latest-cicd [dest: string, --auth: string] {
 def check-cicd [aid: int, appName: string, branch: string, pipeline: string, --auth: string] {
   print $'Checking running CICDs for (ansi pb)($appName)(ansi reset) with (ansi g)($pipeline)(ansi reset) from (ansi g)($branch)(ansi reset) branch'
   let ci = query-cicd $aid $appName $branch $pipeline --auth $auth
-  # Possible pipeline status: Running,Success,Failed,StopByUser
 
   # Update the remote-tracking branches to get the latest commit ID
   # git fetch origin $branch
   # Always use the remote commit id for checking
   let commitID = (git rev-parse $'origin/($branch)')
-  let match = ($ci.data.pipelines | where status == 'Running')
+  # Possible pipeline status: Running,Success,Failed,StopByUser
+  let running = ($ci.data.pipelines | where status == 'Running')
   let deployed = ($ci.data.pipelines | where commit == $commitID)
-  let nMatch = ($match | length)
+  let nRunning = ($running | length)
   let nDeployed = ($deployed | length)
-  if $nMatch == 0 and $nDeployed == 0 { return }
-  if $nMatch > 0 {
+  # 没有正在部署的流水线，也未曾部署过则直接返回以执行下一步
+  if $nRunning == 0 and $nDeployed == 0 { return }
+  if $nRunning > 0 {
     print $'There are running pipelines, please wait with patience or re-run with `-f` flag.'
   } else if $nDeployed > 0 {
     print $'The commit (ansi p)($commitID | str substring 0..9)@($branch)(ansi reset) has been deployed, re-run with `-f` flag to deploy it again.'
   }
-  let result = if $nMatch > 0 { $match } else { $deployed }
+  let result = if $nRunning > 0 { $running } else { $deployed }
   print $'------------------------------------------------------------------------------------------------(char nl)'
   print (format-pipeline-data $result)
   exit 0
@@ -143,7 +143,7 @@ def create-cicd [aid: int, appName: string, branch: string, pipeline: string, --
   let cicd = { appID: $aid, branch: $branch, pipelineYmlName: $pipeline }
   print $'Initialize CICD for (ansi pb)($appName)(ansi reset) with (ansi g)($pipeline)(ansi reset) from (ansi g)($branch)(ansi reset) branch'
 
-  # Query the id of newly created CICD
+  # Query the ID of newly created CICD
   let ci = (curl --silent -H $auth --data-raw $'($cicd | to json)' $cicdUrl | from json)
   if ($ci | describe) == 'string' { print $'Initialize CICD failed with message: (ansi r)($ci)(ansi reset)'; exit 1 }
   if $ci.success { print $'(ansi g)Initialize CICD successfully...(ansi reset)'; return $ci.data.id }
@@ -195,14 +195,14 @@ def query-cicd-by-id [id: int, --auth: string] {
 # 创建 Erda 流水线并执行，同时可以查询流水线执行结果
 export def main [
   operation: string,      # 目前支持两种操作类型，run 和 query, run 用于创建并执行 CICD, query 用于查询 CICD 执行结果
-  dest?: string = 'dev',  # 当操作为 run 时必须指定，用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, query 时无需指定, 默认为 dev
-  --cid(-i): int,         # 当操作为 query 时必须指定，用于查询 CICD 执行结果
+  dest?: string = 'dev',  # 当操作为 run 时必须指定，用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, query 时按需指定, 默认为 dev
+  --cid(-i): int,         # 当操作为 query 时生效，用于查询 CICD 执行结果，如果不传则查询最近 10 条流水线执行结果
   --list(-l): bool,       # 当操作为 run 时生效，用于列出所有可用的执行目标
-  --force(-f): bool,      # 当操作为 run 时生效，即便已经有正在运行的流水线也会强制执行
+  --force(-f): bool,      # 当操作为 run 时生效，即便已经有正在运行的流水线或者已经部署过也会强制重新执行
 ] {
   if $list { pipeline-prepare $operation $dest --list } else { pipeline-prepare $operation $dest }
   let checkType = (if $operation in ['run', 'r'] { 'all' } else { 'session' })
-  all-envs | check-envs $checkType
+  check-envs $checkType
 
   # 用户级别配置，每个开发者根据自己的情况配置, 请注意保密，建议放在本地环境变量里面
   let session = $env.ERDA_SESSION
@@ -217,11 +217,13 @@ export def main [
       let pid = $env.ERDA_PROJECT_ID
       let appName = $env.ERDA_APP_NAME
       let pipeline = $env.ERDA_PIPELINE
+      # 检查是否有正在执行的流水线以及是否该 Commit 已经部署过
       if not $force { check-cicd --auth $auth $appid $appName $branch $pipeline }
       let cicdid = (create-cicd --auth $auth $appid $appName $branch $pipeline)
       run-cicd --auth $auth ($cicdid | into int) $appid $pid
     }
     query | q => {
+      # 未指定 cid 则查询最近 10 条流水线执行结果
       if ($cid | is-empty) { query-latest-cicd --auth $auth $dest; exit 0 }
       if ($cid | describe) != 'int' {
         print $'Invalid value for --cid: (ansi r)($cid)(ansi reset), should be an integer number.'; exit 1
