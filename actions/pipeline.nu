@@ -68,6 +68,8 @@ def check-cicd [aid: int, appName: string, branch: string, pipeline: string, --a
   if ($ci | describe) == 'string' { print $'Checking CICD failed with message: (ansi r)($ci)(ansi reset)'; exit 1 }
   # Possible pipeline status: Running,Success,Failed,StopByUser
   if $ci.success {
+    # Update the remote-tracking branches to get the latest commit ID
+    git fetch origin $branch
     let commitID = (git rev-parse $'origin/($branch)')
     let match = ($ci.data.pipelines | where status == 'Running')
     let deployed = ($ci.data.pipelines | where commit == $commitID)

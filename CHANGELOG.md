@@ -1,22 +1,6 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [1.27.0] - 2023-07-04
-
-### Bug Fixes
-
-- Fix the display of git commiter for the pipeline check
-
-### Features
-
-- Checking if a commit has been deployed before running a new pipeline
-- Check remote branch SHA instead of local SHA before running the pipeline
-
-### Miscellaneous Tasks
-
-- Change the column header of the running pipelines to title case
-- Adapt to Nushell v0.82.1 and above
-
 ## [1.26.0] - 2023-07-01
 
 ### Bug Fixes
