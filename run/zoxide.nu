@@ -6,7 +6,7 @@
 #
 
 # Default prompt for Nushell.
-let-env __zoxide_oldprompt = (if '__zoxide_oldprompt' in ($env | columns) {
+$env.__zoxide_oldprompt = (if '__zoxide_oldprompt' in ($env | columns) {
   $env.__zoxide_oldprompt
 } else if 'PROMPT_COMMAND' in ($env | columns) {
   $env.PROMPT_COMMAND
@@ -20,7 +20,7 @@ def __zoxide_hook [] {
 }
 
 # Initialize hook.
-let-env PROMPT_COMMAND = {
+$env.PROMPT_COMMAND = {
   __zoxide_hook
   do $env.__zoxide_oldprompt
 }

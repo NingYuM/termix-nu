@@ -1,6 +1,6 @@
 # Nushell Config File
 #
-# version = 0.79.1
+# version = 0.82.1
 
 # source ~/.config/nushell/config.nu
 # Ref:
@@ -22,52 +22,18 @@ alias nucc = print (help commands | where command_type != custom and command_typ
 alias tokeid = print (tokei | lines | skip 1 | str join "\n" | detect columns | where {|it| $it.Language !~ "=" and $it.Language !~ "-" and (not ($it.Files | is-empty)) } | into int Files Lines Code Comments Blanks)
 
 # ----------------------- ENV VARS ------------------------
-let-env EDITOR = 'hx'
+$env.EDITOR = 'hx'
 # Use nushell functions to define your right and left prompt
-let-env PROMPT_COMMAND_RIGHT = { '' }
-# The prompt indicators are environmental variables that represent
-# the state of the prompt
-let-env PROMPT_INDICATOR_VI_INSERT = ": "
-let-env PROMPT_INDICATOR_VI_NORMAL = "〉"
-let-env PROMPT_MULTILINE_INDICATOR = "::: "
+$env.PROMPT_COMMAND_RIGHT = { '' }
 
 let poshDir = (brew --prefix oh-my-posh | str trim)
 let poshTheme = $'($poshDir)/share/oh-my-posh/themes/'
 # Recommend themes: zash*/space/robbyrussel/powerline/powerlevel10k_lean*/material/half-life/lambda
 # Recommend double lines: amro/pure/spaceship
-let-env PROMPT_COMMAND = { oh-my-posh prompt print primary --config $'($poshTheme)/zash.omp.json' }
-let-env PROMPT_INDICATOR = $"(ansi y)$> (ansi reset)"
+$env.PROMPT_COMMAND = { oh-my-posh prompt print primary --config $'($poshTheme)/zash.omp.json' }
+$env.PROMPT_INDICATOR = $"(ansi y)$> (ansi reset)"
 
-# Specifies how environment variables are:
-# - converted from a string to a value on Nushell startup (from_string)
-# - converted from a value back to a string when running extrnal commands (to_string)
-# Note: The conversions happen *after* config.nu is loaded
-let-env ENV_CONVERSIONS = {
-  "PATH": {
-    from_string: { |s| $s | split row (char esep) }
-    to_string: { |v| $v | str join (char esep) }
-  }
-  "Path": {
-    from_string: { |s| $s | split row (char esep) }
-    to_string: { |v| $v | str join (char esep) }
-  }
-}
-
-# Directories to search for scripts when calling source or use
-#
-# By default, <nushell-config-dir>/scripts is added
-let-env NU_LIB_DIRS = [
-  ($nu.config-path | path dirname | path join 'scripts')
-]
-
-# Directories to search for plugin binaries when calling register
-#
-# By default, <nushell-config-dir>/plugins is added
-let-env NU_PLUGIN_DIRS = [
-  ($nu.config-path | path dirname | path join 'plugins')
-]
-
-# let-env PATH = (
+# $env.PATH = (
 #   $env.PATH
 #     | prepend `/Applications/Sublime Text.app/Contents/SharedSupport/bin/`
 #     | prepend `/Applications/Sublime Merge.app/Contents/SharedSupport/bin/`
@@ -258,6 +224,7 @@ let dark_theme = {
     list: white
     block: white
     hints: dark_gray
+    search_result: {bg: red fg: white}
 
     shape_and: purple_bold
     shape_binary: purple_bold
@@ -342,6 +309,7 @@ let light_theme = {
     list: white
     block: white
     hints: dark_gray
+    search_result: {fg: white bg: red}
 
     shape_and: purple_bold
     shape_binary: purple_bold
@@ -385,7 +353,7 @@ let carapace_completer = {|spans|
 }
 
 # The default config record. This is where much of your global configuration is setup.
-let-env config = {
+$env.config = {
   # true or false to enable or disable the welcome banner at startup
   show_banner: true
   ls: {
@@ -408,6 +376,15 @@ let-env config = {
       wrapping_try_keep_words: true     # A strategy used by the 'wrapping' methodology
     }
   }
+  # datetime_format determines what a datetime rendered in the shell would look like.
+  # Behavior without this configuration point will be to "humanize" the datetime display,
+  # showing something like "a day ago."
+
+  datetime_format: {
+    normal: '%a, %d %b %Y %H:%M:%S %z'  # shows up in displays of variables or other datetime's outside of tables
+    # table: '%m/%d/%y %I:%M:%S%p'      # generally shows up in tabular outputs such as ls. commenting this out will change it to the default human readable datetime format
+  }
+
   # A 'explore' utility config
   explore: {
     help_banner: true
@@ -466,9 +443,10 @@ let-env config = {
     }
   }
   history: {
-    max_size: 10000             # Session has to be reloaded for this to take effect
+    max_size: 100_000           # Session has to be reloaded for this to take effect
     sync_on_enter: true         # Enable to share history between multiple sessions, else you have to close the session to write history to file
     file_format: "sqlite"       # "sqlite" or "plaintext"
+    isolation: false            # true enables history isolation, false disables it. true will allow the history to be isolated to the current session. false will allow the history to be shared across all sessions.
   }
   completions: {
     quick: true                 # set this to false to prevent auto-selecting completions when only one remains
@@ -476,14 +454,14 @@ let-env config = {
     algorithm: "prefix"         # prefix or fuzzy
     case_sensitive: false       # set to true to enable case-sensitive completions
     external: {
-      enable: true              # set to false to prevent nushell looking into $env.PATH to find more suggestions, `false` recommended for WSL users as this look up my be very slow
+      enable: true              # set to false to prevent nushell looking into $env.PATH to find more suggestions, `false` recommended for WSL users as this look up may be very slow
       max_results: 100          # setting it lower can improve completion performance at the cost of omitting some options
       completer: $carapace_completer           # check 'carapace_completer' above as an example
     }
   }
   filesize: {
     metric: true                # true => KB, MB, GB (ISO standard), false => KiB, MiB, GiB (Windows standard)
-    format: "auto"              # b, kb, kib, mb, mib, gb, gib, tb, tib, pb, pib, eb, eib, zb, zib, auto
+    format: "auto"              # b, kb, kib, mb, mib, gb, gib, tb, tib, pb, pib, eb, eib, auto
   }
   cursor_shape: {
     emacs: line                 # block, underscore, line, blink_block, blink_underscore, blink_line (line is the default)
@@ -498,7 +476,7 @@ let-env config = {
   use_ansi_coloring: true
   bracketed_paste: true         # enable bracketed paste, currently useless on windows
   edit_mode: emacs              # emacs, vi
-  shell_integration: true       # enables terminal markers and a workaround to arrow keys stop working issue
+  shell_integration: true       # enables terminal shell integration. Off by default, as some terminals have issues with this.
   render_right_prompt_on_last_line: false   # true or false to enable or disable right prompt to be rendered on last line of the prompt.
 
   hooks: {
@@ -783,4 +761,4 @@ let-env config = {
   ]
 }
 
-let-env PATH = ($env.PATH | each {|r| $r | split row (char esep)} | flatten | uniq | str join (char esep))
+$env.PATH = ($env.PATH | each {|r| $r | split row (char esep)} | flatten | uniq | str join (char esep))

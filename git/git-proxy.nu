@@ -37,7 +37,7 @@ def-env 'git-proxy' [
     }
 
     # set http_proxy=http://127.0.0.1:10809; set http_proxys=http://127.0.0.1:10809; set ALL_RROXY=http://127.0.0.1:10809
-    # let-env http_proxy = 'http://127.0.0.1:10809'; let-env https_proxy = 'http://127.0.0.1:10809'; let-env ALL_RROXY = 'http://127.0.0.1:10809'
+    # load-env {http_proxy: 'http://127.0.0.1:7890', https_proxy: 'http://127.0.0.1:7890', ALL_RROXY: 'http://127.0.0.1:7890'}
     # The first proxy in grep result should be http proxy
     let proxy = ($proxy).0
     let isClashX = ($proxies | lines | first) =~ 'ClashX'
