@@ -68,7 +68,7 @@ def check-cicd [aid: int, appName: string, branch: string, pipeline: string, --a
   if ($ci | describe) == 'string' { print $'Checking CICD failed with message: (ansi r)($ci)(ansi reset)'; exit 1 }
   # Possible pipeline status: Running,Success,Failed,StopByUser
   if $ci.success {
-    let commitID = (git rev-parse $branch)
+    let commitID = (git rev-parse $'origin/($branch)')
     let match = ($ci.data.pipelines | where status == 'Running')
     let deployed = ($ci.data.pipelines | where commit == $commitID)
     let nMatch = ($match | length)
@@ -77,7 +77,7 @@ def check-cicd [aid: int, appName: string, branch: string, pipeline: string, --a
     if $nMatch > 0 {
       print $'There are running pipelines, please wait with patience or re-run with `-f` flag.'
     } else if $nDeployed > 0 {
-      print $'The commit (ansi p)($commitID | str substring 0..9)@($branch)(ansi reset) has been deployed, to deploy it again please re-run with `-f` flag.'
+      print $'The commit (ansi p)($commitID | str substring 0..9)@($branch)(ansi reset) has been deployed, re-run with `-f` flag to deploy it again.'
     }
     let result = if $nMatch > 0 { $match } else { $deployed }
     print $'------------------------------------------------------------------------------------------------(char nl)'
