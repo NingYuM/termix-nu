@@ -7,21 +7,30 @@
 #  [x] 查询流水线可以在任意目录下执行，不一定要在仓库目录下，只要流水线 ID 正确即可
 #  [x] 执行新流水线之前可以查询是否有正在运行的流水线，如果有则停止执行，也可以加上 -f 强制执行
 #  [x] 执行新流水线之前可以查询同一 Commit 是否已经被部署过，如果部署过则停止执行，也可以加上 -f 强制执行
+#  [x] 允许查询某个 target 下的最近20条流水线记录
 # Description: 创建 Erda 流水线并执行，同时可以查询流水线执行结果
 #   可以 deploy 的 dest 可以为 dev、test、staging、prod 等，对应的流水线配置文件为 .termixrc 中的 erda.dev、erda.test、erda.staging、erda.prod, etc.
 #   执行流水线时要求在仓库的 i 分支上的 .termixrc 文件中配置了对应 dest 的 pid、appid、branch、appName、pipeline 信息
 #   查询流水线结果时要求流水线ID正确，其他信息不作要求
-#   https://erda.cloud/api/terminus/cicds?branches=develop&appID=11147&ymlNames=11147%2FTEST%2Fdevelop%2F.erda%2Fpipelines%2Fnusi.yml%2C%2F.erda%2Fpipelines%2Fnusi.yml&pageNo=1&pageSize=10
+# Usage:
+#   t dp -l
+#   t dp; t dp dev; t tp test -f
+#   t dq 997636681239659
+#   t dq --cid 997636681239659
+#   t dq; t dq test
 
 use ../utils/common.nu *
 
 def erda-host [] { 'https://erda.cloud' }
 
+# 针对特定应用查询所需的全部环境变量
+def all-envs [] { ['ERDA_SESSION', 'ERDA_ENV', 'ERDA_PROJECT_ID', 'ERDA_APP_ID', 'ERDA_APP_NAME', 'ERDA_PIPELINE', 'ERDA_BRANCH'] }
+
 # Check if the required environment variable was set, quit if not
-def check-envs [operation: string] {
+def check-envs [type: string] {
   let envs = $in
-  # 部署需要配置全部环境变量，查询操作只需要配置 ERDA_SESSION
-  let envs = (match $operation { run|r => $envs, _ => ['ERDA_SESSION'] })
+  # 部署需要配置全部环境变量，根据Pipeline ID查询操作只需要配置 ERDA_SESSION
+  let envs = (match $type { all => $envs, _ => ['ERDA_SESSION'] })
   let emptys = ($envs | filter {|it| $env | get -i $it | is-empty })
   if ($emptys | length) > 0 {
     print $'Please set (ansi r)($emptys | str join ',')(ansi reset) in your environment first...'
@@ -55,12 +64,12 @@ def-env pipeline-prepare [operation: string, dest: string = 'dev', --list: bool]
   print $'No (ansi r)origin/i(ansi reset) branch exits, please create it before running this script...'; exit 1
 }
 
-# 根据 AppID、Branch、Pipeline 查询流水线
-def query-cicd [aid: int, appName: string, branch: string, pipeline: string, --auth: string] {
+# 根据 AppID、Branch、Pipeline 查询最近的流水线执行记录
+def query-cicd [aid: int, appName: string, branch: string, pipeline: string, count?: int = 20, --auth: string] {
   # Possible env values: DEV,TEST,STAGING,PROD
   let cicd = {
     ymlNames: $'($aid)/($env.ERDA_ENV)/($branch)/($pipeline)',
-    appID: $aid, branches: $branch, sources: 'dice', pageNo: 1, pageSize: 20
+    appID: $aid, branches: $branch, sources: 'dice', pageNo: 1, pageSize: $count
   }
   let cicdUrl = $'(erda-host)/api/terminus/cicds?($cicd | url build-query)'
 
@@ -90,6 +99,16 @@ def format-pipeline-data [pipelines: list] {
       | reject extra timeBegin timeUpdated normalLabels
       | rename ID Commit Status
   )
+}
+
+# 查询指定目标上最新的N条流水线执行结果
+def query-latest-cicd [dest: string, --auth: string] {
+  print $'Querying latest CICDs for (ansi pb)($dest)(ansi reset):'; hr-line
+  pipeline-prepare query-latest $dest
+  all-envs | check-envs all
+  let ci = query-cicd --auth $auth $env.ERDA_APP_ID $env.ERDA_APP_NAME $env.ERDA_BRANCH $env.ERDA_PIPELINE 10
+  let pipelines = (format-pipeline-data $ci.data.pipelines)
+  print ($pipelines | table -e)
 }
 
 # 检查是否有正在执行的流水线，如果有则显示其概要信息并退出
@@ -182,7 +201,8 @@ export def main [
   --force(-f): bool,      # 当操作为 run 时生效，即便已经有正在运行的流水线也会强制执行
 ] {
   if $list { pipeline-prepare $operation $dest --list } else { pipeline-prepare $operation $dest }
-  ['ERDA_SESSION', 'ERDA_ENV', 'ERDA_PROJECT_ID', 'ERDA_APP_ID', 'ERDA_APP_NAME', 'ERDA_PIPELINE', 'ERDA_BRANCH'] | check-envs $operation
+  let checkType = (if $operation in ['run', 'r'] { 'all' } else { 'session' })
+  all-envs | check-envs $checkType
 
   # 用户级别配置，每个开发者根据自己的情况配置, 请注意保密，建议放在本地环境变量里面
   let session = $env.ERDA_SESSION
@@ -202,7 +222,10 @@ export def main [
       run-cicd --auth $auth ($cicdid | into int) $appid $pid
     }
     query | q => {
-      if ($cid | is-empty) { print $'Please specify the id of the CICD to query with --cid'; exit 1 }
+      if ($cid | is-empty) { query-latest-cicd --auth $auth $dest; exit 0 }
+      if ($cid | describe) != 'int' {
+        print $'Invalid value for --cid: (ansi r)($cid)(ansi reset), should be an integer number.'; exit 1
+      }
       query-cicd-by-id --auth $auth $cid
     }
     _ => {
@@ -220,13 +243,20 @@ export def erda-deploy [
   --list(-l): bool,       # 当操作为 run 时生效，用于列出所有可用的执行目标
   --force(-f): bool,      # 当操作为 run 时生效，即便已经有正在运行的流水线也会强制执行
 ] {
-  if not ($cid | is-empty) {
-    if ($cid | describe) != 'int' {
-      print $'Invalid value for --cid: (ansi r)($cid)(ansi reset), should be an integer number.'; exit 1
+  match $operation {
+    run | r => {
+      if $list { main run $dest --list } else {
+        if $force { main run $dest --force } else { main run $dest }
+      }
     }
-    main query --cid $cid; return
-  }
-  if $list { main $operation $dest --list } else {
-    if $force { main $operation $dest --force } else { main $operation $dest }
+    query | q => {
+      # 允许非指定流水线ID的查询
+      if ($cid | is-empty) {
+        # 需要同时支持 t dq 997636681239659 & t dq test
+        let cidParsed = (do -i {$dest | into int})
+        if ($cidParsed | describe) == 'int' { main query --cid $cidParsed } else { main query $dest }
+      } else { main query --cid $cid }
+    }
+    _ => { main $operation }
   }
 }

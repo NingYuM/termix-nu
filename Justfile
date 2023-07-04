@@ -82,9 +82,9 @@ deploy *FLAGS: _setup
     erda-deploy run {{FLAGS}}
 
 # Query the Erda pipeline running status by CICD id
-deploy-query id: _setup
+deploy-query *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'pipeline.nu') }}; \
-    erda-deploy query --cid={{id}}
+    erda-deploy query {{OPTIONS}}
 
 # Listing the branches of a git repo and the time of the last commit
 git-branch: _setup
