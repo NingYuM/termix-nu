@@ -55,55 +55,67 @@ def-env pipeline-prepare [operation: string, dest: string = 'dev', --list: bool]
   print $'No (ansi r)origin/i(ansi reset) branch exits, please create it before running this script...'; exit 1
 }
 
-# 检查是否有正在执行的流水线，如果有则显示其概要信息并退出
-def check-cicd [aid: int, appName: string, branch: string, pipeline: string, --auth: string] {
+# 根据 AppID、Branch、Pipeline 查询流水线
+def query-cicd [aid: int, appName: string, branch: string, pipeline: string, --auth: string] {
   # Possible env values: DEV,TEST,STAGING,PROD
   let cicd = {
     ymlNames: $'($aid)/($env.ERDA_ENV)/($branch)/($pipeline)',
     appID: $aid, branches: $branch, sources: 'dice', pageNo: 1, pageSize: 20
   }
   let cicdUrl = $'(erda-host)/api/terminus/cicds?($cicd | url build-query)'
-  print $'Checking running CICDs for (ansi pb)($appName)(ansi reset) with (ansi g)($pipeline)(ansi reset) from (ansi g)($branch)(ansi reset) branch'
 
   # Query the id of newly created CICD
   let ci = (curl --silent -H $auth $cicdUrl | from json)
-  if ($ci | describe) == 'string' { print $'Checking CICD failed with message: (ansi r)($ci)(ansi reset)'; exit 1 }
-  # Possible pipeline status: Running,Success,Failed,StopByUser
-  if $ci.success {
-    # Update the remote-tracking branches to get the latest commit ID
-    # git fetch origin $branch
-    # Always use the remote commit id for checking
-    let commitID = (git rev-parse $'origin/($branch)')
-    let match = ($ci.data.pipelines | where status == 'Running')
-    let deployed = ($ci.data.pipelines | where commit == $commitID)
-    let nMatch = ($match | length)
-    let nDeployed = ($deployed | length)
-    if $nMatch == 0 and $nDeployed == 0 { return }
-    if $nMatch > 0 {
-      print $'There are running pipelines, please wait with patience or re-run with `-f` flag.'
-    } else if $nDeployed > 0 {
-      print $'The commit (ansi p)($commitID | str substring 0..9)@($branch)(ansi reset) has been deployed, re-run with `-f` flag to deploy it again.'
-    }
-    let result = if $nMatch > 0 { $match } else { $deployed }
-    print $'------------------------------------------------------------------------------------------------(char nl)'
-    print (
-      $result
-        | select id commit status normalLabels extra timeBegin timeUpdated
-        | update commit {|it| $it.commit | str substring 0..9 }
-        | upsert Comment {|it| $it.normalLabels.commitDetail | from json | get -i comment | str trim }
-        | upsert Author {|it| $it.normalLabels.commitDetail | from json | get -i author }
-        | update status {|it| $'(ansi pb)($it.status)(ansi reset)' }
-        | upsert Runner {|it| $it.extra.runUser.name }
-        | upsert Begin {|it| $it.timeBegin | into datetime | date humanize }
-        | upsert Updated {|it| $it.timeUpdated | into datetime | date humanize }
-        | reject extra timeBegin timeUpdated normalLabels
-        | rename ID Commit Status
-    )
-    exit 0
+  if ($ci | describe) == 'string' { print $'Query CICD failed with message: (ansi r)($ci)(ansi reset)'; exit 1 }
+  if not $ci.success {
+    print $'(ansi r)Query CICD failed, Please try again ...(ansi reset)'
+    print ($ci | table -e)
+    exit 1
   }
-  print $'(ansi r)Checking CICD failed, Please try again ...(ansi reset)'
-  print ($ci | table -e)
-  exit 1
+  return $ci
+}
+
+# 格式化流水线查询结果，以更友好的方式呈现
+def format-pipeline-data [pipelines: list] {
+  return (
+    $pipelines
+      | select id commit status normalLabels extra timeBegin timeUpdated
+      | update commit {|it| $it.commit | str substring 0..9 }
+      | upsert Comment {|it| $it.normalLabels.commitDetail | from json | get -i comment | str trim }
+      | upsert Author {|it| $it.normalLabels.commitDetail | from json | get -i author }
+      | update status {|it| $'(ansi pb)($it.status)(ansi reset)' }
+      | upsert Runner {|it| $it.extra.runUser.name }
+      | upsert Begin {|it| $it.timeBegin | into datetime | date humanize }
+      | upsert Updated {|it| $it.timeUpdated | into datetime | date humanize }
+      | reject extra timeBegin timeUpdated normalLabels
+      | rename ID Commit Status
+  )
+}
+
+# 检查是否有正在执行的流水线，如果有则显示其概要信息并退出
+def check-cicd [aid: int, appName: string, branch: string, pipeline: string, --auth: string] {
+  print $'Checking running CICDs for (ansi pb)($appName)(ansi reset) with (ansi g)($pipeline)(ansi reset) from (ansi g)($branch)(ansi reset) branch'
+  let ci = query-cicd $aid $appName $branch $pipeline --auth $auth
+  # Possible pipeline status: Running,Success,Failed,StopByUser
+
+  # Update the remote-tracking branches to get the latest commit ID
+  # git fetch origin $branch
+  # Always use the remote commit id for checking
+  let commitID = (git rev-parse $'origin/($branch)')
+  let match = ($ci.data.pipelines | where status == 'Running')
+  let deployed = ($ci.data.pipelines | where commit == $commitID)
+  let nMatch = ($match | length)
+  let nDeployed = ($deployed | length)
+  if $nMatch == 0 and $nDeployed == 0 { return }
+  if $nMatch > 0 {
+    print $'There are running pipelines, please wait with patience or re-run with `-f` flag.'
+  } else if $nDeployed > 0 {
+    print $'The commit (ansi p)($commitID | str substring 0..9)@($branch)(ansi reset) has been deployed, re-run with `-f` flag to deploy it again.'
+  }
+  let result = if $nMatch > 0 { $match } else { $deployed }
+  print $'------------------------------------------------------------------------------------------------(char nl)'
+  print (format-pipeline-data $result)
+  exit 0
 }
 
 # 创建 CICD 流水线并返回其对应 ID
@@ -133,7 +145,7 @@ def run-cicd [id: int, appid: int, pid: int, --auth: string] {
 }
 
 # 根据流水线 ID 查询流水线执行结果
-def query-cicd [id: int, --auth: string] {
+def query-cicd-by-id [id: int, --auth: string] {
   let queryUrl = $'(erda-host)/api/terminus/pipelines/($id)'
   let query = (curl --silent -H $auth $queryUrl | from json)
 
@@ -191,7 +203,7 @@ export def main [
     }
     query | q => {
       if ($cid | is-empty) { print $'Please specify the id of the CICD to query with --cid'; exit 1 }
-      query-cicd --auth $auth $cid
+      query-cicd-by-id --auth $auth $cid
     }
     _ => {
       print $'Unsupported operation: (ansi r)($operation)(ansi reset), should be (ansi g)run(ansi reset) or (ansi g)query(ansi reset)'
