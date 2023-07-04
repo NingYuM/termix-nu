@@ -6,6 +6,8 @@
 # Ref:
 #   https://github.com/nushell/nushell/issues/4396
 
+use ../utils/common.nu *
+
 # Transfer repo from source to dest
 export def 'git repo-transfer' [
   source: string   # The source repo git url

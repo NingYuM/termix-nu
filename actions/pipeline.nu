@@ -13,6 +13,8 @@
 #   查询流水线结果时要求流水线ID正确，其他信息不作要求
 #   https://erda.cloud/api/terminus/cicds?branches=develop&appID=11147&ymlNames=11147%2FTEST%2Fdevelop%2F.erda%2Fpipelines%2Fnusi.yml%2C%2F.erda%2Fpipelines%2Fnusi.yml&pageNo=1&pageSize=10
 
+use ../utils/common.nu *
+
 def erda-host [] { 'https://erda.cloud' }
 
 # Check if the required environment variable was set, quit if not

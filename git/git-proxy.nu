@@ -7,6 +7,8 @@
 #   git-proxy off
 #   git-proxy on ali
 
+use ../utils/common.nu *
+
 # Turn on or off the proxies for git
 def-env 'git-proxy' [
   status: string  # Set proxy status: on/off

@@ -10,6 +10,8 @@
 #   t ls-node v15
 #   t ls-node v15 true
 
+use ../utils/common.nu *
+
 export def 'ls-node-remote' [
   minVer: string   # The node version you want to query
   isLts: bool      # Filter the node versions that are LTS

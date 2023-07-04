@@ -4,6 +4,8 @@
 # Usage:
 #   t show-env
 
+use ../utils/common.nu *
+
 # Show locally installed cli app's version and env information
 export def main [] {
   let termixDir = (get-env TERMIX_DIR '(empty)')

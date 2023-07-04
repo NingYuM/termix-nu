@@ -73,20 +73,17 @@ release  updateLog=('false') forceUpgrade=('false'): _setup
 
 # Quickly open the matched nav url in default browser, for mac or windows with powershell
 go nav=('list'): _setup
-  @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
-    overlay use {{ join(_termix, 'actions', 'quick-nav.nu') }}; \
+  @overlay use {{ join(_termix, 'actions', 'quick-nav.nu') }}; \
     go {{nav}}
 
 # Initialize and run an Erda pipeline, the target can be queried by `dp -l`, default is `dev`
 deploy *FLAGS: _setup
-  @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
-    overlay use {{ join(_termix, 'actions', 'pipeline.nu') }}; \
+  @overlay use {{ join(_termix, 'actions', 'pipeline.nu') }}; \
     erda-deploy run {{FLAGS}}
 
 # Query the Erda pipeline running status by CICD id
 deploy-query id: _setup
-  @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
-    overlay use {{ join(_termix, 'actions', 'pipeline.nu') }}; \
+  @overlay use {{ join(_termix, 'actions', 'pipeline.nu') }}; \
     erda-deploy query --cid={{id}}
 
 # Listing the branches of a git repo and the time of the last commit
@@ -138,14 +135,12 @@ rename-branch from=('') to=('') remote=('origin'): _setup
 
 # 显示本机安装应用版本及环境变量相关信息
 show-env: _setup
-  @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
-    overlay use {{ join(_termix, 'actions', 'show-env.nu') }}; \
+  @overlay use {{ join(_termix, 'actions', 'show-env.nu') }}; \
     show-env
 
 # 查询已发布Node版本，支持指定最低版本号
 ls-node minVer=('12') isLts=('false'): _setup
-  @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
-    overlay use {{ join(_termix, 'actions', 'ls-node.nu') }}; \
+  @overlay use {{ join(_termix, 'actions', 'ls-node.nu') }}; \
     ls-node-remote '{{minVer}}' {{isLts}}
 
 # 按时间顺序列出所有的 git tags, 默认按 `time` 排序，可选按 `tag` 排序：ls-tags tag
@@ -159,14 +154,12 @@ ls-tags by=('time'): _setup
 
 # 开启或者关闭 Brew 国内镜像加速
 brew-speed-up status=('on'): _setup
-  @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
-    overlay use {{ join(_termix, 'actions', 'brew-speed-up.nu') }}; \
+  @overlay use {{ join(_termix, 'actions', 'brew-speed-up.nu') }}; \
     brew-speed-up {{status}}
 
 # 开启或者关闭 git 代理, 目前仅支持在阿里郎加速模式下开启 git 代理
 git-proxy status=('on'): _setup
   @load-env { GIT_PROXY_STATUS: '{{status}}' }; \
-    overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
     nu {{ join(_termix, 'git', 'git-proxy.nu') }}
 
 # 查询电商前端团队本周工时填报情况
@@ -185,8 +178,7 @@ gaia-release version=('') repos=('mall,mobile,picker') delete=('false'): _setup
 
 # Transfer a git repo from source to the dest
 repo-transfer from=('') to=(''): _setup
-  @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
-    overlay use {{ join(_termix, 'git', 'repo-transfer.nu') }}; \
+  @overlay use {{ join(_termix, 'git', 'repo-transfer.nu') }}; \
     git repo-transfer {{from}} {{to}}
 
 # t pull-redev true

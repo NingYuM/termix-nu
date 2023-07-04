@@ -5,6 +5,8 @@
 # Usage:
 #   just go
 
+use ../utils/common.nu *
+
 export def 'go' [
   nav_key?: string  # The nav key to go from `quickNavs` config in termix.toml
 ] {
