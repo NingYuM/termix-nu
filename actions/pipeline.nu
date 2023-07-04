@@ -69,7 +69,8 @@ def check-cicd [aid: int, appName: string, branch: string, pipeline: string, --a
   # Possible pipeline status: Running,Success,Failed,StopByUser
   if $ci.success {
     # Update the remote-tracking branches to get the latest commit ID
-    git fetch origin $branch
+    # git fetch origin $branch
+    # Always use the remote commit id for checking
     let commitID = (git rev-parse $'origin/($branch)')
     let match = ($ci.data.pipelines | where status == 'Running')
     let deployed = ($ci.data.pipelines | where commit == $commitID)
