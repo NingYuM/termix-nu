@@ -11,8 +11,6 @@ All notable changes to this project will be documented in this file.
 
 - Checking if a commit has been deployed before running a new pipeline
 - Check remote branch SHA instead of local SHA before running the pipeline
-- Update the remote-tracking branches to get the latest commit ID
-- Always use the remote commit id for deploy checking
 
 ### Miscellaneous Tasks
 
