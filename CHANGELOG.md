@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Fix the display of git commiter for the pipeline check
+- Fix the display of git committer for the pipeline check
 
 ### Features
 

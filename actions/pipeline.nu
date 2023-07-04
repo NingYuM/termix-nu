@@ -89,7 +89,7 @@ def check-cicd [aid: int, appName: string, branch: string, pipeline: string, --a
         | select id commit status normalLabels extra timeBegin timeUpdated
         | update commit {|it| $it.commit | str substring 0..9 }
         | upsert Comment {|it| $it.normalLabels.commitDetail | from json | get -i comment | str trim }
-        | upsert Commiter {|it| $it.normalLabels.commitDetail | from json | get -i author }
+        | upsert Author {|it| $it.normalLabels.commitDetail | from json | get -i author }
         | update status {|it| $'(ansi pb)($it.status)(ansi reset)' }
         | upsert Runner {|it| $it.extra.runUser.name }
         | upsert Begin {|it| $it.timeBegin | into datetime | date humanize }
