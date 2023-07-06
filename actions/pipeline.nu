@@ -57,7 +57,7 @@ def get-pipeline-conf [dest: string = 'dev', --apps: string, --list: bool] {
   # 本地配置文件名，优先从 i 分支上的 .termixrc 文件中读取配置
   # 如果 i 分支不存在则从当前目录下的 .termixrc 文件中读取配置
   cd $env.JUST_INVOKE_DIR
-  let useI = has-ref origin/i
+  let useI = (has-ref origin/i)
   let LOCAL_CONFIG = '.termixrc'
   let useRc = ($LOCAL_CONFIG | path exists)
   let configFile = if $useI { 'origin/i:.termixrc' } else { $LOCAL_CONFIG }
@@ -107,7 +107,9 @@ def query-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
   # Query the id of newly created CICD
   let ci = (curl --silent -H $auth $cicdUrl | from json)
   # log 'Query CICD: ' ($ci.data.pipelines | select id commit status | table -e)
-  if ($ci | describe) == 'string' { print $'Query CICD failed with message: (ansi r)($ci)(ansi reset)'; exit 1 }
+  if ($ci | describe) == 'string' or ($ci | is-empty) {
+    print $'Query CICD failed with message: (ansi r)($ci)(ansi reset)'; exit 1
+  }
   if not $ci.success {
     print $'(ansi r)Query CICD failed, Please try again ...(ansi reset)'
     print ($ci | table -e)
@@ -137,12 +139,12 @@ def format-pipeline-data [pipelines: list] {
 
 # 查询指定目标上最新的N条流水线执行结果
 def query-latest-cicd [dest: string, --apps: string, --auth: string] {
-  let apps = get-pipeline-conf $dest --apps $apps
+  let apps = (get-pipeline-conf $dest --apps $apps)
   check-envs
   for app in $apps {
     print $'Querying latest CICDs for (ansi pb)($app.appName) on ($app.branch)(ansi reset) branch:'; hr-line -c pb
-    let ci = query-cicd --auth $auth $app.appid $app.appName $app.branch $app.env $app.pipeline 10
-    let pipelines = format-pipeline-data $ci.data.pipelines
+    let ci = (query-cicd --auth $auth $app.appid $app.appName $app.branch $app.env $app.pipeline 10)
+    let pipelines = (format-pipeline-data $ci.data.pipelines)
     print ($pipelines | table -e)
   }
 }
@@ -150,7 +152,7 @@ def query-latest-cicd [dest: string, --apps: string, --auth: string] {
 # 检查是否有正在执行的流水线，如果有则显示其概要信息并退出
 def check-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipeline: string, --auth: string] {
   print $'Checking running CICDs for (ansi pb)($appName)(ansi reset) with (ansi g)($pipeline)(ansi reset) from (ansi g)($branch)(ansi reset) branch'
-  let ci = query-cicd $aid $appName $branch $erdaEnv $pipeline --auth $auth
+  let ci = (query-cicd $aid $appName $branch $erdaEnv $pipeline --auth $auth)
 
   # Update the remote-tracking branches to get the latest commit ID
   # git fetch origin $branch
