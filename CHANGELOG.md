@@ -5,11 +5,11 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
-- Support query the latest 10 pipeline running results
+- Support query the latest 10 pipeline running results by `t dq` or `t dq test`, etc.
 
 ### Miscellaneous Tasks
 
-- Update some comments
+- Add some comments
 
 ### Refactor
 
