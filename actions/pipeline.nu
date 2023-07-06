@@ -5,22 +5,25 @@
 #  [x] 执行流水线要求在仓库目录下，且要有 i 分支 & .termixrc 文件里面的配置正确
 #  [x] `t dp -l` 列出所有可用的执行目标
 #  [x] 查询流水线可以在任意目录下执行，不一定要在仓库目录下，只要流水线 ID 正确即可
-#  [x] 执行新流水线之前可以查询是否有正在运行的流水线，如果有则停止执行，也可以加上 -f 强制执行
-#  [x] 执行新流水线之前可以查询同一 Commit 是否已经被部署过，如果部署过则停止执行，也可以加上 -f 强制执行
+#  [x] 执行新流水线之前可以查询是否有正在运行的流水线，如果有则停止执行，也可以加上 `-f` 强制执行
+#  [x] 执行新流水线之前可以查询同一 Commit 是否已经被部署过，如果部署过则停止执行，也可以加上 `-f` 强制执行
 #  [x] 允许查询某个 target 下的最近20条流水线记录
 #  [x] 批量部署模式下不会检查该 Commit 是否部署过，但是会检查同一分支上是否有流水线正在部署
-#  [ ] 支持一次部署多个应用，比如 `t ndp dev --apps app1,app2,app3` or `t ndp --apps all`
-#  [ ] 支持一次查询多个应用的部署情况，比如 `t ndq dev --apps app1,app2,app3`
+#  [x] 支持一次部署多个应用，比如 `t dp dev --apps app1,app2,app3` or `t dp --apps all`
+#  [x] 支持一次查询多个应用的部署情况，比如 `t dq dev --apps app1,app2,app3`
 # Description: 创建 Erda 流水线并执行，同时可以查询流水线执行结果
-#   可以 deploy 的 dest 可以为 dev、test、staging、prod 等，对应的流水线配置文件为 .termixrc 中的 erda.dev、erda.test、erda.staging、erda.prod, etc.
-#   执行流水线时要求在仓库的 i 分支上的 .termixrc 文件中配置了对应 dest 的 pid、appid、branch、appName、pipeline 信息
-#   查询流水线结果时要求流水线ID正确，其他信息不作要求
+#   可以 deploy 的 target 可以为 dev、test 等，对应的流水线配置文件为 .termixrc 中的 erda.dev、erda.test, etc.
+#   执行流水线时要求在仓库的 i 分支上的 .termixrc 文件中配置了对应 dest 的 pid、appid、appName、alias、branch、pipeline 信息
+#   如果不存在 origin/i 分支则会尝试从当前文件夹下的 .termixrc 文件中读取配置
+#   查询流水线结果时可以通过流水线ID，应用名，或者单应用模式下不输入也可以
 # Usage:
 #   t dp -l
 #   t dp; t dp dev; t dp test -f
 #   t dq 997636681239659
 #   t dq --cid 997636681239659
 #   t dq; t dq test
+#   t dp dev --apps app1,app2; t dp test -a all
+#   t dq dev --apps app1,app2; t dq test -a all
 
 use ../utils/common.nu *
 
@@ -49,32 +52,45 @@ def check-pipeline-conf [pipeline: any] {
   }
 }
 
-# Try to load pipeline config variables from .termixrc file on i branch, or list available deploy targets
+# Try to load pipeline config variables from .termixrc file on i branch or current dir, or list available deploy targets
 def get-pipeline-conf [dest: string = 'dev', --apps: string, --list: bool] {
   # 本地配置文件名，优先从 i 分支上的 .termixrc 文件中读取配置
   # 如果 i 分支不存在则从当前目录下的 .termixrc 文件中读取配置
-  let LOCAL_CONFIG = '.termixrc'
   cd $env.JUST_INVOKE_DIR
   let useI = has-ref origin/i
+  let LOCAL_CONFIG = '.termixrc'
   let useRc = ($LOCAL_CONFIG | path exists)
   let configFile = if $useI { 'origin/i:.termixrc' } else { $LOCAL_CONFIG }
   if ($useI or $useRc) {
-    if (not $useI) and ($apps | str trim | is-empty) {
-      print $'You are running the command in (ansi p)batch mode(ansi reset), Please specify the apps to handle by (ansi r)`--apps` or `-a`(ansi reset) flag(ansi reset)...'; exit 1
-    }
     let repoConf = if $useI { (git show 'origin/i:.termixrc' | from toml) } else { (open $LOCAL_CONFIG | from toml) }
-    let targets = ($repoConf.erda | columns | str join ", ")
-    # FIXME: Print available deploy targets and apps with more detail by table
-    if $list { print $'Available deploy targets in ($configFile) are: (ansi pb)($targets)(ansi reset)'; exit 0 }
+    # Print available deploy targets and apps with more detail
+    if $list {
+      print $'Available deploy targets in ($configFile) are:(char nl)'
+      let upsertAlias = {|it| if ($it | get -i alias | is-empty) { 'N/A' } else { $it.alias } }
+      for target in ($repoConf.erda | columns) {
+        print $'Target (ansi p)($target)(ansi reset):'; hr-line
+        print ($repoConf.erda | get $target | upsert alias $upsertAlias | select appName alias branch env pipeline)
+        if ($repoConf.erda | get $target | describe) =~ 'record' { print -n (char nl) }
+      }
+      exit 0
+    }
+
     let pipeline = ($repoConf.erda | get -i $dest)
     if ($pipeline | is-empty) {
       print $'Please set the App configs for (ansi r)erda.($dest)(ansi reset) in (ansi r)($configFile)(ansi reset) first...'; exit 1
     }
-    let conf = if ($pipeline | describe) =~ 'record' { return [$pipeline] } else { $pipeline }
-    let cond = {|x| $apps | split row ',' | any {|it| $it in [$x.appName ($x | get -i alias)] }}
-    let conf = if $apps == 'all' { $conf } else { $conf | filter $cond }
+    # 批量处理模式必须指定 App
+    if (not $useI) and ($apps | str trim | is-empty) {
+      print $'You are running the command in (ansi p)batch mode(ansi reset), Please specify the apps to handle by (ansi r)`--apps` or `-a`(ansi reset) flag(ansi reset)...'; exit 1
+    }
+    let batchMode = ($pipeline | describe) =~ 'table'
+    let conf = if $batchMode { $pipeline } else { [$pipeline] }
     check-pipeline-conf $conf
-    return $conf
+    if not $batchMode { return $conf }
+    # The condition to filter the matched apps
+    let cond = {|x| $apps | split row ',' | any {|it| $it in [$x.appName ($x | get -i alias)] }}
+    let matched = if $apps == 'all' { $conf } else if not ($apps | is-empty) { $conf | filter $cond }
+    return $matched
   }
   print $'No (ansi r)origin/i branch or ($LOCAL_CONFIG)(ansi reset) exits, please create it before running this command...'; exit 1
 }
@@ -120,10 +136,10 @@ def format-pipeline-data [pipelines: list] {
 def query-latest-cicd [dest: string, --apps: string, --auth: string] {
   let apps = get-pipeline-conf $dest --apps $apps
   check-envs
-  for conf in $apps {
-    print $'Querying latest CICDs for (ansi pb)($conf.appName) on ($conf.branch)(ansi reset) branch:'; hr-line
-    let ci = query-cicd --auth $auth $conf.appid $conf.appName $conf.branch $conf.env $conf.pipeline 10
-    let pipelines = (format-pipeline-data $ci.data.pipelines)
+  for app in $apps {
+    print $'Querying latest CICDs for (ansi pb)($app.appName) on ($app.branch)(ansi reset) branch:'; hr-line
+    let ci = query-cicd --auth $auth $app.appid $app.appName $app.branch $app.env $app.pipeline 10
+    let pipelines = format-pipeline-data $ci.data.pipelines
     print ($pipelines | table -e)
   }
 }
@@ -231,16 +247,16 @@ export def main [
       # 根据流水线 ID 查询无需加载其他环境变量，也不需要 .termixrc 文件
       let isIdQuery = ($operation in ['query', 'q']) and ($cid > 0)
       let apps = (if $list { get-pipeline-conf $dest --apps $apps --list } else if (not $isIdQuery) { get-pipeline-conf $dest --apps $apps })
-      for conf in $apps {
+      for app in $apps {
         # 以下为应用级别配置，应用的所有开发者保持一致，可以放在代码仓库里面
-        let pid = $conf.pid
-        let appid = $conf.appid
-        let branch = $conf.branch
-        let appName = $conf.appName
-        let pipeline = $conf.pipeline
+        let pid = $app.pid
+        let appid = $app.appid
+        let branch = $app.branch
+        let appName = $app.appName
+        let pipeline = $app.pipeline
         # 检查是否有正在执行的流水线以及是否该 Commit 已经部署过
         if not $force {
-          if not (check-cicd --auth $auth $appid $appName $branch $conf.env $pipeline) { continue }
+          if not (check-cicd --auth $auth $appid $appName $branch $app.env $pipeline) { continue }
         }
         let cicdid = (create-cicd --auth $auth $appid $appName $branch $pipeline)
         run-cicd --auth $auth ($cicdid | into int) $appid $pid
