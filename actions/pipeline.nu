@@ -87,13 +87,14 @@ def query-cicd [aid: int, appName: string, branch: string, pipeline: string, cou
 def format-pipeline-data [pipelines: list] {
   return (
     $pipelines
-      | select id commit status normalLabels extra timeBegin timeUpdated
+      | select -i id commit status normalLabels extra timeBegin timeUpdated
+      | upsert timeBegin {|it| if ($it | get -i timeBegin | is-empty) { 'N/A' } else { $it.timeBegin }}
       | update commit {|it| $it.commit | str substring 0..9 }
       | upsert Comment {|it| $it.normalLabels.commitDetail | from json | get -i comment | str trim }
       | upsert Author {|it| $it.normalLabels.commitDetail | from json | get -i author }
       | update status {|it| $'(ansi pb)($it.status)(ansi reset)' }
-      | upsert Runner {|it| $it.extra.runUser.name }
-      | upsert Begin {|it| $it.timeBegin | into datetime | date humanize }
+      | upsert Runner {|it| $it.extra | get -i runUser | default { name: 'N/A' } | get name }
+      | upsert Begin {|it| if $it.timeBegin == 'N/A' { 'N/A' } else { $it.timeBegin | into datetime | date humanize } }
       | upsert Updated {|it| $it.timeUpdated | into datetime | date humanize }
       | reject extra timeBegin timeUpdated normalLabels
       | rename ID Commit Status
@@ -105,7 +106,7 @@ def query-latest-cicd [dest: string, --auth: string] {
   print $'Querying latest CICDs for (ansi pb)($dest)(ansi reset):'; hr-line
   pipeline-prepare query-latest $dest
   check-envs all
-  let ci = query-cicd --auth $auth $env.ERDA_APP_ID $env.ERDA_APP_NAME $env.ERDA_BRANCH $env.ERDA_PIPELINE 10
+  let ci = (query-cicd --auth $auth $env.ERDA_APP_ID $env.ERDA_APP_NAME $env.ERDA_BRANCH $env.ERDA_PIPELINE 10)
   let pipelines = (format-pipeline-data $ci.data.pipelines)
   print ($pipelines | table -e)
 }
@@ -113,7 +114,7 @@ def query-latest-cicd [dest: string, --auth: string] {
 # 检查是否有正在执行的流水线，如果有则显示其概要信息并退出
 def check-cicd [aid: int, appName: string, branch: string, pipeline: string, --auth: string] {
   print $'Checking running CICDs for (ansi pb)($appName)(ansi reset) with (ansi g)($pipeline)(ansi reset) from (ansi g)($branch)(ansi reset) branch'
-  let ci = query-cicd $aid $appName $branch $pipeline --auth $auth
+  let ci = (query-cicd $aid $appName $branch $pipeline --auth $auth)
 
   # Update the remote-tracking branches to get the latest commit ID
   # git fetch origin $branch
