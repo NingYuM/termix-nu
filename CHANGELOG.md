@@ -1,6 +1,21 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.28.0] - 2023-07-06
+
+### Features
+
+- Support query the latest 10 pipeline running results
+
+### Miscellaneous Tasks
+
+- Update some comments
+
+### Refactor
+
+- Use module if possible
+- Extract some small custom commands
+
 ## [1.27.0] - 2023-07-04
 
 ### Bug Fixes
