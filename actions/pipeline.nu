@@ -106,6 +106,7 @@ def query-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
 
   # Query the id of newly created CICD
   let ci = (curl --silent -H $auth $cicdUrl | from json)
+  # log 'Query CICD: ' ($ci.data.pipelines | select id commit status | table -e)
   if ($ci | describe) == 'string' { print $'Query CICD failed with message: (ansi r)($ci)(ansi reset)'; exit 1 }
   if not $ci.success {
     print $'(ansi r)Query CICD failed, Please try again ...(ansi reset)'
@@ -117,15 +118,17 @@ def query-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
 
 # 格式化流水线查询结果，以更友好的方式呈现
 def format-pipeline-data [pipelines: list] {
+  let na = 'N/A'
   return (
     $pipelines
-      | select id commit status normalLabels extra timeBegin timeUpdated
+      | select -i id commit status normalLabels extra timeBegin timeUpdated
+      | upsert timeBegin {|it| if ($it | get -i timeBegin | is-empty) { $na } else { $it.timeBegin } }
       | update commit {|it| $it.commit | str substring 0..9 }
       | upsert Comment {|it| $it.normalLabels.commitDetail | from json | get -i comment | str trim }
       | upsert Author {|it| $it.normalLabels.commitDetail | from json | get -i author }
       | update status {|it| $'(ansi pb)($it.status)(ansi reset)' }
-      | upsert Runner {|it| $it.extra.runUser.name }
-      | upsert Begin {|it| $it.timeBegin | into datetime | date humanize }
+      | upsert Runner {|it| $it.extra | get -i runUser | default {name: $na} | get name }
+      | upsert Begin {|it| if $it.timeBegin == $na { $it.timeBegin } else { $it.timeBegin | into datetime | date humanize } }
       | upsert Updated {|it| $it.timeUpdated | into datetime | date humanize }
       | reject extra timeBegin timeUpdated normalLabels
       | rename ID Commit Status
