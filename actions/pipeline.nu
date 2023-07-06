@@ -68,7 +68,7 @@ def get-pipeline-conf [dest: string = 'dev', --apps: string, --list: bool] {
       print $'Available deploy targets in ($configFile) are:(char nl)'
       let upsertAlias = {|it| if ($it | get -i alias | is-empty) { 'N/A' } else { $it.alias } }
       for target in ($repoConf.erda | columns) {
-        print $'Target (ansi p)($target)(ansi reset):'; hr-line
+        print $'Target (ansi p)($target)(ansi reset):'; hr-line -c pb
         print ($repoConf.erda | get $target | upsert alias $upsertAlias | select appName alias branch env pipeline)
         if ($repoConf.erda | get $target | describe) =~ 'record' { print -n (char nl) }
       }
@@ -140,7 +140,7 @@ def query-latest-cicd [dest: string, --apps: string, --auth: string] {
   let apps = get-pipeline-conf $dest --apps $apps
   check-envs
   for app in $apps {
-    print $'Querying latest CICDs for (ansi pb)($app.appName) on ($app.branch)(ansi reset) branch:'; hr-line
+    print $'Querying latest CICDs for (ansi pb)($app.appName) on ($app.branch)(ansi reset) branch:'; hr-line -c pb
     let ci = query-cicd --auth $auth $app.appid $app.appName $app.branch $app.env $app.pipeline 10
     let pipelines = format-pipeline-data $ci.data.pipelines
     print ($pipelines | table -e)
@@ -170,7 +170,7 @@ def check-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
     print $'The commit (ansi p)($commitID | str substring 0..9)@($branch)(ansi reset) has been deployed, re-run with `-f` flag to deploy it again.'
   }
   let result = if $nRunning > 0 { $running } else { $deployed }
-  print $'------------------------------------------------------------------------------------------------(char nl)'
+  hr-line 96 -abc pb
   print (format-pipeline-data $result)
   return false
 }

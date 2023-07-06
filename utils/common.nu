@@ -143,15 +143,18 @@ export def 'log' [
   name: string
   var: any
 ] {
-  print $'(ansi g)-----------------> Debug Begin: ($name) <-----------------(ansi reset)'
+  print $'(ansi g)('─' * 18)> Debug Begin: ($name) <('─' * 18)(ansi reset)'
   print $var
-  print $'(ansi g)------------------->  Debug End <---------------------(char nl)(ansi reset)'
+  print $'(ansi g)('─' * 20)>  Debug End <('─' * 20)(char nl)(ansi reset)'
 }
 
 export def 'hr-line' [
-  --blank-line(-b): bool
+  width?: int = 90,
+  --color(-c): string = 'g',
+  --blank-line(-b): bool,
+  --with-arrow(-a): bool,
 ] {
-  print $'(ansi g)---------------------------------------------------------------------------->(ansi reset)'
+  print $'(ansi $color)('─' * $width)(if $with_arrow {'>'})(ansi reset)'
   if $blank_line { char nl }
 }
 
