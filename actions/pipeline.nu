@@ -151,11 +151,12 @@ def check-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
 
   # Update the remote-tracking branches to get the latest commit ID
   # git fetch origin $branch
-  # Always use the remote commit id for checking
-  let commitID = if (has-ref $'origin/($branch)') { git rev-parse $'origin/($branch)' } else { '' }
+  # Always use the remote commit id for checking, `str trim` is required here
+  let commitID = if (has-ref $'origin/($branch)') { git rev-parse $'origin/($branch)' | str trim } else { '' }
   # Possible pipeline status: Running,Success,Failed,StopByUser
   let running = ($ci.data.pipelines | where status == 'Running')
-  let deployed = ($ci.data.pipelines | where commit == $commitID)
+  # log 'latest' ($ci.data.pipelines | select id commit status)
+  let deployed = ($ci.data.pipelines | where commit == $commitID | where status == 'Success')
   let nRunning = ($running | length)
   let nDeployed = ($deployed | length)
   # 没有正在部署的流水线，也未曾部署过则直接返回以执行下一步
