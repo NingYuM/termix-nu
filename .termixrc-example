@@ -1,0 +1,29 @@
+# TOML Reference: https://toml.io/en/v1.0.0
+
+# 注意事项：
+#   1. 尽量使用内敛表，除非导致文本行宽度过宽，此时可采用标准表;
+#   2. JSON -> TOML: brew install yj && cat package.json | yj -jt;
+#      TOML -> JSON: cat redevelop.b2c.toml | yj -tj -i;
+#   3. VS Code 插件推荐: Even Better TOML;
+#
+
+# pid 和 appid 可以从 https://erda.cloud/terminus/dop/projects/213/apps/7542/repo 中获得
+# Possible env value: DEV,TEST,STAGING,PROD
+# 在批量部署模式下通过 `--apps` 参数指定部署应用时会对 appName 和 alias 字段进行精确匹配
+erda.test = [
+    { pid = 213, appid = 7542, appName = 'fe-docs', alias = 'docs', env = 'TEST', branch = 'develop', pipeline = 'pipeline.yml' },
+    { pid = 1124, appid = 11147, appName = 'nusi-slim', alias = 'nusi', env = 'TEST', branch = 'develop', pipeline = '.erda/pipelines/nusi.yml' },
+]
+
+erda.dev = [
+    { pid = 213, appid = 7542, appName = 'fe-docs', alias = 'docs', env = 'DEV', branch = 'feature/latest', pipeline = 'pipeline.yml' },
+    { pid = 1124, appid = 11147, appName = 'nusi-slim', alias = 'nusi', env = 'DEV', branch = 'feature/nusi', pipeline = '.erda/pipelines/nusi.yml' },
+]
+
+erda.staging = [
+    { pid = 213, appid = 7542, appName = 'fe-docs', alias = 'docs', env = 'STAGING', branch = 'release/latest', pipeline = 'pipeline.yml' }
+]
+
+erda.master = [
+    { pid = 213, appid = 7542, appName = 'fe-docs', alias = 'docs', env = 'PROD', branch = 'master', pipeline = 'pipeline.yml' }
+]
