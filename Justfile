@@ -79,12 +79,12 @@ go nav=('list'): _setup
 # Run an Erda pipeline, the target can be queried by `dp -l`, default is `dev`, and use `--app` to specify the apps to deploy
 deploy *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'pipeline.nu') }}; \
-    erda-deploy run {{OPTIONS}}
+    erda-deploy {{OPTIONS}}
 
 # Query the Erda pipeline running status by CICD id or `--app`
 deploy-query *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'pipeline.nu') }}; \
-    erda-deploy query {{OPTIONS}}
+    erda-query {{OPTIONS}}
 
 # Listing the branches of a git repo and the time of the last commit
 git-branch: _setup

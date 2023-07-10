@@ -283,29 +283,28 @@ export def main [
   }
 }
 
-# 创建 Erda 流水线并执行，同时可以查询流水线执行结果
+# 创建 Erda 流水线并执行，默认情况下会检查是否有流水线正在执行或者是否该 Commit 已经部署过，若有则停止并给予提示
 export def erda-deploy [
-  operation: string,      # 目前支持两种操作类型，run 和 query, run 用于创建并执行 CICD, query 用于查询 CICD 执行结果
-  dest?: string = 'dev',  # 当操作为 run 时必须指定，用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, query 时无需指定, 默认为 dev
-  --cid(-i): any,         # 当操作为 query 时必须指定，用于查询 CICD 执行结果
-  --list(-l): bool,       # 当操作为 run 时生效，用于列出所有可用的执行目标
-  --force(-f): bool,      # 当操作为 run 时生效，即便已经有正在运行的流水线也会强制执行
-  --apps(-a): string,     # 指定需要批量部署的应用，多个应用以英文逗号分隔
+  dest?: string = 'dev',  # 用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, 默认为 dev
+  --list(-l): bool,       # 用于列出所有可能的执行目标
+  --force(-f): bool,      # 即便已经有正在运行的流水线，或者即便该 Commit 对应的分支已经部署过也会强制重新部署
+  --apps(-a): string,     # 指定需要批量部署的应用，多个应用以","分隔，在多应用模式下必须指定，单应用模式忽略
 ] {
-  match $operation {
-    run | r => {
-      if $list { main run $dest --apps $apps --list } else {
-        if $force { main run $dest --apps $apps --force } else { main run $dest --apps $apps }
-      }
-    }
-    query | q => {
-      # 允许非指定流水线ID的查询
-      if ($cid | is-empty) {
-        # 需要同时支持 t dq 997636681239659 & t dq test
-        let cidParsed = (do -i {$dest | into int})
-        if ($cidParsed | describe) == 'int' { main query --cid $cidParsed } else { main query $dest --apps $apps }
-      } else { main query --cid $cid }
-    }
-    _ => { main $operation }
+  if $list { main run $dest --apps $apps --list } else {
+    if $force { main run $dest --apps $apps --force } else { main run $dest --apps $apps }
   }
+}
+
+# 根据流水线 ID 或目标环境查询流水线执行结果, 例如: 单应用: t dq 997636681239659; t dq test, 多应用: t dq dev -a all
+export def erda-query [
+  dest?: string = 'dev',  # 用于指定流水线查询目标环境，如 dev, test, staging, prod 等, 默认为 dev
+  --cid(-i): any,         # 用于通过流水线的执行 ID 查询 CICD 执行结果，如果指定该参数则忽略 dest 参数
+  --apps(-a): string,     # 指定需要批量查询的应用，多个应用以","分隔，在多应用模式下必须指定，单应用模式忽略
+] {
+  # 允许非指定流水线ID的查询
+  if ($cid | is-empty) {
+    # 需要同时支持 t dq 997636681239659 & t dq test
+    let cidParsed = (do -i {$dest | into int})
+    if ($cidParsed | describe) == 'int' { main query --cid $cidParsed } else { main query $dest --apps $apps }
+  } else { main query --cid $cid }
 }
