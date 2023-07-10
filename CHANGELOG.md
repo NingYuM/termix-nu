@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - Fix pipeline checking with the same SHA
 - Fix pipeline data formatting issue for newly created pipelines
 - Fix display of horizontal line
+- Fix no CICD data error for query or pre-deploy checking
 
 ### Features
 
