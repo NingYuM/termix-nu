@@ -144,6 +144,9 @@ def query-latest-cicd [dest: string, --apps: string, --auth: string] {
   for app in $apps {
     print $'Querying latest CICDs for (ansi pb)($app.appName) on ($app.branch)(ansi reset) branch:'; hr-line -c pb
     let ci = (query-cicd --auth $auth $app.appid $app.appName $app.branch $app.env $app.pipeline 10)
+    if ($ci.data.total == 0) {
+      print $'No CICD found for (ansi pb)($app.appName)(ansi reset) on (ansi g)($app.branch)(ansi reset) branch'; exit 0
+    }
     let pipelines = (format-pipeline-data $ci.data.pipelines)
     print ($pipelines | table -e)
   }
@@ -153,6 +156,7 @@ def query-latest-cicd [dest: string, --apps: string, --auth: string] {
 def check-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipeline: string, --auth: string] {
   print $'Checking running CICDs for (ansi pb)($appName)(ansi reset) with (ansi g)($pipeline)(ansi reset) from (ansi g)($branch)(ansi reset) branch'
   let ci = (query-cicd $aid $appName $branch $erdaEnv $pipeline --auth $auth)
+  if ($ci.data.total == 0) { return true }
 
   # Update the remote-tracking branches to get the latest commit ID
   # git fetch origin $branch
