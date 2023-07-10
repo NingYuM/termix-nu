@@ -286,9 +286,9 @@ export def main [
 # 创建 Erda 流水线并执行，默认情况下会检查是否有流水线正在执行或者是否该 Commit 已经部署过，若有则停止并给予提示
 export def erda-deploy [
   dest?: string = 'dev',  # 用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, 默认为 dev
-  --list(-l): bool,       # 用于列出所有可能的执行目标
+  --list(-l): bool,       # 列出所有可能的部署目标及应用信息
   --force(-f): bool,      # 即便已经有正在运行的流水线，或者即便该 Commit 对应的分支已经部署过也会强制重新部署
-  --apps(-a): string,     # 指定需要批量部署的应用，多个应用以","分隔，在多应用模式下必须指定，单应用模式忽略
+  --apps(-a): string,     # 指定需要批量部署的应用，多个应用以","分隔，在多应用模式下必须指定(`all` 代表所有)，单应用模式忽略
 ] {
   if $list { main run $dest --apps $apps --list } else {
     if $force { main run $dest --apps $apps --force } else { main run $dest --apps $apps }
@@ -299,7 +299,7 @@ export def erda-deploy [
 export def erda-query [
   dest?: string = 'dev',  # 用于指定流水线查询目标环境，如 dev, test, staging, prod 等, 默认为 dev
   --cid(-i): any,         # 用于通过流水线的执行 ID 查询 CICD 执行结果，如果指定该参数则忽略 dest 参数
-  --apps(-a): string,     # 指定需要批量查询的应用，多个应用以","分隔，在多应用模式下必须指定，单应用模式忽略
+  --apps(-a): string,     # 指定需要批量查询的应用，多个应用以","分隔，在多应用模式下必须指定(`all` 代表所有)，单应用模式忽略
 ] {
   # 允许非指定流水线ID的查询
   if ($cid | is-empty) {
