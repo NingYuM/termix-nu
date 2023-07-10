@@ -1,6 +1,27 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.30.0] - 2023-07-10
+
+### Bug Fixes
+
+- Fix pipeline checking with the same SHA
+- Fix pipeline data formatting issue for newly created pipelines
+- Fix display of horizontal line
+
+### Features
+
+- Add deploy or query multiple apps support with local `.termixrc` config
+- Print available deploy targets and apps with more detail
+- Add help tips for erda-deploy and erda-query command
+
+### Miscellaneous Tasks
+
+- Add deploy config for multiple apps
+- Adapt to nushell v0.82
+- Add .termixrc-example config for batch deploy
+- Bump to v1.30.0
+
 ## [1.28.0] - 2023-07-06
 
 ### Features
