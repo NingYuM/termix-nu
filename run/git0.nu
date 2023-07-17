@@ -24,7 +24,7 @@ def 'git clean-remote' [] {
     let branches = (git ls-remote --heads --refs $remote | lines | each { |line| $line | str substring 52.. })
     $'Remote branches of ($remote):(char nl)'
     $branches | each { |branch|
-      let keep = (echo $whiteList | any $it == $branch)
+      let keep = (echo $whiteList | any {|it| $it == $branch })
       if $keep {
         $"($remote) ---> ($branch) keep: ($keep)"
       } else {

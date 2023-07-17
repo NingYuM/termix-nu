@@ -33,8 +33,8 @@ $env.PROMPT_COMMAND = {
 # Jump to a directory using only keywords.
 def-env __zoxide_z [...rest:string] {
   # `z -` does not work yet, see https://github.com/nushell/nushell/issues/4769
-  let arg0 = ($rest | append '~').0
-  let path = if ($rest | length) <= 1 and ($arg0 | path expand | path type) == dir {
+  let arg0 = ([$rest] | append '~').0
+  let path = if ([$rest] | length) <= 1 and ($arg0 | path expand | path type) == dir {
     $arg0
   } else {
     (zoxide query --exclude $env.PWD -- $rest | str trim -r -c "\n")

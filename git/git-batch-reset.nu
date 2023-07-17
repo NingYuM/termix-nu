@@ -20,7 +20,7 @@ export def 'git batch-reset' [
 
   cd $env.JUST_INVOKE_DIR
   let current = (git branch --show-current | str trim)
-  let available = (git branch | into string | lines | str substring 2..)
+  let available = (git branch | into string | lines | each { str substring 2.. })
   let candidates = if ($branches | is-empty) { $available } else { $dest }
 
   print $'(char nl)Start to (ansi r)reset ($count) commits(ansi reset) on branches: (char nl)'
