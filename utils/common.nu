@@ -95,8 +95,9 @@ export def 'compare-ver' [
 ] {
   let dest = ($to | str downcase | str trim -c 'v' | str trim)
   let source = ($from | str downcase | str trim -c 'v' | str trim)
-  let v1 = ($source | split row '.' | each {|it| ($it | into int)})
-  let v2 = ($dest | split row '.' | each {|it| ($it | into int)})
+  # Ignore '-beta' or '-rc' suffix
+  let v1 = ($source | split row '.' | each {|it| ($it | parse -r '(?P<v>\d+)' | get v | get 0 )})
+  let v2 = ($dest | split row '.' | each {|it| ($it | parse -r '(?P<v>\d+)' | get v | get 0 )})
   for $v in $v1 -n {
     let c1 = ($v1 | get -i $v.index | default 0)
     let c2 = ($v2 | get -i $v.index | default 0)
