@@ -38,7 +38,7 @@ def main [
   }
 
   # Check mall-$bizType dir exists
-  if ($'mall-($bizType)' | path exists) == false {
+  if not ($'mall-($bizType)' | path exists) {
     print $'[ERR] This directory: (ansi r)mall-($bizType) does not exist!(ansi reset) Bye~~'; exit 3
   }
 

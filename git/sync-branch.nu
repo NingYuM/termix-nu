@@ -21,7 +21,7 @@ export def 'git sync-branch' [
   let useConfBr = (get-conf useConfFromBranch)
   let confBr = if $useConfBr == '_current_' { $destBranch } else { 'i' }
 
-  if (has-ref $'origin/($confBr)') == false {
+  if not (has-ref $'origin/($confBr)') {
     print $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
     exit 0
   }

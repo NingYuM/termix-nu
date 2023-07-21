@@ -12,7 +12,7 @@ export def main [] {
   let localIExists = (has-ref i)
   let remoteIExists = (has-ref origin/i)
 
-  if ($localIExists or $remoteIExists) == false {
+  if not ($localIExists or $remoteIExists) {
     print $'You do not have an i branch, branch description query failed, bye...(char nl)'
     exit 3
   }
@@ -44,7 +44,7 @@ export def main [] {
       | query json 'descriptions'
       | transpose name description
       | get name
-      | each { |br| if (has-ref origin/($br)) == false { $br } }
+      | each { |br| if not (has-ref origin/($br)) { $br } }
       | compact
   )
 

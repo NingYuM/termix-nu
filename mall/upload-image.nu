@@ -38,12 +38,12 @@ def main [
   }
 
   let OSS_CONF = './oss-conf.json'
-  if ($OSS_CONF | path exists) == false {
+  if not ($OSS_CONF | path exists) {
     print $"Oss config file (ansi r)'oss-conf.json' not found!(ansi reset) Please add it and try again!"
     exit 3
   }
   # Check mall-$bizType dir exists
-  if ($'mall-($bizType)' | path exists) == false {
+  if not ($'mall-($bizType)' | path exists) {
     print $'[ERR] This directory: (ansi r)mall-($bizType) does not exist!(ansi reset) Bye~~'; exit 3
   }
 

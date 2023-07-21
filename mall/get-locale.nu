@@ -37,13 +37,13 @@ def main [
   }
 
   let bizCheck = $bizType in ['b2c', 'b2b', 'scrm', 'sea', 'point']
-  if $bizCheck == false {
+  if not $bizCheck {
     print $'(ansi r)You have input the wrong biz type, Please try again!(ansi reset)(char nl)'
     exit 7
   }
 
   # Check mall-$bizType dir exists
-  if ($'mall-($bizType)' | path exists) == false {
+  if not ($'mall-($bizType)' | path exists) {
     print $'[ERR] This directory: (ansi r)mall-($bizType) does not exist!(ansi reset) Bye~~'; exit 3
   }
 

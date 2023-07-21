@@ -38,7 +38,7 @@ def main [
 ] {
   # We don't need herd image, a raw linux distro image with node installed is okay
   # npm config set registry https://registry.npm.terminus.io/
-  if (is-installed 'termix') == false {
+  if not (is-installed 'termix') {
     npm i -g @terminus/termix@latest
   }
   print $'(ansi pr) Termix version: (termix --version | str trim) (ansi reset)'; hr-line

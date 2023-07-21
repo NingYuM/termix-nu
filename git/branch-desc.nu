@@ -14,7 +14,7 @@ export def main [
   let descFile = 'd.toml'
   let localIExists = (has-ref i)
   let remoteIExists = (has-ref origin/i)
-  if ($localIExists or $remoteIExists) == false {
+  if not ($localIExists or $remoteIExists) {
     print $'You do not have an i branch, branch description query failed, bye...(char nl)'
     exit 3
   }

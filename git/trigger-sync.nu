@@ -17,10 +17,8 @@ export def 'git trigger-sync' [
   # 从远程更新指定分支代码到本地
   if ($current == $selected) { git pull origin $selected } else { git fetch origin $'($selected):($selected)' }
   # Remote branch does not exit
-  if (has-ref origin/($selected)) == false {
-    git push origin $selected -u
-    exit 0
-  }
+  if not (has-ref origin/($selected)) { git push origin $selected -u; exit 0 }
+
   let diff = (
     git rev-list --left-right $'($selected)...origin/($selected)' --count
       | detect columns -n
@@ -38,7 +36,7 @@ export def 'git trigger-sync' [
   let useConfBr = (get-conf useConfFromBranch)
   let confBr = if $useConfBr == '_current_' { $selected } else { 'i' }
 
-  if (has-ref origin/($confBr)) == false {
+  if not (has-ref origin/($confBr)) {
     print $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
     exit 0
   }

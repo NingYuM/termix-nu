@@ -42,7 +42,7 @@ export def 'git tag-redev' [
 
   print $'Delete tag ($tagName) ---> (ansi r)($delete_tag)(ansi reset)(char nl)'
   # 不存在则创建临时路径
-  if ($repoPath | path exists) == false { mkdir $repoPath }
+  if not ($repoPath | path exists) { mkdir $repoPath }
   # 保存当前路径方便后期跳回
   let currentDir = ($env.PWD | str trim)
 
