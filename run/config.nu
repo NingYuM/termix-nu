@@ -360,12 +360,15 @@ $env.config = {
     use_ls_colors: true         # use the LS_COLORS environment variable to colorize output
     clickable_links: true       # enable or disable clickable links. Your terminal has to support links.
   }
+
   rm: {
     always_trash: false         # always act as if -t was given. Can be overridden with -p
   }
+
   cd: {
     abbreviations: true         # allows `cd s/o/f` to expand to `cd some/other/folder`
   }
+
   table: {
     mode: light                 # basic, compact, compact_double, light, thin, with_love, rounded, reinforced, heavy, none, other
     index_mode: always          # "always" show indexes, "never" show indexes, "auto" = show indexes when a table has "index" column
@@ -387,67 +390,41 @@ $env.config = {
 
   # A 'explore' utility config
   explore: {
-    help_banner: true
-    exit_esc: true
-
-    command_bar_text: '#C4C9C6'
-    # command_bar: {fg: '#C4C9C6' bg: '#223311' }
-
-    status_bar_background: {fg: '#1D1F21' bg: '#C4C9C6' }
-    # status_bar_text: {fg: '#C4C9C6' bg: '#223311' }
-
-    highlight: {bg: 'yellow' fg: 'black' }
-
-    status: {
-      # warn: {bg: 'yellow', fg: 'blue'}
-      # error: {bg: 'yellow', fg: 'blue'}
-      # info: {bg: 'yellow', fg: 'blue'}
-    }
-
     try: {
-      # border_color: 'red'
-      # highlighted_color: 'blue'
-
-      # reactive: false
-    }
-
+      border_color: {fg: "white"}
+    },
+    status_bar_background: {fg: "#1D1F21", bg: "#C4C9C6"},
+    command_bar_text: {fg: "#C4C9C6"},
+    highlight: {fg: "black", bg: "yellow"},
+    status: {
+      warn: {},
+      info: {},
+      error: {fg: "white", bg: "red"},
+    },
     table: {
-      split_line: '#404040'
-
-      cursor: true
-
-      line_index: true
-      line_shift: true
-      line_head_top: true
-      line_head_bottom: true
-
-      show_head: true
-      show_index: true
-
-      # selected_cell: {fg: 'white', bg: '#777777'}
-      # selected_row: {fg: 'yellow', bg: '#C1C2A3'}
-      # selected_column: blue
-
-      # padding_column_right: 2
-      # padding_column_left: 2
-
-      # padding_index_left: 2
-      # padding_index_right: 1
-    }
-
+      split_line: {fg: "#404040"},
+      selected_cell: {},
+      selected_row: {},
+      selected_column: {},
+      cursor: true,
+      line_shift: true,
+      line_index: true,
+      line_head_top: true,
+      line_head_bottom: true,
+    },
     config: {
-      cursor_color: { bg: 'yellow' fg: 'black' }
-
-      # border_color: white
-      # list_color: green
-    }
+      border_color: {fg: "white"}
+      cursor_color: {fg: "black", bg: "light_yellow"}
+    },
   }
+
   history: {
     max_size: 100_000           # Session has to be reloaded for this to take effect
     sync_on_enter: true         # Enable to share history between multiple sessions, else you have to close the session to write history to file
     file_format: "sqlite"       # "sqlite" or "plaintext"
     isolation: false            # true enables history isolation, false disables it. true will allow the history to be isolated to the current session. false will allow the history to be shared across all sessions.
   }
+
   completions: {
     quick: true                 # set this to false to prevent auto-selecting completions when only one remains
     partial: true               # set this to false to prevent partial filling of the prompt
@@ -459,15 +436,18 @@ $env.config = {
       completer: $carapace_completer           # check 'carapace_completer' above as an example
     }
   }
+
   filesize: {
     metric: true                # true => KB, MB, GB (ISO standard), false => KiB, MiB, GiB (Windows standard)
     format: "auto"              # b, kb, kib, mb, mib, gb, gib, tb, tib, pb, pib, eb, eib, auto
   }
+
   cursor_shape: {
     emacs: line                 # block, underscore, line, blink_block, blink_underscore, blink_line (line is the default)
     vi_insert: block            # block, underscore, line , blink_block, blink_underscore, blink_line (block is the default)
     vi_normal: underscore       # block, underscore, line, blink_block, blink_underscore, blink_line (underscore is the default)
   }
+
   color_config: $dark_theme     # if you want a light theme, replace `$dark_theme` to `$light_theme`
   use_grid_icons: true
   footer_mode: "25"             # always, never, number_of_rows, auto
@@ -480,24 +460,18 @@ $env.config = {
   render_right_prompt_on_last_line: false   # true or false to enable or disable right prompt to be rendered on last line of the prompt.
 
   hooks: {
-    pre_prompt: [{
-      $nothing                  # replace with source code to run before the prompt is shown
-    }]
-    pre_execution: [{
-      $nothing                  # replace with source code to run before the repl input is run
-    }]
+    pre_prompt: [{ null }]              # run before the prompt is shown
+    pre_execution: [{ null }]           # run before the repl input is run
     env_change: {
-      PWD: [{|before, after|
-        $nothing                # replace with source code to run if the PWD environment is different since the last repl input
-      }]
+      PWD: [{|before, after| null }]    # run if the PWD environment is different since the last repl input
     }
+    # run before the output of a command is drawn, example: `{ if (term size).columns >= 100 { table -e } else { table } }`
     display_output: {
       if (term size).columns >= 100 { table -e } else { table }
     }
-    command_not_found: {
-      null                      # replace with source code to return an error message when a command is not found
-    }
+    command_not_found: { null } # return an error message when a command is not found
   }
+
   menus: [
     # Configuration for default nushell menus
     # Note the lack of source parameter
@@ -757,6 +731,367 @@ $env.config = {
       keycode: char_s
       mode: [emacs, vi_normal, vi_insert]
       event: { send: menu name: commands_with_description }
+    }
+    {
+      name: move_up
+      modifier: none
+      keycode: up
+      mode: [emacs, vi_normal, vi_insert]
+      event: {
+        until: [
+          {send: menuup}
+          {send: up}
+        ]
+      }
+    }
+    {
+      name: move_down
+      modifier: none
+      keycode: down
+      mode: [emacs, vi_normal, vi_insert]
+      event: {
+        until: [
+          {send: menudown}
+          {send: down}
+        ]
+      }
+    }
+    {
+      name: move_left
+      modifier: none
+      keycode: left
+      mode: [emacs, vi_normal, vi_insert]
+      event: {
+        until: [
+          {send: menuleft}
+          {send: left}
+        ]
+      }
+    }
+    {
+      name: move_right_or_take_history_hint
+      modifier: none
+      keycode: right
+      mode: [emacs, vi_normal, vi_insert]
+      event: {
+        until: [
+          {send: historyhintcomplete}
+          {send: menuright}
+          {send: right}
+        ]
+      }
+    }
+    {
+      name: move_one_word_left
+      modifier: control
+      keycode: left
+      mode: [emacs, vi_normal, vi_insert]
+      event: {edit: movewordleft}
+    }
+    {
+      name: move_one_word_right_or_take_history_hint
+      modifier: control
+      keycode: right
+      mode: [emacs, vi_normal, vi_insert]
+      event: {
+        until: [
+          {send: historyhintwordcomplete}
+          {edit: movewordright}
+        ]
+      }
+    }
+    {
+      name: move_to_line_start
+      modifier: none
+      keycode: home
+      mode: [emacs, vi_normal, vi_insert]
+      event: {edit: movetolinestart}
+    }
+    {
+      name: move_to_line_start
+      modifier: control
+      keycode: char_a
+      mode: [emacs, vi_normal, vi_insert]
+      event: {edit: movetolinestart}
+    }
+    {
+      name: move_to_line_end_or_take_history_hint
+      modifier: none
+      keycode: end
+      mode: [emacs, vi_normal, vi_insert]
+      event: {
+        until: [
+          {send: historyhintcomplete}
+          {edit: movetolineend}
+        ]
+      }
+    }
+    {
+      name: move_to_line_end_or_take_history_hint
+      modifier: control
+      keycode: char_e
+      mode: [emacs, vi_normal, vi_insert]
+      event: {
+        until: [
+          {send: historyhintcomplete}
+          {edit: movetolineend}
+        ]
+      }
+    }
+    {
+      name: move_to_line_start
+      modifier: control
+      keycode: home
+      mode: [emacs, vi_normal, vi_insert]
+      event: {edit: movetolinestart}
+    }
+    {
+      name: move_to_line_end
+      modifier: control
+      keycode: end
+      mode: [emacs, vi_normal, vi_insert]
+      event: {edit: movetolineend}
+    }
+    {
+      name: move_up
+      modifier: control
+      keycode: char_p
+      mode: [emacs, vi_normal, vi_insert]
+      event: {
+        until: [
+          {send: menuup}
+          {send: up}
+        ]
+      }
+    }
+    {
+      name: move_down
+      modifier: control
+      keycode: char_t
+      mode: [emacs, vi_normal, vi_insert]
+      event: {
+          until: [
+              {send: menudown}
+              {send: down}
+          ]
+      }
+    }
+    {
+      name: delete_one_character_backward
+      modifier: none
+      keycode: backspace
+      mode: [emacs, vi_insert]
+      event: {edit: backspace}
+    }
+    {
+      name: delete_one_word_backward
+      modifier: control
+      keycode: backspace
+      mode: [emacs, vi_insert]
+      event: {edit: backspaceword}
+    }
+    {
+      name: delete_one_character_forward
+      modifier: none
+      keycode: delete
+      mode: [emacs, vi_insert]
+      event: {edit: delete}
+    }
+    {
+      name: delete_one_character_forward
+      modifier: control
+      keycode: delete
+      mode: [emacs, vi_insert]
+      event: {edit: delete}
+    }
+    {
+      name: delete_one_character_forward
+      modifier: control
+      keycode: char_h
+      mode: [emacs, vi_insert]
+      event: {edit: backspace}
+    }
+    {
+      name: delete_one_word_backward
+      modifier: control
+      keycode: char_w
+      mode: [emacs, vi_insert]
+      event: {edit: backspaceword}
+    }
+    {
+      name: move_left
+      modifier: none
+      keycode: backspace
+      mode: vi_normal
+      event: {edit: moveleft}
+    }
+    {
+      name: newline_or_run_command
+      modifier: none
+      keycode: enter
+      mode: emacs
+      event: {send: enter}
+    }
+    {
+      name: move_left
+      modifier: control
+      keycode: char_b
+      mode: emacs
+      event: {
+        until: [
+          {send: menuleft}
+          {send: left}
+        ]
+      }
+    }
+    {
+      name: move_right_or_take_history_hint
+      modifier: control
+      keycode: char_f
+      mode: emacs
+      event: {
+        until: [
+          {send: historyhintcomplete}
+          {send: menuright}
+          {send: right}
+        ]
+      }
+    }
+    {
+      name: redo_change
+      modifier: control
+      keycode: char_g
+      mode: emacs
+      event: {edit: redo}
+    }
+    {
+      name: undo_change
+      modifier: control
+      keycode: char_z
+      mode: emacs
+      event: {edit: undo}
+    }
+    {
+      name: paste_before
+      modifier: control
+      keycode: char_y
+      mode: emacs
+      event: {edit: pastecutbufferbefore}
+    }
+    {
+      name: cut_word_left
+      modifier: control
+      keycode: char_w
+      mode: emacs
+      event: {edit: cutwordleft}
+    }
+    {
+      name: cut_line_to_end
+      modifier: control
+      keycode: char_k
+      mode: emacs
+      event: {edit: cuttoend}
+    }
+    {
+      name: cut_line_from_start
+      modifier: control
+      keycode: char_u
+      mode: emacs
+      event: {edit: cutfromstart}
+    }
+    {
+      name: swap_graphemes
+      modifier: control
+      keycode: char_t
+      mode: emacs
+      event: {edit: swapgraphemes}
+    }
+    {
+      name: move_one_word_left
+      modifier: alt
+      keycode: left
+      mode: emacs
+      event: {edit: movewordleft}
+    }
+    {
+      name: move_one_word_right_or_take_history_hint
+      modifier: alt
+      keycode: right
+      mode: emacs
+      event: {
+        until: [
+          {send: historyhintwordcomplete}
+          {edit: movewordright}
+        ]
+      }
+    }
+    {
+      name: move_one_word_left
+      modifier: alt
+      keycode: char_b
+      mode: emacs
+      event: {edit: movewordleft}
+    }
+    {
+      name: move_one_word_right_or_take_history_hint
+      modifier: alt
+      keycode: char_f
+      mode: emacs
+      event: {
+        until: [
+          {send: historyhintwordcomplete}
+          {edit: movewordright}
+        ]
+      }
+    }
+    {
+      name: delete_one_word_forward
+      modifier: alt
+      keycode: delete
+      mode: emacs
+      event: {edit: deleteword}
+    }
+    {
+      name: delete_one_word_backward
+      modifier: alt
+      keycode: backspace
+      mode: emacs
+      event: {edit: backspaceword}
+    }
+    {
+      name: delete_one_word_backward
+      modifier: alt
+      keycode: char_m
+      mode: emacs
+      event: {edit: backspaceword}
+    }
+    {
+      name: cut_word_to_right
+      modifier: alt
+      keycode: char_d
+      mode: emacs
+      event: {edit: cutwordright}
+    }
+    {
+      name: upper_case_word
+      modifier: alt
+      keycode: char_u
+      mode: emacs
+      event: {edit: uppercaseword}
+    }
+    {
+      name: lower_case_word
+      modifier: alt
+      keycode: char_l
+      mode: emacs
+      event: {edit: lowercaseword}
+    }
+    {
+      name: capitalize_char
+      modifier: alt
+      keycode: char_c
+      mode: emacs
+      event: {edit: capitalizechar}
     }
   ]
 }
