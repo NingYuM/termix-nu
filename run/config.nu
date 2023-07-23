@@ -51,12 +51,48 @@ def nun [] {
   http get https://api.github.com/repos/nushell/nightly/releases | sort-by -r created_at | select name tag_name id created_at
 }
 
-def cargo-ile [] {
-  fd -I shadow.rs | lines | each { |it| rm $it } | flatten
+# 在本地构建所有 Nushell 二进制文件
+def build-all-nu [] {
   if not ((pwd | path basename | str trim) == 'nushell') { z nushell }
-  # cargo install --features=extra --path .
-  # if ('rust-toolchain.toml' | path exists) { rm rust-toolchain.toml }
-  sh ./scripts/install-all.sh
+  fd -I shadow.rs | lines | each { |it| rm $it } | flatten
+
+  let nu_root = $env.PWD
+  print $'Run build all in ($nu_root)'
+
+  print '-------------------------------------------------------------------'
+  print 'Building nushell (nu) with dataframes and all the plugins'
+  print '-------------------------------------------------------------------'
+
+  def build-nushell [] {
+      print $'(char nl)Building nushell'
+      print '----------------------------'
+
+      cd $nu_root
+      cargo build --features=dataframe,extra
+  }
+
+  def build-plugin [] {
+      let plugin = $in
+
+      print $'(char nl)Building ($plugin)'
+      print '----------------------------'
+
+      cd $'($nu_root)/crates/($plugin)'
+      cargo build
+  }
+
+  let plugins = [
+      nu_plugin_inc,
+      nu_plugin_gstat,
+      nu_plugin_query,
+      nu_plugin_example,
+      nu_plugin_custom_values,
+      nu_plugin_formats,
+  ]
+
+  for plugin in $plugins {
+      $plugin | build-plugin
+  }
 }
 
 def cargo-ta  [] { cargo test --all --all-features }
