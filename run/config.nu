@@ -52,33 +52,37 @@ def nun [] {
 }
 
 # 在本地构建所有 Nushell 二进制文件
-def build-all-nu [] {
+def install-all-nu [] {
   if not ((pwd | path basename | str trim) == 'nushell') { z nushell }
+  print 'Remove cached shadow files...'
   fd -I shadow.rs | lines | each { |it| rm $it } | flatten
+  print (fd -I shadow.rs )
 
   let nu_root = $env.PWD
-  print $'Run build all in ($nu_root)'
+  print $'Run install all in ($nu_root)'
 
   print '-------------------------------------------------------------------'
-  print 'Building nushell (nu) with dataframes and all the plugins'
+  print 'Installing Nu with dataframes,extra and all the plugins'
   print '-------------------------------------------------------------------'
 
-  def build-nushell [] {
-      print $'(char nl)Building nushell'
+  def install-nushell [] {
+      print $'(char nl)Installing nushell'
       print '----------------------------'
 
       cd $nu_root
-      cargo build --features=dataframe,extra
+      cargo install --force --path . --features=dataframe,extra
   }
 
-  def build-plugin [] {
+  install-nushell
+
+  def install-plugin [] {
       let plugin = $in
 
-      print $'(char nl)Building ($plugin)'
+      print $'(char nl)Installing ($plugin)'
       print '----------------------------'
 
       cd $'($nu_root)/crates/($plugin)'
-      cargo build
+      cargo install --force --path .
   }
 
   let plugins = [
@@ -91,7 +95,7 @@ def build-all-nu [] {
   ]
 
   for plugin in $plugins {
-      $plugin | build-plugin
+      $plugin | install-plugin
   }
 }
 
