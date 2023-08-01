@@ -1,6 +1,18 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.31.0] - 2023-08-01
+
+### Miscellaneous Tasks
+
+- Adapt to Nushell v0.82.1
+- Fix compare-ver, Ignore '-beta' or '-rc' suffix
+- Update config add build-all-nu command
+
+### Refactor
+
+- Use `not` if necessary
+
 ## [1.30.0] - 2023-07-10
 
 ### Bug Fixes
