@@ -6,8 +6,8 @@ All notable changes to this project will be documented in this file.
 ### Miscellaneous Tasks
 
 - Adapt to Nushell v0.82.1
-- Fix compare-ver, Ignore '-beta' or '-rc' suffix
-- Update config add build-all-nu command
+- Fix compare-ver, Ignore `-beta` or `-rc` suffix
+- Update config add `install-all-nu` command
 
 ### Refactor
 
