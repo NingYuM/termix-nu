@@ -1137,3 +1137,6 @@ $env.config = {
 }
 
 $env.PATH = ($env.PATH | each {|r| $r | split row (char esep)} | flatten | uniq | str join (char esep))
+
+# REF: https://github.com/atuinsh/atuin
+source ~/.local/share/atuin/init.nu
