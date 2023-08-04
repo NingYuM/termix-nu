@@ -68,9 +68,20 @@ return {
   keys = {
     { key = 'Enter', mods = 'CMD', action = act.ToggleFullScreen },
     { key = 'p', mods = 'CMD', action = act.ActivateCommandPalette },
-    -- tabs: navigation
+    -- Tabs: navigation
     { key = 'LeftArrow', mods = 'CMD', action = act.ActivateTabRelative(-1) },
     { key = 'RightArrow', mods = 'CMD', action = act.ActivateTabRelative(1) },
+    -- Split panes
+    {
+      key = 'V',
+      mods = 'CTRL|SHIFT|CMD',
+      action = wezterm.action.SplitVertical { domain = 'CurrentPaneDomain' },
+    },
+    {
+      key = 'H',
+      mods = 'CTRL|SHIFT|CMD',
+      action = wezterm.action.SplitHorizontal { domain = 'CurrentPaneDomain' },
+    },
   },
 
   mouse_bindings = {
