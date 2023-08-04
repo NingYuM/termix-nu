@@ -20,6 +20,12 @@ return {
   font_size = is_mac and 20 or 15,
   window_background_opacity = 1,
   window_decorations = is_mac and "RESIZE" or "INTEGRATED_BUTTONS|RESIZE",
+
+  -- Command Palette settings
+  command_palette_fg_color = '#FFF',
+  -- 655,6F3B80,7F7180
+  command_palette_bg_color = "#7F7180",
+  command_palette_font_size = is_mac and 18 or 13,
   -- Candidates: Catppuccin Mocha, Argonaut, Dracula (Official), Bamboo, Omni (Gogh)
   color_scheme = is_mac and 'Dracula (Official)' or "Catppuccin Mocha",
 
