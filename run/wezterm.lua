@@ -4,6 +4,9 @@
 -- Usage:
 --  Create soft link on Windows by pwsh:
 --  gsudo New-Item -ItemType SymbolicLink -Path "~\.wezterm.lua" -Target "run\wezterm.lua"
+-- Install:
+--  Windows: scoop install wezterm
+--  MacOS: brew install --cask wezterm, brew install --cask wezterm-nightly, brew upgrade --cask wezterm-nightly --no-quarantine --greedy-latest
 -- REF:
 --  1. https://wezfurlong.org/wezterm/config/files.html
 --  2. https://wezfurlong.org/wezterm/config/default-keys.html
@@ -28,6 +31,10 @@ return {
   command_palette_font_size = is_mac and 18 or 13,
   -- Candidates: Catppuccin Mocha, Argonaut, Dracula (Official), Bamboo, Omni (Gogh)
   color_scheme = is_mac and 'Dracula (Official)' or "Catppuccin Mocha",
+  colors = {
+    -- 被选中的内容的背景色
+    selection_bg = '#7F7180'
+  },
 
   -- Font settings
   font = wezterm.font_with_fallback {
@@ -56,6 +63,15 @@ return {
   show_tab_index_in_tab_bar = false,
   hide_tab_bar_if_only_one_tab = false,
   switch_to_last_active_tab_when_closing_tab = true,
+
+  -- Keys REF: https://wezfurlong.org/wezterm/config/keys.html
+  keys = {
+    { key = 'Enter', mods = 'CMD', action = act.ToggleFullScreen },
+    { key = 'p', mods = 'CMD', action = act.ActivateCommandPalette },
+    -- tabs: navigation
+    { key = 'LeftArrow', mods = 'CMD', action = act.ActivateTabRelative(-1) },
+    { key = 'RightArrow', mods = 'CMD', action = act.ActivateTabRelative(1) },
+  },
 
   mouse_bindings = {
     -- Change the default click behavior so that it only selects
