@@ -167,7 +167,7 @@ emp showAll=('false') showPrev=('false'): _setup
   @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
     overlay use {{ join(_termix, 'actions', 'working-hours.nu') }}; \
     let codes = (get-env EMP_PROJECT_CODE '' | split row ','); \
-    $codes | each { |code| working-hours $code --show-all={{showAll}} --show-prev={{showPrev}} } | flatten | uniq
+    $codes | each { |code| working-hours $code --show-all={{showAll}} --show-prev={{showPrev}} } | flatten | uniq | ignore
 
 # 给标品源码仓库打 Release Tag
 [private]
