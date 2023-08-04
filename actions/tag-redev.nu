@@ -27,7 +27,7 @@ export def 'git tag-redev' [
   let TAG = if ($currentBeTag | is-empty) { $redevCurrentTag } else { $currentBeTag }
   # let tagName = 'v1.0.0-2021.08.09'
   # 如果传入的是完整的带时间戳的 Tag 名就不用再重复加时间戳了
-  let tagName = if ($TAG | str contains '-') { $TAG } else { $'($TAG)-(date now | date format $_DATE_FMT)' }
+  let tagName = if ($TAG | str contains '-') { $TAG } else { $'($TAG)-(date now | format date $_DATE_FMT)' }
 
   let repoPath = (get-tmp-path)
   let redevRepos = ($actionConf | get redevRepos)

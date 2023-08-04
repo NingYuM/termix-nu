@@ -208,7 +208,7 @@ def nudown [] {
       | select name download_count created_at
       | update created_at {|it| $it.created_at | into datetime }
       | where created_at > 2022-07-05T17:00:56Z
-      # | update created_at {|it| $it | date format '%m/%d/%Y %H:%M:%S' }
+      # | update created_at {|it| $it | format date '%m/%d/%Y %H:%M:%S' }
 }
 
 # -------------------------- Autocompletion ------------------------

@@ -35,7 +35,7 @@ export def 'termix-ver' [] {
   let tmpPath = (get-tmp-path)
   let currentVer = (get-conf version)
   let confName = ([$tmpPath '.termix-conf'] | path join)
-  let checkDate = (date now | date format $_DATE_FMT)
+  let checkDate = (date now | format date $_DATE_FMT)
   if ($confName | path exists) {
     let conf = (open -r $confName)
     let latestVer = ($conf | query json 'latestVer')
@@ -71,7 +71,7 @@ def 'query-ver' [
   let _UPGRADE_TAG = (_UPGRADE_TAG)
   # Update latest commits from remote to local, tags inclueded
   enter $env.TERMIX_DIR; git fetch origin -p; git pull --tags
-  let checkDate = (date now | date format $_DATE_FMT)
+  let checkDate = (date now | format date $_DATE_FMT)
   # Get latest release tag name
   let latestVer = (git tag -l --sort=-v:refname | lines | select 0).0
   # Check whether the latest release tag is a force upgrade
