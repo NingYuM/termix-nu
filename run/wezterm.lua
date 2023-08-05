@@ -29,8 +29,11 @@ return {
   -- 655,6F3B80,7F7180
   command_palette_bg_color = "#7F7180",
   command_palette_font_size = is_mac and 18 or 13,
-  -- Candidates: Catppuccin Mocha, Argonaut, Dracula (Official), Bamboo, Omni (Gogh)
-  color_scheme = is_mac and 'Dracula (Official)' or "Catppuccin Mocha",
+  -- Selected: Catppuccin Mocha, Argonaut, Dracula (Official), Omni (Gogh)
+  -- Calamity, Chalkboard, Desert, Earthsong, Flatland, Foxnightly (Gogh)
+  -- GitHub Dark, Glacier, Gogh (Gogh), Google Dark (Gogh), GruvboxDark
+  -- Grape
+  color_scheme = is_mac and 'GruvboxDark' or "Desert",
   colors = {
     -- 被选中的内容的背景色
     selection_bg = '#7F7180'

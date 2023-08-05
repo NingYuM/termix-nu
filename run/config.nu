@@ -418,6 +418,7 @@ $env.config = {
       truncating_suffix: "..."          # A suffix used by the 'truncating' methodology
       wrapping_try_keep_words: true     # A strategy used by the 'wrapping' methodology
     }
+    header_on_separator: false          # show header text on separator/border line
   }
   # datetime_format determines what a datetime rendered in the shell would look like.
   # Behavior without this configuration point will be to "humanize" the datetime display,
@@ -462,7 +463,7 @@ $env.config = {
     max_size: 100_000           # Session has to be reloaded for this to take effect
     sync_on_enter: true         # Enable to share history between multiple sessions, else you have to close the session to write history to file
     file_format: "sqlite"       # "sqlite" or "plaintext"
-    isolation: true             # Only available with sqlite file_format. true enables history isolation, false disables it. true will allow the history to be isolated to the current session using up/down arrows. false will allow the history to be shared across all sessions.
+    isolation: false            # Only available with sqlite file_format. true enables history isolation, false disables it. true will allow the history to be isolated to the current session using up/down arrows. false will allow the history to be shared across all sessions.
   }
 
   completions: {
