@@ -33,7 +33,7 @@ return {
   -- Calamity, Chalkboard, Desert, Earthsong, Flatland, Foxnightly (Gogh)
   -- GitHub Dark, Glacier, Gogh (Gogh), Google Dark (Gogh), GruvboxDark
   -- Grape
-  color_scheme = is_mac and 'GruvboxDark' or "Desert",
+  color_scheme = is_mac and 'Desert' or "Desert",
   colors = {
     -- 被选中的内容的背景色
     selection_bg = '#7F7180'
@@ -85,6 +85,7 @@ return {
       mods = 'CTRL|SHIFT|CMD',
       action = wezterm.action.SplitHorizontal { domain = 'CurrentPaneDomain' },
     },
+    { key = 'S', mods = 'CTRL|SHIFT', action = wezterm.action.QuickSelect },
     -- Edit tab title
     {
       key = 'E',
@@ -120,5 +121,9 @@ return {
     },
     -- NOTE that binding only the 'Up' event can give unexpected behaviors.
     -- Read more below on the gotcha of binding an 'Up' event only.
+  },
+
+  unix_domains = {
+    { name = 'unix' }
   },
 }
