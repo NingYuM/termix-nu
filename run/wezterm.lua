@@ -11,18 +11,85 @@
 --  1. https://wezfurlong.org/wezterm/config/files.html
 --  2. https://wezfurlong.org/wezterm/config/default-keys.html
 --  3. https://wezfurlong.org/wezterm/colorschemes/index.html
+--  4. https://wezfurlong.org/wezterm/config/keys.html
+--  5. https://support.apple.com/zh-cn/guide/mac-help/cpmh0011/mac
+--  6. https://medium.com/@s.birntachas/70-mac-keyboard-shortcuts-6a614e902a22
 
 local wezterm = require 'wezterm';
 local act = wezterm.action;
 
-local is_mac = string.find(wezterm.target_triple, 'apple-darwin', 0, true) and true or false
+local launch_menu = {}
+local default_prog = {}
+local set_environment_variables = {}
+
+-- Shell
+if wezterm.target_triple:find('windows') then
+  -- table.insert( launch_menu, { label = 'Nu', args = { 'nu' } } )
+  table.insert( launch_menu, {
+    label = 'PowerShell',
+    args = { 'pwsh.exe', '-NoLogo' }
+  } )
+  table.insert( launch_menu, {
+    label = "WSL",
+    args = { "wsl.exe", "--cd", "/home/" }
+  } )
+  default_prog = { 'pwsh.exe', '-NoLogo' }
+elseif wezterm.target_triple:find('linux') then
+  -- table.insert( launch_menu, { label = 'Nu', args = { 'nu' } } )
+  table.insert( launch_menu, {
+    label = 'Bash',
+    args = { 'bash', '-l' }
+  } )
+  default_prog = { 'bash', '-l' }
+else
+  -- table.insert( launch_menu, { label = 'Nu', args = { 'nu' } } )
+  table.insert( launch_menu, {
+    label = 'Zsh',
+    args = { 'zsh', '-l' }
+  } )
+  default_prog = { 'zsh', '-l' }
+end
+
+-- Title
+function basename( s )
+    return string.gsub( s, '(.*[/\\])(.*)', '%2' )
+end
+
+wezterm.on( 'format-tab-title', function( tab, tabs, panes, config, hover, max_width )
+    local index = ""
+    local pane = tab.active_pane
+    local process = basename( pane.foreground_process_name )
+
+    if #tabs > 1 then
+        index = string.format( "%d: ", tab.tab_index + 1 )
+    end
+
+    return { {
+        Text = ' ' .. index .. process .. ' '
+     } }
+end )
+
+-- Startup
+wezterm.on( 'gui-startup', function( cmd )
+    local tab, pane, window = wezterm.mux.spawn_window( cmd or {} )
+    window:gui_window()
+end )
+
+local is_mac = wezterm.target_triple:find('darwin')
 
 return {
   initial_rows = 25,
   initial_cols = 100,
   font_size = is_mac and 20 or 15,
   window_background_opacity = 1,
+  native_macos_fullscreen_mode = false,
   window_decorations = is_mac and "RESIZE" or "INTEGRATED_BUTTONS|RESIZE",
+
+  inactive_pane_hsb = {
+    hue = 0.9,
+    saturation = 0.9,
+    brightness = 0.9
+  },
 
   -- Command Palette settings
   command_palette_fg_color = '#FFF',
@@ -67,6 +134,10 @@ return {
   hide_tab_bar_if_only_one_tab = false,
   switch_to_last_active_tab_when_closing_tab = true,
 
+  launch_menu = launch_menu,
+  default_prog = default_prog,
+  set_environment_variables = set_environment_variables,
+
   -- Keys REF: https://wezfurlong.org/wezterm/config/keys.html
   keys = {
     { key = 'Enter', mods = 'CMD', action = act.ToggleFullScreen },
@@ -78,14 +149,14 @@ return {
     {
       key = 'V',
       mods = 'CTRL|SHIFT|CMD',
-      action = wezterm.action.SplitVertical { domain = 'CurrentPaneDomain' },
+      action = act.SplitVertical { domain = 'CurrentPaneDomain' },
     },
     {
       key = 'H',
       mods = 'CTRL|SHIFT|CMD',
-      action = wezterm.action.SplitHorizontal { domain = 'CurrentPaneDomain' },
+      action = act.SplitHorizontal { domain = 'CurrentPaneDomain' },
     },
-    { key = 'S', mods = 'CTRL|SHIFT', action = wezterm.action.QuickSelect },
+    { key = 'S', mods = 'CTRL|SHIFT', action = act.QuickSelect },
     -- Edit tab title
     {
       key = 'E',
