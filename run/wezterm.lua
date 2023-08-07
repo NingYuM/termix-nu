@@ -20,11 +20,13 @@ local act = wezterm.action;
 
 local launch_menu = {}
 local default_prog = {}
-local set_environment_variables = {}
+local set_environment_variables = {
+  PATH = wezterm.home_dir .. '/.cargo/bin:' .. os.getenv('PATH')
+}
 
 -- Shell
 if wezterm.target_triple:find('windows') then
-  -- table.insert( launch_menu, { label = 'Nu', args = { 'nu' } } )
+  table.insert( launch_menu, { label = 'Nu', args = { 'nu' } } )
   table.insert( launch_menu, {
     label = 'PowerShell',
     args = { 'pwsh.exe', '-NoLogo' }
@@ -33,21 +35,21 @@ if wezterm.target_triple:find('windows') then
     label = "WSL",
     args = { "wsl.exe", "--cd", "/home/" }
   } )
-  default_prog = { 'pwsh.exe', '-NoLogo' }
+  default_prog = { 'nu' }
 elseif wezterm.target_triple:find('linux') then
-  -- table.insert( launch_menu, { label = 'Nu', args = { 'nu' } } )
+  table.insert( launch_menu, { label = 'Nu', args = { 'nu' } } )
   table.insert( launch_menu, {
     label = 'Bash',
     args = { 'bash', '-l' }
   } )
-  default_prog = { 'bash', '-l' }
+  default_prog = { 'nu' }
 else
-  -- table.insert( launch_menu, { label = 'Nu', args = { 'nu' } } )
+  table.insert( launch_menu, { label = 'Nu', args = { 'nu' } } )
   table.insert( launch_menu, {
     label = 'Zsh',
     args = { 'zsh', '-l' }
   } )
-  default_prog = { 'zsh', '-l' }
+  default_prog = { 'nu' }
 end
 
 -- Title
@@ -145,6 +147,7 @@ return {
     -- Tabs: navigation
     { key = 'LeftArrow', mods = 'CMD', action = act.ActivateTabRelative(-1) },
     { key = 'RightArrow', mods = 'CMD', action = act.ActivateTabRelative(1) },
+    { key = 'T', mods = 'CMD|SHIFT', action = wezterm.action.ShowTabNavigator },
     -- Split panes
     {
       key = 'V',
@@ -157,6 +160,7 @@ return {
       action = act.SplitHorizontal { domain = 'CurrentPaneDomain' },
     },
     { key = 'S', mods = 'CTRL|SHIFT', action = act.QuickSelect },
+    { key = 'N', mods = 'CMD|SHIFT', action = act.SpawnCommandInNewTab { args = { 'nu' } } },
     -- Edit tab title
     {
       key = 'E',
