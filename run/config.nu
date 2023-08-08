@@ -23,8 +23,6 @@ alias tokeid = print (tokei | lines | skip 1 | str join "\n" | detect columns | 
 
 # ----------------------- ENV VARS ------------------------
 $env.EDITOR = 'hx'
-# Use nushell functions to define your right and left prompt
-$env.PROMPT_COMMAND_RIGHT = { '' }
 
 let poshDir = (brew --prefix oh-my-posh | str trim)
 let poshTheme = $'($poshDir)/share/oh-my-posh/themes/'
@@ -46,6 +44,27 @@ def cls [] { ansi cls }
 def 'env exists?' [] { $in in (env).name }  # ' Just hack for syntax highlight
 def sum [] { reduce {|acc, item| $acc + $item } }
 def ver [] { (version | transpose key value | to md --pretty) }
+
+# Print a horizontal line
+export def hr-line [
+  width?: int = 90,
+  --color(-c): string = 'g',
+  --blank-line(-b): bool,
+  --with-arrow(-a): bool,
+] {
+  print $'(ansi $color)('─' * $width)(if $with_arrow {'>'})(ansi reset)'
+  if $blank_line { char nl }
+}
+
+# Update all local branches for the specified repos
+def ua [] {
+  let repos = ['nusi-slim', 'nusi-flex', 'terp-ui']
+  for p in $repos {
+    z $p;
+    print $'Pull all from (ansi p)($env.PWD)(ansi reset):'
+    hr-line; t pull-all; print (char nl)
+  }
+}
 
 def nun [] {
   http get https://api.github.com/repos/nushell/nightly/releases | sort-by -r created_at | select name tag_name id created_at
@@ -178,7 +197,7 @@ def "cargo search" [ query: string, --limit=10 ] {
   | flatten
 }
 
-def 'nu-sloc' [] {
+def nu-sloc [] {
   let stats = (
     ls **/*.nu
       | select name
