@@ -23,6 +23,8 @@ alias tokeid = print (tokei | lines | skip 1 | str join "\n" | detect columns | 
 
 # ----------------------- ENV VARS ------------------------
 $env.EDITOR = 'hx'
+# Disable the date & time displaying on the right of prompt
+$env.PROMPT_COMMAND_RIGHT = { '' }
 
 let poshDir = (brew --prefix oh-my-posh | str trim)
 let poshTheme = $'($poshDir)/share/oh-my-posh/themes/'
@@ -85,7 +87,7 @@ def install-all-nu [] {
   print '-------------------------------------------------------------------'
 
   def install-nushell [] {
-      print $'(char nl)Installing nushell'
+      print $'(char nl)Installing Nushell'
       print '----------------------------'
 
       cd $nu_root
@@ -219,7 +221,7 @@ def nu-sloc [] {
   print $stats
 }
 
-# Check how many downloads nushell has had
+# Check how many downloads Nushell has had
 def nudown [] {
     http get https://api.github.com/repos/nushell/nushell/releases
       | get assets
@@ -238,7 +240,7 @@ def nudown [] {
 # And here is the theme collection
 # https://github.com/nushell/nu_scripts/tree/main/themes
 let dark_theme = {
-    # color for nushell primitives
+    # color for Nushell primitives
     separator: white
     leading_trailing_space_bg: { attr: n } # no fg, no bg, attr none effectively turns this off
     header: green_bold
@@ -323,7 +325,7 @@ let dark_theme = {
 }
 
 let light_theme = {
-    # color for nushell primitives
+    # color for Nushell primitives
     separator: dark_gray
     leading_trailing_space_bg: { attr: n } # no fg, no bg, attr none effectively turns this off
     header: green_bold
@@ -491,7 +493,7 @@ $env.config = {
     algorithm: "prefix"         # prefix or fuzzy
     case_sensitive: false       # set to true to enable case-sensitive completions
     external: {
-      enable: true              # set to false to prevent nushell looking into $env.PATH to find more suggestions, `false` recommended for WSL users as this look up may be very slow
+      enable: true              # set to false to prevent Nushell looking into $env.PATH to find more suggestions, `false` recommended for WSL users as this look up may be very slow
       max_results: 100          # setting it lower can improve completion performance at the cost of omitting some options
       completer: $carapace_completer           # check 'carapace_completer' above as an example
     }
@@ -533,7 +535,7 @@ $env.config = {
   }
 
   menus: [
-    # Configuration for default nushell menus
+    # Configuration for default Nushell menus
     # Note the lack of source parameter
     {
       name: completion_menu
@@ -583,7 +585,7 @@ $env.config = {
         description_text: yellow
       }
     }
-    # Example of extra menus created using a nushell source
+    # Example of extra menus created using a Nushell source
     # Use the source field to create a list of records that populates
     # the menu
     {
