@@ -525,7 +525,11 @@ $env.config = {
     pre_prompt: [{ null }]              # run before the prompt is shown
     pre_execution: [{ null }]           # run before the repl input is run
     env_change: {
-      PWD: [{|before, after| null }]    # run if the PWD environment is different since the last repl input
+      PWD: [{ |before, after|
+        if ('FNM_DIR' in $env) and ([.nvmrc .node-version] | path exists | any { |it| $it }) {
+          fnm use
+        }
+      }]
     }
     # run before the output of a command is drawn, example: `{ if (term size).columns >= 100 { table -e } else { table } }`
     display_output: {
