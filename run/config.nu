@@ -68,11 +68,12 @@ def ua [] {
   }
 }
 
+# Show Nu nightly builds infomation
 def nun [] {
   http get https://api.github.com/repos/nushell/nightly/releases | sort-by -r created_at | select name tag_name id created_at
 }
 
-# 在本地构建所有 Nushell 二进制文件
+# 在本地构建并安装所有 Nushell 二进制文件
 def install-all-nu [] {
   if not ((pwd | path basename | str trim) == 'nushell') { z nushell }
   print 'Remove cached shadow files...'
@@ -122,9 +123,13 @@ def install-all-nu [] {
 
 def cargo-ta  [] { cargo test --all --all-features }
 
+# 备份本地通过 Cargo 安装的 Nu 二进制文件到 ~/Applications/nu-main
 def nu-backup-main [] { cp -r ~/.cargo/bin/nu* ~/Applications/nu-main/ }
+# 将 ~/Applications/nu-main 中的 Nu 二进制文件恢复到本地 Cargo 安装目录
 def nu-restore-main [] { cp -r ~/Applications/nu-main/* ~/.cargo/bin/; print $'Please restart Nu session...' }
+# 将 ~/Applications/nu-latest/ 中的 Nu 二进制文件恢复到本地 Cargo 安装目录
 def nu-use-latest [] { cp -r ~/Applications/nu-latest/* ~/.cargo/bin/; print $'Please restart Nu session...' }
+# 将官方发布的最新版 Nu 二进制文件下载到本地并安装到 ~/Applications/nu-latest/ 目录
 def nu-fetch-latest [] {
   cd ~/Applications/nu-latest/
   curl -s https://api.github.com/repos/nushell/nushell/releases/latest | grep browser_download_url | cut -d '"' -f 4 | grep x86_64-apple-darwin  | aria2c -i -
@@ -137,7 +142,7 @@ def cargo-clippy [] {
   cargo clippy --all --all-features -- -D warnings -D clippy::unwrap_used -A clippy::needless_collect
 }
 
-# example usage: `$nu.config-path | goto`
+# Example usage: `$nu.config-path | goto`
 def-env goto [] {
   let input = $in
   let path = if ($input | path type) == file { ($input | path dirname) } else { $input }
