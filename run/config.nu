@@ -92,7 +92,7 @@ def install-all-nu [] {
       print '----------------------------'
 
       cd $nu_root
-      cargo install --force --path . --features=dataframe,extra
+      cargo install --force --locked --path . --features=dataframe,extra
   }
 
   install-nushell
