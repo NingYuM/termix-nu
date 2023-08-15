@@ -74,7 +74,9 @@ def nun [] {
 }
 
 # 在本地构建并安装所有 Nushell 二进制文件
-def install-all-nu [] {
+def install-all-nu [
+  --plugin-only: bool, # Install plugins only
+] {
   if not ((pwd | path basename | str trim) == 'nushell') { z nushell }
   print 'Remove cached shadow files...'
   fd -I shadow.rs | lines | each { |it| rm $it } | flatten
@@ -95,7 +97,7 @@ def install-all-nu [] {
       cargo install --force --locked --path . --features=dataframe,extra
   }
 
-  install-nushell
+  if not $plugin_only { install-nushell }
 
   def install-plugin [] {
       let plugin = $in
