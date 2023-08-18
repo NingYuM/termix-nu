@@ -24,6 +24,6 @@ erda.staging = [
     { pid = 213, appid = 7542, appName = 'fe-docs', alias = 'docs', env = 'STAGING', branch = 'release/latest', pipeline = 'pipeline.yml' }
 ]
 
-erda.master = [
+erda.prod = [
     { pid = 213, appid = 7542, appName = 'fe-docs', alias = 'docs', env = 'PROD', branch = 'master', pipeline = 'pipeline.yml' }
 ]
