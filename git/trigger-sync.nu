@@ -43,7 +43,7 @@ export def 'git trigger-sync' [
   let pushConf = (git show $'origin/($confBr):.termixrc' | from toml | to json)
   let ignored = (get-env SYNC_IGNORE_ALIAS '')
   # 处理分支名称包含‘.’的情况: `support/release-2.4`
-  let escapedBranch = ($selected | str replace -a '\.' '\.')
+  let escapedBranch = ($selected | str replace -a '.' '\.')
   # 获取待同步目的仓库及目的分支映射
   let dests = ($pushConf | query json $'branches.($escapedBranch)')
   # 如果没有任何同步配置直接退出

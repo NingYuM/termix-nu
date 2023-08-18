@@ -59,7 +59,7 @@ export def 'append-desc' [
     let summary = (
       $records | insert has-desc { |it|
         # 处理分支名称包含‘.’的情况: `support/release-2.4`
-        let escapedBranch = ($it.name | str replace -a '\.' '\.')
+        let escapedBranch = ($it.name | str replace -a '.' '\.')
         let desc = ($descriptions | query json $'descriptions.($escapedBranch)')
         if ($desc | is-empty) { '' } else { '   √' }
       }

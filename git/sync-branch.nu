@@ -14,7 +14,7 @@ export def 'git sync-branch' [
   cd $env.JUST_INVOKE_DIR
   # `git hash-object --stdin < /dev/null` will raise "fatal: could not open '<' for reading: No such file or directory" error
   # 一定要 trim 啊，否则后面可能匹配不到，哎呦……
-  let zero = (git hash-object -t tree /dev/null | str replace -a '[0-9a-f]' '0' | str trim)
+  let zero = (git hash-object -t tree /dev/null | str replace -ar '[0-9a-f]' '0' | str trim)
   let destBranch = ($remoteRef | str replace 'refs/heads/' '')
   let localBranch = ($localRef | str replace 'refs/heads/' '')
   # Decide which branch to get `.termixrc` conf from ?
@@ -30,7 +30,7 @@ export def 'git sync-branch' [
   # The following line not work: ^^^ Expected column path, found string
   # let matchBranch = ($pushConf | get branches | default '' $destBranch | select $destBranch | compact | length)
   # 处理分支名称包含‘.’的情况: `support/release-2.4`
-  let escapedBranch = ($destBranch | str replace -a '\.' '\.')
+  let escapedBranch = ($destBranch | str replace -a '.' '\.')
   # 获取待同步目的仓库及目的分支映射
   let dests = ($pushConf | query json $'branches.($escapedBranch)')
   # 如果没有任何同步配置直接退出

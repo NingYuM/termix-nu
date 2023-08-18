@@ -77,7 +77,7 @@ def 'no-desc' [
   branch: string
 ] {
   # 处理分支名称包含‘.’的情况: `support/release-2.4`
-  let escapedBranch = ($branch | str replace -a '\.' '\.')
+  let escapedBranch = ($branch | str replace -a '.' '\.')
   # ($descriptions | select $escapedBranch | compact | length) == 0
   let noDescription = ($descriptions | query json $'descriptions.($escapedBranch)' | is-empty)
   echo ($noDescription and $branch != 'i')
