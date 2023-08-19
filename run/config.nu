@@ -12,12 +12,24 @@
 source ~/.zoxide.nu
 
 # ---------------------- Aliases -------------------------
+# List files and display one entry per line with `exa`
 alias ll = exa -l
+# List all files (including hidden files) with `exa`
 alias la = exa -la
+# Change to parent directory
 alias .. = cd ..
+# Change to parent of parent directory
 alias ... = do { cd ..; cd .. }
+# Global `just` task receipes
 alias t = just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .
-alias nuc = print (help commands | where command_type != custom and command_type != alias | reject signatures search_terms)
+# Show Nushell commands
+alias nuc = print (
+  help commands | where command_type != custom and command_type != alias
+  | default '' signatures
+  | default '' decl_id
+  | reject signatures search_terms decl_id
+)
+# Show the count of Nushell comamnds
 alias nucc = print (help commands | where command_type != custom and command_type != alias | length)
 alias tokeid = print (tokei | lines | skip 1 | str join "\n" | detect columns | where {|it| $it.Language !~ "=" and $it.Language !~ "-" and (not ($it.Files | is-empty)) } | into int Files Lines Code Comments Blanks)
 
@@ -42,9 +54,12 @@ $env.PROMPT_INDICATOR = $"(ansi y)$> (ansi reset)"
 
 # -------------------- Custom Commands -------------------------
 
+# Clear screen
 def cls [] { ansi cls }
 def 'env exists?' [] { $in in (env).name }  # ' Just hack for syntax highlight
+# Sum input numbers
 def sum [] { reduce {|acc, item| $acc + $item } }
+# Display Nu version info in markdown format
 def ver [] { (version | transpose key value | to md --pretty) }
 
 # Print a horizontal line
@@ -193,6 +208,20 @@ def-env load-direnv [] {
   )
 }
 
+# Load environment variables from the .env file.
+def-env load-dot-env [
+  path: string = '.env'
+] {
+  load-env (
+    open --raw $path
+      | str replace -a '"' ''
+      | str replace -a "'" ''
+      | lines
+      | parse '{key}={value}'
+      | reduce -f {} { |it, acc| $acc | insert $it.key ($it.value | str trim -c '"') }  # "
+  )
+}
+
 def "cargo search" [ query: string, --limit=10 ] {
   ^cargo search $query --limit $limit
   | lines
@@ -206,6 +235,7 @@ def "cargo search" [ query: string, --limit=10 ] {
   | flatten
 }
 
+# Count Nu source codes
 def nu-sloc [] {
   let stats = (
     ls **/*.nu
