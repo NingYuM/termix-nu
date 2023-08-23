@@ -25,8 +25,9 @@
 #   t dp dev --apps app1,app2; t dp test -a all
 #   t dq dev --apps app1,app2; t dq test -a all
 
-use ../utils/common.nu *
+use ../utils/common.nu [has-ref hr-line]
 
+const NA = 'N/A'
 const ERDA_HOST = 'https://erda.cloud'
 
 # Check if the required environment variable was set, quit if not
@@ -66,7 +67,7 @@ def get-pipeline-conf [dest: string = 'dev', --apps: string, --list: bool] {
     # Print available deploy targets and apps with more detail
     if $list {
       print $'Available deploy targets in ($configFile) are:(char nl)'
-      let upsertAlias = {|it| if ($it | get -i alias | is-empty) { 'N/A' } else { $it.alias } }
+      let upsertAlias = {|it| if ($it | get -i alias | is-empty) { $NA } else { $it.alias } }
       for target in ($repoConf.erda | columns) {
         print $'Target (ansi p)($target)(ansi reset):'; hr-line -c pb
         print ($repoConf.erda | get $target | upsert alias $upsertAlias | select appName alias branch env pipeline)
@@ -120,7 +121,6 @@ def query-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
 
 # 格式化流水线查询结果，以更友好的方式呈现
 def format-pipeline-data [pipelines: list] {
-  let NA = 'N/A'
   return (
     $pipelines
       | select -i id commit status normalLabels extra timeBegin timeUpdated

@@ -6,8 +6,8 @@
 #   t git-remote-branch origin
 #   t git-remote-branch origin true
 
-use ../utils/git.nu [ append-desc ]
-use ../utils/common.nu [ has-ref hr-line ]
+use ../utils/git.nu [append-desc]
+use ../utils/common.nu [has-ref hr-line]
 
 # Creates a table listing the remote branches of
 # a git repository and the time of the last commit

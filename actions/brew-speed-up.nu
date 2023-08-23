@@ -9,7 +9,7 @@
 # Usage:
 # 	just brew-speed-up
 
-use ../utils/common.nu *
+use ../utils/common.nu [hr-line]
 
 export def main [
   status: string  # set to `off` to disable brew speed up

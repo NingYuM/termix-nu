@@ -6,7 +6,7 @@
 #   t pull-redev develop
 #   t pull-redev master true
 
-use ../utils/common.nu [get-tmp-path get-env has-ref hr-line]
+use ../utils/common.nu [get-tmp-path get-env get-termix-conf has-ref hr-line]
 
 # 列出远程二开仓库 Tags
 export def 'git pull-redev' [
@@ -15,9 +15,8 @@ export def 'git pull-redev' [
   --show-diff(-d): any      # Set to 'true' if you want to see the files changed since prev tag, defined as `any` acutually `bool`
 ] {
 
-  # FIXME
-  let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
-  let repoPath = (get-tmp-path)
+  let _TERMIX_CONF = get-termix-conf
+  let repoPath = get-tmp-path
   let redevRepos = (open $_TERMIX_CONF | get redevRepos)
   let filteredRepos = ($redevRepos | where $',($group),' =~ $it.group)
   if ($filteredRepos | length) > 0 {

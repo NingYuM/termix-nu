@@ -5,13 +5,13 @@
 # Usage:
 #   nu-ver
 
-use ../utils/common.nu [ _DATE_FMT, _UPGRADE_TAG, get-tmp-path, get-conf, is-lower-ver ]
+use ../utils/common.nu [_DATE_FMT, _UPGRADE_TAG, get-tmp-path, get-conf, is-lower-ver]
 
 # Check min nushell version and show upgrading tips to the user
 export def 'nu-ver' [] {
 
   let currentVer = (version).version
-  let minVer = (get-conf minNuVer '0.83.2')
+  let minVer = get-conf minNuVer '0.83.2'
   upgrade-tip nushell $minVer $currentVer
 }
 
@@ -19,7 +19,7 @@ export def 'nu-ver' [] {
 export def 'just-ver' [] {
 
   let currentVer = (just --version | str replace 'just' '' | str trim)
-  let minVer = (get-conf minJustVer '1.13.0')
+  let minVer = get-conf minJustVer '1.13.0'
   upgrade-tip just $minVer $currentVer
 }
 
@@ -32,8 +32,8 @@ export def 'just-ver' [] {
 #     [√] 当删除掉最新的强制更新版本 Release Tag 时用户端可以检测到并在不升级的情况下恢复正常使用；
 # Check latest termix-nu version and show upgrading tips if there is a new release
 export def 'termix-ver' [] {
-  let tmpPath = (get-tmp-path)
-  let currentVer = (get-conf version)
+  let tmpPath = get-tmp-path
+  let currentVer = get-conf version
   let confName = ([$tmpPath '.termix-conf'] | path join)
   let checkDate = (date now | format date $_DATE_FMT)
   if ($confName | path exists) {

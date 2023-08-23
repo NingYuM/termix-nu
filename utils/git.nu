@@ -4,7 +4,7 @@
 # Usage:
 #   Git related helpers
 
-use common.nu [ has-ref get-env ]
+use common.nu [has-ref get-env]
 
 # Do a git repo sync
 export def 'do-sync' [

@@ -4,7 +4,7 @@
 # Usage:
 #   t check-branch
 
-use ../utils/common.nu [ has-ref ]
+use ../utils/common.nu [has-ref]
 
 # Check whether all remote branches have related description
 export def main [] {

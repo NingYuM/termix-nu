@@ -15,8 +15,13 @@
 #   [ ] rm .husky/pre-push
 #   [ ] Check .dice in redevelop repo
 
-def 'hr-line' [ --blank-line(-b): bool ] {
-  print $'(ansi g)---------------------------------------------------------------------------->(ansi reset)'
+export def 'hr-line' [
+  width?: int = 90,
+  --color(-c): string = 'g',
+  --blank-line(-b): bool,
+  --with-arrow(-a): bool,
+] {
+  print $'(ansi $color)('─' * $width)(if $with_arrow {'>'})(ansi reset)'
   if $blank_line { char nl }
 }
 

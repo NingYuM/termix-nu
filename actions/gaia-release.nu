@@ -9,7 +9,7 @@
 # Usage:
 # 	just gaia-release
 
-use ../utils/common.nu [ _DATE_FMT ]
+use ../utils/common.nu [_DATE_FMT get-termix-conf get-tmp-path hr-line has-ref]
 
 export def main [
   version: string         # Gaia FE release version
@@ -17,9 +17,8 @@ export def main [
   --delete-tag(-d): any   # Set to 'true' if you want to delete the specified tag, defined as `any` acutually `bool`
 ] {
 
-  # FIXME
-  let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
-  let repoPath = (get-tmp-path)
+  let _TERMIX_CONF = get-termix-conf
+  let repoPath = get-tmp-path
   let gaiaSrcRepos = (open $_TERMIX_CONF | get gaiaSrcRepos)
   print $'Using global repo path: (ansi p)($repoPath)(ansi reset)(char nl)'
 

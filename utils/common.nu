@@ -18,15 +18,12 @@
 #   6: Server error
 #   7: Invalid parameter
 
-# FIXME
 export const _DATE_FMT  = '%Y.%m.%d'
 export const _TIME_FMT =  '%Y-%m-%d %H:%M:%S'
 export const _UPGRADE_TAG = '$-FORCE-UPGRADE-$'
 
-export def _TERMIX_CONF [] { ([$env.TERMIX_DIR 'termix.toml'] | path join) }
-
 # Termix.toml config file path
-# let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
+export def get-termix-conf [] { ([$env.TERMIX_DIR 'termix.toml'] | path join) }
 
 # If current host is Windows
 export def windows? [] {
@@ -49,16 +46,14 @@ export def 'get-conf' [
   key: string       # The key to get it's value from termix.toml
   default?: any     # The default value for an empty conf
 ] {
-  # FIXME
-  let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
+  let _TERMIX_CONF = get-termix-conf
   let result = (open $_TERMIX_CONF | get $key)
   if ($result | is-empty) { $default } else { $result }
 }
 
 # Get TERMIX_TMP_PATH
 export def 'get-tmp-path' [] {
-  # FIXME
-  let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
+  let _TERMIX_CONF = get-termix-conf
   let actionConf = (open $_TERMIX_CONF)
   # 先从环境变量里面查找临时文件路径
   let tmpDir = (get-env TERMIX_TMP_PATH '')

@@ -6,14 +6,14 @@
 # Ref:
 #   https://github.com/nushell/nushell/issues/4396
 
-use ../utils/common.nu *
+use ../utils/common.nu [get-tmp-path hr-line]
 
 # Transfer repo from source to dest
 export def 'git repo-transfer' [
   source: string   # The source repo git url
   dest: string     # The dest repo git url
 ] {
-  let tmpPath = (get-tmp-path)
+  let tmpPath = get-tmp-path
   cd $tmpPath
   print $'(char nl)Sync git repo from ($source)(char nl)'
   print $'to dest:      (ansi g)---> ($dest)(ansi reset)(char nl)'

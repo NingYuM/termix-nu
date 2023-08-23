@@ -4,7 +4,7 @@
 # Usage:
 #   t show-env
 
-use ../utils/common.nu *
+use ../utils/common.nu [get-env get-ver]
 
 # Show locally installed cli app's version and env information
 export def main [] {
@@ -27,7 +27,6 @@ export def main [] {
 
   char nl; print (version | transpose | rename nu-key value)
 
-  # FIXME: Table layout will be broken on Windows if using `echo` here
   print [
     [name, value];
     ['Git', $gitVer]

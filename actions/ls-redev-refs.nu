@@ -6,7 +6,7 @@
 #   t ls-redev-refs true
 
 use ../git/branch.nu [git-branch]
-use ../utils/common.nu [get-tmp-path windows?]
+use ../utils/common.nu [get-tmp-path get-termix-conf windows?]
 
 # Show Branches and Tags of redevelop related repos
 export def 'git ls-redev-refs' [
@@ -14,8 +14,7 @@ export def 'git ls-redev-refs' [
   --show-branches: any      # Set true to show remote branches last commit info, defined as `any` acutually `bool`
 ] {
 
-  # FIXME
-  let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
+  let _TERMIX_CONF = get-termix-conf
   let repoPath = get-tmp-path
   let redevRepos = (open $_TERMIX_CONF | get redevRepos)
   let filteredRepos = ($redevRepos | where $',($group),' =~ $it.group)

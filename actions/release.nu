@@ -11,7 +11,7 @@
 # Usage:
 # 	just release
 
-use ../utils/common.nu [ _UPGRADE_TAG, get-conf, is-lower-ver, has-ref ]
+use ../utils/common.nu [_UPGRADE_TAG, get-conf, is-lower-ver, has-ref]
 
 export def main [
   --update-log: any      # Set to `true` do enable updating CHANGELOG.md, defined as `any` acutually `bool`

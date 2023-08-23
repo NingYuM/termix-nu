@@ -4,7 +4,7 @@
 # Usage:
 #   t pull-all
 
-use ../utils/common.nu [ hr-line ]
+use ../utils/common.nu [hr-line]
 
 # Pull all local branches from remote repo
 export def 'git pull-all' [
