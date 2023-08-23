@@ -5,6 +5,9 @@
 #   t git-batch-exec 'git reset --hard HEAD~3'
 #   t git-batch-exec 'git show --abbrev-commit --no-patch'
 
+use ../utils/compose-cmd.nu [compose-command]
+use ../utils/common.nu [get-env hr-line has-ref]
+
 # https://github.com/nushell/nushell/pull/3611
 # https://github.com/nushell/nushell/issues/3433
 # git reset --hard HEAD~3

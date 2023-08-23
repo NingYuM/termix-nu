@@ -5,7 +5,7 @@
 # Usage:
 #   just go
 
-use ../utils/common.nu *
+use ../utils/common.nu [get-conf windows?]
 
 export def 'go' [
   nav_key?: string  # The nav key to go from `quickNavs` config in termix.toml

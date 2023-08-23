@@ -6,6 +6,8 @@
 #   just prune-synced-branches
 #   just prune-synced-branches false
 
+use ../utils/common.nu [hr-line has-ref get-tmp-path get-conf]
+
 # Clean possibly unused branches of synced dest repos
 export def main [
   --user: string        # Git repo access user name

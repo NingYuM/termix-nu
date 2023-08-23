@@ -5,6 +5,8 @@
 #   t tag-redev v2.2.0.9
 #   t tag-redev v2.2.0.9 master true
 
+use ../utils/common.nu [ _DATE_FMT, get-env, get-tmp-path, hr-line, has-ref ]
+
 # 给远程二开仓库批量打 Tag
 export def 'git tag-redev' [
   tag: string               # Specify the tag you want to create
@@ -13,8 +15,6 @@ export def 'git tag-redev' [
   --delete-tag(-d): any     # Set to 'true' if you want to delete the specified tag, defined as `any` acutually `bool`
 ] {
 
-  # FIXME
-  let _DATE_FMT = '%Y.%m.%d'
   # FIXME
   let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
   let currentBeTag = $tag
@@ -69,7 +69,7 @@ export def 'git tag-redev' [
       print $'Tag: (ansi p)($tagName)(ansi reset) delete successfully!(char nl)'
     }
 
-    if (! $delete_tag) {
+    if (not $delete_tag) {
       # Add a tag and push it to the remote repo
       git checkout $branch; git tag $tagName -am $TAG_COMMENT; git push origin --tags
       print $'Tag: (ansi p)($tagName)(ansi reset) created successfully!'

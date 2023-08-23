@@ -27,7 +27,7 @@
 
 use ../utils/common.nu *
 
-def erda-host [] { 'https://erda.cloud' }
+const ERDA_HOST = 'https://erda.cloud'
 
 # Check if the required environment variable was set, quit if not
 def check-envs [] {
@@ -102,7 +102,7 @@ def query-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
     ymlNames: $'($aid)/($erdaEnv)/($branch)/($pipeline)',
     appID: $aid, branches: $branch, sources: 'dice', pageNo: 1, pageSize: $count
   }
-  let cicdUrl = $'(erda-host)/api/terminus/cicds?($cicd | url build-query)'
+  let cicdUrl = $'($ERDA_HOST)/api/terminus/cicds?($cicd | url build-query)'
 
   # Query the id of newly created CICD
   let ci = (curl --silent -H $auth $cicdUrl | from json)
@@ -183,7 +183,7 @@ def check-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
 
 # 创建 CICD 流水线并返回其对应 ID
 def create-cicd [aid: int, appName: string, branch: string, pipeline: string, --auth: string] {
-  let cicdUrl = $'(erda-host)/api/terminus/cicds'
+  let cicdUrl = $'($ERDA_HOST)/api/terminus/cicds'
   let cicd = { appID: $aid, branch: $branch, pipelineYmlName: $pipeline }
   print $'Initialize CICD for (ansi pb)($appName)(ansi reset) with (ansi g)($pipeline)(ansi reset) from (ansi g)($branch)(ansi reset) branch'
 
@@ -198,9 +198,9 @@ def create-cicd [aid: int, appName: string, branch: string, pipeline: string, --
 
 # 执行指定 ID 的流水线
 def run-cicd [id: int, appid: int, pid: int, --auth: string] {
-  let runUrl = $'(erda-host)/api/terminus/cicds/($id)/actions/run'
+  let runUrl = $'($ERDA_HOST)/api/terminus/cicds/($id)/actions/run'
   let run = (curl --silent -H $auth -X POST $runUrl | from json)
-  let url = $'(erda-host)/terminus/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
+  let url = $'($ERDA_HOST)/terminus/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
   if $run.success {
     print $'CICD started, You can query the pipeline running status with id: (ansi g)($id)(ansi reset)'
     print $'Or visit ($url) for more details'
@@ -209,7 +209,7 @@ def run-cicd [id: int, appid: int, pid: int, --auth: string] {
 
 # 根据流水线 ID 查询流水线执行结果
 def query-cicd-by-id [id: int, --auth: string] {
-  let queryUrl = $'(erda-host)/api/terminus/pipelines/($id)'
+  let queryUrl = $'($ERDA_HOST)/api/terminus/pipelines/($id)'
   let query = (curl --silent -H $auth $queryUrl | from json)
 
   if ($query | describe) == 'string' { print $'Query CICD failed with message: (ansi r)($query)(ansi reset)'; exit 1 }
@@ -228,7 +228,7 @@ def query-cicd-by-id [id: int, --auth: string] {
     End: $timeEnd
     Duration: ($'($query.data.costTimeSec)sec' | into duration)
     # 此处之所以没有直接用 $appid & $pid 是因为可能存在在 A 应用仓库中查询 B 应用的流水线执行结果的情况，故而以返回数据为准
-    URL: $'(erda-host)/terminus/dop/projects/($query.data.projectID)/apps/($query.data.applicationID)/pipeline/obsoleted?pipelineID=($id)'
+    URL: $'($ERDA_HOST)/terminus/dop/projects/($query.data.projectID)/apps/($query.data.applicationID)/pipeline/obsoleted?pipelineID=($id)'
   }
   print $'(char nl)(ansi pb)Current Running Status of CICD ($id):(ansi reset)'
   print '----------------------------------------------------------'

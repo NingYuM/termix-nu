@@ -12,6 +12,8 @@
 # Usage:
 #   t rename-branch old-name new-name
 
+use ../utils/common.nu [ has-ref hr-line ]
+
 # Rename remote branch, and delete old branch after rename
 export def 'git branch-rename' [
   from: string      # The old branch name to be renamed

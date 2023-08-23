@@ -6,6 +6,8 @@
 #   t pull-redev develop
 #   t pull-redev master true
 
+use ../utils/common.nu [get-tmp-path get-env has-ref hr-line]
+
 # 列出远程二开仓库 Tags
 export def 'git pull-redev' [
   branch: string            # Specify the branch to pull

@@ -9,14 +9,14 @@
 # Usage:
 # 	just gaia-release
 
+use ../utils/common.nu [ _DATE_FMT ]
+
 export def main [
   version: string         # Gaia FE release version
   repos: string           # The repos to creat a release tag, multi repo could be separated by ','
   --delete-tag(-d): any   # Set to 'true' if you want to delete the specified tag, defined as `any` acutually `bool`
 ] {
 
-  # FIXME
-  let _DATE_FMT = '%Y.%m.%d'
   # FIXME
   let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
   let repoPath = (get-tmp-path)

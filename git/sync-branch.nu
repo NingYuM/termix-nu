@@ -4,6 +4,9 @@
 # Usage:
 #   This's a git push hook, don't call it manually
 
+use ../utils/git.nu [get-sync-ref do-sync]
+use ../utils/common.nu [get-conf get-env has-ref hr-line]
+
 # Sync local branches to remote according to .termixrc config file from remote repo
 export def 'git sync-branch' [
   localRef: string   # Local git branch/ref to push

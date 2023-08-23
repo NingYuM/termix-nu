@@ -5,11 +5,13 @@
 # Usage:
 #   nu-ver
 
+use ../utils/common.nu [ _DATE_FMT, _UPGRADE_TAG, get-tmp-path, get-conf, is-lower-ver ]
+
 # Check min nushell version and show upgrading tips to the user
 export def 'nu-ver' [] {
 
   let currentVer = (version).version
-  let minVer = (get-conf minNuVer '0.83.1')
+  let minVer = (get-conf minNuVer '0.83.2')
   upgrade-tip nushell $minVer $currentVer
 }
 
@@ -30,8 +32,6 @@ export def 'just-ver' [] {
 #     [√] 当删除掉最新的强制更新版本 Release Tag 时用户端可以检测到并在不升级的情况下恢复正常使用；
 # Check latest termix-nu version and show upgrading tips if there is a new release
 export def 'termix-ver' [] {
-  # FIXME
-  let _DATE_FMT = (_DATE_FMT)
   let tmpPath = (get-tmp-path)
   let currentVer = (get-conf version)
   let confName = ([$tmpPath '.termix-conf'] | path join)
@@ -65,10 +65,6 @@ export def 'termix-ver' [] {
 def 'query-ver' [
   conf: string,
 ] {
-  # FIXME
-  let _DATE_FMT = (_DATE_FMT)
-  # FIXME
-  let _UPGRADE_TAG = (_UPGRADE_TAG)
   # Update latest commits from remote to local, tags inclueded
   enter $env.TERMIX_DIR; git fetch origin -p; git pull --tags
   let checkDate = (date now | format date $_DATE_FMT)

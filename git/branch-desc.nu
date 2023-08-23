@@ -5,6 +5,8 @@
 #   t desc
 #   t desc master
 
+use ../utils/common.nu [ has-ref, hr-line ]
+
 # Show branch description from branch description file `d` of `i` branch
 export def main [
   branch: string        # The branch to query from description file

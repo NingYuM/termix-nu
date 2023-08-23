@@ -7,6 +7,9 @@
 #   t dir-batch-exec 'pwd && echo "--------> " && ncu'
 #   t dir-batch-exec 'pwd; git remote -v; git push origin master; git push origin --tags'
 
+use ../utils/common.nu [hr-line]
+use ../utils/compose-cmd.nu [compose-command]
+
 # 在指定目录或者当前目录的所有子目录里执行指定命令,多个目录用空格分隔
 export def main [
   cmd: string           # The command to execute in directories

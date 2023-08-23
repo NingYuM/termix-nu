@@ -19,9 +19,10 @@
 #   7: Invalid parameter
 
 # FIXME
-export def _DATE_FMT [] { '%Y.%m.%d' }
-export def _TIME_FMT [] { '%Y-%m-%d %H:%M:%S' }
-export def _UPGRADE_TAG [] { '$-FORCE-UPGRADE-$' }
+export const _DATE_FMT  = '%Y.%m.%d'
+export const _TIME_FMT =  '%Y-%m-%d %H:%M:%S'
+export const _UPGRADE_TAG = '$-FORCE-UPGRADE-$'
+
 export def _TERMIX_CONF [] { ([$env.TERMIX_DIR 'termix.toml'] | path join) }
 
 # Termix.toml config file path

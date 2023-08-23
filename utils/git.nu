@@ -4,6 +4,8 @@
 # Usage:
 #   Git related helpers
 
+use common.nu [ has-ref get-env ]
+
 # Do a git repo sync
 export def 'do-sync' [
   syncFrom: string  # The git branch or commit hash to sync from
@@ -48,8 +50,8 @@ export def 'append-desc' [
 ] {
 
   let descFile = 'd.toml'
-  let localIExists = (has-ref i)
-  let remoteIExists = (has-ref origin/i)
+  let localIExists = has-ref i
+  let remoteIExists = has-ref origin/i
   if not ($localIExists or $remoteIExists) {
     $records | sort-by last-commit
   } else {

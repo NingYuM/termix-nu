@@ -2,6 +2,8 @@
 # Author: hustcer
 # Created: 2021/10/03 09:39:52
 
+use ../utils/common.nu [get-env]
+
 # Compose command with the shell to execute it
 export def 'compose-command' [
   cmd: string       # The command to compose

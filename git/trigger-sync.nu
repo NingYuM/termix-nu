@@ -6,6 +6,9 @@
 #   just trigger-sync
 #   just trigger-sync feature/latest
 
+use ../utils/git.nu [get-sync-ref do-sync]
+use ../utils/common.nu [get-conf get-env has-ref hr-line]
+
 # Manually trigger code syncing to all related dests for specified branch
 export def 'git trigger-sync' [
   branch?: string   # Local git branch/ref to push

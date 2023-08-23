@@ -5,6 +5,9 @@
 #   t ls-redev-refs
 #   t ls-redev-refs true
 
+use ../git/branch.nu [git-branch]
+use ../utils/common.nu [get-tmp-path windows?]
+
 # Show Branches and Tags of redevelop related repos
 export def 'git ls-redev-refs' [
   group: string             # Specify the groups of repo to list their refs
@@ -13,7 +16,7 @@ export def 'git ls-redev-refs' [
 
   # FIXME
   let _TERMIX_CONF = ([$env.TERMIX_DIR 'termix.toml'] | path join)
-  let repoPath = (get-tmp-path)
+  let repoPath = get-tmp-path
   let redevRepos = (open $_TERMIX_CONF | get redevRepos)
   let filteredRepos = ($redevRepos | where $',($group),' =~ $it.group)
 

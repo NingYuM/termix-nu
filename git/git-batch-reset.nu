@@ -5,6 +5,8 @@
 #   t git-batch-reset 3
 #   t git-batch-reset 3 develop master
 
+use ../utils/common.nu [hr-line has-ref]
+
 # git reset --hard HEAD~3
 # 将指定Git分支硬回滚N个commit
 export def 'git batch-reset' [
