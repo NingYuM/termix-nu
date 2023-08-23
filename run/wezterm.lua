@@ -116,6 +116,12 @@ return {
     'Cascadia Code',
   },
 
+  -- Change the proportional UI/title font family that is used by default.
+  -- This applies to all the proportional UI text; fancy tab bar, char selector, command palette and so on.
+  window_frame = {
+    font = wezterm.font('Fira Code'),
+  },
+
   max_fps = 60,
   animation_fps = 60,
   front_end = 'WebGpu',
