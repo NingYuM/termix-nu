@@ -1,6 +1,48 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.32.0] - 2023-08-23
+
+### Bug Fixes
+
+- Fix common version compare agorithm
+- Fix nushell install with dataframe feature
+
+### Chore
+
+- Update wezterm config for Windows
+
+### Features
+
+- Fix spawn of Nu and launcher menu
+- Add `ua` and `hr-line` custom utils
+
+### Miscellaneous Tasks
+
+- Add wezterm config file
+- Add atuin setup for nushell config
+- Adapt to nu v0.84, change `date format` to `format date`
+- Add ignore as a workaroud for unnecessary each output
+- Update command palette config for wezterm
+- Add key mapping config for wezterm
+- Update wezterm key mapping
+- Update theme config for wezterm
+- Add keyboard shortcut to modifty tab name
+- Update zoxide config for Nu 0.83.1
+- Update config for wezterm
+- Update launch menu config for wezterm
+- Update Nu config, Disable the date & time displaying on the right of prompt
+- Update config for fnm
+- Update comments for some custom commands
+- Add `--plugin-only` for install-all-nu command
+- Update .termixrc-example
+- Adapt to Nu v0.84 and bump to new version: v1.32.0
+- Add comments for alias in nu config file
+
+### Refactor
+
+- Adapt to Nu v0.84 and use const and module if possible
+
 ## [1.31.0] - 2023-08-01
 
 ### Miscellaneous Tasks
