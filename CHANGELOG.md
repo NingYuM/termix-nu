@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 ## [1.33.0] - 2023-08-30
 
+### Bug Fixes
+
+- Fix git ref checking custom command `has-ref`
+
 ### Features
 
 - Add `symlink` and `unpack` custom command
