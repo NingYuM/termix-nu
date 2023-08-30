@@ -181,6 +181,78 @@ def bump-ver [
   sd -f e -s $fromVer $toVer (fd --type file | lines)
 }
 
+# Create a symlink for the specified file
+export def symlink [
+  existing: path   # The existing file
+  link_name: path  # The name of the symlink
+] {
+  let existing = ($existing | path expand -s)
+  let link_name = ($link_name | path expand)
+
+  if $nu.os-info.family == 'windows' {
+    if ($existing | path type) == 'dir' {
+      mklink /D $link_name $existing
+    } else {
+      mklink $link_name $existing
+    }
+  } else {
+    ln -s $existing $link_name | ignore
+  }
+}
+
+# Uppack archive file
+export def unpack [
+  p: path           # archive to unpack
+  --create-dir(-d)  # create a directory
+] {
+  if $create_dir {
+    let dir = ($p | path parse).stem
+
+    if ($p | str ends-with '.tar') {
+      mkdir $dir
+      tar -xf $p --directory $dir
+    } else if ($p | str ends-with '.tar.gz') {
+      let dir = ($p | path parse -e 'tar.gz').stem
+      mkdir $dir
+      tar -xzf $p --directory $dir
+    } else if ($p | str ends-with '.tar.xz') {
+      let dir = ($p | path parse -e 'tar.xz').stem
+      mkdir $dir
+      tar -xf $p --directory $dir
+    } else if ($p | str ends-with '.tgz') {
+      mkdir $dir
+      tar zxvf $p --directory $dir
+    } else if ($p | str ends-with '.zip') {
+      mkdir $dir
+      unzip $p -d $dir
+    } else if ($p | str ends-with '.7z') {
+      mkdir $dir
+      ^7z x $p $'-o($dir)'
+    } else {
+      echo $"Unknown extension: ($p)"
+    }
+
+  } else {
+
+    if ($p | str ends-with '.tar') {
+      tar -xf $p
+    } else if ($p | str ends-with '.tar.gz') {
+      tar -xzf $p
+    } else if ($p | str ends-with '.tar.xz') {
+      tar -xf $p
+    } else if ($p | str ends-with '.tgz') {
+      tar zxvf $p
+    } else if ($p | str ends-with '.zip') {
+      unzip $p
+    } else if ($p | str ends-with '.7z') {
+      ^7z x $p
+    } else {
+      echo $"Unknown extension: ($p)"
+    }
+
+  }
+}
+
 def gh-pr [repo: string = 'nushell/nushell'] {
   gh -R $repo pr list --json url,number,author,title
     | from json
