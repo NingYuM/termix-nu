@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.33.0] - 2023-08-30
+
+### Features
+
+- Add `symlink` and `unpack` custom command
+- Enable reading .termixrc from termix-nu dir while running Erda pipelines
+
+### Miscellaneous Tasks
+
+- Change the proportional UI/title font family for `wezterm` config
+
 ## [1.32.0] - 2023-08-23
 
 ### Bug Fixes
