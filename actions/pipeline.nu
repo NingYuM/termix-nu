@@ -57,43 +57,46 @@ def check-pipeline-conf [pipeline: any] {
 def get-pipeline-conf [dest: string = 'dev', --apps: string, --list: bool] {
   # 本地配置文件名，优先从 i 分支上的 .termixrc 文件中读取配置
   # 如果 i 分支不存在则从当前目录下的 .termixrc 文件中读取配置
+  # 如果都不存在则从 termix-nu 仓库的 .termixrc 文件中读取配置
+  # 如果以上都不存在则提示用户创建 .termixrc 文件
   cd $env.JUST_INVOKE_DIR
   let useI = (has-ref origin/i)
-  let LOCAL_CONFIG = '.termixrc'
+  let LOCAL_CONFIG = if ('.termixrc' | path exists) { '.termixrc' } else { $'($env.TERMIX_DIR)/.termixrc' }
   let useRc = ($LOCAL_CONFIG | path exists)
   let configFile = if $useI { 'origin/i:.termixrc' } else { $LOCAL_CONFIG }
-  if ($useI or $useRc) {
-    let repoConf = if $useI { (git show 'origin/i:.termixrc' | from toml) } else { (open $LOCAL_CONFIG | from toml) }
-    # Print available deploy targets and apps with more detail
-    if $list {
-      print $'Available deploy targets in ($configFile) are:(char nl)'
-      let upsertAlias = {|it| if ($it | get -i alias | is-empty) { $NA } else { $it.alias } }
-      for target in ($repoConf.erda | columns) {
-        print $'Target (ansi p)($target)(ansi reset):'; hr-line -c pb
-        print ($repoConf.erda | get $target | upsert alias $upsertAlias | select appName alias branch env pipeline)
-        if ($repoConf.erda | get $target | describe) =~ 'record' { print -n (char nl) }
-      }
-      exit 0
-    }
-
-    let pipeline = ($repoConf.erda | get -i $dest)
-    if ($pipeline | is-empty) {
-      print $'Please set the App configs for (ansi r)erda.($dest)(ansi reset) in (ansi r)($configFile)(ansi reset) first...'; exit 1
-    }
-    # 批量处理模式必须指定 App
-    if (not $useI) and ($apps | str trim | is-empty) {
-      print $'You are running the command in (ansi p)batch mode(ansi reset), Please specify the apps to handle by (ansi r)`--apps` or `-a`(ansi reset) flag(ansi reset)...'; exit 1
-    }
-    let batchMode = ($pipeline | describe) =~ 'table'
-    let conf = if $batchMode { $pipeline } else { [$pipeline] }
-    check-pipeline-conf $conf
-    if not $batchMode { return $conf }
-    # The condition to filter the matched apps
-    let cond = {|x| $apps | split row ',' | any {|it| $it in [$x.appName ($x | get -i alias)] }}
-    let matched = if $apps == 'all' { $conf } else if not ($apps | is-empty) { $conf | filter $cond }
-    return $matched
+  if not ($useI or $useRc) {
+    print $'No (ansi r)origin/i branch or ($LOCAL_CONFIG)(ansi reset) exits, please create it before running this command...'; exit 1
   }
-  print $'No (ansi r)origin/i branch or ($LOCAL_CONFIG)(ansi reset) exits, please create it before running this command...'; exit 1
+
+  let repoConf = if $useI { (git show 'origin/i:.termixrc' | from toml) } else { (open $LOCAL_CONFIG | from toml) }
+  # Print available deploy targets and apps with more detail
+  if $list {
+    print $'Available deploy targets in ($configFile) are:(char nl)'
+    let upsertAlias = {|it| if ($it | get -i alias | is-empty) { $NA } else { $it.alias } }
+    for target in ($repoConf.erda | columns) {
+      print $'Target (ansi p)($target)(ansi reset):'; hr-line -c pb
+      print ($repoConf.erda | get $target | upsert alias $upsertAlias | select appName alias branch env pipeline)
+      if ($repoConf.erda | get $target | describe) =~ 'record' { print -n (char nl) }
+    }
+    exit 0
+  }
+
+  let pipeline = ($repoConf.erda | get -i $dest)
+  if ($pipeline | is-empty) {
+    print $'Please set the App configs for (ansi r)erda.($dest)(ansi reset) in (ansi r)($configFile)(ansi reset) first...'; exit 1
+  }
+  # 批量处理模式必须指定 App
+  if (not $useI) and ($apps | str trim | is-empty) {
+    print $'You are running the command in (ansi p)batch mode(ansi reset), Please specify the apps to handle by (ansi r)`--apps` or `-a`(ansi reset) flag(ansi reset)...'; exit 1
+  }
+  let batchMode = ($pipeline | describe) =~ 'table'
+  let conf = if $batchMode { $pipeline } else { [$pipeline] }
+  check-pipeline-conf $conf
+  if not $batchMode { return $conf }
+  # The condition to filter the matched apps
+  let cond = {|x| $apps | split row ',' | any {|it| $it in [$x.appName ($x | get -i alias)] }}
+  let matched = if $apps == 'all' { $conf } else if not ($apps | is-empty) { $conf | filter $cond }
+  return $matched
 }
 
 # 根据 AppID、Branch、Pipeline 查询最近的流水线执行记录
