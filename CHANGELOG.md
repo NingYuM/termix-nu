@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Features
 
 - Add `symlink` and `unpack` custom command
-- Enable reading .termixrc from termix-nu dir while running Erda pipelines
+- Enable reading `.termixrc` from `termix-nu` dir while running Erda pipelines
 
 ### Miscellaneous Tasks
 
