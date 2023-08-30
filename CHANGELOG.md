@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.35.0] - 2023-08-30
+
+### Bug Fixes
+
+- Fix `just upgrade` bug
+
 ## [1.33.0] - 2023-08-30
 
 ### Bug Fixes
