@@ -62,7 +62,7 @@ ver: _setup
 
 # Upgrade termix-nu repo to the latest version
 upgrade:
-  @cd {{_termix}}; git checkout master; git pull origin (git tag -l --sort=-v:refname | lines | select 0) --ff-only;
+  @cd {{_termix}}; git checkout master; git pull --tags; git pull origin (git tag -l --sort=-v:refname | lines | select 0) --ff-only;
 
 # Release a new version for termix-nu
 release  updateLog=('false') forceUpgrade=('false'): _setup
