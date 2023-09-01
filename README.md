@@ -45,7 +45,7 @@ winget install Nushell.Nushell
 # Install the latest version of nushell, extra features included.
 cargo install nu --features=extra
 # Install nushell of the specified version
-cargo +stable install nu --all-features --version 0.68.0
+cargo +stable install nu --all-features --version 0.80.0
 ```
 
 ### `Just` & `nu` 更新提示
@@ -576,9 +576,11 @@ t check-branch
    npx husky install
    # To automatically have Git hooks enabled after install, edit package.json
    # And add `"prepare": "husky install"` to `scripts`
+   # 添加 `pre-push` Hook Demo
+   npx husky add .husky/pre-push "echo push"
    ```
 2. 如果项目里面之前正确配置过 Husky 只需要执行 `npm install`即可
-3. 配置 `pre-push` Hook(只需配置一次，一个人配置完毕后其他成员更新仓库即可), 内容如下:
+3. 配置 `pre-push` Hook(只需配置一次，一个人配置完毕后其他成员更新仓库即可), 将 `.husky/pre-push` Demo 脚本改为以下内容:
 
    ```bash
    #!/bin/sh
@@ -696,7 +698,148 @@ t trigger-sync feature/sync
 
 ---
 
-### 21. Homebrew 镜像加速{#brew-speed-up}
+### 21. 从命令行执行 Erda 流水线{#run-pipeline}
+
+**功能描述**:
+
+自从 Erda 启用多因子认证后想通过快捷方式部署 Erda 流水线变得很困难，本命令行工具可以通过一条命令执行指定流水线，当然了它也没有超能力无法直接绕过多因子认证，只能“曲线救国”需要你在环境变量里面配置下 Erda 的登录 Session 信息，然后就可以使用了。相比于通过浏览器登录 Erda 找到对应项目里对应应用的对应流水线，然后手工创建并执行来说还是方便许多。而且本工具不仅支持单个应用的部署，还支持多个应用批量部署（不限于前端应用或者后端应用，理论上只要能通过流水线部署的应用都可以支持）。
+
+在执行流水线部署之前默认会做两重检查：
+
+1. 检查当前分支上是否有正在部署的流水线；
+2. 如果没有正在执行的流水线继续检查将要部署的分支的最新提交是否已经部署过（在单应用仓库内部署有效，**多应用模式下跳过此检查**）；
+
+如果其中任意一个检查的结果为“是”则停止部署并给予相应提示以避免重复部署，如果都没有则执行部署。也可以通过 `--force` 或者 `-f` 参数跳过检查，强制部署。
+可以通过 `t erda-deploy -h` 或者 `t dp -h` 查看更多帮助信息。
+
+**配置步骤**:
+
+1. 配置环境变量
+
+   需要在 `termix-nu` 的 `.env` 文件里面加一个环境变量(使用该功能的每位用户都需要配置):
+
+   ```bash
+   # 户级别配置，每个开发者根据自己的情况配置, 请注意保密
+   # 该配置用于执行 Erda Pipeline， 如果不需要可以不配
+   # 该环境变量对应登陆 Erda 后在浏览器 Cookie 里面所看到的 OPENAPISESSION 值，如过期需手工更新
+   ERDA_SESSION='92525ee0...'
+   ```
+
+2. 配置应用流水线信息(**单应用模式**)
+
+   该步骤只需要团队里面的某一位同学配置下即可，需要修改 `i` 分支(关于 `i` 分支[前面](#desc)已经有所说明)上的 `.termixrc` 配置, 在该 **toml** 文件的**前面**添加类似如下配置：
+
+   ```toml
+   # pid 为项目 ID，appid 为应用 ID
+   # 如果代码仓库访问链接为: https://erda.cloud/terminus/dop/projects/1124/apps/11147/repo，则从URL里面可以获取这两个值
+   # Possible env values: DEV, TEST, STAGING, PROD
+   erda.test = { pid = 1124, appid = 11147, appName = 'nusi-slim', env = 'TEST', branch = 'develop', pipeline = '.erda/pipelines/nusi.yml' }
+   erda.dev = { pid = 1124, appid = 11147, appName = 'nusi-slim', env = 'DEV', branch = 'feature/nusi', pipeline = '.erda/pipelines/nusi.yml' }
+   ```
+
+   **注意：** 该配置文件提交并推送到远程以后其他人需要执行 `git fetch origin i:i` 命令在不改变当前分支的情况下更新 i 分支, 之后才能使配置生效
+
+3. 配置应用流水线信息(**多应用模式**)
+
+   如果你只需要部署一个应用只完成**步骤 2**即可，如果你需要同时部署多个应用可以跳过**步骤 2**，通过该步骤完成多应用的配置。该步骤需要你在执行部署命令的目录里面有一个 `.termixrc` 文件，内容如下（参考 `.termixrc-example` 示例文件）：
+
+   ```toml
+   # appName & alias 会作为多应用模式下 `--apps` 参数的检索字段
+   erda.test = [
+      { pid = 213, appid = 7542, appName = 'fe-docs', alias = 'docs', env = 'TEST', branch = 'develop', pipeline = 'pipeline.yml' },
+      { pid = 1124, appid = 11147, appName = 'nusi-slim', alias = 'nusi', env = 'TEST', branch = 'develop', pipeline = '.erda/pipelines/nusi.yml' },
+   ]
+
+   erda.dev = [
+      { pid = 213, appid = 7542, appName = 'fe-docs', alias = 'docs', env = 'DEV', branch = 'feature/latest', pipeline = 'pipeline.yml' },
+      { pid = 1124, appid = 11147, appName = 'nusi-slim', alias = 'nusi', env = 'DEV', branch = 'feature/nusi', pipeline = '.erda/pipelines/nusi.yml' },
+   ]
+
+   erda.staging = [
+      { pid = 213, appid = 7542, appName = 'fe-docs', alias = 'docs', env = 'STAGING', branch = 'release/latest', pipeline = 'pipeline.yml' }
+   ]
+
+   erda.prod = [
+      { pid = 213, appid = 7542, appName = 'fe-docs', alias = 'docs', env = 'PROD', branch = 'master', pipeline = 'pipeline.yml' }
+   ]
+   ```
+
+   在多应用模式下必须通过 `--apps` 或 `-a` 参数指定要部署或查询的应用，多个应用之间用英文逗号分隔，输入的应用名会在上述配置里面的 `appName` 和 `alias` 里面进行精确匹配，只有匹配到的应用才会被部署。可以通过 `t dp -l` 命令查询可部署的目标及应用信息。
+
+**命令格式**:
+
+- 单应用：`deploy dest=('dev')`;
+- 多应用：`deploy dest=('dev') --apps nusi,docs`;
+
+**参数说明**:
+
+- `dest`: 选填，待执行的目标流水线，默认值为 `dev`，对于上述**步骤 2**的 **toml** 配置 `erda` 下面有两个 Key：`dev` & `test`, 所以 `dest` 的取值也只能是这两个(可以通过 `t dp -l` 查询所有可能的部署目标);
+- `--force` 或者 `-f` 参数跳过检查步骤，强制部署应用
+- `--list` 或者 `-l` 列出所有可能的部署目标及应用信息
+- `--apps` 或者 `-a` 指定需要批量部署的应用，多个应用以","分隔，在多应用模式下必须指定(`-a all`或者`--apps all`代表选择指定目标下的所有应用)，单应用模式忽略
+- `--help` 或者 `-h` 查看帮助信息
+
+**使用举例**:
+
+```bash
+# 触发默认的 `dev` 配置对应的流水线的创建和执行, 或者 `t dp` (dp 为 deploy 的别名)
+t deploy
+# 查询所有可能的部署目标
+t dp -l
+# 触发 `test` 配置对应的流水线的创建和执行
+t deploy test
+# 通过 dp 别名执行部署，并且强制部署测试环境
+t dp test -f
+# 部署测试环境所有应用
+t dp test -a all
+# 查找测试环境里面 appName 或者 alias 为 nusi 的应用并部署
+t dp test -a nusi
+```
+
+**输出样例**:
+
+![Run Erda Pipeline from CLI](https://img.alicdn.com/imgextra/i1/O1CN01yxKRG51Mnt22iQDDH_!!6000000001480-2-tps-978-115.png)
+
+---
+
+### 22. 从命令行查询 Erda 流水线的执行情况{#query-pipeline}
+
+**功能描述**:
+
+对于通过上述 `deploy` 命令执行的流水线会在输出里面告诉你当前触发执行的流水线的 ID，比如上图中的 **988218150879331**，此时可以通过 `deploy-query` 命令来查询流水线的执行情况。
+
+执行查询命令时如果不指定流水线 ID 则查询指定目标的最近 **10** 条部署记录并以表格形式显示, 在多应用查询模式下必须通过 `--apps` 或 `-a` 参数指定要查询的应用，多个应用之间用英文逗号分隔，输入的应用名会在配置里面的 `appName` 和 `alias` 里面进行精确匹配。
+
+**命令格式**:
+
+- 根据 ID 查询单条部署记录：`deploy-query [id]`;
+- 单应用查询最近 10 条部署记录：`deploy-query test`;
+- 多应用查询最近 10 条部署记录：`deploy-query test -a all`;
+
+**参数说明**:
+
+- `id`: 选填，待查询的目标流水线对应的 ID，比如上图中的 **988218150879331**; 如果不填则查询默认目标的最近**10**条部署记录
+- `--apps` 或者 `-a` 指定需要批量查询的应用，多个应用以","分隔，在多应用模式下必须指定(`-a all`或者`--apps all`代表查询指定目标下的所有应用)，单应用模式忽略
+- `--help` 或者 `-h` 查看帮助信息
+
+**使用举例**:
+
+```bash
+# 根据流水线 ID 查询其执行情况, 或者 `t dq` (dq 为 deploy-query 的别名)
+t deploy-query 988218150879331
+# 查询测试环境最近的10条部署记录
+t dq test
+# 多应用模式下查询开发环境所有应用的最近10条部署记录
+t dq dev -a all
+```
+
+**输出样例**:
+
+![Query Erda Pipeline Running Status from CLI](https://img.alicdn.com/imgextra/i1/O1CN01415e4m1ir1HspRbuv_!!6000000004465-2-tps-1434-409.png)
+
+---
+
+### 23. Homebrew 镜像加速{#brew-speed-up}
 
 **功能描述**: 由于众所周知的原因 `brew` 更新或者安装应用的时候会比较慢，本工具可以通过给 `brew` 设置国内镜像的方式来提速，同时允许用户恢复到初始设置。
 
@@ -721,7 +864,7 @@ t brew-speed-up off
 
 ---
 
-### 22. 查看团队成员当前 EMP 工时填报情况{#emp}
+### 24. 查看团队成员当前 EMP 工时填报情况{#emp}
 
 **功能描述**: 查看团队成员当前 EMP 工时填报情况
 
@@ -752,7 +895,7 @@ t emp true true
 
 ---
 
-### 23. 给标品源码仓库批量打 Tag{#gaia-release}
+### 25. 给标品源码仓库批量打 Tag{#gaia-release}
 
 **功能描述**: 在标品前端需要发布新版本的时候将标品 `gaia-mall,gaia-mobile,gaia-picker` 等源码仓库指定分支批量打 Release Tag, 也可以用于删除指定 Tag
 
@@ -778,7 +921,7 @@ t gaia-release v2.2.0.21-2021.11.09 mall,mobile
 
 ---
 
-### 24. 给远程二开仓库批量打 Tag{#tag-redev}
+### 26. 给远程二开仓库批量打 Tag{#tag-redev}
 
 **功能描述**: 给远程二开仓库指定分支批量打 Release Tag, 目前前端二开仓库含增量、全量及所有业态有 13 个，人工挨个仓库打 Tag 是不现实的，也很容易出错。另外，该命令也可以用于删除指定 Tag。
 
@@ -806,7 +949,7 @@ t tag-redev v2.2.0.21-2021.11.09 master
 
 ---
 
-### 25. 查询二开仓库的远程分支及 Tag 信息{#ls-redev-refs}
+### 27. 查询二开仓库的远程分支及 Tag 信息{#ls-redev-refs}
 
 **功能描述**:
 
@@ -830,7 +973,7 @@ t ls-redev-refs b2c,b2b true
 
 ---
 
-### 26. 批量更新远程二开仓库代码到本地{#pull-redev}
+### 28. 批量更新远程二开仓库代码到本地{#pull-redev}
 
 **功能描述**: 更新远程二开仓库代码到本地，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `TERMIX_TMP_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `termixTmpPath` 配置;
 
@@ -851,7 +994,7 @@ t pull-redev
 t pull-redev develop true
 ```
 
-### 27. 扫描(清理)同步仓库里面冗余分支{#prune-branches}
+### 29. 扫描(清理)同步仓库里面冗余分支{#prune-branches}
 
 **功能描述**: 随着时间的推移各个部署环境的仓库里面可能存在很多不需要的分支，尤其是之前通过流水线同步的方式不会自动清理源分支不存在的同步分支，这些分支需要被清理掉，否则部署的时候找流水线也不太方便(这真的不是强行加的理由)，本脚本的作用就是扫描出这些分支，但是安全起见不会直接执行删除操作，只是提示用户这些分支是可以被清理掉的，最终还是需要用户去手工确认删掉, 可清理分支的判定原则就是读取全局同步配置: `i` 分支上的 `.termixrc` 文件然后不在同步配置里面的**部署仓库分支**即为可删除分支，如果确认的时候该分支也不是部署中的分支大概率是可以删掉的了;
 

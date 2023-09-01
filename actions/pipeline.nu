@@ -18,7 +18,7 @@
 #   如果不存在 origin/i 分支则会尝试从当前文件夹下的 .termixrc 文件中读取配置
 #   查询流水线结果时可以通过流水线ID，应用名，或者单应用模式下不输入也可以
 # Note:
-#   curl -XPOST 'https://openapi.erda.cloud/login?username=username&password=password'
+#   curl -X POST 'https://openapi.erda.cloud/login?username=username&password=password'
 # Usage:
 #   t dp -l
 #   t dp; t dp dev; t dp test -f
@@ -44,6 +44,7 @@ def check-envs [] {
   }
 }
 
+# Get Erda OpenAPI session token from .termix-conf file
 def get-auth [] {
   let TERMIX_CONF = $'($env.TERMIX_TMP_PATH)/.termix-conf'
   let erdaSession = open $TERMIX_CONF | from json | get -i erdaSession | default $NA
@@ -54,7 +55,8 @@ def get-auth [] {
 def renew-session [] {
   print 'Renewing Erda session...'
   let TERMIX_CONF = $'($env.TERMIX_TMP_PATH)/.termix-conf'
-  let RENEW_URL = $'https://openapi.erda.cloud/login?username=($env.ERDA_USERNAME)&password=($env.ERDA_PASSWORD)'
+  let query = { username: $env.ERDA_USERNAME, password: $env.ERDA_PASSWORD } | url build-query
+  let RENEW_URL = $'https://openapi.erda.cloud/login?($query)'
   let renew = curl --silent -X POST $RENEW_URL | from json
   open $TERMIX_CONF | from json
     | upsert erdaSession $renew.sessionid | to json
