@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.36.0] - 2023-09-01
+
+### Features
+
+- Renew Erda session automatically if expired by username and password
+
+### Miscellaneous Tasks
+
+- Update README.md and use build-query for session renew
+
 ## [1.35.0] - 2023-08-30
 
 ### Bug Fixes
