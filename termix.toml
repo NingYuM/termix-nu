@@ -7,7 +7,7 @@
 #   3. VS Code 插件推荐: Even Better TOML;
 
 # Termix-nu version
-version = 'v1.36.0'
+version = 'v1.37.0'
 
 # Min nushell version required to run termix-nu commands
 minNuVer = '0.84.0'
@@ -102,10 +102,8 @@ staffPayload = '[{"beginDate":"_first_day_","endDate":"_last_day_","baseProjectT
 
 # 快捷导航
 [quickNavs]
-nusid = 'https://erda.cloud/terminus/dop/projects/1124/apps/11147/pipeline/obsoleted'
-terpd = 'https://erda.cloud/terminus/dop/projects/1158/apps/11338/pipeline/obsoleted'
-fe-docs = 'https://erda.cloud/terminus/dop/projects/213/apps/7542/repo'
-nusi-mobile = 'https://erda.cloud/terminus/dop/projects/170/apps/4419/repo'
+nusi-slim = 'https://nusi-slim.app.terminus.io/'
+nusi-flex = 'https://nusi-flex.app.terminus.io/'
 
 # Set currentSelected to change the shell to execute the command
 # 'SHELL_TO_RUN_CMD' var in .env has higher priority

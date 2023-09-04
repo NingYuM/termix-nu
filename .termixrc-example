@@ -27,3 +27,7 @@ erda.staging = [
 erda.prod = [
     { pid = 213, appid = 7542, appName = 'fe-docs', alias = 'docs', env = 'PROD', branch = 'master', pipeline = 'pipeline.yml' }
 ]
+
+# 快捷导航
+[quickNavs]
+erda = 'https://erda.cloud/'
