@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
-- Add merge quick navs from local .termixrc file support
+- Add merge quick navs from local `.termixrc` file support
 
 ### Miscellaneous Tasks
 
