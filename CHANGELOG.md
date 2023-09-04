@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.37.0] - 2023-09-04
+
+### Features
+
+- Add merge quick navs from local .termixrc file support
+
+### Miscellaneous Tasks
+
+- Update README.md
+
 ## [1.36.0] - 2023-09-01
 
 ### Features
