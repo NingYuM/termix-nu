@@ -12,10 +12,10 @@
 source ~/.zoxide.nu
 
 # ---------------------- Aliases -------------------------
-# List files and display one entry per line with `exa`
-alias ll = exa -l
-# List all files (including hidden files) with `exa`
-alias la = exa -la
+# List files and display one entry per line with `eza`
+alias ll = eza -l
+# List all files (including hidden files) with `eza`
+alias la = eza -la
 # Change to parent directory
 alias .. = cd ..
 # Change to parent of parent directory
