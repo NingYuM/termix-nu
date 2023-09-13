@@ -11,6 +11,9 @@
 #   npm run icon:get b2c //at.alicdn.com/t/font_1949908_fie05xdkkq7.js
 
 # Check if some command available in current shell
+
+use std [repeat]
+
 def 'is-installed' [ app: string ] {
   (which $app | length) > 0
 }
@@ -21,7 +24,7 @@ export def 'hr-line' [
   --blank-line(-b): bool,
   --with-arrow(-a): bool,
 ] {
-  print $'(ansi $color)('─' * $width)(if $with_arrow {'>'})(ansi reset)'
+  print $'(ansi $color)('─' | repeat $width | str join)(if $with_arrow {'>'})(ansi reset)'
   if $blank_line { char nl }
 }
 

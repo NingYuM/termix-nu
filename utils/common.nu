@@ -18,6 +18,8 @@
 #   6: Server error
 #   7: Invalid parameter
 
+use std [repeat]
+
 export const _DATE_FMT  = '%Y.%m.%d'
 export const _TIME_FMT =  '%Y-%m-%d %H:%M:%S'
 export const _UPGRADE_TAG = '$-FORCE-UPGRADE-$'
@@ -153,7 +155,7 @@ export def 'hr-line' [
   --blank-line(-b): bool,
   --with-arrow(-a): bool,
 ] {
-  print $'(ansi $color)('─' * $width)(if $with_arrow {'>'})(ansi reset)'
+  print $'(ansi $color)('─' | repeat $width | str join)(if $with_arrow {'>'})(ansi reset)'
   if $blank_line { char nl }
 }
 

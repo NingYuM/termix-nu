@@ -8,6 +8,8 @@
 # 使用:
 #   nu get-locale.nu b2c
 
+use std [repeat]
+
 let I18 = {
   b2c: { PID: 5, DESIGN_PID: 6 },
   sea: { PID: 7, DESIGN_PID: 8 },
@@ -25,7 +27,7 @@ export def 'hr-line' [
   --blank-line(-b): bool,
   --with-arrow(-a): bool,
 ] {
-  print $'(ansi $color)('─' * $width)(if $with_arrow {'>'})(ansi reset)'
+  print $'(ansi $color)('─' | repeat $width | str join)(if $with_arrow {'>'})(ansi reset)'
   if $blank_line { char nl }
 }
 

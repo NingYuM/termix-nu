@@ -9,6 +9,8 @@
 #   nu upload-image.nu b2c
 #   npm run image:upload b2c
 
+use std [repeat]
+
 # Check if some command available in current shell
 def 'is-installed' [ app: string ] {
   (which $app | length) > 0
@@ -20,7 +22,7 @@ export def 'hr-line' [
   --blank-line(-b): bool,
   --with-arrow(-a): bool,
 ] {
-  print $'(ansi $color)('─' * $width)(if $with_arrow {'>'})(ansi reset)'
+  print $'(ansi $color)('─' | repeat $width | str join)(if $with_arrow {'>'})(ansi reset)'
   if $blank_line { char nl }
 }
 
