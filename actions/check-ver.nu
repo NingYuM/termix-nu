@@ -75,7 +75,7 @@ def 'query-ver' [
   let forceUpgrade = ($msg | str contains $_UPGRADE_TAG)
   let config = { 'latestVer': $latestVer, 'checkDate': $checkDate, 'forceUpgrade': $forceUpgrade }
   $config | to json | save -f $conf
-  echo $latestVer
+  $latestVer
 }
 
 # Compare min version with current version and show upgrading tips if required

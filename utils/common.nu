@@ -62,7 +62,7 @@ export def 'get-tmp-path' [] {
     print $'(ansi r)Path ($tmpPath) does not exist, please create it and try again...(ansi reset)(char nl)(char nl)'
     exit 3
   }
-  echo $tmpPath
+  $tmpPath
 }
 
 # Check if a CLI App was installed, if true get the installed version, otherwise return 'N/A'
@@ -71,7 +71,7 @@ export def 'get-ver' [
   verCmd: string  # The Nushell command to get it's version number
 ] {
   let installed = (which $app | length) > 0
-  echo (if $installed { (nu -c $verCmd | str trim) } else { 'N/A' })
+  (if $installed { (nu -c $verCmd | str trim) } else { 'N/A' })
 }
 
 # Check if a git repo has the specified ref: could be a branch or tag, etc.

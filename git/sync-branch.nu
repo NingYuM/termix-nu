@@ -49,7 +49,7 @@ export def 'git sync-branch' [
     print ($syncDests | upsert lock {|it| if ('lock' in $it) { $it.lock } else { '-' }} | move lock --before SYNC)
   } else { exit 0 }
 
-  echo $syncDests | where SYNC == '   √' | each { |iter|
+  $syncDests | where SYNC == '   √' | each { |iter|
     let syncFrom = (get-sync-ref $localBranch $iter)
     let gitUrl = ($pushConf | query json $'repos.($iter.repo).git')
     let navUrl = ($pushConf | query json $'repos.($iter.repo).url')

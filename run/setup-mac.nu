@@ -28,7 +28,7 @@ def 'is-installed' [
   let bin = ($termixConf | query json $'macCliApps.($app).bin')
   let check = if ($bin | is-empty) { $app } else { $bin }
   let installed = (which $check | length) > 0
-  echo $installed
+  $installed
 }
 
 def 'brew-inst' [

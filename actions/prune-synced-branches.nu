@@ -107,5 +107,5 @@ def 'prepare-repo' [
     if ($output.exit_code == 128) { print $'(ansi y)WARN:(ansi reset) --- No permission for ($dest.name): ($dest.git)' }
   }
   print 'Repo preparing done!'; hr-line
-  echo $repoName
+  $repoName
 }

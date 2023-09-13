@@ -82,5 +82,5 @@ def 'no-desc' [
   let escapedBranch = ($branch | str replace -a '.' '\.')
   # ($descriptions | select $escapedBranch | compact | length) == 0
   let noDescription = ($descriptions | query json $'descriptions.($escapedBranch)' | is-empty)
-  echo ($noDescription and $branch != 'i')
+  ($noDescription and $branch != 'i')
 }

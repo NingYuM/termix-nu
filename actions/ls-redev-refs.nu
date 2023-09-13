@@ -27,7 +27,7 @@ export def 'git ls-redev-refs' [
   print $'(ansi p)---------------> List remote refs <--------------- (char nl)(ansi reset)'
 
   $filteredRepos | each { |it|
-    let url = (echo $it | get url)
+    let url = ($it | get url)
     let repoNameIdx = ($url | str index-of -e '/') + 1
     let repoName = ($url | str substring $repoNameIdx..)
     # 单一二开仓库完整路径

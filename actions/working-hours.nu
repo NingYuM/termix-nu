@@ -151,7 +151,7 @@ def 'get-monday' [
   let duration = ($'($pastDays)day' | into duration)
   let beginOfToday = ($'($today.year.0)-($today.month.0)-($today.day.0)' | into datetime)
   let beginOfToday = if $prev == true { $beginOfToday - 7day } else { $beginOfToday }
-  echo (($beginOfToday - $duration) | format date $_TIME_FMT)
+  (($beginOfToday - $duration) | format date $_TIME_FMT)
 }
 
 # Get the ending time of sunday, like 2021-12-12 23:59:59
@@ -162,7 +162,7 @@ def 'get-sunday' [
   let _TIME_FMT = '%Y-%m-%d %H:%M:%S'
   let sunday = (((get-monday) | into datetime) + 7day - 1sec)
   let sunday = if $prev == true { $sunday - 7day } else { $sunday }
-  echo ($sunday | format date $_TIME_FMT)
+  ($sunday | format date $_TIME_FMT)
 }
 
 def 'get-hr-per-staff' [

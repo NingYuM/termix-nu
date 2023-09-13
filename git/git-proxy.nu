@@ -26,7 +26,7 @@ def-env 'git-proxy' [
       if $isWindows {
         let xrayPID = ($proxies | detect columns -n | get column1 | get 0)
         let proxyAddr = (netstat -ano | findstr $xrayPID | findstr LISTENING | detect columns -n | sort-by column1 -r | get column1)
-        echo $proxyAddr
+        $proxyAddr
       } else {
         ($proxies | detect columns -n).column8
       }
