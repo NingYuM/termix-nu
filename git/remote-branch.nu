@@ -11,7 +11,7 @@ use ../utils/common.nu [has-ref hr-line]
 
 # Creates a table listing the remote branches of
 # a git repository and the time of the last commit
-export def 'git-remote-branch' [
+export def git-remote-branch [
   repo: string          # The git repo to display remote branch info
   alias: string         # The remote url alias for git repo
   --show-tag(-t): any   # Set to 'true' if you want to show all the tags, defined as `any` acutually `bool`

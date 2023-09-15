@@ -37,7 +37,7 @@ export def windows? [] {
 }
 
 # Get the specified env key's value or ''
-export def 'get-env' [
+export def get-env [
   key: string       # The key to get it's env value
   default?: string  # The default value for an empty env
 ] {
@@ -47,7 +47,7 @@ export def 'get-env' [
 }
 
 # Get the specified config from `termix.toml` by key
-export def 'get-conf' [
+export def get-conf [
   key: string       # The key to get it's value from termix.toml
   default?: any     # The default value for an empty conf
 ] {
@@ -57,7 +57,7 @@ export def 'get-conf' [
 }
 
 # Get TERMIX_TMP_PATH
-export def 'get-tmp-path' [] {
+export def get-tmp-path [] {
   let _TERMIX_CONF = get-termix-conf
   let actionConf = (open $_TERMIX_CONF)
   # 先从环境变量里面查找临时文件路径
@@ -71,7 +71,7 @@ export def 'get-tmp-path' [] {
 }
 
 # Check if a CLI App was installed, if true get the installed version, otherwise return 'N/A'
-export def 'get-ver' [
+export def get-ver [
   app: string     # The CLI App to check
   verCmd: string  # The Nushell command to get it's version number
 ] {
@@ -80,7 +80,7 @@ export def 'get-ver' [
 }
 
 # Check if a git repo has the specified ref: could be a branch or tag, etc.
-export def 'has-ref' [
+export def has-ref [
   ref: string   # The git ref to check
 ] {
   let checkRepo = (do -i { git rev-parse --is-inside-work-tree } | complete)
@@ -92,7 +92,7 @@ export def 'has-ref' [
 
 # Compare two version number, return `true` if first one is higher than second one,
 # Return `null` if they are equal, otherwise return `false`
-export def 'compare-ver' [
+export def compare-ver [
   from: string,
   to: string,
 ] {
@@ -114,7 +114,7 @@ export def 'compare-ver' [
 }
 
 # Compare two version number, return true if first one is lower then second one
-export def 'is-lower-ver' [
+export def is-lower-ver [
   from: string,
   to: string,
 ] {
@@ -122,7 +122,7 @@ export def 'is-lower-ver' [
 }
 
 # Check if git was installed and if current directory is a git repo
-export def 'git-check' [
+export def git-check [
   dest: string        # The dest dir to check
   --check-repo: int   # Check if current directory is a git repo
 ] {
@@ -151,7 +151,7 @@ def build-line [
 }
 
 # Log some variables
-export def 'log' [
+export def log [
   name: string
   var: any
 ] {
@@ -160,7 +160,7 @@ export def 'log' [
   print $'(ansi g)(build-line 20)>  Debug End <(build-line 20)(char nl)(ansi reset)'
 }
 
-export def 'hr-line' [
+export def hr-line [
   width?: int = 90,
   --color(-c): string = 'g',
   --blank-line(-b): bool,

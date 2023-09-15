@@ -76,7 +76,7 @@ export def main [
 }
 
 # 显示工时统计信息
-def 'handle-working-hours' [
+def handle-working-hours [
   allStaffs: any
   workingHours: any
   leavingHours: any
@@ -141,7 +141,7 @@ def 'handle-working-hours' [
 }
 
 # Get the beginning time of monday, like 2021-12-06 00:00:00
-def 'get-monday' [
+def get-monday [
   --prev: any
 ] {
   # FIXME
@@ -155,7 +155,7 @@ def 'get-monday' [
 }
 
 # Get the ending time of sunday, like 2021-12-12 23:59:59
-def 'get-sunday' [
+def get-sunday [
   --prev: any
 ] {
   # FIXME
@@ -165,7 +165,7 @@ def 'get-sunday' [
   ($sunday | format date $_TIME_FMT)
 }
 
-def 'get-hr-per-staff' [
+def get-hr-per-staff [
   id: string
   weekDay: string
   hours: any
@@ -175,7 +175,7 @@ def 'get-hr-per-staff' [
 }
 
 # 处理未登录、超时、服务器错误等
-def 'handle-exception' [
+def handle-exception [
   res: string
 ] {
 

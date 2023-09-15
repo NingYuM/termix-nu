@@ -44,7 +44,7 @@ export def 'git repo-transfer' [
   }
 }
 
-def 'do-push' [
+def do-push [
   dest: string      # The dest repo git url
 ] {
   print $'(ansi g)Push code to the remote dest:(ansi reset)(char nl)'

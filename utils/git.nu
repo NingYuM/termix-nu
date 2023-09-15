@@ -12,7 +12,7 @@ export-env {
 }
 
 # Do a git repo sync
-export def 'do-sync' [
+export def do-sync [
   syncFrom: string  # The git branch or commit hash to sync from
   gitUrl: string    # The remote git repo url
   repo: any         # The git repo config options
@@ -35,7 +35,7 @@ export def 'do-sync' [
 #    B.  如果 lock != 'true' 且该字段为有效的 git commit hash 则以该hash对应的commit为待同步源
 #    C.  如果 lock != 'true' 且该字段不是有效的 git commit hash 则无须同步
 # 获取待同步分支或者 Commit ID
-export def 'get-sync-ref' [
+export def get-sync-ref [
   syncFrom: string  # The git branch or commit hash to sync from
   repo: any         # The git repo config options
 ] {
@@ -50,7 +50,7 @@ export def 'get-sync-ref' [
 }
 
 # Append the `has-desc` column to a git summary table to indicate if that branch has a description
-export def 'append-desc' [
+export def append-desc [
   records: table    # The table to append a `has-desc` column witch must has a `name` column for the git branch name
 ] {
 

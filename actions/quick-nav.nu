@@ -7,7 +7,7 @@
 
 use ../utils/common.nu [get-conf windows?]
 
-export def 'go' [
+export def go [
   nav_key?: string  # The nav key to go from `quickNavs` config in termix.toml
 ] {
 
@@ -31,14 +31,14 @@ export def 'go' [
   }
 }
 
-export def 'show-navs' [] {
+export def show-navs [] {
   print $'(ansi pb)(char nl)Available Nav Items:(char nl)(char nl)(ansi reset)'
   print (merge-navs | transpose | rename key url)
   exit 0
 }
 
 # Merge all nav items from termix.toml and .termixrc
-export def 'merge-navs' [] {
+export def merge-navs [] {
   let quickNavs = get-conf quickNavs
   enter $env.JUST_INVOKE_DIR
   # Decide which branch to get `.termixrc` conf from ?

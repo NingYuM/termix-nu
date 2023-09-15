@@ -66,7 +66,7 @@ export def main [
 }
 
 # Clone or update repo, setup all dest remote alias
-def 'prepare-repo' [
+def prepare-repo [
   repos: any
   --user: string        # Git repo access user name
   --ak: string          # Git repo access token

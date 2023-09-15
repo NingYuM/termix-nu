@@ -17,7 +17,12 @@
 
 use std [repeat]
 
-export def 'hr-line' [
+# Check if some command available in current shell
+def is-installed [ app: string ] {
+  (which $app | length) > 0
+}
+
+export def hr-line [
   width?: int = 90,
   --color(-c): string = 'g',
   --blank-line(-b): bool,
@@ -25,11 +30,6 @@ export def 'hr-line' [
 ] {
   print $'(ansi $color)('─' | repeat $width | str join)(if $with_arrow {'>'})(ansi reset)'
   if $blank_line { char nl }
-}
-
-# Check if some command available in current shell
-def 'is-installed' [ app: string ] {
-  ((which $app | length) > 0)
 }
 
 # 创建二开仓库并推送到 erda.cloud, 需要用到的环境变量: GIT_TOKEN, COMMIT_MSG, GIT_TOKEN 为流水线编译时环境变量, COMMIT_MSG 为Commit相关信息

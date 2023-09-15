@@ -61,7 +61,7 @@ def 'backup-origin' [
 }
 
 # Restore the origin url from backup of prev
-def 'restore-origin' [
+def restore-origin [
   dir: string
 ] {
   cd $dir

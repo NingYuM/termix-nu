@@ -5,7 +5,7 @@
 use ../utils/common.nu [get-env, get-termix-conf]
 
 # Compose command with the shell to execute it
-export def 'compose-command' [
+export def compose-command [
   cmd: string       # The command to compose
 ] {
   let _TERMIX_CONF = get-termix-conf

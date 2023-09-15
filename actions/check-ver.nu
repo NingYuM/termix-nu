@@ -8,7 +8,7 @@
 use ../utils/common.nu [_DATE_FMT, _UPGRADE_TAG, get-tmp-path, get-conf, is-lower-ver]
 
 # Check min nushell version and show upgrading tips to the user
-export def 'nu-ver' [] {
+export def nu-ver [] {
 
   let currentVer = (version).version
   let minVer = get-conf minNuVer '0.83.2'
@@ -16,7 +16,7 @@ export def 'nu-ver' [] {
 }
 
 # Check min just version and show upgrading tips to the user
-export def 'just-ver' [] {
+export def just-ver [] {
 
   let currentVer = (just --version | str replace 'just' '' | str trim)
   let minVer = get-conf minJustVer '1.13.0'
@@ -31,7 +31,7 @@ export def 'just-ver' [] {
 #     [√] 当用户升级到最新版本后所有命令可以正常执行；
 #     [√] 当删除掉最新的强制更新版本 Release Tag 时用户端可以检测到并在不升级的情况下恢复正常使用；
 # Check latest termix-nu version and show upgrading tips if there is a new release
-export def 'termix-ver' [] {
+export def termix-ver [] {
   let tmpPath = get-tmp-path
   let currentVer = get-conf version
   let confName = ([$tmpPath '.termix-conf'] | path join)
@@ -62,7 +62,7 @@ export def 'termix-ver' [] {
 }
 
 # Query and save termix-nu version to conf file everyday
-def 'query-ver' [
+def query-ver [
   conf: string,
 ] {
   # Update latest commits from remote to local, tags inclueded
@@ -79,7 +79,7 @@ def 'query-ver' [
 }
 
 # Compare min version with current version and show upgrading tips if required
-def 'upgrade-tip' [
+def upgrade-tip [
   cmd: string,
   min: string,
   current: string,

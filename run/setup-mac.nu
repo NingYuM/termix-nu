@@ -7,7 +7,7 @@
 
 let termixConf = (open 'termix.toml' | to json)
 
-def 'setup-mac' [] {
+def setup-mac [] {
     if (is-installed brew) {
         print $'Prepare to use `brew` to install CLI apps...(char nl)(char nl)'
     } else {
@@ -22,7 +22,7 @@ def 'setup-mac' [] {
 }
 
 # Check if a CLI App was installed, return true if installed, otherwise return false
-def 'is-installed' [
+def is-installed [
   app: string     # The CLI App to check
 ] {
   let bin = ($termixConf | query json $'macCliApps.($app).bin')
@@ -31,7 +31,7 @@ def 'is-installed' [
   $installed
 }
 
-def 'brew-inst' [
+def brew-inst [
     apps: string    # The cli apps to install, separated by ','
 ] {
     $apps | split row ',' | each { |app|

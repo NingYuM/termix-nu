@@ -17,11 +17,11 @@ let I18 = {
 }
 
 # Check if some command available in current shell
-def 'is-installed' [ app: string ] {
+def is-installed [ app: string ] {
   (which $app | length) > 0
 }
 
-export def 'hr-line' [
+export def hr-line [
   width?: int = 90,
   --color(-c): string = 'g',
   --blank-line(-b): bool,

@@ -8,7 +8,7 @@ use ../utils/common.nu [has-ref]
 use ../utils/git.nu [append-desc]
 
 # Creates a table listing the branches of a git repository and the day of the last commit
-export def 'git-branch' [
+export def git-branch [
   repo: path    # The repo path to show git branch info
 ] {
 

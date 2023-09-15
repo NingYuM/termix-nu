@@ -74,7 +74,7 @@ export def main [] {
 }
 
 # Check if the specified branch has a description in `descriptions`
-def 'no-desc' [
+def no-desc [
   descriptions: string
   branch: string
 ] {
