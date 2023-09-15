@@ -139,14 +139,22 @@ export def 'git-check' [
   }
 }
 
+# Create a line by repeating the unit with specified times
+def build-line [
+  times: int,
+  unit: string = '-',
+] {
+  ($unit | repeat $times | str join)
+}
+
 # Log some variables
 export def 'log' [
   name: string
   var: any
 ] {
-  print $'(ansi g)('─' * 18)> Debug Begin: ($name) <('─' * 18)(ansi reset)'
+  print $'(ansi g)(build-line 18)> Debug Begin: ($name) <(build-line 18)(ansi reset)'
   print $var
-  print $'(ansi g)('─' * 20)>  Debug End <('─' * 20)(char nl)(ansi reset)'
+  print $'(ansi g)(build-line 20)>  Debug End <(build-line 20)(char nl)(ansi reset)'
 }
 
 export def 'hr-line' [
@@ -155,7 +163,7 @@ export def 'hr-line' [
   --blank-line(-b): bool,
   --with-arrow(-a): bool,
 ] {
-  print $'(ansi $color)('─' | repeat $width | str join)(if $with_arrow {'>'})(ansi reset)'
+  print $'(ansi $color)(build-line $width)(if $with_arrow {'>'})(ansi reset)'
   if $blank_line { char nl }
 }
 

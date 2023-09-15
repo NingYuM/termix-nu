@@ -8,6 +8,8 @@
 #   2. https://github.com/nushell/nushell/issues/4300 Config Settings
 #   3. https://github.com/nushell/nushell/blob/main/docs/How_To_Coloring_and_Theming.md
 
+use std [repeat]
+
 # use ~/github/terminus/termix-nu/run/zoxide-eq.nu [z, zi]
 source ~/.zoxide.nu
 
@@ -71,7 +73,7 @@ export def hr-line [
   --blank-line(-b): bool,
   --with-arrow(-a): bool,
 ] {
-  print $'(ansi $color)('─' * $width)(if $with_arrow {'>'})(ansi reset)'
+  print $'(ansi $color)('─' | repeat $width | str join)(if $with_arrow {'>'})(ansi reset)'
   if $blank_line { char nl }
 }
 
