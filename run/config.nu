@@ -1,6 +1,6 @@
 # Nushell Config File
-# Update config from: ba0f069c3
-# version = 0.83.2
+# Update config from: 2c176a7f1
+# version = 0.85.0
 
 # source ~/.config/nushell/config.nu
 # Ref:
@@ -353,53 +353,31 @@ def nudown [] {
 # And here is the theme collection
 # https://github.com/nushell/nu_scripts/tree/main/themes
 let dark_theme = {
-    # color for Nushell primitives
+    # color for nushell primitives
     separator: white
     leading_trailing_space_bg: { attr: n } # no fg, no bg, attr none effectively turns this off
     header: green_bold
     empty: blue
     # Closures can be used to choose colors for specific values.
     # The value (in this case, a bool) is piped into the closure.
-    bool: { if $in { 'light_cyan' } else { 'light_gray' } }
+    # eg) {|| if $in { 'light_cyan' } else { 'light_gray' } }
+    bool: light_cyan
     int: white
-    filesize: {|e|
-      if $e == 0b {
-        'white'
-      } else if $e < 1mb {
-        'cyan'
-      } else { 'blue' }
-    }
+    filesize: cyan
     duration: white
-    date: { (date now) - $in |
-      if $in < 1hr {
-        'purple'
-      } else if $in < 6hr {
-        'red'
-      } else if $in < 1day {
-        'yellow'
-      } else if $in < 3day {
-        'green'
-      } else if $in < 1wk {
-        'light_green'
-      } else if $in < 6wk {
-        'cyan'
-      } else if $in < 52wk {
-        'blue'
-      } else { 'dark_gray' }
-    }
+    date: purple
     range: white
     float: white
     string: white
     nothing: white
     binary: white
-    cellpath: white
+    cell-path: white
     row_index: green_bold
     record: white
     list: white
     block: white
     hints: dark_gray
     search_result: {bg: red fg: white}
-
     shape_and: purple_bold
     shape_binary: purple_bold
     shape_block: blue_bold
@@ -438,53 +416,31 @@ let dark_theme = {
 }
 
 let light_theme = {
-    # color for Nushell primitives
+    # color for nushell primitives
     separator: dark_gray
     leading_trailing_space_bg: { attr: n } # no fg, no bg, attr none effectively turns this off
     header: green_bold
     empty: blue
     # Closures can be used to choose colors for specific values.
     # The value (in this case, a bool) is piped into the closure.
-    bool: { if $in { 'dark_cyan' } else { 'dark_gray' } }
+    # eg) {|| if $in { 'dark_cyan' } else { 'dark_gray' } }
+    bool: dark_cyan
     int: dark_gray
-    filesize: {|e|
-      if $e == 0b {
-        'dark_gray'
-      } else if $e < 1mb {
-        'cyan_bold'
-      } else { 'blue_bold' }
-    }
+    filesize: cyan_bold
     duration: dark_gray
-    date: { (date now) - $in |
-      if $in < 1hr {
-        'purple'
-      } else if $in < 6hr {
-        'red'
-      } else if $in < 1day {
-        'yellow'
-      } else if $in < 3day {
-        'green'
-      } else if $in < 1wk {
-        'light_green'
-      } else if $in < 6wk {
-        'cyan'
-      } else if $in < 52wk {
-        'blue'
-      } else { 'dark_gray' }
-    }
+    date: purple
     range: dark_gray
     float: dark_gray
     string: dark_gray
     nothing: dark_gray
     binary: dark_gray
-    cellpath: dark_gray
+    cell-path: dark_gray
     row_index: green_bold
     record: white
     list: white
     block: white
     hints: dark_gray
     search_result: {fg: white bg: red}
-
     shape_and: purple_bold
     shape_binary: purple_bold
     shape_block: blue_bold
@@ -547,6 +503,7 @@ $env.config = {
     mode: light                 # basic, compact, compact_double, light, thin, with_love, rounded, reinforced, heavy, none, other
     index_mode: always          # "always" show indexes, "never" show indexes, "auto" = show indexes when a table has "index" column
     show_empty: false           # show 'empty list' and 'empty record' placeholders for command output
+    padding: { left: 1, right: 1 }      # a left right padding of each column in a table
     trim: {
       methodology: wrapping             # wrapping or truncating
       truncating_suffix: "..."          # A suffix used by the 'truncating' methodology
@@ -558,6 +515,8 @@ $env.config = {
   # Behavior without this configuration point will be to "humanize" the datetime display,
   # showing something like "a day ago."
 
+  error_style: "fancy"                  # "fancy" or "plain" for screen reader-friendly error messages
+
   datetime_format: {
     normal: '%a, %d %b %Y %H:%M:%S %z'  # shows up in displays of variables or other datetime's outside of tables
     # table: '%m/%d/%y %I:%M:%S%p'      # generally shows up in tabular outputs such as ls. commenting this out will change it to the default human readable datetime format
@@ -565,9 +524,6 @@ $env.config = {
 
   # A 'explore' utility config
   explore: {
-    try: {
-      border_color: {fg: "white"}
-    },
     status_bar_background: {fg: "#1D1F21", bg: "#C4C9C6"},
     command_bar_text: {fg: "#C4C9C6"},
     highlight: {fg: "black", bg: "yellow"},
@@ -581,15 +537,11 @@ $env.config = {
       selected_cell: {},
       selected_row: {},
       selected_column: {},
-      cursor: true,
+      show_cursor: true,
       line_shift: true,
       line_index: true,
       line_head_top: true,
       line_head_bottom: true,
-    },
-    config: {
-      border_color: {fg: "white"}
-      cursor_color: {fg: "black", bg: "light_yellow"}
     },
   }
 
@@ -618,9 +570,9 @@ $env.config = {
   }
 
   cursor_shape: {
-    emacs: line                 # block, underscore, line, blink_block, blink_underscore, blink_line (line is the default)
-    vi_insert: block            # block, underscore, line , blink_block, blink_underscore, blink_line (block is the default)
-    vi_normal: underscore       # block, underscore, line, blink_block, blink_underscore, blink_line (underscore is the default)
+    emacs: line           # block, underscore, line, blink_block, blink_underscore, blink_line, inherit to skip setting cursor shape (line is the default)
+    vi_insert: block      # block, underscore, line, blink_block, blink_underscore, blink_line, inherit to skip setting cursor shape (block is the default)
+    vi_normal: underscore # block, underscore, line, blink_block, blink_underscore, blink_line, inherit to skip setting cursor shape (underscore is the default)
   }
 
   color_config: $dark_theme     # if you want a light theme, replace `$dark_theme` to `$light_theme`
@@ -780,6 +732,7 @@ $env.config = {
         until: [
           { send: menu name: completion_menu }
           { send: menunext }
+          { edit: complete }
         ]
       }
     }
