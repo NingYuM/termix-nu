@@ -18,8 +18,6 @@
 #   6: Server error
 #   7: Invalid parameter
 
-use std [repeat]
-
 export const _DATE_FMT  = '%Y.%m.%d'
 export const _TIME_FMT =  '%Y-%m-%d %H:%M:%S'
 export const _UPGRADE_TAG = '$-FORCE-UPGRADE-$'
@@ -144,7 +142,7 @@ def build-line [
   times: int,
   unit: string = '-',
 ] {
-  ($unit | repeat $times | str join)
+  0..<$times | reduce -f '' { |i, acc| $unit + $acc }
 }
 
 # Log some variables
