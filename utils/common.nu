@@ -23,7 +23,7 @@ export const _TIME_FMT =  '%Y-%m-%d %H:%M:%S'
 export const _UPGRADE_TAG = '$-FORCE-UPGRADE-$'
 
 export-env {
-  # 去除前导空格背景色
+  # FIXME: 去除前导空格背景色
   $env.config.color_config.leading_trailing_space_bg = { attr: n }
 }
 

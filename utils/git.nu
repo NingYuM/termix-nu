@@ -6,6 +6,11 @@
 
 use common.nu [has-ref get-env]
 
+export-env {
+  # FIXME: 去除前导空格背景色
+  $env.config.color_config.leading_trailing_space_bg = { attr: n }
+}
+
 # Do a git repo sync
 export def 'do-sync' [
   syncFrom: string  # The git branch or commit hash to sync from

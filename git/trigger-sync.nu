@@ -9,6 +9,11 @@
 use ../utils/git.nu [get-sync-ref do-sync]
 use ../utils/common.nu [get-conf get-env has-ref hr-line]
 
+export-env {
+  # FIXME: 去除前导空格背景色
+  $env.config.color_config.leading_trailing_space_bg = { attr: n }
+}
+
 # Manually trigger code syncing to all related dests for specified branch
 export def 'git trigger-sync' [
   branch?: string   # Local git branch/ref to push

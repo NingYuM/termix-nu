@@ -14,6 +14,7 @@ use ../utils/common.nu [hr-line]
 export def main [
   status: string  # set to `off` to disable brew speed up
 ] {
+
   let BREW_MIRROR = 'https://mirrors.aliyun.com/homebrew/brew.git'
   let CASK_MIRROR = 'https://mirrors.ustc.edu.cn/homebrew-cask.git'
   let CORE_MIRROR = 'https://mirrors.aliyun.com/homebrew/homebrew-core.git'

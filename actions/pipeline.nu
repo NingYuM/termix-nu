@@ -33,6 +33,11 @@ use ../utils/common.nu [has-ref hr-line log]
 const NA = 'N/A'
 const ERDA_HOST = 'https://erda.cloud'
 
+export-env {
+  # FIXME: 去除前导空格背景色
+  $env.config.color_config.leading_trailing_space_bg = { attr: n }
+}
+
 # Check if the required environment variable was set, quit if not
 def check-envs [] {
   # 部署/查询 Pipeline 操作需要先配置 ERDA_USERNAME & ERDA_PASSWORD
@@ -96,7 +101,7 @@ def get-pipeline-conf [dest: string = 'dev', --apps: string, --list: bool] {
     print $'Available deploy targets in ($configFile) are:(char nl)'
     let upsertAlias = {|it| if ($it | get -i alias | is-empty) { $NA } else { $it.alias } }
     for target in ($repoConf.erda | columns) {
-      print $'Target (ansi p)($target)(ansi reset):'; hr-line -c pb
+      print $'Target (ansi p)($target)(ansi reset):'; hr-line 60 -c navy
       print ($repoConf.erda | get $target | upsert alias $upsertAlias | select appName alias branch env pipeline)
       if ($repoConf.erda | get $target | describe) =~ 'record' { print -n (char nl) }
     }
