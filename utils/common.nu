@@ -38,8 +38,8 @@ export def windows? [] {
 
 # Get the specified env key's value or ''
 export def get-env [
-  key: string       # The key to get it's env value
-  default?: string  # The default value for an empty env
+  key: string,       # The key to get it's env value
+  default?: string,  # The default value for an empty env
 ] {
   $env | get -i $key | default $default
   # let hasEnv = (env | any { |it| $it.name == $key })
@@ -48,8 +48,8 @@ export def get-env [
 
 # Get the specified config from `termix.toml` by key
 export def get-conf [
-  key: string       # The key to get it's value from termix.toml
-  default?: any     # The default value for an empty conf
+  key: string,       # The key to get it's value from termix.toml
+  default?: any,     # The default value for an empty conf
 ] {
   let _TERMIX_CONF = get-termix-conf
   let result = (open $_TERMIX_CONF | get $key)
@@ -72,8 +72,8 @@ export def get-tmp-path [] {
 
 # Check if a CLI App was installed, if true get the installed version, otherwise return 'N/A'
 export def get-ver [
-  app: string     # The CLI App to check
-  verCmd: string  # The Nushell command to get it's version number
+  app: string,     # The CLI App to check
+  verCmd: string,  # The Nushell command to get it's version number
 ] {
   let installed = (which $app | length) > 0
   (if $installed { (nu -c $verCmd | str trim) } else { 'N/A' })
@@ -123,8 +123,8 @@ export def is-lower-ver [
 
 # Check if git was installed and if current directory is a git repo
 export def git-check [
-  dest: string        # The dest dir to check
-  --check-repo: int   # Check if current directory is a git repo
+  dest: string,        # The dest dir to check
+  --check-repo: int,   # Check if current directory is a git repo
 ] {
   cd $dest
   let isGitInstalled = (which git | length) > 0
@@ -152,8 +152,8 @@ def build-line [
 
 # Log some variables
 export def log [
-  name: string
-  var: any
+  name: string,
+  var: any,
 ] {
   print $'(ansi g)(build-line 18)> Debug Begin: ($name) <(build-line 18)(ansi reset)'
   print $var

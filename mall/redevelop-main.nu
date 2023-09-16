@@ -29,12 +29,12 @@ export def hr-line [
 
 # 创建二开仓库并推送到 erda.cloud, 需要用到的环境变量: GIT_TOKEN, COMMIT_MSG, GIT_TOKEN 为流水线编译时环境变量, COMMIT_MSG 为Commit相关信息
 def main [
-  --template(-t): string      # termix redevelop template value
-  --checkout(-c): string      # termix redevelop checkout value
-  --token(-k): string         # git 账号对应的 Access Token
-  --deploy-repo: string       # 部署仓库 Git 地址，生成的二开代码将推送到该仓库对应的孤儿分支
-  --src-dir: string           # 源码仓库对应代码目录,比如对于 alias 为 git-checkout 的 git-checkout Action 可以传 ${git-checkout}
-  --test-branch: string       # 需要映射到测试环境 develop 分支的源码仓库分支名
+  --template(-t): string,      # termix redevelop template value
+  --checkout(-c): string,      # termix redevelop checkout value
+  --token(-k): string,         # git 账号对应的 Access Token
+  --deploy-repo: string,       # 部署仓库 Git 地址，生成的二开代码将推送到该仓库对应的孤儿分支
+  --src-dir: string,           # 源码仓库对应代码目录,比如对于 alias 为 git-checkout 的 git-checkout Action 可以传 ${git-checkout}
+  --test-branch: string,       # 需要映射到测试环境 develop 分支的源码仓库分支名
 ] {
   cd $src_dir
   # We don't need herd image, a raw linux distro image with node installed is okay

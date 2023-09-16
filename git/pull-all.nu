@@ -8,8 +8,8 @@ use ../utils/common.nu [hr-line]
 
 # Pull all local branches from remote repo
 export def 'git pull-all' [
-  repoDir: string   # The git repo dir to run pull action
-  alias: string     # The remote url alias for git repo
+  repoDir: string,   # The git repo dir to run pull action
+  alias: string,     # The remote url alias for git repo
 ] {
 
   cd $repoDir

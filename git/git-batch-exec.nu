@@ -14,8 +14,8 @@ use ../utils/common.nu [get-env hr-line has-ref]
 # git show --abbrev-commit --no-patch
 # 在候选分支上批量执行特定操作,多个分支用空格分隔
 export def 'git batch-exec' [
-  cmd: string       # The command to execute for specified branches
-  branches: string  # The branches to have command be executed, default all local branches
+  cmd: string,       # The command to execute for specified branches
+  branches: string,  # The branches to have command be executed, default all local branches
 ] {
 
   # echo $cmd; echo $branches; exit 0

@@ -12,9 +12,9 @@ use ../utils/compose-cmd.nu [compose-command]
 
 # 在指定目录或者当前目录的所有子目录里执行指定命令,多个目录用空格分隔
 export def main [
-  cmd: string           # The command to execute in directories
-  dirs: string          # The directories to execute the command
-  --parent(-p): string  # If no dirs specified, run the command in all subdirs of specified parent dir
+  cmd: string,           # The command to execute in directories
+  dirs: string,          # The directories to execute the command
+  --parent(-p): string,  # If no dirs specified, run the command in all subdirs of specified parent dir
 ] {
 
   let dest = ($dirs | str trim | split row ' '| compact | each { |it| [$parent $it] | path join })

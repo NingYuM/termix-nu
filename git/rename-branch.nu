@@ -16,9 +16,9 @@ use ../utils/common.nu [has-ref hr-line]
 
 # Rename remote branch, and delete old branch after rename
 export def 'git branch-rename' [
-  from: string      # The old branch name to be renamed
-  to: string        # The new branch name to rename to
-  remote?: string   # Remote alias name, 'origin' by default
+  from: string,      # The old branch name to be renamed
+  to: string,        # The new branch name to rename to
+  remote?: string,   # Remote alias name, 'origin' by default
 ] {
 
   let remoteAlias = if ($remote | is-empty) { 'origin' } else { $remote }

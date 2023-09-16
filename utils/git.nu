@@ -13,9 +13,9 @@ export-env {
 
 # Do a git repo sync
 export def do-sync [
-  syncFrom: string  # The git branch or commit hash to sync from
-  gitUrl: string    # The remote git repo url
-  repo: any         # The git repo config options
+  syncFrom: string,  # The git branch or commit hash to sync from
+  gitUrl: string,    # The remote git repo url
+  repo: any,         # The git repo config options
 ] {
   print $'Sync from local (ansi g)($syncFrom)(ansi reset) to remote (ansi p)($repo.dest) of repo ($repo.repo)(ansi reset) -->(char nl)'
   let force = (get-env FORCE '0' | into int)
@@ -36,8 +36,8 @@ export def do-sync [
 #    C.  如果 lock != 'true' 且该字段不是有效的 git commit hash 则无须同步
 # 获取待同步分支或者 Commit ID
 export def get-sync-ref [
-  syncFrom: string  # The git branch or commit hash to sync from
-  repo: any         # The git repo config options
+  syncFrom: string,  # The git branch or commit hash to sync from
+  repo: any,         # The git repo config options
 ] {
   let hasLock = (do -i { $repo | get lock }) != $nothing
   if $hasLock {

@@ -10,8 +10,8 @@ use ../utils/common.nu [hr-line has-ref]
 # git reset --hard HEAD~3
 # 将指定Git分支硬回滚N个commit
 export def 'git batch-reset' [
-  count: int        # The commit count to reset for specified branches
-  branches: string  # The branches to do reset, default all local branches
+  count: int,        # The commit count to reset for specified branches
+  branches: string,  # The branches to do reset, default all local branches
 ] {
 
   let dest = ($branches | str trim | split row ' ' | compact)

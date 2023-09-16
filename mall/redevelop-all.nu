@@ -34,14 +34,14 @@ export def hr-line [
 
 # 创建二开仓库并推送到 erda.cloud, 需要用到的环境变量: GIT_TOKEN, COMMIT_MSG, GIT_TOKEN 为流水线编译时环境变量, COMMIT_MSG 为Commit相关信息
 def main [
-  --template(-t): string      # termix redevelop template value
-  --checkout(-c): string      # termix redevelop checkout value
-  --redev-dir: string         # 二开全量仓库对应代码目录,比如对于alias为redev-repo的git-checkout Action可以传 ${redev-repo}
-  --redev-origin-dir: string  # 二开增量仓库对应代码目录,比如对于alias为redev-origin-repo的git-checkout Action可以传 ${redev-origin-repo}
-  --redev-git: string         # 二开全量仓库Git地址
-  --redev-origin-git: string  # 二开增量仓库Git地址
-  --token(-k): string         # git 账号对应的 Access Token
-  --dest-branch(-d): string = 'master'    # 需要推送到的二开仓库目的分支, 默认为 master, 也可以另外指定
+  --template(-t): string,      # termix redevelop template value
+  --checkout(-c): string,      # termix redevelop checkout value
+  --redev-dir: string,         # 二开全量仓库对应代码目录,比如对于alias为redev-repo的git-checkout Action可以传 ${redev-repo}
+  --redev-origin-dir: string,  # 二开增量仓库对应代码目录,比如对于alias为redev-origin-repo的git-checkout Action可以传 ${redev-origin-repo}
+  --redev-git: string,         # 二开全量仓库Git地址
+  --redev-origin-git: string,  # 二开增量仓库Git地址
+  --token(-k): string,         # git 账号对应的 Access Token
+  --dest-branch(-d): string = 'master',    # 需要推送到的二开仓库目的分支, 默认为 master, 也可以另外指定
 ] {
   # We don't need herd image, a raw linux distro image with node installed is okay
   # npm config set registry https://registry.npm.terminus.io/

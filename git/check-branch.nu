@@ -75,8 +75,8 @@ export def main [] {
 
 # Check if the specified branch has a description in `descriptions`
 def no-desc [
-  descriptions: string
-  branch: string
+  descriptions: string,
+  branch: string,
 ] {
   # 处理分支名称包含‘.’的情况: `support/release-2.4`
   let escapedBranch = ($branch | str replace -a '.' '\.')

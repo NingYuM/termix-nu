@@ -6,9 +6,9 @@
 
 # Show insertions/deletions and number of files changed for each commit
 export def 'git stat' [
-  repo: path    # The repo path to show git stat
-  --count(-c): int = 20
-  --author(-a): string
+  repo: path,    # The repo path to show git stat
+  --count(-c): int = 20,
+  --author(-a): string,
 ] {
   print $'(ansi p)(char nl)Modification stat info for each commit: (ansi reset)(char nl)'
   cd $repo

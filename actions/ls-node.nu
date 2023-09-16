@@ -11,8 +11,8 @@
 #   t ls-node v15 true
 
 export def ls-node-remote [
-  minVer: string   # The node version you want to query
-  isLts: bool      # Filter the node versions that are LTS
+  minVer: string,   # The node version you want to query
+  isLts: bool,      # Filter the node versions that are LTS
 ] {
 
   # brew install fnm to install it, see: https://github.com/Schniz/fnm

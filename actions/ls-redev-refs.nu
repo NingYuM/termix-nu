@@ -10,8 +10,8 @@ use ../utils/common.nu [get-tmp-path get-termix-conf windows?]
 
 # Show Branches and Tags of redevelop related repos
 export def 'git ls-redev-refs' [
-  group: string             # Specify the groups of repo to list their refs
-  --show-branches: any      # Set true to show remote branches last commit info, defined as `any` acutually `bool`
+  group: string,             # Specify the groups of repo to list their refs
+  --show-branches: any,      # Set true to show remote branches last commit info, defined as `any` acutually `bool`
 ] {
 
   let _TERMIX_CONF = get-termix-conf

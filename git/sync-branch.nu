@@ -14,9 +14,9 @@ export-env {
 
 # Sync local branches to remote according to .termixrc config file from remote repo
 export def 'git sync-branch' [
-  localRef: string   # Local git branch/ref to push
-  localOid: string   # Local git commit object id
-  remoteRef: string  # Remote git branch/ref to push to
+  localRef: string,   # Local git branch/ref to push
+  localOid: string,   # Local git commit object id
+  remoteRef: string,  # Remote git branch/ref to push to
 ] {
 
   cd $env.JUST_INVOKE_DIR

@@ -10,9 +10,9 @@ use ../utils/common.nu [hr-line has-ref get-tmp-path get-conf]
 
 # Clean possibly unused branches of synced dest repos
 export def main [
-  --user: string        # Git repo access user name
-  --ak: string          # Git repo access token
-  --dry-run(-d): any    # In dry-run mode no branch will be deleted, just show all deletable branches, defined as `any` acutually `bool`
+  --user: string,        # Git repo access user name
+  --ak: string,          # Git repo access token
+  --dry-run(-d): any,    # In dry-run mode no branch will be deleted, just show all deletable branches, defined as `any` acutually `bool`
 ] {
 
   cd $env.JUST_INVOKE_DIR
@@ -67,9 +67,9 @@ export def main [
 
 # Clone or update repo, setup all dest remote alias
 def prepare-repo [
-  repos: any
-  --user: string        # Git repo access user name
-  --ak: string          # Git repo access token
+  repos: any,
+  --user: string,        # Git repo access user name
+  --ak: string,          # Git repo access token
 ] {
   if ($repos | is-empty) {
     print $'No dest repos to be cleaned, bye...(char nl)'

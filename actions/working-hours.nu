@@ -8,9 +8,9 @@
 #   https://emp.app.terminus.io/view/worktime_WorkTimeBO_DepartmentWorkTime
 
 export def main [
-  code: string
-  --show-all: any   # Set true to show all members even if the working hours filled correctly
-  --show-prev: any   # Set true to query working hours of previous week
+  code: string,
+  --show-all: any,   # Set true to show all members even if the working hours filled correctly
+  --show-prev: any,   # Set true to query working hours of previous week
 ] {
 
   let monday = get-monday --prev=$show_prev
@@ -77,11 +77,11 @@ export def main [
 
 # 显示工时统计信息
 def handle-working-hours [
-  allStaffs: any
-  workingHours: any
-  leavingHours: any
-  --show-all: any
-  --show-prev: any
+  allStaffs: any,
+  workingHours: any,
+  leavingHours: any,
+  --show-all: any,
+  --show-prev: any,
 ] {
 
   let title = (get-env EMP_WORKING_HOUR_TITLE '本周工时填报')
@@ -166,9 +166,9 @@ def get-sunday [
 }
 
 def get-hr-per-staff [
-  id: string
-  weekDay: string
-  hours: any
+  id: string,
+  weekDay: string,
+  hours: any,
 ] {
   let hour = ($hours | where staffId == $id and day == $weekDay)
   if ($hour | length) == 0 { 0 } else { ($hour | select 0).0.Hrs }
