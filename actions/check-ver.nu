@@ -97,7 +97,6 @@ def upgrade-tip [
       print $'        ------------> Your ($cmd) is (ansi r)OUTDATED(ansi reset) <------------ (char nl)'
       print $'(ansi lpr)    Please run `brew update && brew upgrade ($cmd)` to upgrade to the latest.    (ansi reset)(char nl)'
       print $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
-      exit 1
     }
   }
 }
