@@ -195,8 +195,8 @@ keys = [
   { key = "home", with = "super | shift", bytes = [27, 91, 53, 126] },
   { key = "right", with = "super", action = "SelectNextTab" },
   { key = "left", with = "super", action = "SelectPrevTab" },
-  { key = "t", with = "super | shift", action = "CreateTab" },
-  { key = "n", with = "super | shift", action = "CreateWindow" },
+  { key = "n", with = "super | shift", action = "CreateTab" },
+  { key = "w", with = "super | shift", action = "CreateWindow" },
   { key = "v", with = "super | shift | control", action = "SplitVertically" },
   { key = "h", with = "super | shift | control", action = "SplitHorizontally" },
 ]
