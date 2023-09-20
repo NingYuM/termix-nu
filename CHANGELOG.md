@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.38.1] - 2023-09-20
+
+### Bug Fixes
+
+- Fix Nushell version check, do not exit if we must update
+
+# Changelog
+All notable changes to this project will be documented in this file.
+
 ## [1.38.0] - 2023-09-20
 
 ### Features
