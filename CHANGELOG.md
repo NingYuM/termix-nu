@@ -5,10 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Fix Nushell version check, do not exit if we must update
-
-# Changelog
-All notable changes to this project will be documented in this file.
+- Fix Nushell version check, do not exit if we don't have to update
 
 ## [1.38.0] - 2023-09-20
 
