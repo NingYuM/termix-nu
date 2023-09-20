@@ -1,6 +1,29 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.38.0] - 2023-09-20
+
+### Features
+
+- Add Rio.toml config file for Rio terminal
+- Add `--all(-a)` flag to `trigger-sync` command to sync all local branches that have a syncing config
+
+### Miscellaneous Tasks
+
+- Use eza instead of exa in Nu config
+- Adapt to Nu v0.85 for `echo` command
+- Use `std repeat` instead of string mutiply operator
+- Update brew env for Nu config
+- Use repeat instead of string multiply operator for Nu v0.85
+- Update Nushell config for v0.85
+- Set $env.config.color_config.leading_trailing_space_bg for Nu v0.85
+- Update code formatting
+
+### Refactor
+
+- Use reduce for build-line for better compatibility
+- Change command naming style
+
 ## [1.37.0] - 2023-09-04
 
 ### Features
