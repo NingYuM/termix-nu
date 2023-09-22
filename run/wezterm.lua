@@ -149,6 +149,7 @@ return {
   -- Keys REF: https://wezfurlong.org/wezterm/config/keys.html
   keys = {
     { key = 'Enter', mods = 'CMD', action = act.ToggleFullScreen },
+    { key = 'f', mods = 'CTRL|CMD', action = act.ToggleFullScreen },
     { key = 'p', mods = 'CMD', action = act.ActivateCommandPalette },
     -- Tabs: navigation
     { key = 'LeftArrow', mods = 'CMD', action = act.ActivateTabRelative(-1) },
