@@ -47,7 +47,7 @@ export def hr-line [
 def main [
   bizType?: string,        # 业务类型: b2c|b2b|sea
 ] {
-  if ($bizType == $nothing) {
+  if ($bizType == null) {
     print $'(char nl)Usage: nu clean-locale.nu (ansi r)<bizType>(ansi reset)'; hr-line
     print $'(ansi g)Description: (ansi reset)根据`业务类型`从本地清除指定业务类型文件夹下多余的国际化文案'
     print $'(ansi g)Supported bizTypes: (ansi reset)b2c / b2b / sea'

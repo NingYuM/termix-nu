@@ -38,7 +38,7 @@ export def hr-line [
 def main [
   bizType?: string,        # 业务类型: b2c|b2b|scrm|sea|point
 ] {
-  if ($bizType == $nothing) {
+  if ($bizType == null) {
     print $'(char nl)Usage: nu upload-locale.nu (ansi r)<bizType>(ansi reset)'; hr-line
     print $'(ansi g)Description: (ansi reset)根据`业务类型`从本地上传文案到国际化文案管理平台，也支持从源码扫描并上传'
     print $'(ansi g)Supported bizTypes: (ansi reset)b2c / b2b / scrm / sea / point'

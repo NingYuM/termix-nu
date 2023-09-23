@@ -104,7 +104,7 @@ def sync-branch [
   # 获取待同步目的仓库及目的分支映射
   let dests = $pushConf | query json $'branches.($escapedBranch)'
   # 如果没有任何同步配置直接退出
-  if ($dests == $nothing) { exit 0 }
+  if ($dests == null) { exit 0 }
 
   let syncDests = ($dests | upsert SYNC {
       get repo | each { |it| if ($',($ignored),' =~ $',($it),') { '   x' } else { '   √' } }
@@ -121,7 +121,7 @@ def sync-branch [
     let navUrl = ($pushConf | query json $'repos.($iter.repo).url')
 
     if not ($syncFrom | is-empty) { do-sync $syncFrom $gitUrl $iter }
-    if ($navUrl != '' and $syncFrom != $nothing) {
+    if ($navUrl != '' and $syncFrom != null) {
       print $'You can check the result from: (ansi g)($navUrl)(ansi reset)'
       hr-line
     }

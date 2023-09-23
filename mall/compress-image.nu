@@ -30,7 +30,7 @@ export def hr-line [
 def main [
   bizType?: string,        # 业务类型: b2c|b2b|scrm|sea|point
 ] {
-  if ($bizType == $nothing) {
+  if ($bizType == null) {
     print $'(char nl)Usage: nu compress-image.nu (ansi r)<bizType>(ansi reset)'; hr-line
     print $'(ansi g)Description: (ansi reset)根据`业务类型`压缩本地 `./client/images`、`./client/design/images` 中的图片'
     print $'(ansi g)Supported bizTypes: (ansi reset)b2c / b2b / scrm / sea / point'

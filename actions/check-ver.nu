@@ -46,7 +46,7 @@ export def termix-ver [] {
     }
 
     # Parse conf as JSON and check forceUpgrade column
-    let hasForceUpgrade = ($conf | query json forceUpgrade) != $nothing
+    let hasForceUpgrade = ($conf | query json forceUpgrade) != null
     let forceUpgrade = (if $hasForceUpgrade { ($conf | query json 'forceUpgrade') and (is-lower-ver $currentVer $latestVer)} else { false })
     # Quit command right now if it's a force upgrade
     if ($forceUpgrade) {

@@ -20,7 +20,7 @@ export def do-sync [
   print $'Sync from local (ansi g)($syncFrom)(ansi reset) to remote (ansi p)($repo.dest) of repo ($repo.repo)(ansi reset) -->(char nl)'
   let force = (get-env FORCE '0' | into int)
   let forcePush = (get-env FORCE_PUSH '0' | into int)
-  let hasLock = (do -i { $repo | get lock }) != $nothing
+  let hasLock = (do -i { $repo | get lock }) != null
   if ($forcePush == 1 or $force == 1 or $hasLock) {
     # You MUST use '--no-verify' to prevent infinite loops!!!
     git push --no-verify --force $gitUrl $'($syncFrom):refs/heads/($repo.dest)'
@@ -39,10 +39,10 @@ export def get-sync-ref [
   syncFrom: string,  # The git branch or commit hash to sync from
   repo: any,         # The git repo config options
 ] {
-  let hasLock = (do -i { $repo | get lock }) != $nothing
+  let hasLock = (do -i { $repo | get lock }) != null
   if $hasLock {
-    if $repo.lock == 'true' { $nothing } else {
-      if (has-ref $repo.lock) { $repo.lock } else { $nothing }
+    if $repo.lock == 'true' { null } else {
+      if (has-ref $repo.lock) { $repo.lock } else { null }
     }
   } else {
     $syncFrom

@@ -47,7 +47,7 @@ export def main [
     let cleanable = if $remoteBranches.exit_code == 0 { (
       git ls-remote --heads --refs $alias | detect columns -n | rename cid br | each { |branch|
         # Ignore the repos that don't have access permission
-        if $branch != $nothing {
+        if $branch != null {
           let brnm = ($branch.br | str replace 'refs/heads/' '')
           let noUse = ($syncs | where repo == $alias and dest == $brnm | length) == 0
           if $noUse { $brnm }
