@@ -77,6 +77,15 @@ export def hr-line [
   if $blank_line { char nl }
 }
 
+# Display my IP info
+def get-ip [] {
+  $env.config.table.mode = 'basic'
+  # curl ifconfig.me
+  # curl api.ipify.org
+  # curl ipinfo.io/ip
+  http get https://lumtest.com/myip.json | table -e
+}
+
 # Update all local branches for the specified repos
 def ua [] {
   let repos = ['nusi-slim', 'nusi-flex', 'terp-ui']
