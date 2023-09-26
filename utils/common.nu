@@ -162,9 +162,9 @@ export def log [
 
 export def hr-line [
   width?: int = 90,
+  --blank-line(-b),
+  --with-arrow(-a),
   --color(-c): string = 'g',
-  --blank-line(-b): bool,
-  --with-arrow(-a): bool,
 ] {
   print $'(ansi $color)(build-line $width)(if $with_arrow {'>'})(ansi reset)'
   if $blank_line { char nl }

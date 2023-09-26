@@ -81,7 +81,7 @@ def check-pipeline-conf [pipeline: any] {
 }
 
 # Try to load pipeline config variables from .termixrc file on i branch or current dir, or list available deploy targets
-def get-pipeline-conf [dest: string = 'dev', --apps: string, --list: bool] {
+def get-pipeline-conf [dest: string = 'dev', --apps: string, --list] {
   # 本地配置文件名，优先从 i 分支上的 .termixrc 文件中读取配置
   # 如果 i 分支不存在则从当前目录下的 .termixrc 文件中读取配置
   # 如果都不存在则从 termix-nu 仓库的 .termixrc 文件中读取配置
@@ -290,9 +290,9 @@ def query-cicd-by-id [id: int] {
 export def main [
   operation: string,      # 目前支持两种操作类型，run 和 query, run 用于创建并执行 CICD, query 用于查询 CICD 执行结果
   dest?: string = 'dev',  # 当操作为 run 时必须指定，用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, query 时按需指定, 默认为 dev
-  --cid(-i): int,         # 当操作为 query 时生效，用于查询 CICD 执行结果，如果不传则查询最近 10 条流水线执行结果
   --list(-l): bool,       # 当操作为 run 时生效，用于列出所有可用的执行目标
   --force(-f): bool,      # 当操作为 run 时生效，即便已经有正在运行的流水线或者已经部署过也会强制重新执行
+  --cid(-i): int,         # 当操作为 query 时生效，用于查询 CICD 执行结果，如果不传则查询最近 10 条流水线执行结果
   --apps(-a): string,     # 指定需要批量部署的应用，多个应用以英文逗号分隔
 ] {
   check-envs
@@ -335,13 +335,11 @@ export def main [
 # 创建 Erda 流水线并执行，默认情况下会检查是否有流水线正在执行或者是否该 Commit 已经部署过，若有则停止并给予提示
 export def erda-deploy [
   dest?: string = 'dev',  # 用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, 默认为 dev
-  --list(-l): bool,       # 列出所有可能的部署目标及应用信息
-  --force(-f): bool,      # 即便已经有正在运行的流水线，或者即便该 Commit 对应的分支已经部署过也会强制重新部署
+  --list(-l),             # 列出所有可能的部署目标及应用信息
+  --force(-f),            # 即便已经有正在运行的流水线，或者即便该 Commit 对应的分支已经部署过也会强制重新部署
   --apps(-a): string,     # 指定需要批量部署的应用，多个应用以","分隔，在多应用模式下必须指定(`all` 代表所有)，单应用模式忽略
 ] {
-  if $list { main run $dest --apps $apps --list } else {
-    if $force { main run $dest --apps $apps --force } else { main run $dest --apps $apps }
-  }
+  main run $dest --apps $apps --force $force --list $list
 }
 
 # 根据流水线 ID 或目标环境查询流水线执行结果, 例如: 单应用: t dq 997636681239659; t dq test, 多应用: t dq dev -a all

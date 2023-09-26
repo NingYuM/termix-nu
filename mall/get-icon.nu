@@ -22,8 +22,8 @@ def is-installed [ app: string ] {
 export def hr-line [
   width?: int = 90,
   --color(-c): string = 'g',
-  --blank-line(-b): bool,
-  --with-arrow(-a): bool,
+  --blank-line(-b),
+  --with-arrow(-a),
 ] {
   print $'(ansi $color)('─' | repeat $width | str join)(if $with_arrow {'>'})(ansi reset)'
   if $blank_line { char nl }

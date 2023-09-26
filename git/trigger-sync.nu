@@ -18,7 +18,7 @@ export-env {
 # Manually trigger code syncing to all related dests for specified branch
 export def 'git trigger-sync' [
   branch?: string,    # Local git branch/ref to push
-  --all(-a): bool,    # Whether to sync all branches that have syncing config
+  --all(-a),          # Whether to sync all branches that have syncing config
 ] {
 
   cd $env.JUST_INVOKE_DIR

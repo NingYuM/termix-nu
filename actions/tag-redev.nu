@@ -12,7 +12,7 @@ export def 'git tag-redev' [
   tag: string,               # Specify the tag you want to create
   branch: string,            # Specify the branch to create a tag from
   group: string,             # Specify the groups of repo to create a tag for
-  --delete-tag(-d): any,     # Set to 'true' if you want to delete the specified tag, defined as `any` acutually `bool`
+  --delete-tag(-d): bool,    # Set to 'true' if you want to delete the specified tag
 ] {
 
   let _TERMIX_CONF = get-termix-conf

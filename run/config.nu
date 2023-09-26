@@ -70,8 +70,8 @@ def ver [] { (version | transpose key value | to md --pretty) }
 export def hr-line [
   width?: int = 90,
   --color(-c): string = 'g',
-  --blank-line(-b): bool,
-  --with-arrow(-a): bool,
+  --blank-line(-b),
+  --with-arrow(-a),
 ] {
   print $'(ansi $color)('─' | repeat $width | str join)(if $with_arrow {'>'})(ansi reset)'
   if $blank_line { char nl }
@@ -96,6 +96,8 @@ def ua [] {
   }
 }
 
+# Clean nightly Tags:
+# `git tag -l | lines | filter { $in =~ nightly } | each { git tag -d $in }`
 # Show Nu nightly builds infomation
 def nun [] {
   http get https://api.github.com/repos/nushell/nightly/releases | sort-by -r created_at | select name tag_name id created_at
@@ -103,7 +105,7 @@ def nun [] {
 
 # 在本地构建并安装所有 Nushell 二进制文件
 def install-all-nu [
-  --plugin-only: bool, # Install plugins only
+  --plugin-only,  # Install plugins only
 ] {
   if not ((pwd | path basename | str trim) == 'nushell') { z nushell }
   print 'Remove cached shadow files...'
@@ -181,7 +183,7 @@ def-env goto [] {
 
 # Bump Nushell to new version
 def bump-ver [
-  --minor(-m): bool   # Bump minor version
+  --minor(-m)   # Bump minor version
 ] {
   let fromVer = (open cargo.toml | get package.version)
   let $toVer = if $minor {
