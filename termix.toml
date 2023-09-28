@@ -15,9 +15,6 @@ minNuVer = '0.85.0'
 # Min just version required to run termix-nu commands
 minJustVer = '1.13.0'
 
-# 临时二开仓库存放目录, .env 里面 TERMIX_TMP_PATH 具有更高优先级
-termixTmpPath = '/Users/hustcer/.termix-nu'
-
 # 新增的二开标签备注
 redevTagComment = 'This is a release tag'
 

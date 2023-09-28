@@ -4,14 +4,14 @@
 # Usage:
 #   t show-env
 
-use ../utils/common.nu [get-env get-ver]
+use ../utils/common.nu [get-tmp-path get-env get-ver]
 
 # Show locally installed cli app's version and env information
 export def main [] {
   let termixDir = (get-env TERMIX_DIR '(empty)')
   let shell = (get-env SHELL_TO_RUN_CMD '(empty)')
   let justFile = (get-env JUST_FILE_PATH '(empty)')
-  let termixTmp = (get-env TERMIX_TMP_PATH '(empty)')
+  let termixTmp = get-tmp-path
   let justInvokeDir = (get-env JUST_INVOKE_DIR '(empty)')
   let syncIgnore = (get-env SYNC_IGNORE_ALIAS '(empty)')
   let npmVer = (get-ver npm 'npm --version')

@@ -28,7 +28,7 @@
 #   t dp dev --apps app1,app2; t dp test -a all
 #   t dq dev --apps app1,app2; t dq test -a all
 
-use ../utils/common.nu [has-ref hr-line log]
+use ../utils/common.nu [get-tmp-path has-ref hr-line log]
 
 const NA = 'N/A'
 const ERDA_HOST = 'https://erda.cloud'
@@ -51,7 +51,7 @@ def check-envs [] {
 
 # Get Erda OpenAPI session token from .termix-conf file
 def get-auth [] {
-  let TERMIX_CONF = $'($env.TERMIX_TMP_PATH)/.termix-conf'
+  let TERMIX_CONF = $'(get-tmp-path)/.termix-conf'
   let erdaSession = open $TERMIX_CONF | from json | get -i erdaSession | default $NA
   $'cookie: OPENAPISESSION=($erdaSession)'
 }
@@ -59,7 +59,7 @@ def get-auth [] {
 # Renew Erda session by username and password if expired
 def renew-session [] {
   print 'Renewing Erda session...'
-  let TERMIX_CONF = $'($env.TERMIX_TMP_PATH)/.termix-conf'
+  let TERMIX_CONF = $'(get-tmp-path)/.termix-conf'
   let query = { username: $env.ERDA_USERNAME, password: $env.ERDA_PASSWORD } | url build-query
   let RENEW_URL = $'https://openapi.erda.cloud/login?($query)'
   let renew = curl --silent -X POST $RENEW_URL | from json

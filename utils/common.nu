@@ -60,13 +60,19 @@ export def get-conf [
 export def get-tmp-path [] {
   let _TERMIX_CONF = get-termix-conf
   let actionConf = (open $_TERMIX_CONF)
+  let DEFAULT_TMP = $'($env.HOME)/.termix-nu'
   # 先从环境变量里面查找临时文件路径
   let tmpDir = (get-env TERMIX_TMP_PATH '')
-  let tmpPath = if ($tmpDir | is-empty) { ($actionConf | get termixTmpPath) } else { $tmpDir }
+  # 如果环境变量里面没有配置临时文件路径，则使用 HOME 目录下的 .termix 目录
+  let tmpPath = if ($tmpDir | is-empty) {
+    if not ($DEFAULT_TMP | path exists) { mkdir $DEFAULT_TMP }
+    $DEFAULT_TMP
+  }
   if not ($tmpPath | path exists) {
     print $'(ansi r)Path ($tmpPath) does not exist, please create it and try again...(ansi reset)(char nl)(char nl)'
     exit 3
   }
+  # print $'Using (ansi g)($tmpPath)(ansi reset) as the temporary directory...(char nl)'
   $tmpPath
 }
 
