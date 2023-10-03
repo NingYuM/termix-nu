@@ -1,6 +1,6 @@
 # Nushell Config File
-# Update config from: 2c176a7f1
-# version = 0.85.0
+# Update config from: 844cb1213
+# version = 0.85.1
 
 # source ~/.config/nushell/config.nu
 # Ref:
@@ -506,10 +506,6 @@ $env.config = {
     always_trash: false         # always act as if -t was given. Can be overridden with -p
   }
 
-  cd: {
-    abbreviations: true         # allows `cd s/o/f` to expand to `cd some/other/folder`
-  }
-
   table: {
     mode: light                 # basic, compact, compact_double, light, thin, with_love, rounded, reinforced, heavy, none, other
     index_mode: always          # "always" show indexes, "never" show indexes, "auto" = show indexes when a table has "index" column
@@ -545,14 +541,9 @@ $env.config = {
     },
     table: {
       split_line: {fg: "#404040"},
-      selected_cell: {},
+      selected_cell: {bg: light_blue},
       selected_row: {},
       selected_column: {},
-      show_cursor: true,
-      line_shift: true,
-      line_index: true,
-      line_head_top: true,
-      line_head_bottom: true,
     },
   }
 
@@ -596,6 +587,7 @@ $env.config = {
   edit_mode: emacs              # emacs, vi
   shell_integration: true       # enables terminal shell integration. Off by default, as some terminals have issues with this.
   render_right_prompt_on_last_line: false   # true or false to enable or disable right prompt to be rendered on last line of the prompt.
+  use_kitty_protocol: false     # enables keyboard enhancement protocol implemented by kitty console, only if your terminal support this
 
   hooks: {
     pre_prompt: [{ null }]              # run before the prompt is shown
