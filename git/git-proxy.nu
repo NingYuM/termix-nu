@@ -8,7 +8,7 @@
 #   git-proxy on ali
 
 # Turn on or off the proxies for git
-def-env git-proxy [
+def --env git-proxy [
   status: string  # Set proxy status: on/off
 ] {
   # Get xray pid for Windows:

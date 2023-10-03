@@ -175,7 +175,7 @@ def cargo-clippy [] {
 }
 
 # Example usage: `$nu.config-path | goto`
-def-env goto [] {
+def --env goto [] {
   let input = $in
   let path = if ($input | path type) == file { ($input | path dirname) } else { $input }
   cd $path
@@ -285,7 +285,7 @@ def topf [n: int = 20] {
 }
 
 # load environment variables from the .envrc file.
-def-env load-direnv [] {
+def --env load-direnv [] {
   load-env (
     open --raw .envrc
       | lines
@@ -296,7 +296,7 @@ def-env load-direnv [] {
 }
 
 # Load environment variables from the .env file.
-def-env load-dot-env [
+def --env load-dot-env [
   path: string = '.env'
 ] {
   load-env (
