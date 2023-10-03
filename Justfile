@@ -58,7 +58,7 @@ default: _setup
 
 # Display termix current version number
 ver: _setup
-  @print (open $'($env.TERMIX_DIR)/termix.toml' | get version)
+  @echo (open $'($env.TERMIX_DIR)/termix.toml' | get version)
 
 # Upgrade termix-nu repo to the latest version
 upgrade:
