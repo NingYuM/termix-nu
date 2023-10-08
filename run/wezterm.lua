@@ -20,6 +20,7 @@ local act = wezterm.action;
 
 local launch_menu = {}
 local default_prog = {}
+-- Maybe you need to add `/Users/hustcer/.cargo/bin/nu` to `/etc/shells`
 local set_environment_variables = {
   PATH = wezterm.home_dir .. '/.cargo/bin:' .. os.getenv('PATH')
 }

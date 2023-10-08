@@ -31,7 +31,7 @@ alias nuc = print (
   | default '' decl_id
   | reject signatures search_terms decl_id
 )
-# Show the count of Nushell comamnds
+# Show the count of Nushell commands
 alias nucc = print (help commands | where command_type != custom and command_type != alias | length)
 alias tokeid = print (tokei | lines | skip 1 | str join "\n" | detect columns | where {|it| $it.Language !~ "=" and $it.Language !~ "-" and (not ($it.Files | is-empty)) } | into int Files Lines Code Comments Blanks)
 
@@ -98,7 +98,7 @@ def ua [] {
 
 # Clean nightly Tags:
 # `git tag -l | lines | filter { $in =~ nightly } | each { git tag -d $in }`
-# Show Nu nightly builds infomation
+# Show Nu nightly builds information
 def nun [] {
   http get https://api.github.com/repos/nushell/nightly/releases | sort-by -r created_at | select name tag_name id created_at
 }

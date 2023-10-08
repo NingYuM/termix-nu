@@ -65,10 +65,10 @@ option-as-alt = 'both'
 
 # Window configuration
 #
-# • width - define the intial window width.
+# • width - define the initial window width.
 #   Default: 600
 #
-# • height - define the inital window height.
+# • height - define the initial window height.
 #   Default: 400
 #
 # • opacity - changes the window transparency state (only Windows / X11)
@@ -96,9 +96,12 @@ mode = "Windowed"
 #
 [fonts]
 size = 26
-extras = [{ family = "PingFang SC" }]
+extras = [
+  { family = "PingFang SC" },
+  { family = "Sarasa Gothic SC" },
+]
 
-# # You can also set family on root to overwritte all fonts
+# # You can also set family on root to overwrite all fonts
 # family = "cascadiamono"
 
 [fonts.regular]

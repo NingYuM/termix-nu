@@ -45,7 +45,7 @@ def check-envs [] {
   let empties = ($envs | filter {|it| $env | get -i $it | is-empty })
   if ($empties | length) > 0 {
     print $'Please set (ansi r)($empties | str join ',')(ansi reset) in your environment first...'
-    exit 1
+    exit 5
   }
 }
 

@@ -86,6 +86,11 @@ deploy-query *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'pipeline.nu') }}; \
     erda-query {{OPTIONS}}
 
+# Send a message to DingTalk Group by a custom robot
+ding-msg *OPTIONS: _setup
+  @overlay use {{ join(_termix, 'actions', 'dingtalk-notify.nu') }}; \
+    dingtalk notify {{OPTIONS}}
+
 # Listing the branches of a git repo and the time of the last commit
 git-branch: _setup
   @# The following two statement must be written in one line
