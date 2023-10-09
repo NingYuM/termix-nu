@@ -71,11 +71,13 @@ def --env git-proxy [
     print $'(ansi p)Proxy turned off(ansi reset)(char nl)'
     print $'(ansi p)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
     print $'If you want to unset proxy for the terminal, please run: (char nl)'
+    const HIDE_CMD = '[http_proxy https_proxy ALL_RROXY] | each { do -i { hide-env $in } }'
+
     if $isWindows {
-      print $'hide-env http_proxy https_proxy ALL_RROXY(char nl)(char nl)'
-      echo 'hide-env http_proxy https_proxy ALL_RROXY' | clip
+      print $'($HIDE_CMD)(char nl)(char nl)'
+      echo $'($HIDE_CMD)' | clip
     } else {
-      print $'For NuShell: (ansi g)hide-env http_proxy https_proxy ALL_RROXY(ansi reset)(char nl)'
+      print $'For NuShell: (ansi g)($HIDE_CMD)(ansi reset)(char nl)'
       print $'For bash, zsh, sh, etc.: (ansi g)unset http_proxy https_proxy ALL_RROXY(ansi reset)(char nl)'
     }
   }
