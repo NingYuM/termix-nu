@@ -65,13 +65,15 @@ def show-available-syncs [
   --ignored(-i): string,  # 代码同步需要忽略推送的仓库简称，多个仓库用英文逗号分隔
 ] {
   mut results = []
+  let cross = $'(ansi light_gray)  x(ansi reset)'
+  let mark = $'(ansi g)  √(ansi reset)'
   for branch in ($syncs | columns) {
     for dest in ($syncs | get $branch) {
       mut sync = { Source: $branch, Dest: $'--->  ($dest.dest)', Repo: $dest.repo }
       $sync.Lock = ($dest | get -i lock | default '-')
-      if ($',($ignored),' =~ $',($dest.repo),') { $sync.SYNC = ' x' } else { $sync.SYNC = ' √' }
-      $sync.Local = if (has-ref $branch) { '  √' } else { '  x' }
-      $sync.Remote = if (has-ref origin/($branch)) { '  √' } else { '  x' }
+      if ($',($ignored),' =~ $',($dest.repo),') { $sync.SYNC = $cross } else { $sync.SYNC = $mark }
+      $sync.Local = if (has-ref $branch) { $mark } else { $cross }
+      $sync.Remote = if (has-ref origin/($branch)) { $mark } else { $cross }
       $sync.Update = if (has-ref origin/($branch)) { git show $'origin/($branch)' --no-patch --format=%ci | into datetime }
       $results = ($results | append $sync)
     }
