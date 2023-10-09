@@ -19,6 +19,7 @@ export-env {
 export def 'git trigger-sync' [
   branch?: string,    # Local git branch/ref to push
   --all(-a),          # Whether to sync all branches that have syncing config
+  --force(-f),        # Whether to force sync even if refused by remote
 ] {
 
   cd $env.JUST_INVOKE_DIR
@@ -45,7 +46,7 @@ export def 'git trigger-sync' [
   }
   for branch in $candidates {
     update-branch $branch
-    sync-branch $branch --all $all --ignored $ignored
+    sync-branch $branch --all $all --ignored $ignored --force $force
   }
 }
 
@@ -94,6 +95,7 @@ def sync-branch [
   branch: string,         # Local git branch/ref to sync
   --all(-a): any,         # Whether to sync all branches that have syncing config
   --ignored(-i): string,  # 代码同步需要忽略推送的仓库简称，多个仓库用英文逗号分隔
+  --force(-f): bool,      # Whether to force sync even if refused by remote
 ] {
 
   let pushConf = get-push-config $branch --all $all
@@ -120,7 +122,7 @@ def sync-branch [
     let gitUrl = ($pushConf | query json $'repos.($iter.repo).git')
     let navUrl = ($pushConf | query json $'repos.($iter.repo).url')
 
-    if not ($syncFrom | is-empty) { do-sync $syncFrom $gitUrl $iter }
+    if not ($syncFrom | is-empty) { do-sync $syncFrom $gitUrl $iter --force-sync $force }
     if ($navUrl != '' and $syncFrom != null) {
       print $'You can check the result from: (ansi g)($navUrl)(ansi reset)'
       hr-line

@@ -13,15 +13,16 @@ export-env {
 
 # Do a git repo sync
 export def do-sync [
-  syncFrom: string,  # The git branch or commit hash to sync from
-  gitUrl: string,    # The remote git repo url
-  repo: any,         # The git repo config options
+  syncFrom: string,     # The git branch or commit hash to sync from
+  gitUrl: string,       # The remote git repo url
+  repo: any,            # The git repo config options, such as: { repo: 'terp-rls', dest: 'main', lock: true }
+  --force-sync: bool,   # Force to sync even if refused by the remote repo
 ] {
   print $'Sync from local (ansi g)($syncFrom)(ansi reset) to remote (ansi p)($repo.dest) of repo ($repo.repo)(ansi reset) -->(char nl)'
   let force = (get-env FORCE '0' | into int)
   let forcePush = (get-env FORCE_PUSH '0' | into int)
   let hasLock = (do -i { $repo | get lock }) != null
-  if ($forcePush == 1 or $force == 1 or $hasLock) {
+  if ($forcePush == 1 or $force == 1 or $hasLock or $force_sync) {
     # You MUST use '--no-verify' to prevent infinite loops!!!
     git push --no-verify --force $gitUrl $'($syncFrom):refs/heads/($repo.dest)'
   } else {
