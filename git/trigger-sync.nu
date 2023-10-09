@@ -75,7 +75,7 @@ def update-branch [
 
 def get-push-config [
   branch: string,         # Local git branch/ref to push
-  --all(-a): any,         # Whether to sync all branches that have syncing config
+  --all(-a): bool,        # Whether to sync all branches that have syncing config
 ] {
   # Decide which branch to get `.termixrc` conf from ?
   let useConfBr = get-conf useConfFromBranch
@@ -93,7 +93,7 @@ def get-push-config [
 
 def sync-branch [
   branch: string,         # Local git branch/ref to sync
-  --all(-a): any,         # Whether to sync all branches that have syncing config
+  --all(-a): bool,        # Whether to sync all branches that have syncing config
   --ignored(-i): string,  # 代码同步需要忽略推送的仓库简称，多个仓库用英文逗号分隔
   --force(-f): bool,      # Whether to force sync even if refused by remote
 ] {
