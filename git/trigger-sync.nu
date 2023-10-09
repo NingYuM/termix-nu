@@ -19,6 +19,7 @@ export-env {
 export def 'git trigger-sync' [
   branch?: string,    # Local git branch/ref to push
   --all(-a),          # Whether to sync all branches that have syncing config
+  --list(-l),         # List all branches that have syncing config
   --force(-f),        # Whether to force sync even if refused by remote
 ] {
 
@@ -32,12 +33,19 @@ export def 'git trigger-sync' [
       exit 7
     }
   }
+
+  let conf = get-push-config $current --all $all | get pushConf
+  let repos = $conf | query json 'repos'
+  let allSyncs = $conf | query json 'branches'
+
+  if $list {
+    echo $'(char nl)The following branches have code syncing config:'; hr-line -b
+    show-available-syncs $allSyncs --repos $repos --ignored $ignored
+    exit 0
+  }
+
   let candidates = if $all {
-    get-push-config $current --all $all
-      | get pushConf
-      | query json 'branches'
-      | columns
-      | filter {|it| has-ref $it }
+    $allSyncs | columns | filter {|it| has-ref $it }
   } else { [$selected] }
 
   if ($candidates | length) > 1 {
@@ -48,6 +56,30 @@ export def 'git trigger-sync' [
     update-branch $branch
     sync-branch $branch --all $all --ignored $ignored --force $force
   }
+}
+
+# Show All available branch syncing configs with a readable output
+def show-available-syncs [
+  syncs: table,           # All available branch syncing configs
+  --repos: record,        # All available repos
+  --ignored(-i): string,  # 代码同步需要忽略推送的仓库简称，多个仓库用英文逗号分隔
+] {
+  mut results = []
+  for branch in ($syncs | columns) {
+    for dest in ($syncs | get $branch) {
+      mut sync = { Source: $branch, Dest: $'--->  ($dest.dest)', Repo: $dest.repo }
+      $sync.Lock = ($dest | get -i lock | default '-')
+      if ($',($ignored),' =~ $',($dest.repo),') { $sync.SYNC = ' x' } else { $sync.SYNC = ' √' }
+      $sync.Local = if (has-ref $branch) { '  √' } else { '  x' }
+      $sync.Remote = if (has-ref origin/($branch)) { '  √' } else { '  x' }
+      $sync.Update = if (has-ref origin/($branch)) { git show $'origin/($branch)' --no-patch --format=%ci | into datetime }
+      $results = ($results | append $sync)
+    }
+  }
+  $results | sort-by Source | print
+  print 'REPO INFO:'; hr-line
+  $repos | table -e | print
+  echo (char nl)
 }
 
 def update-branch [

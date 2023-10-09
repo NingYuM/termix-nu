@@ -45,6 +45,7 @@ _gstat_plugin := if os_family() == 'windows' { 'nu_plugin_gstat.exe' } else { 'n
 # alias rb := git-remote-branch
 alias dp := deploy
 alias dq := deploy-query
+alias gsync := trigger-sync
 
 # To pass arguments to a dependency, put the dependency
 # in parentheses along with the arguments, just like:

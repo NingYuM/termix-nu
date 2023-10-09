@@ -177,7 +177,7 @@ export def hr-line [
   --color(-c): string = 'g',
 ] {
   print $'(ansi $color)(build-line $width)(if $with_arrow {'>'})(ansi reset)'
-  if $blank_line { char nl }
+  if $blank_line { print -n (char nl) }
 }
 
 # parallel { print "Oh" } { print "Ah" } { print "Eeh" }
