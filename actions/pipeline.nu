@@ -158,7 +158,8 @@ def query-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
 def format-pipeline-data [pipelines: list] {
   return (
     $pipelines
-      | select -i id commit status normalLabels extra timeBegin timeUpdated
+      | select -i id commit status normalLabels extra timeBegin timeUpdated filterLabels
+      | upsert id {|it| get-pipeline-url $it }
       | upsert timeBegin {|it| if ($it | get -i timeBegin | is-empty) { $NA } else { $it.timeBegin } }
       | update commit {|it| $it.commit | str substring 0..9 }
       | upsert Comment {|it| $it.normalLabels.commitDetail | from json | get -i comment | str trim }
@@ -167,9 +168,18 @@ def format-pipeline-data [pipelines: list] {
       | upsert Runner {|it| $it.extra | get -i runUser | default {name: $NA} | get name }
       | upsert Begin {|it| if $it.timeBegin == $NA { $it.timeBegin } else { $it.timeBegin | into datetime | date humanize } }
       | upsert Updated {|it| $it.timeUpdated | into datetime | date humanize }
-      | reject extra timeBegin timeUpdated normalLabels
+      | reject extra timeBegin timeUpdated normalLabels filterLabels
       | rename ID Commit Status
   )
+}
+
+# Render pipeline ID as a clickable link while querying latest CICDs
+def get-pipeline-url [pipeline: table] {
+  let id = $pipeline.id
+  let appid = $pipeline.filterLabels.appID
+  let pid = $pipeline.filterLabels.projectID
+  $'($ERDA_HOST)/terminus/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
+    | ansi link --text $'($id)'
 }
 
 # 查询指定目标上最新的N条流水线执行结果
