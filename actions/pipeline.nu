@@ -159,7 +159,7 @@ def format-pipeline-data [pipelines: list] {
   return (
     $pipelines
       | select -i id commit status normalLabels extra timeBegin timeUpdated filterLabels
-      | upsert id {|it| get-pipeline-url $it }
+      | upsert id { $in | get-pipeline-url }
       | upsert timeBegin {|it| if ($it | get -i timeBegin | is-empty) { $NA } else { $it.timeBegin } }
       | update commit {|it| $it.commit | str substring 0..9 }
       | upsert Comment {|it| $it.normalLabels.commitDetail | from json | get -i comment | str trim }
@@ -174,12 +174,13 @@ def format-pipeline-data [pipelines: list] {
 }
 
 # Render pipeline ID as a clickable link while querying latest CICDs
-def get-pipeline-url [pipeline: table] {
+def get-pipeline-url [--as-raw-string] {
+  let $pipeline = $in
   let id = $pipeline.id
   let appid = $pipeline.filterLabels.appID
   let pid = $pipeline.filterLabels.projectID
-  $'($ERDA_HOST)/terminus/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
-    | ansi link --text $'($id)'
+  let link = $'($ERDA_HOST)/terminus/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
+  if $as_raw_string { $link } else { $link | ansi link --text $'($id)' }
 }
 
 # 查询指定目标上最新的N条流水线执行结果
@@ -187,13 +188,16 @@ def query-latest-cicd [dest: string, --apps: string] {
   let apps = (get-pipeline-conf $dest --apps $apps)
   check-envs
   for app in $apps {
-    print $'Querying latest CICDs for (ansi pb)($app.appName) on ($app.branch)(ansi reset) branch:'; hr-line -c pb
+    echo $'Querying latest CICDs for (ansi pb)($app.appName) on ($app.branch)(ansi reset) branch:'; hr-line -c pb
     let ci = (query-cicd $app.appid $app.appName $app.branch $app.env $app.pipeline 10)
     if ($ci.data.total == 0) {
-      print $'No CICD found for (ansi pb)($app.appName)(ansi reset) on (ansi g)($app.branch)(ansi reset) branch'; exit 0
+      echo $'No CICD found for (ansi pb)($app.appName)(ansi reset) on (ansi g)($app.branch)(ansi reset) branch'; exit 0
     }
     let pipelines = (format-pipeline-data $ci.data.pipelines)
-    print ($pipelines | table -e)
+    echo ($pipelines | table -e)
+    echo 'URL of the latest pipeline:'; hr-line
+    echo ($ci.data.pipelines | first | get-pipeline-url --as-raw-string)
+    echo (char nl)
   }
 }
 
