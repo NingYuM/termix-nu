@@ -17,6 +17,7 @@
 #   5: Condition not satisfied
 #   6: Server error
 #   7: Invalid parameter
+#   8: Auth failed
 
 export const _DATE_FMT  = '%Y.%m.%d'
 export const _TIME_FMT =  '%Y-%m-%d %H:%M:%S'
