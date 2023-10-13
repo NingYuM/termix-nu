@@ -63,6 +63,9 @@ def renew-session [] {
   let query = { username: $env.ERDA_USERNAME, password: $env.ERDA_PASSWORD } | url build-query
   let RENEW_URL = $'https://openapi.erda.cloud/login?($query)'
   let renew = curl --silent -X POST $RENEW_URL | from json
+  if ($renew | describe) == 'string' {
+    print $'Session renew failed with msg: (ansi r)($renew)(ansi reset)'; exit 8
+  }
   open $TERMIX_CONF | from json
     | upsert erdaSession $renew.sessionid | to json
     | save -rf $TERMIX_CONF
