@@ -33,6 +33,8 @@ export def 'git sync-branch' [
     print $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
     exit 0
   }
+
+  git fetch origin $confBr -q   # 更新远程分支的最新提交
   let pushConf = (git show $'origin/($confBr):.termixrc' | from toml | to json)
   let ignored = (get-env SYNC_IGNORE_ALIAS '')
   # The following line not work: ^^^ Expected column path, found string

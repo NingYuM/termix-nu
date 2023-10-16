@@ -18,6 +18,8 @@ export def main [] {
     print $'You do not have an i branch, branch description query failed, bye...(char nl)'
     exit 3
   }
+
+  git fetch origin i:i -q   # 更新远程 i 分支到本地
   # 本地 i 分支优先级高于远程
   let repo = ($env.PWD | path basename | str trim)
   let querySource = if $localIExists { 'i' } else { 'origin/i' }

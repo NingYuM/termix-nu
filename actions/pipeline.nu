@@ -98,7 +98,9 @@ def get-pipeline-conf [dest: string = 'dev', --apps: string, --list] {
     print $'No (ansi r)origin/i branch or ($LOCAL_CONFIG)(ansi reset) exits, please create it before running this command...'; exit 1
   }
 
-  let repoConf = if $useI { (git show 'origin/i:.termixrc' | from toml) } else { (open $LOCAL_CONFIG | from toml) }
+  let repoConf = if $useI {
+    git fetch origin i -q; (git show 'origin/i:.termixrc' | from toml)
+  } else { (open $LOCAL_CONFIG | from toml) }
   # Print available deploy targets and apps with more detail
   if $list {
     print $'Available deploy targets in ($configFile) are:(char nl)'

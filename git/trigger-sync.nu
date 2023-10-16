@@ -121,6 +121,8 @@ def get-push-config [
     print $'Branch (ansi r)($CONF_BRANCH) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
     exit 0
   }
+
+  git fetch origin $CONF_BRANCH -q    # 更新远程分支的最新提交
   let pushConf = (git show $'origin/($CONF_BRANCH):.termixrc' | from toml | to json)
   { pushConf: $pushConf, confBr: $CONF_BRANCH }
 }
