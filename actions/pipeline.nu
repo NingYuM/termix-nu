@@ -102,16 +102,7 @@ def get-pipeline-conf [dest: string = 'dev', --apps: string, --list] {
     git fetch origin i -q; (git show 'origin/i:.termixrc' | from toml)
   } else { (open $LOCAL_CONFIG | from toml) }
   # Print available deploy targets and apps with more detail
-  if $list {
-    print $'Available deploy targets in ($configFile) are:(char nl)'
-    let upsertAlias = {|it| if ($it | get -i alias | is-empty) { $NA } else { $it.alias } }
-    for target in ($repoConf.erda | columns) {
-      print $'Target (ansi p)($target)(ansi reset):'; hr-line 60 -c navy
-      print ($repoConf.erda | get $target | upsert alias $upsertAlias | select appName alias branch env pipeline)
-      if ($repoConf.erda | get $target | describe) =~ 'record' { print -n (char nl) }
-    }
-    exit 0
-  }
+  if $list { show-available-targets $configFile $repoConf }
 
   let pipeline = ($repoConf.erda | get -i $dest)
   if ($pipeline | is-empty) {
@@ -129,6 +120,29 @@ def get-pipeline-conf [dest: string = 'dev', --apps: string, --list] {
   let cond = {|x| $apps | split row ',' | any {|it| $it in [$x.appName ($x | get -i alias)] }}
   let matched = if $apps == 'all' { $conf } else if not ($apps | is-empty) { $conf | filter $cond }
   return $matched
+}
+
+# 列出所有可用的执行目标
+def show-available-targets [
+  configFile: string,  # 配置文件路径
+  repoConf: table,     # 配置文件内容
+] {
+  print $'Available deploy targets in ($configFile) are:(char nl)'
+  let upsertAlias = {|it| if ($it | get -i alias | is-empty) { $NA } else { $it.alias } }
+  let upsertDescription = {|it| if ($it | get -i description | is-empty) { '-' } else { $it.description } }
+  for target in ($repoConf.erda | columns) {
+    print $'Target (ansi p)($target)(ansi reset):'; hr-line 60 -c navy
+    print (
+      $repoConf.erda
+        | get $target
+        | upsert alias $upsertAlias
+        | upsert description $upsertDescription
+        | select appName alias branch env pipeline description
+        | rename -c { appName: name }
+      )
+    if ($repoConf.erda | get $target | describe) =~ 'record' { print -n (char nl) }
+  }
+  exit 0
 }
 
 # 根据 AppID、Branch、Pipeline 查询最近的流水线执行记录
