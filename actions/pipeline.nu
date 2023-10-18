@@ -199,11 +199,11 @@ def get-pipeline-url [--as-raw-string] {
   let appid = $pipeline.filterLabels.appID
   let pid = $pipeline.filterLabels.projectID
   let link = $'($ERDA_HOST)/terminus/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
-  if (not $as_raw_string) and ((version | get features) =~ 'extra') {
-    return ($link | ansi link --text $'($id)')
+  if $as_raw_string { $link } else {
+    # FIXME: 无法正确渲染链接, 因为 ansi link 在 extra feature 里面
+    # $link | ansi link --text $'($id)'
+    return $id
   }
-  if (not $as_raw_string) and ((version | get features) !~ 'extra') { return $id }
-  return $link
 }
 
 # 查询指定目标上最新的N条流水线执行结果
