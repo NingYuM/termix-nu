@@ -2,6 +2,7 @@
 # Author: hustcer
 # Created: 2021/11/12 10:06:56
 # Description: Script to release termix-nu
+# Create CHANGELOG for the new version 1.50.0: `git cliff --unreleased --tag 1.50.0 --prepend CHANGELOG.md`
 # TODO:
 # [√] 版本检查确保新版本版本号更大(需要再考虑是否合理？)
 # [√] 确保新版本对应 Tag 不存在

@@ -1,6 +1,42 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.50.0] - 2023-10-18
+
+### Bug Fixes
+
+- Fix `get-tmp-path` for Windows
+- Fix hide-env tip for `git-proxy off`
+
+### Documentation
+
+- Add FAQ.md
+- Update README.md
+
+### Features
+
+- Add `get-ip` custom command to Nu config
+- Make `TERMIX_TMP_PATH` env config optional and fallback to `($env.HOME)/.termix-nu`
+- Add `dingtalk notify` command to send a message to DingTalk Group by custom robot, see `t ding-msg -h` for more help
+- Add `--force` or `-f` switch to `trigger-sync` command
+- Add `trigger-sync -l` to list all branch syncing configs of current repo
+- Add `gsync` as an alias for `trigger-sync`
+- Render pipeline ID as a clickable link while querying latest CICDs
+- Show the latest pipeline link while querying latest CICDs
+- Fetch remote head before running pipelines or syncing branches
+- Add description field to available deploy targets for `dp -l`
+
+### Miscellaneous Tasks
+
+- Adapt to Nu v0.86.0, use `bool` type for flags
+- Update `Nushell` config
+- Adapt to Nu v0.86, use `def --env` instead of `def-env`
+
+### Refactor
+
+- Change `$nothing` to `null` for Nu v0.86
+- Fix some `any` type
+
 ## [1.38.1] - 2023-09-20
 
 ### Bug Fixes
