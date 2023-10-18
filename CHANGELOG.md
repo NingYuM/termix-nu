@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 
 - Fix `get-tmp-path` for Windows
 - Fix hide-env tip for `git-proxy off`
+- Fix `gsync -a` error when the remote branch does not exists
 
 ### Documentation
 

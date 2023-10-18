@@ -88,10 +88,13 @@ def update-branch [
   branch: string,    # Local git branch/ref to push
 ] {
   let current = git branch --show-current | str trim
-  # 从远程更新指定分支代码到本地
-  if ($current == $branch) { git pull origin $branch } else { git fetch origin $'($branch):($branch)' }
-  # Remote branch does not exit
-  if not (has-ref origin/($branch)) { git push origin $branch -u; exit 0 }
+  # 从远程更新指定分支代码到本地, 如果远程分支存在的话
+  if (has-ref origin/($branch)) {
+    if ($current == $branch) { git pull origin $branch } else { git fetch origin $'($branch):($branch)' }
+  } else {
+    # Remote branch does not exit
+    git push origin $branch -u; exit 0
+  }
 
   let diff = (
     git rev-list --left-right $'($branch)...origin/($branch)' --count
@@ -165,3 +168,5 @@ def sync-branch [
     }
   } | ignore # FIXME: remove ignore after `each` bug fixed
 }
+
+alias main = git trigger-sync

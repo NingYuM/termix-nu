@@ -46,7 +46,7 @@ export def get-sync-ref [
       if (has-ref $repo.lock) { $repo.lock } else { null }
     }
   } else {
-    $syncFrom
+    if (has-ref $syncFrom) { $syncFrom } else { null }
   }
 }
 
