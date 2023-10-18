@@ -45,7 +45,7 @@ winget install Nushell.Nushell
 # Install the latest version of nushell, extra features included.
 cargo install nu --features=extra
 # Install nushell of the specified version
-cargo +stable install nu --all-features --version 0.85.0
+cargo +stable install nu --all-features --version 0.86.0
 ```
 如果不想本地编译安装也可以下载对应版本的 `nightly` 包: https://github.com/nushell/nightly/releases
 

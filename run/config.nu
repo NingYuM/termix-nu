@@ -1,6 +1,6 @@
 # Nushell Config File
-# Update config from: 844cb1213
-# version = 0.85.1
+# Update config from: 5d8763ed1
+# version = 0.86.0
 
 # source ~/.config/nushell/config.nu
 # Ref:

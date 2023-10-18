@@ -24,6 +24,9 @@ const DINGTALK_API = 'https://oapi.dingtalk.com/robot/send'
 const DEFAULT_PIC = 'https://img.alicdn.com/imgextra/i3/O1CN014pnilM25N0WkhbzTq_!!6000000007513-2-tps-1385-1249.png'
 
 # Send a message to DingTalk Group by a custom robot
+# 依赖环境变量:
+#   - `DINGTALK_NOTIFY`: 'on' 打开, 'off' 关闭, 未设置也是关闭;
+#   - `DINGTALK_ROBOT_AK`, `DINGTALK_ROBOT_SECRET`: 钉钉群通知机器人的 `Access Token` 和 `Secret`;
 export def 'dingtalk notify' [
   --type(-t): string = 'text',  # 消息类型，默认为：`text`, 其他可选类型：`link`, `markdown`
   --title: string,              # 消息标题, 对 `link`, `markdown` 类型消息有效
