@@ -34,6 +34,8 @@ brew upgrade nushell just
 ```cmd
 # For more detail: https://github.com/lukesampson/scoop
 scoop install just
+scoop install nu
+# Or you can install Nu by winget
 winget install Nushell.Nushell
 ```
 
@@ -43,9 +45,9 @@ winget install Nushell.Nushell
 
 ```bash
 # Install the latest version of nushell, extra features included.
-cargo install nu --features=extra
+cargo install nu --features=extra,dataframe
 # Install nushell of the specified version
-cargo +stable install nu --all-features --version 0.86.0
+cargo +stable install nu --features=extra,dataframe --version 0.86.0
 ```
 如果不想本地编译安装也可以下载对应版本的 `nightly` 包: https://github.com/nushell/nightly/releases
 
