@@ -18,7 +18,11 @@ def --env git-proxy [
   let isWindows = (sys).host.name == 'Windows'
   # On macOS, we typically use ClashX or AliMgrSoc to proxy the traffic
   # On windows the proxy could be Clash for Windows or v2ray
-  let proxies = if $isWindows { (tasklist | findstr 'xray clash') } else { (lsof -i -n -P | grep -E 'ClashX|AliMgrSoc' | grep LISTEN) }
+  let proxies = if $isWindows {
+    (tasklist | findstr 'xray clash')
+  } else {
+    (lsof -i -n -P | grep -E 'ClashX|AliMgrSoc' | grep LISTEN)
+  }
 
   if ($status == 'on') {
 
@@ -36,10 +40,10 @@ def --env git-proxy [
       exit 3
     }
 
-    # set http_proxy=http://127.0.0.1:10809; set http_proxys=http://127.0.0.1:10809; set ALL_RROXY=http://127.0.0.1:10809
+    # export http_proxy=http://127.0.0.1:7890 https_proxy=http://127.0.0.1:7890 ALL_RROXY=http://127.0.0.1:7890
     # load-env {http_proxy: 'http://127.0.0.1:7890', https_proxy: 'http://127.0.0.1:7890', ALL_RROXY: 'http://127.0.0.1:7890'}
     # The first proxy in grep result should be http proxy
-    let proxy = ($proxy).0
+    let proxy = if (($proxy).0 | str contains '*') { ($proxy).0 | str replace '*' '127.0.0.1' } else { ($proxy).0 }
     let isClashX = ($proxies | lines | first) =~ 'ClashX'
     if $isWindows or $isClashX {
       git config --global http.proxy $'http://($proxy)'
@@ -62,9 +66,7 @@ def --env git-proxy [
     print $'If you want to set proxy for the terminal, please run: (char nl)'
     print $'export http_proxy=socks5://($proxy) https_proxy=socks5://($proxy) ALL_RROXY=socks://($proxy)(char nl)(char nl)'
   } else {
-    # if ('ALL_RROXY' in (env).name) { hide ALL_RROXY }
-    # if ('http_proxy' in (env).name) { hide http_proxy }
-    # if ('https_proxy' in (env).name) { hide https_proxy }
+    # git config --global --unset http.proxy; git config --global --unset https.proxy; git config --global --unset socks.proxy
     unset-git-conf http.proxy
     unset-git-conf https.proxy
     unset-git-conf socks.proxy
