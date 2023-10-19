@@ -112,6 +112,13 @@ git-remote-branch remote=('origin')  showTag=('false'): _setup
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; \
     git-remote-branch {{JUST_INVOKE_DIR}} {{remote}} --show-tag={{showTag}}
 
+# Show commit info diff between two commits, e.g. t git-diff-commit 051da464 0ab1df2d
+git-diff-commit *OPTIONS: _setup
+  @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
+    overlay use {{ join(_termix, 'git', 'diff-commit.nu') }}; \
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; \
+    git diff-commit {{OPTIONS}}
+
 # Show branch description from branch description file `d` of `i` branch
 desc branch=(`git branch --show-current`) showNotes=('false'): _setup
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \

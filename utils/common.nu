@@ -20,7 +20,7 @@
 #   8: Auth failed
 
 export const _DATE_FMT  = '%Y.%m.%d'
-export const _TIME_FMT =  '%Y-%m-%d %H:%M:%S'
+export const _TIME_FMT =  '%Y/%m/%d %H:%M:%S'
 export const _UPGRADE_TAG = '$-FORCE-UPGRADE-$'
 
 export-env {
