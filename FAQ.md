@@ -1,13 +1,23 @@
 
-
 ## FAQ:
 
-1. "Could not find `cygpath` executable to translate recipe..." on Windows
+1. 初次执行 `t` 的时候报错:
+  ```console
+  Error: nu::shell::plugin_failed_to_load
+
+    × Plugin failed to load: No such file or directory (os error 2)
+
+  error: Recipe `_register_plugins` failed with exit code 1
+  ```
+这可能是因为 `Nushell` 安装后还没有使用过，也没有为其初始化配置文件，可以尝试在命令行执行下 `nu`，然后会有两个交互式提问，直接输入 `y` 即可。这样就会为 `nu` 创建默认的配置文件。接下来可以再次执行 `t` 试试。
+
+
+2. "Could not find `cygpath` executable to translate recipe..." on Windows
 
 Install git by `winget install Git.Git` and `cygpath` will be available in `C:\Program Files\Git\usr\bin`, add this dir in global `PATH` environment variable should work.
 
 
-2. 执行 `t` 的时候报类似如下错误:
+3. 执行 `t` 的时候报类似如下错误:
   ```console
   Error: nu::parser::registered_file_not_found
 
