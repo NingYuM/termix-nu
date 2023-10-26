@@ -5,6 +5,8 @@
 #  [x] 执行流水线要求在仓库目录下，且要有 i 分支 & .termixrc 文件里面的配置正确
 #  [x] `t dp -l` 列出所有可用的执行目标
 #  [x] 查询流水线可以在任意目录下执行，不一定要在仓库目录下，只要流水线 ID 正确即可
+#  [x] 根据流水线 ID 查询流水线执行结果
+#  [x] 根据流水线 ID 终止对应的流水线
 #  [x] 执行新流水线之前可以查询是否有正在运行的流水线，如果有则停止执行，也可以加上 `-f` 强制执行
 #  [x] 执行新流水线之前可以查询同一 Commit 是否已经被部署过，如果部署过则停止执行，也可以加上 `-f` 强制执行
 #  [x] 允许查询某个 target 下的最近20条流水线记录
@@ -289,6 +291,21 @@ def run-cicd [id: int, appid: int, pid: int] {
   }
 }
 
+# 停止指定 ID 的流水线
+def stop-cicd [id: int] {
+  let cancelUrl = $'($ERDA_HOST)/api/terminus/cicds/($id)/actions/cancel'
+  mut run = (curl --silent -H (get-auth) -X POST $cancelUrl | from json)
+  # Check session expired, and renew if needed
+  if ($run | describe) == 'string' and ($run =~ 'auth failed') {
+    renew-session
+    $run = (curl --silent -H (get-auth) -X POST $cancelUrl | from json)
+  }
+  if $run.success {
+    print $'CICD stopped, pipeline current status of id: (ansi g)($id)(ansi reset)'
+    query-cicd-by-id $id
+  }
+}
+
 # 根据流水线 ID 查询流水线执行结果
 def query-cicd-by-id [id: int] {
   let queryUrl = $'($ERDA_HOST)/api/terminus/pipelines/($id)'
@@ -323,14 +340,16 @@ def query-cicd-by-id [id: int] {
   # print ($query | table -e)     # Just for debugging purpose
 }
 
+# POST https://erda.cloud/api/terminus/cicds/1248053184433812/actions/cancel
 # 创建 Erda 流水线并执行，同时可以查询流水线执行结果
 export def main [
-  operation: string,      # 目前支持两种操作类型，run 和 query, run 用于创建并执行 CICD, query 用于查询 CICD 执行结果
-  dest?: string = 'dev',  # 当操作为 run 时必须指定，用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, query 时按需指定, 默认为 dev
-  --list(-l): bool,       # 当操作为 run 时生效，用于列出所有可用的执行目标
-  --force(-f): bool,      # 当操作为 run 时生效，即便已经有正在运行的流水线或者已经部署过也会强制重新执行
-  --cid(-i): int,         # 当操作为 query 时生效，用于查询 CICD 执行结果，如果不传则查询最近 10 条流水线执行结果
-  --apps(-a): string,     # 指定需要批量部署的应用，多个应用以英文逗号分隔
+  operation: string,          # 目前支持两种操作类型，run 和 query, run 用于创建并执行 CICD, query 用于查询 CICD 执行结果
+  dest?: string = 'dev',      # 当操作为 run 时必须指定，用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, query 时按需指定, 默认为 dev
+  --list(-l): bool,           # 当操作为 run 时生效，用于列出所有可用的执行目标
+  --force(-f): bool,          # 当操作为 run 时生效，即便已经有正在运行的流水线或者已经部署过也会强制重新执行
+  --cid(-i): int,             # 当操作为 query 时生效，用于查询 CICD 执行结果，如果不传则查询最近 10 条流水线执行结果
+  --apps(-a): string,         # 指定需要批量部署的应用，多个应用以英文逗号分隔
+  --stop-by-id(-s): int,      # 当操作为 run 时生效，用于根据流水线ID停止对应的正在运行的流水线
 ] {
   check-envs
 
@@ -338,6 +357,7 @@ export def main [
     run | r => {
       # 根据流水线 ID 查询无需加载其他环境变量，也不需要 .termixrc 文件
       let isIdQuery = ($operation in ['query', 'q']) and ($cid > 0)
+      if not ($stop_by_id | is-empty) { stop-cicd $stop_by_id; exit 0 }
       let apps = (if $list { get-pipeline-conf $dest --apps $apps --list } else if (not $isIdQuery) { get-pipeline-conf $dest --apps $apps })
       for app in $apps {
         # 以下为应用级别配置，应用的所有开发者保持一致，可以放在代码仓库里面
@@ -371,12 +391,13 @@ export def main [
 
 # 创建 Erda 流水线并执行，默认情况下会检查是否有流水线正在执行或者是否该 Commit 已经部署过，若有则停止并给予提示
 export def erda-deploy [
-  dest?: string = 'dev',  # 用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, 默认为 dev
-  --list(-l),             # 列出所有可能的部署目标及应用信息
-  --force(-f),            # 即便已经有正在运行的流水线，或者即便该 Commit 对应的分支已经部署过也会强制重新部署
-  --apps(-a): string,     # 指定需要批量部署的应用，多个应用以","分隔，在多应用模式下必须指定(`all` 代表所有)，单应用模式忽略
+  dest?: string = 'dev',    # 用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, 默认为 dev
+  --list(-l),               # 列出所有可能的部署目标及应用信息
+  --force(-f),              # 即便已经有正在运行的流水线，或者即便该 Commit 对应的分支已经部署过也会强制重新部署
+  --apps(-a): string,       # 指定需要批量部署的应用，多个应用以","分隔，在多应用模式下必须指定(`all` 代表所有)，单应用模式忽略
+  --stop-by-id(-s): int,    # 根据流水线ID 停止对应的正在运行的流水线
 ] {
-  main run $dest --apps $apps --force $force --list $list
+  main run $dest --apps $apps --force $force --list $list --stop-by-id $stop_by_id
 }
 
 # 根据流水线 ID 或目标环境查询流水线执行结果, 例如: 单应用: t dq 997636681239659; t dq test, 多应用: t dq dev -a all

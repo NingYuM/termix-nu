@@ -1,3 +1,5 @@
+# Termix-Nu 使用说明
+
 ## 前言
 
 `termix` ，`termi` 是公司英文简称前缀，也是命令行终端 `terminal` 的前缀，`mix` 可以理解为工具箱，`termix` 就是公司内部使用的命令行工具箱了。`termix-nu` 即[`Nushell`](https://github.com/nushell/nushell) 版本的`termix`, 与之对应的还有个 JS 版本的[`termix`](https://fe-docs.app.terminus.io/docs/termix/termix), 为了避免重复造轮子两者虽然名字上有关联，但实际上功能是不重叠的。
@@ -49,6 +51,7 @@ cargo install nu --features=extra,dataframe
 # Install nushell of the specified version
 cargo +stable install nu --features=extra,dataframe --version 0.86.0
 ```
+
 如果不想本地编译安装也可以下载对应版本的 `nightly` 包: https://github.com/nushell/nightly/releases
 
 ### `Just` & `nu` 更新提示
