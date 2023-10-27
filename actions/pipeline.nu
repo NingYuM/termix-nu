@@ -291,6 +291,7 @@ def run-cicd [id: int, appid: int, pid: int] {
   }
 }
 
+# POST https://erda.cloud/api/terminus/cicds/1248053184433812/actions/cancel
 # 停止指定 ID 的流水线
 def stop-cicd [id: int] {
   let cancelUrl = $'($ERDA_HOST)/api/terminus/cicds/($id)/actions/cancel'
@@ -340,7 +341,6 @@ def query-cicd-by-id [id: int] {
   # print ($query | table -e)     # Just for debugging purpose
 }
 
-# POST https://erda.cloud/api/terminus/cicds/1248053184433812/actions/cancel
 # 创建 Erda 流水线并执行，同时可以查询流水线执行结果
 export def main [
   operation: string,          # 目前支持两种操作类型，run 和 query, run 用于创建并执行 CICD, query 用于查询 CICD 执行结果

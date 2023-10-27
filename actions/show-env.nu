@@ -15,7 +15,7 @@ export def main [] {
   let justInvokeDir = (get-env JUST_INVOKE_DIR '(empty)')
   let syncIgnore = (get-env SYNC_IGNORE_ALIAS '(empty)')
   let npmVer = (get-ver npm 'npm --version')
-  let yarnVer = (get-ver yarn 'yarn --version')
+  let pnpmVer = (get-ver pnpm 'pnpm --version')
   let herdVer = (get-ver herd 'herd --version')
   let termixVer = (get-ver termix 'termix --version')
   let nodeVer = (get-ver node '(node --version | str substring 1..)')
@@ -35,7 +35,7 @@ export def main [] {
     ['Herd', $herdVer]
     ['Node', $nodeVer]
     ['Npm', $npmVer]
-    ['Yarn', $yarnVer]
+    ['Pnpm', $pnpmVer]
     ['Termix', $termixVer]
     ['-------', '--------']
     ['Git Proxy', $gitProxy]

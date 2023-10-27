@@ -101,6 +101,7 @@ staffPayload = '[{"beginDate":"_first_day_","endDate":"_last_day_","baseProjectT
 [quickNavs]
 nusi-slim = 'https://nusi-slim.app.terminus.io/'
 nusi-flex = 'https://nusi-flex.app.terminus.io/'
+termix-nu = 'https://fe-docs.app.terminus.io/termix/termix-nu'
 
 # Set currentSelected to change the shell to execute the command
 # 'SHELL_TO_RUN_CMD' var in .env has higher priority

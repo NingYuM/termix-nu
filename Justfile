@@ -59,7 +59,9 @@ default: _setup
 
 # Display termix current version number
 ver: _setup
-  @echo (open $'($env.TERMIX_DIR)/termix.toml' | get version)
+  @let ver = (open $'($env.TERMIX_DIR)/termix.toml' | get version); { \
+  version: $ver, commit: (git rev-parse $ver | str substring 0..7),   \
+  manual: 'https://fe-docs.app.terminus.io/termix/termix-nu' } | print
 
 # Upgrade termix-nu repo to the latest version
 upgrade:
