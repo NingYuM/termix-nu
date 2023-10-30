@@ -49,6 +49,7 @@ export def merge-navs [] {
   let specialNavs = if ($termixrc | is-empty) { {} } else { ( $termixrc | from toml | to json | query json 'quickNavs') }
   let rcNavs = get-rc-navs
   let rcNavs = if ($rcNavs | is-empty) { {} } else { $rcNavs }
+  let specialNavs = if ($specialNavs | is-empty) { {} } else { $specialNavs }
   let allNavs = ($quickNavs | merge $specialNavs | merge $rcNavs)
   $allNavs
 }
