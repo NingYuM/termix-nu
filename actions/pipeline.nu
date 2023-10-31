@@ -40,6 +40,13 @@ export-env {
   $env.config.color_config.leading_trailing_space_bg = { attr: n }
 }
 
+# 判断是否需要重试，如果返回 true 则重试，否则不重试
+def should-retry [resp: any] {
+  let isEmpty = ($resp | is-empty)
+  let noAuth = ($resp | describe) == 'string' and ($resp =~ 'auth failed')
+  $isEmpty or $noAuth
+}
+
 # Check if the required environment variable was set, quit if not
 def check-envs [] {
   # 部署/查询 Pipeline 操作需要先配置 ERDA_USERNAME & ERDA_PASSWORD
@@ -159,7 +166,7 @@ def query-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
   # Query the id of newly created CICD
   mut ci = (curl --silent -H (get-auth) $cicdUrl | from json)
   # Check session expired, and renew if needed
-  if ($ci | describe) == 'string' and ($ci =~ 'auth failed') {
+  if (should-retry $ci) {
     renew-session
     $ci = (curl --silent -H (get-auth) $cicdUrl | from json)
   }
@@ -209,7 +216,7 @@ def get-pipeline-url [--as-raw-string] {
 }
 
 # 查询指定目标上最新的N条流水线执行结果
-def query-latest-cicd [dest: string, --apps: string] {
+def query-latest-cicd [dest: string, --apps: string, --show-running-detail] {
   let apps = (get-pipeline-conf $dest --apps $apps)
   check-envs
   for app in $apps {
@@ -223,6 +230,12 @@ def query-latest-cicd [dest: string, --apps: string] {
     echo 'URL of the latest pipeline:'; hr-line
     echo ($ci.data.pipelines | first | get-pipeline-url --as-raw-string)
     echo (char nl)
+    if ($show_running_detail) {
+      let running = $ci.data.pipelines | where status == 'Running'
+      if ($running | length) == 0 { return }
+      echo $'Detail of the running pipelines:'; hr-line
+      $running | get ID | each {|it| query-cicd-by-id $it }
+    }
   }
 }
 
@@ -264,7 +277,7 @@ def create-cicd [aid: int, appName: string, branch: string, pipeline: string] {
   # Query the ID of newly created CICD
   mut ci = (curl --silent -H (get-auth) --data-raw $'($cicd | to json)' $cicdUrl | from json)
   # Check session expired, and renew if needed
-  if ($ci | describe) == 'string' and ($ci =~ 'auth failed') {
+  if (should-retry $ci) {
     renew-session
     $ci = (curl --silent -H (get-auth) --data-raw $'($cicd | to json)' $cicdUrl | from json)
   }
@@ -281,7 +294,7 @@ def run-cicd [id: int, appid: int, pid: int] {
   mut run = (curl --silent -H (get-auth) -X POST $runUrl | from json)
   let url = $'($ERDA_HOST)/terminus/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
   # Check session expired, and renew if needed
-  if ($run | describe) == 'string' and ($run =~ 'auth failed') {
+  if (should-retry $run) {
     renew-session
     $run = (curl --silent -H (get-auth) -X POST $runUrl | from json)
   }
@@ -297,7 +310,7 @@ def stop-cicd [id: int] {
   let cancelUrl = $'($ERDA_HOST)/api/terminus/cicds/($id)/actions/cancel'
   mut run = (curl --silent -H (get-auth) -X POST $cancelUrl | from json)
   # Check session expired, and renew if needed
-  if ($run | describe) == 'string' and ($run =~ 'auth failed') {
+  if (should-retry $run) {
     renew-session
     $run = (curl --silent -H (get-auth) -X POST $cancelUrl | from json)
   }
@@ -313,7 +326,7 @@ def query-cicd-by-id [id: int] {
   mut query = (curl --silent -H (get-auth) $queryUrl | from json)
 
   # Check session expired, and renew if needed
-  if ($query | describe) == 'string' and ($query =~ 'auth failed') {
+  if (should-retry $query) {
     renew-session
     $query = (curl --silent -H (get-auth) $queryUrl | from json)
   }
