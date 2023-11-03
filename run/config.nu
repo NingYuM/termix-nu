@@ -166,12 +166,31 @@ def nu-backup-main [] { cp -r ~/.cargo/bin/nu* ~/Applications/nu-main/ }
 def nu-restore-main [] { cp -r ~/Applications/nu-main/* ~/.cargo/bin/; print $'Please restart Nu session...' }
 # 将 ~/Applications/nu-latest/ 中的 Nu 二进制文件恢复到本地 Cargo 安装目录
 def nu-use-latest [] { cp -r ~/Applications/nu-latest/* ~/.cargo/bin/; print $'Please restart Nu session...' }
+# 将 ~/Applications/nu-nightly/ 中的 Nu 二进制文件恢复到本地 Cargo 安装目录
+def nu-use-nightly [] { cp -r ~/Applications/nu-nightly/* ~/.cargo/bin/; print $'Please restart Nu session...' }
 # 将官方发布的最新版 Nu 二进制文件下载到本地并安装到 ~/Applications/nu-latest/ 目录
 def nu-fetch-latest [] {
   cd ~/Applications/nu-latest/
   curl -s https://api.github.com/repos/nushell/nushell/releases/latest | grep browser_download_url | cut -d '"' -f 4 | grep x86_64-apple-darwin  | aria2c -i -
   mkdir nu-latest; tar xvf nu-*.tar.gz --directory=nu-latest
   cp -r nu-latest/**/* .; rm -rf nu-*
+  $'(char nl)Update to Nu: (ansi g)(./nu --version)(ansi reset)'
+}
+
+# 将每日構建发布的最新版 Nu 二进制文件下载到本地并安装到 ~/Applications/nu-nightly/ 目录
+def nu-fetch-nightly [] {
+  cd ~/Applications/nu-nightly
+  http get https://api.github.com/repos/nushell/nightly/releases
+    | sort-by -r published_at
+    | select tag_name name published_at assets_url assets
+    | first
+    | get assets
+    | get browser_download_url
+    | filter { $in =~ 'x86_64-darwin-full' }
+    | get 0
+    | aria2c -i -
+  mkdir nu-nightly; tar xvf nu-*.tar.gz --directory=nu-nightly
+  cp -r nu-nightly/**/* .; rm -rf nu-*
   $'(char nl)Update to Nu: (ansi g)(./nu --version)(ansi reset)'
 }
 
