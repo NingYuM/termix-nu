@@ -7,7 +7,7 @@
 # REF:
 #   - [DingTalk Robot API](https://open.dingtalk.com/document/robots/custom-robot-access)
 # TODO:
-#   - [ ] 支持同时向多个机器人发送消息
+#   - [x] 支持同时向多个机器人发送消息, 多个 Token 用 `,` 分隔
 #   - [ ] 支持 `actionCard`, `feedCard` 类型消息
 #   - [ ] 升级 OR 创建对应 Erda Action
 # Usage:
@@ -42,11 +42,19 @@ export def 'dingtalk notify' [
   if $type not-in ['text', 'link', 'markdown'] { echo $'(ansi r)Invalid message type. Bye~(ansi reset)'; exit 7 }
 
   check-envs
-  let sign = get-sign
-  let query = { access_token: $env.DINGTALK_ROBOT_AK, timestamp: $sign.timestamp, sign: $sign.sign }
-  let payload = get-msg-payload --type $type --title $title --text $text --msg-url $msg_url --pic-url $pic_url --at-all $at_all --at-mobiles $at_mobiles
-  let ding = http post -t application/json $'($DINGTALK_API)?($query | url build-query)' $payload
-  if ($ding.errcode != 0) { echo $ding.errmsg; exit 7 }
+  let tokens = $env.DINGTALK_ROBOT_AK | str trim | split row ','
+  let secrets = $env.DINGTALK_ROBOT_SECRET | str trim | split row ','
+  if ($tokens | length) != ($secrets | length) {
+    echo 'Invalid DINGTALK_ROBOT_AK or DINGTALK_ROBOT_SECRET config, length mismatch!'; exit 7
+  }
+
+  for tk in $tokens --numbered {
+    let sign = get-sign ($secrets | get $tk.index)
+    let query = { access_token: $tk.item, timestamp: $sign.timestamp, sign: $sign.sign }
+    let payload = get-msg-payload --type $type --title $title --text $text --msg-url $msg_url --pic-url $pic_url --at-all $at_all --at-mobiles $at_mobiles
+    let ding = http post -t application/json $'($DINGTALK_API)?($query | url build-query)' $payload
+    if ($ding.errcode != 0) { echo $ding.errmsg; exit 7 }
+  }
   echo 'Bravo, DingTalk message sent successfully.'
 }
 
@@ -82,11 +90,10 @@ def get-msg-payload [
   match $type { 'text' => $TEXT_MSG, 'link' => $LINK_MSG, 'markdown' => $MARKDOWN_MSG, _ => $TEXT_MSG }
 }
 
-# Get signature and timestamp for DingTalk query params
-def get-sign [] {
+# Get signature and timestamp for DingTalk query params by secret
+def get-sign [secret: string] {
   if not (is-installed openssl) { echo 'Please install `openssl` first.'; exit 2 }
   let timestamp = date now | format date '%s000'
-  let secret = $env.DINGTALK_ROBOT_SECRET
   let sign = $'($timestamp)(char nl)($secret)' | openssl dgst -sha256 -hmac $secret -binary | encode base64
   { timestamp: $timestamp, sign: $sign }
 }
