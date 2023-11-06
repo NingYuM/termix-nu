@@ -63,6 +63,11 @@ ver: _setup
   version: $ver, commit: (git rev-parse $ver | str substring 0..7),   \
   manual: 'https://fe-docs.app.terminus.io/termix/termix-nu' } | print
 
+# Syncronize doc from termix-nu to fe-docs repo
+[private]
+sync-doc: _setup
+  @cd $env.TERMIX_DIR; cp README.md ../fe-docs/docs/termix/termix-nu.md
+
 # Upgrade termix-nu repo to the latest version
 upgrade:
   @cd {{_termix}}; git checkout master; git pull --tags; git pull origin (git tag -l --sort=-v:refname | lines | select 0) --ff-only;

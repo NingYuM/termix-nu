@@ -705,7 +705,7 @@ t trigger-sync feature/sync
 
 **功能描述**:
 
-自从 Erda 启用多因子认证后想通过快捷方式部署 Erda 流水线变得很困难，本命令行工具可以通过一条命令执行指定流水线。相比于通过浏览器登录 Erda 找到对应项目里对应应用的对应流水线，然后手工创建并执行来说还是方便许多。而且本工具不仅支持单个应用的部署，还支持多个应用批量部署（不限于前端应用或者后端应用，理论上只要能通过流水线部署的应用都可以支持）。
+自从 Erda 启用多因子认证后想通过快捷方式部署 Erda 流水线变得很困难，本命令行工具可以通过一条命令执行指定流水线（也支持终止指定流水线的运行）。相比于通过浏览器登录 Erda 找到对应项目里对应应用的对应流水线，然后手工创建并执行来说还是方便许多。而且本工具不仅支持单个应用的部署，还支持多个应用批量部署（不限于前端应用或者后端应用，理论上只要能通过流水线部署的应用都可以支持）。
 
 在执行流水线部署之前默认会做两重检查：
 
@@ -779,6 +779,7 @@ t trigger-sync feature/sync
 - `dest`: 选填，待执行的目标流水线，默认值为 `dev`，对于上述**步骤 2**的 **toml** 配置 `erda` 下面有两个 Key：`dev` & `test`, 所以 `dest` 的取值也只能是这两个(可以通过 `t dp -l` 查询所有可能的部署目标);
 - `--force` 或者 `-f` 参数跳过检查步骤，强制部署应用
 - `--list` 或者 `-l` 列出所有可能的部署目标及应用信息
+- `--stop-by-id` 或 `-s` 根据流水线 ID 终止对应的正在运行的流水线
 - `--apps` 或者 `-a` 指定需要批量部署的应用，多个应用以","分隔，在多应用模式下必须指定(`-a all`或者`--apps all`代表选择指定目标下的所有应用)，单应用模式忽略
 - `--help` 或者 `-h` 查看帮助信息
 
@@ -842,7 +843,215 @@ t dq dev -a all
 
 ---
 
-### 23. Homebrew 镜像加速{#brew-speed-up}
+### 23. 在手机端执行或者查询 Erda 流水线{#erda-pipeline-in-mobile}
+
+本功能并非 `termix-nu` 直接提供的，但使用的基础能力是基于 `termix-nu` 的，所以也放在这里顺便提一下。要想在手机端执行或者查询 Erda 流水线需要在手机上安装 GitHub App，借助其可以在手机端执行 Workflow 的能力达到目的。为了方便大家使用特封装了一个 Github Action: [`hustcer/erda-pipeline`](https://github.com/hustcer/erda-pipeline)，并附有配套的使用文档。大家可以参考文档配置试试，有问题随时反馈。
+
+### 24. 钉钉机器人群发消息{#dingtalk-msg}
+
+**功能描述**:
+
+本命令对钉钉机器人消息发送接口进行了一些简单的封装，使得您通过一条简单的命令即可通过钉钉群自定义机器人发送消息。目前支持的消息类型有: `text`, `link`, `markdown`, 默认消息类型为 `text`。支持通过环境变量关闭消息发送；支持同时向多个钉钉机器人发送消息。
+
+**命令格式**: `ding-msg *OPTIONS`
+
+**参数说明**:
+
+- `--help` 或者 `-h` 查看本命令的帮助信息
+- `--type` 或 `-t` 消息类型，默认为：`text`, 其他可选类型：`link`, `markdown`
+- `--title` 消息标题, 对 `link`, `markdown` 类型消息有效
+- `--text` 消息内容, 对 `text`, `link`, `markdown` 类型消息有效
+- `--msg-url` 消息链接, 对 `link` 类型消息有效
+- `--pic-url` 图片链接, 对 `link` 类型消息有效
+- `--at-all` 是否@所有人, 若是则不再单独@指定人, 不支持 `link` 类型消息
+- `--at-mobiles` 被@人的手机号, 多个手机号用 `,` 分隔, 不支持 `link` 类型消息
+
+**环境变量**:
+
+本命令的执行依赖三个环境变量, 可以在 `termix-nu` 的 `.env` 文件里面进行配置，也可以参考 `.env-example` 里的配置：
+
+- `DINGTALK_NOTIFY`: `on` 表示打开, `off` 关闭, 没有设置也是关闭。
+- `DINGTALK_ROBOT_AK`: 钉钉机器人的 Access Token，多个 Token 之间用英文 `,` 分隔；
+- `DINGTALK_ROBOT_SECRET`: 钉钉机器人的加签密钥，多个密钥之间用英文 `,` 分隔；
+- 如果 **AK** 和 **SECRET** 配置了多个需要确保二者的数目相等，而且顺序一致；
+
+**使用举例**:
+
+```bash
+# 发送文本类型消息
+t ding-msg --text 你好啊
+# 发送文本类型消息，并@所有人
+t ding-msg --text 你好啊 --at-all
+# 发送文本类型消息，并通过手机号@指定人
+t ding-msg --text 你好啊 --at-mobiles 13800138000,13800138001
+# 发送链接类型消息
+t ding-msg --type link --title 欢迎访问端点科技 --msg-url https://terminus.io/ --text '作为国内领先的新商业软件提供商，致力于用平台化、端到端的软件生态方式，为全球各行各业的客户提供全方位的软件产品、解决方案和技术服务'
+# 发送 MarkDown 类型消息, 注意：中英混排的时候为了防止文案被解析为多个参数可以在外面多加一对引号，如下：
+t ding-msg --type markdown --title 欢迎访问端点科技 --text "'## 端点科技 <br/> 欢迎访问 <br/> 友情链接 <br/> [端点科技](https://terminus.io/)'"
+```
+
+---
+
+### 25. 在 Erda 流水线里通过钉钉机器人群发消息{#dingtalk-msg-in-erda}
+
+本功能并非 `termix-nu` 直接提供的，但使用的基础能力是基于 `termix-nu` 的 `ding-msg` 命令。为了方便大家在 Erda 流水线中使用对配置步骤进行了简化，按照如下操作即可。
+
+:::info
+
+Erda 其实提供了 [`dingtalk-robot-msg`](https://www.erda.cloud/market/action/dingtalk-robot-msg), 但是这个 Action 不太能满足我的需求：
+1. 允许同一个流水线配置文件在开发、测试环境不必发送通知，只在预发和生产执行成功后发送通知；
+2. 或许可以通过 [`if`](https://docs.erda.cloud/2.2/manual/dop/guides/reference/pipeline.html#if) 让 Action 根据条件来执行，但是如果条件不满足的时候直接标记为执行失败，这个不是我希望的结果，另外“目前 pipeline 执行的时候假如没有加入条件执行，那么当一个任务失败，下面的任务就会自动失败”，这个也不是我希望的；
+3. 需要支持同时向多个钉钉机器人发送通知，因为关心这条流水线执行结果的群可能不止一个；
+
+正是因为如上原因才重新实现了这个功能。当然为了方便大家使用，未来不排除会将本功能移植到 Erda Action 里面。
+:::
+
+步骤一:
+
+在应用目录里面添加一个脚本文件比如 `dingtalk-notify.nu`, 内容如下:
+
+```bash
+const DINGTALK_API = 'https://oapi.dingtalk.com/robot/send'
+# 链接类型消息的默认图片
+const DEFAULT_PIC = 'https://img.alicdn.com/imgextra/i3/O1CN014pnilM25N0WkhbzTq_!!6000000007513-2-tps-1385-1249.png'
+
+# Send a message to DingTalk Group by a custom robot
+# 依赖环境变量:
+#   - `DINGTALK_NOTIFY`: 'on' 打开, 'off' 关闭, 未设置也是关闭;
+#   - `DINGTALK_ROBOT_AK`, `DINGTALK_ROBOT_SECRET`: 钉钉群通知机器人的 `Access Token` 和 `Secret`;
+export def 'dingtalk notify' [
+  --type(-t): string = 'text',  # 消息类型，默认为：`text`, 其他可选类型：`link`, `markdown`
+  --title: string,              # 消息标题, 对 `link`, `markdown` 类型消息有效
+  --text: string,               # 消息内容, 对 `text`, `link`, `markdown` 类型消息有效
+  --msg-url: string,            # 消息链接, 对 `link` 类型消息有效
+  --pic-url: string,            # 图片链接, 对 `link` 类型消息有效
+  --at-all,                     # 是否@所有人, 若是则不再单独@指定人, 不支持 'link' 类型消息
+  --at-mobiles: string = '',    # 被@人的手机号,多个手机号用 `,` 分隔, 不支持 'link' 类型消息
+] {
+  let enableNotify = (get-env DINGTALK_NOTIFY 'off' | str trim | str downcase) == 'on'
+  let notifyTip = $'DingTalk notification is (ansi r)disabled(ansi reset), to enable it (ansi g)set `DINGTALK_NOTIFY` to `on`(ansi reset) in pipeline environment. Bye~'
+  if not $enableNotify { echo $notifyTip; exit 0 }
+  if $type not-in ['text', 'link', 'markdown'] { echo $'(ansi r)Invalid message type. Bye~(ansi reset)'; exit 7 }
+
+  check-envs
+  let tokens = $env.DINGTALK_ROBOT_AK | str trim | split row ','
+  let secrets = $env.DINGTALK_ROBOT_SECRET | str trim | split row ','
+  if ($tokens | length) != ($secrets | length) {
+    echo 'Invalid DINGTALK_ROBOT_AK or DINGTALK_ROBOT_SECRET config, length mismatch!'; exit 7
+  }
+
+  for tk in $tokens --numbered {
+    let sign = get-sign ($secrets | get $tk.index)
+    let query = { access_token: $tk.item, timestamp: $sign.timestamp, sign: $sign.sign }
+    let payload = get-msg-payload --type $type --title $title --text $text --msg-url $msg_url --pic-url $pic_url --at-all $at_all --at-mobiles $at_mobiles
+    let ding = http post -t application/json $'($DINGTALK_API)?($query | url build-query)' $payload
+    if ($ding.errcode != 0) { echo $ding.errmsg; exit 7 }
+  }
+  echo 'Bravo, DingTalk message sent successfully.'
+}
+
+# Get the specified env key's value or ''
+def get-env [
+  key: string,       # The key to get it's env value
+  default?: string,  # The default value for an empty env
+] {
+  $env | get -i $key | default $default
+}
+
+# Check if some command available in current shell
+def is-installed [ app: string ] {
+  (which $app | length) > 0
+}
+
+# Get message payload for DingTalk Robot
+def get-msg-payload [
+  --type(-t): string = 'text',  # 消息类型，默认为：`text`, 其他可选类型：`link`, `markdown`
+  --title: string,              # 消息标题, 对 `link`, `markdown` 类型消息有效
+  --text: string,               # 消息内容, 对 `text`, `link`, `markdown` 类型消息有效
+  --msg-url: string,            # 消息链接, 对 `link` 类型消息有效
+  --pic-url: string,            # 图片链接, 对 `link` 类型消息有效
+  --at-all: bool = false,       # 是否@所有人, 若是则不再单独@指定人, 不支持 'link' 类型消息
+  --at-mobiles: string = '',    # 被@人的手机号,多个手机号用 `,` 分隔, 不支持 'link' 类型消息
+] {
+  let mention = {
+    atMobiles: ($at_mobiles | str replace -a ' ' '' | split row ',')
+    isAtAll: $at_all,     # 是否@所有人, 若是则不再单独@指定人, 不支持 'link' 类型消息
+  }
+
+  let TEXT_MSG = {
+    at: $mention, msgtype: 'text', text: { 'content': $text }
+  }
+
+  let picUrl = if ($pic_url | str trim | is-empty) { $DEFAULT_PIC } else { $pic_url }
+  let LINK_MSG = {
+    msgtype: 'link',
+    link: { title: $title, text: $text, messageUrl: $msg_url, picUrl: $picUrl }
+  }
+
+  let MARKDOWN_MSG = {
+    at: $mention, msgtype: 'markdown', markdown: { title: $title, text: $text }
+  }
+
+  match $type { 'text' => $TEXT_MSG, 'link' => $LINK_MSG, 'markdown' => $MARKDOWN_MSG, _ => $TEXT_MSG }
+}
+
+# Get signature and timestamp for DingTalk query params by secret
+def get-sign [secret: string] {
+  if not (is-installed openssl) { echo 'Please install `openssl` first.'; exit 2 }
+  let timestamp = date now | format date '%s000'
+  let sign = $'($timestamp)(char nl)($secret)' | openssl dgst -sha256 -hmac $secret -binary | encode base64
+  { timestamp: $timestamp, sign: $sign }
+}
+
+# Check if the required environment variable was set, quit if not
+def check-envs [] {
+  let envs = ['DINGTALK_ROBOT_AK' 'DINGTALK_ROBOT_SECRET']
+  let empties = ($envs | filter {|it| $env | get -i $it | is-empty })
+  if ($empties | length) > 0 {
+    print $'Please set (ansi r)($empties | str join ',')(ansi reset) in your environment first...'
+    exit 5
+  }
+}
+
+alias main = dingtalk notify
+```
+
+步骤二：
+
+在流水线里添加如下节点:
+
+```yml
+- stage:
+   - custom-script:
+      alias: dingtalk-notify
+      version: '2.0'
+      image: registry.erda.cloud/erda-actions/terminus-debian-node:18.17-lts
+      commands: |-
+      pnpm i nushell@0.86 -g
+      nu -c "version"
+      cd ${{ dirs.git-checkout }}
+      COMMIT_SHA=$(git rev-parse HEAD | cut -c 1-8)
+      OPERATOR_NAME=$([ "((pipeline.trigger.mode))" == "cron" ]  && echo "定时任务" || echo "((dice.operator.name))")
+      nu dingtalk-notify.nu --type link \
+         --title "🎉 Terp-UI ($GITTAR_BRANCH 分支) 移动端部署完成 🎉" \
+         --text "$OPERATOR_NAME 部署了 Terp-UI $DICE_WORKSPACE 环境，SHA: $COMMIT_SHA，点击查看详情！" \
+         --msg-url "https://erda.cloud/terminus/dop/projects/190/apps/11969/pipeline/obsoleted?pipelineID=$PIPELINE_ID"
+```
+
+步骤三：
+
+配置以下流水线环境变量：
+
+- `DINGTALK_NOTIFY`: `on` 表示打开, `off` 关闭, 没有设置也是关闭。
+- `DINGTALK_ROBOT_AK`: 钉钉机器人的 Access Token，多个 Token 之间用英文 `,` 分隔；
+- `DINGTALK_ROBOT_SECRET`: 钉钉机器人的加签密钥，多个密钥之间用英文 `,` 分隔；
+- 如果 **AK** 和 **SECRET** 配置了多个需要确保二者的数目相等，而且顺序一致；
+
+完成以上三步应该就可以发送钉钉群机器人通知了，赶紧试试吧。
+
+---
+
+### 26. Homebrew 镜像加速{#brew-speed-up}
 
 **功能描述**: 由于众所周知的原因 `brew` 更新或者安装应用的时候会比较慢，本工具可以通过给 `brew` 设置国内镜像的方式来提速，同时允许用户恢复到初始设置。
 
@@ -867,7 +1076,7 @@ t brew-speed-up off
 
 ---
 
-### 24. 查看团队成员当前 EMP 工时填报情况{#emp}
+### 27. 查看团队成员当前 EMP 工时填报情况{#emp}
 
 **功能描述**: 查看团队成员当前 EMP 工时填报情况
 
@@ -898,7 +1107,7 @@ t emp true true
 
 ---
 
-### 25. 给标品源码仓库批量打 Tag{#gaia-release}
+### 28. 给标品源码仓库批量打 Tag{#gaia-release}
 
 **功能描述**: 在标品前端需要发布新版本的时候将标品 `gaia-mall,gaia-mobile,gaia-picker` 等源码仓库指定分支批量打 Release Tag, 也可以用于删除指定 Tag
 
@@ -924,7 +1133,7 @@ t gaia-release v2.2.0.21-2021.11.09 mall,mobile
 
 ---
 
-### 26. 给远程二开仓库批量打 Tag{#tag-redev}
+### 29. 给远程二开仓库批量打 Tag{#tag-redev}
 
 **功能描述**: 给远程二开仓库指定分支批量打 Release Tag, 目前前端二开仓库含增量、全量及所有业态有 13 个，人工挨个仓库打 Tag 是不现实的，也很容易出错。另外，该命令也可以用于删除指定 Tag。
 
@@ -952,7 +1161,7 @@ t tag-redev v2.2.0.21-2021.11.09 master
 
 ---
 
-### 27. 查询二开仓库的远程分支及 Tag 信息{#ls-redev-refs}
+### 30. 查询二开仓库的远程分支及 Tag 信息{#ls-redev-refs}
 
 **功能描述**:
 
@@ -976,7 +1185,7 @@ t ls-redev-refs b2c,b2b true
 
 ---
 
-### 28. 批量更新远程二开仓库代码到本地{#pull-redev}
+### 31. 批量更新远程二开仓库代码到本地{#pull-redev}
 
 **功能描述**: 更新远程二开仓库代码到本地，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `TERMIX_TMP_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `termixTmpPath` 配置;
 
@@ -997,7 +1206,7 @@ t pull-redev
 t pull-redev develop true
 ```
 
-### 29. 扫描(清理)同步仓库里面冗余分支{#prune-branches}
+### 32. 扫描(清理)同步仓库里面冗余分支{#prune-branches}
 
 **功能描述**: 随着时间的推移各个部署环境的仓库里面可能存在很多不需要的分支，尤其是之前通过流水线同步的方式不会自动清理源分支不存在的同步分支，这些分支需要被清理掉，否则部署的时候找流水线也不太方便(这真的不是强行加的理由)，本脚本的作用就是扫描出这些分支，但是安全起见不会直接执行删除操作，只是提示用户这些分支是可以被清理掉的，最终还是需要用户去手工确认删掉, 可清理分支的判定原则就是读取全局同步配置: `i` 分支上的 `.termixrc` 文件然后不在同步配置里面的**部署仓库分支**即为可删除分支，如果确认的时候该分支也不是部署中的分支大概率是可以删掉的了;
 
