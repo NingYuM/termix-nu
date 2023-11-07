@@ -27,13 +27,21 @@ alias t = just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .
 # Show Nushell commands
 alias nuc = print (
   help commands | where command_type != custom and command_type != alias
-  | default '' signatures
-  | default '' decl_id
-  | reject signatures search_terms decl_id
+    | default '' decl_id
+    | default '' signatures
+    | reject signatures search_terms decl_id
 )
 # Show the count of Nushell commands
 alias nucc = print (help commands | where command_type != custom and command_type != alias | length)
-alias tokeid = print (tokei | lines | skip 1 | str join "\n" | detect columns | where {|it| $it.Language !~ "=" and $it.Language !~ "-" and (not ($it.Files | is-empty)) } | into int Files Lines Code Comments Blanks)
+alias tokeid = print (
+  tokei
+    | lines
+    | skip 1
+    | str join "\n"
+    | detect columns
+    | where {|it| $it.Language !~ "=" and $it.Language !~ "-" and (not ($it.Files | is-empty)) }
+    | into int Files Lines Code Comments Blanks
+)
 
 # ----------------------- ENV VARS ------------------------
 $env.EDITOR = 'hx'
@@ -88,7 +96,15 @@ def get-ip [] {
 
 # Update all local branches for the specified repos
 def ua [] {
-  let repos = ['nusi-slim', 'nusi-flex', 'terp-ui']
+  let repos = [
+    'terp-ui',
+    'setup-nu',
+    'nusi-slim',
+    'nusi-flex',
+    'terp-docs',
+    'termix-nu',
+    'setup-moonbit',
+  ]
   for p in $repos {
     z $p;
     print $'Pull all from (ansi p)($env.PWD)(ansi reset):'
@@ -100,7 +116,9 @@ def ua [] {
 # `git tag -l | lines | filter { $in =~ nightly } | each { git tag -d $in }`
 # Show Nu nightly builds information
 def nun [] {
-  http get https://api.github.com/repos/nushell/nightly/releases | sort-by -r created_at | select name tag_name id created_at
+  http get https://api.github.com/repos/nushell/nightly/releases
+    | sort-by -r created_at
+    | select name tag_name id created_at
 }
 
 # Pipe stdout + stderr
@@ -171,7 +189,11 @@ def nu-use-nightly [] { cp -r ~/Applications/nu-nightly/* ~/.cargo/bin/; print $
 # 将官方发布的最新版 Nu 二进制文件下载到本地并安装到 ~/Applications/nu-latest/ 目录
 def nu-fetch-latest [] {
   cd ~/Applications/nu-latest/
-  curl -s https://api.github.com/repos/nushell/nushell/releases/latest | grep browser_download_url | cut -d '"' -f 4 | grep x86_64-apple-darwin  | aria2c -i -
+  curl -s https://api.github.com/repos/nushell/nushell/releases/latest
+    | grep browser_download_url
+    | cut -d '"' -f 4
+    | grep x86_64-apple-darwin
+    | aria2c -i -
   mkdir nu-latest; tar xvf nu-*.tar.gz --directory=nu-latest
   cp -r nu-latest/**/* .; rm -rf nu-*
   $'(char nl)Update to Nu: (ansi g)(./nu --version)(ansi reset)'
@@ -335,15 +357,15 @@ def --env load-dot-env [
 
 def "cargo search" [ query: string, --limit=10 ] {
   ^cargo search $query --limit $limit
-  | lines
-  | each { |line|
-    if ($line | str contains "#") {
-      $line | parse --regex '(?P<name>.+) = "(?P<version>.+)" +# (?P<description>.+)'
-    } else {
-      $line | parse --regex '(?P<name>.+) = "(?P<version>.+)"'
-    }
-  }
-  | flatten
+    | lines
+    | each { |line|
+        if ($line | str contains "#") {
+          $line | parse --regex '(?P<name>.+) = "(?P<version>.+)" +# (?P<description>.+)'
+        } else {
+          $line | parse --regex '(?P<name>.+) = "(?P<version>.+)"'
+        }
+      }
+    | flatten
 }
 
 # Count Nu source codes
