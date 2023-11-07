@@ -27,7 +27,7 @@ export def main [] {
   # Alternatively since nushell v0.40.0 you can use the following line, which is longer but more readable
   # git ls-remote --heads --refs origin | detect columns -n | rename cid name |
   #     update name { get name | str replace 'refs/heads/' '' } | get name
-  let remoteBranches = (git ls-remote --heads --refs origin | lines | each { str substring 52.. })
+  let remoteBranches = (git ls-remote --heads --refs origin | lines | par-each -k { str substring 52.. })
   let allDescribed = ($remoteBranches | where (no-desc $descriptions $it) | str join | str trim | is-empty)
 
   if ($allDescribed) {
@@ -48,7 +48,7 @@ export def main [] {
       | query json 'descriptions'
       | transpose name description
       | get name
-      | each { |br| if not (has-ref origin/($br)) { $br } }
+      | par-each -k { |br| if not (has-ref origin/($br)) { $br } }
       | compact
   )
 

@@ -17,7 +17,7 @@ export def main [
   --parent(-p): string,  # If no dirs specified, run the command in all subdirs of specified parent dir
 ] {
 
-  let dest = ($dirs | str trim | split row ' '| compact | each { |it| [$parent $it] | path join })
+  let dest = ($dirs | str trim | split row ' '| compact | par-each -k { |it| [$parent $it] | path join })
   let children = (ls $parent | where type == dir | get name)
   let destDirs = (if ($dirs | is-empty) { $children } else { $dest })
   let cmdToExec = (compose-command $cmd)

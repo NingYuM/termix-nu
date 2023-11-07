@@ -21,7 +21,7 @@ export def 'git diff-commit' [
   let diff = (
     git rev-list --ancestry-path $'($from)..($to)'
       | lines
-      | each { git show -s --format=%cn---%h---%ci---%B $in | str trim }
+      | par-each -k { git show -s --format=%cn---%h---%ci---%B $in | str trim }
       | split column '---'
       | rename Author SHA Date Message
       | upsert Date { $in.Date | format date $_TIME_FMT }

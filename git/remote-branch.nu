@@ -27,7 +27,7 @@ export def git-remote-branch [
   let basic = (
     git ls-remote --heads --refs $alias
     | lines
-    | each { str substring 52.. }
+    | par-each -k { str substring 52.. }
     | wrap name
     | upsert local { |it|  if (has-ref $it.name) { '   √' }}
     | upsert author { |it| git show $"remotes/($alias)/($it.name)" -s --format='%an' | str trim }

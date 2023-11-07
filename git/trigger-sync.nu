@@ -148,7 +148,7 @@ def sync-branch [
   if ($dests == null) { exit 0 }
 
   let syncDests = ($dests | upsert SYNC {
-      get repo | each { |it| if ($',($ignored),' =~ $',($it),') { '   x' } else { '   √' } }
+      get repo | par-each { |it| if ($',($ignored),' =~ $',($it),') { '   x' } else { '   √' } }
     } | upsert source $branch | move source --before dest | sort-by SYNC)
   # 如果没有找到对应分支的 push hook 配置则直接退出
   if ($syncDests | length) > 0 {
