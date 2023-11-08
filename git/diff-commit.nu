@@ -11,14 +11,17 @@ use ../utils/common.nu [has-ref, _TIME_FMT]
 
 # Show commit info diff between two commits, support grep in Author,SHA,Date and Message fields
 export def 'git diff-commit' [
-  --from(-f): string,         # Diff from commit hash
-  --to(-t): string = 'HEAD',  # Diff to commit hash
-  --grep(-g): string,         # Find commits in Author,SHA,Date and Message fields by keyword
+  --from(-f): string,             # Diff from commit hash
+  --to(-t): string = 'HEAD',      # Diff to commit hash
+  --grep(-g): string,             # Find commits in Author,SHA,Date and Message fields by keyword
+  --not-contain(-C): string,      # Exclude commits that contain specified keyword in commit message
+  --exclude-shas(-H): string,     # Exclude commits by SHAs
+  --exclude-authors(-A): string,  # Exclude commits by authors
 ] {
   if not (has-ref $from) { echo $'Commit hash or ref (ansi p)($from)(ansi reset) not found'; exit 7 }
   if not (has-ref $to) { echo $'Commit hash or ref (ansi p)($to)(ansi reset) not found'; exit 7 }
 
-  let diff = (
+  mut diff = (
     git rev-list --ancestry-path $'($from)..($to)'
       | lines
       | par-each -k { git show -s --format=%cn---%h---%ci---%B $in | str trim }
@@ -29,6 +32,18 @@ export def 'git diff-commit' [
   if ($diff | is-empty) {
     echo $'No modification between (ansi p)($from)(ansi reset) and (ansi p)($to)(ansi reset)'
     exit 0
+  }
+
+  if not ($not_contain | is-empty) {
+    $diff = ($diff | where Message !~ $not_contain)
+  }
+  if not ($exclude_shas | is-empty) {
+    let SHAs = $exclude_shas | split row ','
+    $diff = ($diff | filter {|it| $it.SHA not-in $SHAs })
+  }
+  if not ($exclude_authors | is-empty) {
+    let authors = $exclude_authors | split row ','
+    $diff = ($diff | filter {|it| $it.Author not-in $authors })
   }
   if ($grep | is-empty) {
     echo $'(char nl)Modification between (ansi p)($from)(ansi reset) and (ansi p)($to)(ansi reset): (char nl)'
