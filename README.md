@@ -703,6 +703,44 @@ t trigger-sync feature/sync
 
 ---
 
+### 21. Git 提交记录比较{#git-diff-commit}
+
+**功能描述**:
+
+在项目上线后的每一次发版都要很谨慎，尤其是对于预发和生产的分支，在某些情况下需要知道当前分支的最近一次发布和最新的 Commit 之间究竟有哪些 Commit, 这些 Commit 是谁在什么时候提交的？提交信息是什么样的？SHA 值是什么？你可能需要这个数据跟每一位研发确认，或者可能需要拉个 hotfix 分支并 cherry-pick 其中的某些 Commit 然后单独发个修复版本。这种情况就比较适合用这个命令：`git-diff-commit`
+
+**命令格式**: `git-diff-commit {flags}`
+
+**参数说明**:
+
+- `-f`, `--from` <String> - 需要比较的起始 Commit SHA
+- `-t`, `--to` <String> - 需要比较的终止 Commit SHA 或 ref (默认: 'HEAD')
+- `-g`, `--grep` <String> - 在Commit的 Author,SHA,Date 和备注字段搜索指定关键字
+- `-C`, `--not-contain` <String> - 筛选提交备注里面不包含特定关键字的 Commit
+- `-H`, `--exclude-shas` <String> - 排除特定的 SHA，多个值可以用 `,` 分隔
+- `-A`, `--exclude-authors` <String> - 排除特定的 Author，多个值可以用 `,` 分隔
+- `-h`, `--help` - 显示本命令的帮助信息
+
+**使用举例**:
+
+```bash
+# 基本使用
+t git-diff-commit -f d3d9e66e7 -t 1d70d99b
+# -t 的默认值是 HEAD，所以这个参数也可以不加
+t git-diff-commit -f d3d9e66e7 -t HEAD
+t git-diff-commit -f HEAD~9 -t HEAD
+# Commit diff 结果里面搜索特定关键字
+t git-diff-commit -f develop -t feature/latest -g 'feat:'
+# Commit diff 结果里面排除特定提交者
+t git-diff-commit -f HEAD~9 -A author1,author2
+```
+
+**输出样例**:
+
+![Git Commit Diff Output](https://img.alicdn.com/imgextra/i3/O1CN01vvK30h1jCXwdRze9m_!!6000000004512-2-tps-2848-684.png)
+
+---
+
 ### 21. 从命令行执行 Erda 流水线{#run-pipeline}
 
 **功能描述**:
