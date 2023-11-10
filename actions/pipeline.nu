@@ -209,9 +209,7 @@ def get-pipeline-url [--as-raw-string] {
   let pid = $pipeline.filterLabels.projectID
   let link = $'($ERDA_HOST)/terminus/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
   if $as_raw_string { $link } else {
-    # FIXME: 无法正确渲染链接, 因为 ansi link 在 extra feature 里面
-    # $link | ansi link --text $'($id)'
-    return $id
+    $link | ansi link --text $'($id)'
   }
 }
 
