@@ -76,6 +76,7 @@ export def get-latest-nightly-build [
       | insert hash { $latest.tag_name | parse 'nightly-{hash}' | get 0.hash }
 
   let destDir = (which nu).path | path dirname | path join 'nu-nightly'
+  if not ($destDir | path exists) { mkdir $destDir }
 
   if (is-installed aria2c) {
     aria2c $target.browser_download_url --dir $destDir --out $target.name
@@ -91,7 +92,8 @@ export def get-latest-nightly-build [
       cd $destDir
       tar xvf nu-*.tar.gz --directory $destDir
       rm nu-*.tar*gz; cd ..
-      cp -r nu-nightly/nu-*/* .
+      # `sudo` is required to move the files to `/usr/local/bin` on macOS
+      sudo cp -r nu-nightly/nu-*/* .
       rm -rf nu-nightly
       print $'(char nl)Update to Nu: (ansi g)(./nu --version) - (./nu -c "version | get commit_hash")(ansi reset)'
       print $'Please restart Nu session to use the latest nightly release...'
