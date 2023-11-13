@@ -14,6 +14,7 @@ export def get-latest-nightly-build [
   --interactive(-i),    # ask the user to choose the target architecture
   target: string = ''   # the target architecture, matches all of them by default
 ]: nothing -> nothing {
+
   mut target = $target
   let latest = http get https://api.github.com/repos/nushell/nightly/releases
       | sort-by published_at --reverse
@@ -35,27 +36,27 @@ export def get-latest-nightly-build [
       | get arch
 
   let arch = match ($matches | length) {
-      0 => {
-        let span = metadata $target | get span
-        error make {
-          msg: $'(ansi red_bold)No_Match_Found(ansi reset)'
-          label: {
-            start: $span.start
-            end: $span.end
-            text: $'No architecture matching this in ($latest.html_url)'
-          }
+    0 => {
+      let span = metadata $target | get span
+      error make {
+        msg: $'(ansi red_bold)No_Match_Found(ansi reset)'
+        label: {
+          start: $span.start
+          end: $span.end
+          text: $'No architecture matching this in ($latest.html_url)'
         }
-      },
-      1 => { $matches.0 },
-      _ => {
-        let choice = $matches | input list --fuzzy $'Please (ansi cyan)choose one architecture(ansi reset):'
-        if ($choice | is-empty) {
-          print 'User chose to exit, bye...'
-          return
-        }
+      }
+    },
+    1 => { $matches.0 },
+    _ => {
+      let choice = $matches | input list --fuzzy $'Please (ansi cyan)choose one architecture(ansi reset):'
+      if ($choice | is-empty) {
+        print 'User chose to exit, bye...'
+        return
+      }
 
-        $choice
-      },
+      $choice
+    },
   }
 
   let target = $latest.assets | where name !~ 'msi' | where name =~ $arch
