@@ -58,7 +58,7 @@ export def get-latest-nightly-build [
       },
   }
 
-  let target = $latest.assets | where name =~ $arch
+  let target = $latest.assets | where name !~ 'msi' | where name =~ $arch
   if ($target | length) != 1 {
     error make --unspanned {
       msg: (
@@ -99,7 +99,14 @@ export def get-latest-nightly-build [
       print $'Please restart Nu session to use the latest nightly release...'
     },
     'zip' => {
-      print $'(ansi cyan)hint(ansi reset): run `(ansi default_dimmed)unzip ($target.name) -d .(ansi reset)` to unpack the archive'
+      print $'Try to unpack the archive...'
+      cd $destDir
+      tar xvf nu-*.zip
+      rm nu-*.zip; cd ..
+      cp nu-nightly/nu_plugin_* .
+      cp nu-nightly/nu.exe nu-nightly.exe
+      rm -rf nu-nightly
+      print $'Please replace nu.exe with nu-nightly.exe manually and restart Nu session'
     },
     _ => {
       print $"Unknown extension ($build.extension), you'll have to figure out how to extract this archive ;)"
