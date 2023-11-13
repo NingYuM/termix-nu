@@ -32,7 +32,7 @@ export def main [
   let rules = ($descriptions | query json 'rules')
   print $'(char nl)(ansi p)($queryBranch) (ansi reset)分支描述：(char nl)'
   hr-line
-  print $'(char nl)($desc)(char nl)'
+  print $'(char nl)($desc | default $"(ansi grey66)-- No Description --(ansi reset)")(char nl)'
 
   if ($show_notes) {
     $rules | enumerate | each {|rule|
