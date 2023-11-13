@@ -187,6 +187,11 @@ emp showAll=('false') showPrev=('false'): _setup
     let codes = (get-env EMP_PROJECT_CODE '' | split row ','); \
     $codes | each { |code| working-hours $code --show-all {{showAll}} --show-prev {{showPrev}} } | flatten | uniq | ignore
 
+# Get the latest nightly build of Nu
+[private]
+nu-use-nightly *OPTIONS: _setup
+  @overlay use {{ join(_termix, 'actions', 'nu-nightly.nu') }}; get-latest-nightly-build {{OPTIONS}}
+
 # 给标品源码仓库打 Release Tag
 [private]
 gaia-release version=('') repos=('mall,mobile,picker') delete=('false'): _setup
