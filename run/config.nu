@@ -1,6 +1,6 @@
 # Nushell Config File
-# Update config from: 5d8763ed1
-# version = 0.86.0
+# Update config from: e8e0526f5
+# version = 0.86.1
 
 # source ~/.config/nushell/config.nu
 # Ref:
@@ -453,6 +453,7 @@ let dark_theme = {
     shape_globpattern: cyan_bold
     shape_int: purple_bold
     shape_internalcall: cyan_bold
+    shape_keyword: cyan_bold
     shape_list: cyan_bold
     shape_literal: blue
     shape_match_pattern: green
@@ -493,9 +494,9 @@ let light_theme = {
     binary: dark_gray
     cell-path: dark_gray
     row_index: green_bold
-    record: white
-    list: white
-    block: white
+    record: dark_gray
+    list: dark_gray
+    block: dark_gray
     hints: dark_gray
     search_result: {fg: white bg: red}
     shape_and: purple_bold
@@ -516,6 +517,7 @@ let light_theme = {
     shape_globpattern: cyan_bold
     shape_int: purple_bold
     shape_internalcall: cyan_bold
+    shape_keyword: cyan_bold
     shape_list: cyan_bold
     shape_literal: blue
     shape_match_pattern: green
