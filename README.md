@@ -164,6 +164,8 @@ winget install Nushell.Nushell
 
 此工具箱里面的脚本每天第一次执行的时候会检查远程是否有新版本，如果有可以通过 `t upgrade` 命令更新 `termix-nu` 到最新版本, 本质上是将本地脚本仓库更新到远程最新的 Release Tag 对应的提交，所以如果命令更新失败你也可以进入到 `termix-nu` 代码仓库所在目录直接更新 `master` 分支代码;
 
+`termix-nu` 的版本与 `nushell` 的版本是对应的，前者往往依赖 `nushell` 最新版本的一些特性, 所以如果通过 `t upgrade` 命令更新 `termix-nu` 后发现功能不正常或者提示 Nushell 版本过低可以通过 `brew outdated; brew upgrade nushell`（对于 Windows 系统可以通过 `scoop update nushell` 或者 `winget upgrade Nushell.Nushell`）命令更新。
+
 ---
 
 ### 3. 发布 `termix-nu` 新版本{#release}
@@ -808,6 +810,16 @@ t git-diff-commit -f HEAD~9 -A author1,author2
    ```
 
    在多应用模式下必须通过 `--apps` 或 `-a` 参数指定要部署或查询的应用，多个应用之间用英文逗号分隔，输入的应用名会在上述配置里面的 `appName` 和 `alias` 里面进行精确匹配，只有匹配到的应用才会被部署。可以通过 `t dp -l` 命令查询可部署的目标及应用信息。
+
+:::info
+其它说明：
+
+1. 以上配置中 `env` 的可能值只能为 `DEV`, `TEST`, `STAGING`, `PROD` 中的一个，这个参数是查询流水线执行记录不可缺少的;
+2. 在上述配置文件中还可以添加可选的 `description` 字段，用于描述该流水线是干什么的，这个描述在 `dp -l` 的时候会显示出来;
+3. 如果你在一个环境中有两个分支，这两个分支除了名字外其他配置都一样，在执行流水线的时候可能一条命令同时触发了这两条流水线，如果你只想执行其中一条流水线可以设置不同的 `alias` 来达到目的；
+4. erda.[test|dev|staging|prod] 只是示例，实际上这个字段名不重要你可以随便命名比如: `erda.xyz`, 只需要保证其值里面的数组元素结构符合要求即可；
+
+:::
 
 **命令格式**:
 
