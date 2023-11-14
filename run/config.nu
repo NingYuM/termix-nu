@@ -98,11 +98,11 @@ def get-ip [] {
 def ua [] {
   let repos = [
     'terp-ui',
-    'setup-nu',
     'nusi-slim',
     'nusi-flex',
     'terp-docs',
     'termix-nu',
+    'setup-nu',
     'setup-moonbit',
   ]
   for p in $repos {
