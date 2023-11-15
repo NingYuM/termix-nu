@@ -192,7 +192,7 @@ def nu-fetch-latest [] {
   curl -s https://api.github.com/repos/nushell/nushell/releases/latest
     | grep browser_download_url
     | cut -d '"' -f 4
-    | grep x86_64-apple-darwin
+    | grep x86_64-darwin-full
     | aria2c -i -
   mkdir nu-latest; tar xvf nu-*.tar.gz --directory=nu-latest
   cp -r nu-latest/**/* .; rm -rf nu-*
