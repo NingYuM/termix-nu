@@ -63,7 +63,7 @@ ver: _setup
   version: $ver, commit: (git rev-parse $ver | str substring 0..7),   \
   manual: 'https://fe-docs.app.terminus.io/termix/termix-nu' } | print
 
-# Syncronize doc from termix-nu to fe-docs repo
+# Synchronize doc from termix-nu to fe-docs repo
 [private]
 sync-doc: _setup
   @cd $env.TERMIX_DIR; cp README.md ../fe-docs/docs/termix/termix-nu.md
