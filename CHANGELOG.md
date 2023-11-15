@@ -1,6 +1,46 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.51.0] - 2023-11-15
+
+### Bug Fixes
+
+- Fix `git-proxy` error for the latest clashX version
+- Fix commit SHA detection for `just ver` command
+- Fix `t go` error for Nu v0.86.1, should work for Nu v0.86.0
+- Add empty response check for ERDA pipeline related commands
+- Fix `t nu-use-nightly` for nu binaries that installed by `brew` and add non-aria2c install support
+- Fix `t nu-use-nightly` for Windows
+
+### Documentation
+
+- Update FAQ.md
+- Update README.md add DingTalk related doc
+- Update README.md
+- Add doc for `git-diff-commit` command
+
+### Features
+
+- Add `t git-diff-commit` command to Show commit info diff between two commits, support grep in Author,SHA,Date and Message
+- Update `git-diff-commit` command add `--not-contain`, `--exclude-shas` and `--exclude-authors` flags
+- Add stop pipeline support by running command like `t dp --stop-by-id 123`
+- Add manual link to `t ver` and `t go`
+- Add sending messages to multiple DingTalk robots support
+- Add ansi link for querying latest CICDs
+- Add `t nu-use-nightly` private command
+- Add empty description tip for `t desc`
+- Fetch latest full release for `nu-fetch-latest` in config.nu
+
+### Miscellaneous Tasks
+
+- Add `nu-fetch-nightly` and `nu-use-nightly` to config.nu
+- Update Nu config to nushell/nushell SHA: e8e0526f5
+- Update termix-nu docs
+
+### Refactor
+
+- Use `par-each` instead of `each` whenever possible for better performance
+
 ## [1.50.0] - 2023-10-18
 
 ### Bug Fixes
