@@ -39,7 +39,6 @@ export def 'git trigger-sync' [
   let allSyncs = $conf | query json 'branches'
 
   if $list {
-    echo $'(char nl)The following branches have code syncing config:'; hr-line -b
     show-available-syncs $allSyncs --repos $repos --ignored $ignored
     exit 0
   }
@@ -67,6 +66,9 @@ def show-available-syncs [
   mut results = []
   let cross = $'(ansi light_gray)  x(ansi reset)'
   let mark = $'(ansi g)  √(ansi reset)'
+  if ($syncs | is-empty) { print $'No available syncing config found, Bye...'; exit 0 }
+
+  echo $'(char nl)The following branches have code syncing config:'; hr-line -b
   for branch in ($syncs | columns) {
     for dest in ($syncs | get $branch) {
       mut sync = { Source: $branch, Dest: $'--->  ($dest.dest)', Repo: $dest.repo }
