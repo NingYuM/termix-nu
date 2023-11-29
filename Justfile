@@ -237,9 +237,9 @@ git-sync-branch localRef localOid remoteRef: _setup
     git sync-branch {{localRef}} {{localOid}} {{remoteRef}}
 
 # 手工触发批量同步本地分支到远程指定分支
-trigger-sync branch=(`git branch --show-current`): _setup
+trigger-sync *OPTIONS: _setup
   @overlay use {{ join(_termix, 'git', 'trigger-sync.nu') }}; \
-    git trigger-sync {{branch}}
+    git trigger-sync {{OPTIONS}}
 
 # Clean possibly unused branches of synced dest repos
 [private]

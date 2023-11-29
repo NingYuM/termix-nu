@@ -20,11 +20,12 @@ export def 'git trigger-sync' [
   branch?: string,    # Local git branch/ref to push
   --all(-a),          # Whether to sync all branches that have syncing config
   --list(-l),         # List all branches that have syncing config
+  --repo(-r): string, # Specify which repo to sync to, and ignore the branch syncing config
   --force(-f),        # Whether to force sync even if refused by remote
 ] {
 
   cd $env.JUST_INVOKE_DIR
-  let $branch = $branch | str trim
+  let branch = if ($branch | is-empty) { git branch --show-current | str trim } else { $branch | str trim }
   let ignored = get-env SYNC_IGNORE_ALIAS ''
   let current = git branch --show-current | str trim
   let selected = if ($branch | is-empty) { $current } else {
@@ -53,7 +54,7 @@ export def 'git trigger-sync' [
   }
   for branch in $candidates {
     update-branch $branch
-    sync-branch $branch --all $all --ignored $ignored --force $force
+    sync-branch $branch --all $all --ignored $ignored --repo $repo --force $force
   }
 }
 
@@ -136,6 +137,7 @@ def sync-branch [
   branch: string,         # Local git branch/ref to sync
   --all(-a): bool,        # Whether to sync all branches that have syncing config
   --ignored(-i): string,  # 代码同步需要忽略推送的仓库简称，多个仓库用英文逗号分隔
+  --repo(-r): string,     # Specify which repo to sync to, and ignore the branch syncing config
   --force(-f): bool,      # Whether to force sync even if refused by remote
 ] {
 
@@ -145,7 +147,10 @@ def sync-branch [
   # 处理分支名称包含‘.’的情况: `support/release-2.4`
   let escapedBranch = $branch | str replace -a '.' '\.'
   # 获取待同步目的仓库及目的分支映射
-  let dests = $pushConf | query json $'branches.($escapedBranch)'
+  # 如果同步的时候指定了目的仓库则直接同步到指定的仓库的同名分支
+  let dests = if (not ($repo | is-empty)) and ($repo in ($pushConf | query json 'repos')) {
+    [ { repo: $repo, dest: $branch } ]
+  } else { $pushConf | query json $'branches.($escapedBranch)' }
   # 如果没有任何同步配置直接退出
   if ($dests == null) { exit 0 }
 
@@ -154,7 +159,11 @@ def sync-branch [
     } | upsert source $branch | move source --before dest | sort-by SYNC)
   # 如果没有找到对应分支的 push hook 配置则直接退出
   if ($syncDests | length) > 0 {
-    print $'(char nl)Found the following matched dests from (ansi g)`origin/($confBr):.termixrc`(ansi reset):(char nl)'
+    if not ($repo | is-empty) {
+      print $'(char nl)Going to sync to (ansi g)($repo)(ansi reset) specified by `--repo`:(char nl)'
+    } else {
+      print $'(char nl)Found the following matched dests from (ansi g)`origin/($confBr):.termixrc`(ansi reset):(char nl)'
+    }
     print ($syncDests | upsert lock {|it| if ('lock' in $it) { $it.lock } else { '-' }} | move lock --before SYNC)
   } else { exit 0 }
 
