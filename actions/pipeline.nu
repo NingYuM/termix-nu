@@ -93,7 +93,7 @@ def check-pipeline-conf [pipeline: any] {
 }
 
 # Try to load pipeline config variables from .termixrc file on i branch or current dir, or list available deploy targets
-def get-pipeline-conf [dest: string = 'dev', --apps: string, --list] {
+def get-pipeline-conf [dest: string = 'dev', --apps: string, --list, --grep: string] {
   # 本地配置文件名，优先从 i 分支上的 .termixrc 文件中读取配置
   # 如果 i 分支不存在则从当前目录下的 .termixrc 文件中读取配置
   # 如果都不存在则从 termix-nu 仓库的 .termixrc 文件中读取配置
@@ -111,7 +111,7 @@ def get-pipeline-conf [dest: string = 'dev', --apps: string, --list] {
     git fetch origin i -q; (git show 'origin/i:.termixrc' | from toml)
   } else { (open $LOCAL_CONFIG | from toml) }
   # Print available deploy targets and apps with more detail
-  if $list { show-available-targets $configFile $repoConf }
+  if $list { show-available-targets $configFile $repoConf --grep $grep }
 
   let pipeline = ($repoConf.erda | get -i $dest)
   if ($pipeline | is-empty) {
@@ -135,13 +135,17 @@ def get-pipeline-conf [dest: string = 'dev', --apps: string, --list] {
 def show-available-targets [
   configFile: string,  # 配置文件路径
   repoConf: table,     # 配置文件内容
+  --grep(-g): string,  # 仅在与 `-l` 一起使用时生效，从部署配置里面搜索name,alias或description里包含特定字符串的部署目标
 ] {
-  print $'Available deploy targets in ($configFile) are:(char nl)'
+  if ($grep | is-empty) {
+    print $'Available deploy targets in ($configFile) are:(char nl)'
+  } else {
+    print $'Available deploy targets in ($configFile) which contains ($grep) are:(char nl)'
+  }
   let upsertAlias = {|it| if ($it | get -i alias | is-empty) { $NA } else { $it.alias } }
   let upsertDescription = {|it| if ($it | get -i description | is-empty) { '-' } else { $it.description } }
   for target in ($repoConf.erda | columns) {
-    print $'Target (ansi p)($target)(ansi reset):'; hr-line 60 -c navy
-    print (
+    mut deployTarget = (
       $repoConf.erda
         | get $target
         | upsert alias $upsertAlias
@@ -149,7 +153,18 @@ def show-available-targets [
         | select appName alias branch env pipeline description
         | rename -c { appName: name }
       )
-    if ($repoConf.erda | get $target | describe) =~ 'record' { print -n (char nl) }
+    let isTable = ($deployTarget | describe) =~ 'table'
+    let isRecord = ($deployTarget | describe) =~ 'record'
+    if not ($grep | is-empty) {
+      if ($isRecord and $'($deployTarget.name)($deployTarget.alias)($deployTarget.description)' !~ $grep) { continue }
+      if $isTable {
+        $deployTarget = ($deployTarget | where {|it| $'($it.name)($it.alias)($it.description)' =~ $grep })
+        if ($deployTarget | is-empty) { continue }
+      }
+    }
+    print $'Target (ansi p)($target)(ansi reset):'; hr-line 60 -c navy
+    print $deployTarget
+    if $isRecord { print -n (char nl) }
   }
   exit 0
 }
@@ -357,6 +372,7 @@ export def main [
   operation: string,          # 目前支持两种操作类型，run 和 query, run 用于创建并执行 CICD, query 用于查询 CICD 执行结果
   dest?: string = 'dev',      # 当操作为 run 时必须指定，用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, query 时按需指定, 默认为 dev
   --list(-l): bool,           # 当操作为 run 时生效，用于列出所有可用的执行目标
+  --grep(-g): string,         # 仅在与 `-l` 一起使用时生效，从部署配置里面搜索name,alias或description里包含特定字符串的部署目标
   --force(-f): bool,          # 当操作为 run 时生效，即便已经有正在运行的流水线或者已经部署过也会强制重新执行
   --cid(-i): int,             # 当操作为 query 时生效，用于查询 CICD 执行结果，如果不传则查询最近 10 条流水线执行结果
   --apps(-a): string,         # 指定需要批量部署的应用，多个应用以英文逗号分隔
@@ -369,7 +385,11 @@ export def main [
       # 根据流水线 ID 查询无需加载其他环境变量，也不需要 .termixrc 文件
       let isIdQuery = ($operation in ['query', 'q']) and ($cid > 0)
       if not ($stop_by_id | is-empty) { stop-cicd $stop_by_id; exit 0 }
-      let apps = (if $list { get-pipeline-conf $dest --apps $apps --list } else if (not $isIdQuery) { get-pipeline-conf $dest --apps $apps })
+      let apps = (if $list {
+          get-pipeline-conf $dest --apps $apps --list --grep $grep
+        } else if (not $isIdQuery) {
+          get-pipeline-conf $dest --apps $apps
+        })
       for app in $apps {
         # 以下为应用级别配置，应用的所有开发者保持一致，可以放在代码仓库里面
         let pid = $app.pid
@@ -404,11 +424,12 @@ export def main [
 export def erda-deploy [
   dest?: string = 'dev',    # 用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, 默认为 dev
   --list(-l),               # 列出所有可能的部署目标及应用信息
+  --grep(-g): string,       # 仅在与 `-l` 一起使用时生效，从部署配置里面搜索name,alias或description里包含特定字符串的部署目标
   --force(-f),              # 即便已经有正在运行的流水线，或者即便该 Commit 对应的分支已经部署过也会强制重新部署
   --apps(-a): string,       # 指定需要批量部署的应用，多个应用以","分隔，在多应用模式下必须指定(`all` 代表所有)，单应用模式忽略
   --stop-by-id(-s): int,    # 根据流水线ID 停止对应的正在运行的流水线
 ] {
-  main run $dest --apps $apps --force $force --list $list --stop-by-id $stop_by_id
+  main run $dest --apps $apps --force $force --list $list --grep $grep --stop-by-id $stop_by_id
 }
 
 # 根据流水线 ID 或目标环境查询流水线执行结果, 例如: 单应用: t dq 997636681239659; t dq test, 多应用: t dq dev -a all
