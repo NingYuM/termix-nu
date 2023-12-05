@@ -1,6 +1,18 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.52.0] - 2023-12-05
+
+### Bug Fixes
+
+- Fix printing of `pull-all` detail output
+- Fix `trigger-sync` command when no syncing config available
+
+### Features
+
+- Add `--repo` flag support for `trigger-sync` command
+- Add `--grep` flag for `t dp -l` command
+
 ## [1.51.0] - 2023-11-15
 
 ### Bug Fixes
