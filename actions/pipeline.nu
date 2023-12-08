@@ -362,8 +362,7 @@ def query-cicd-by-id [id: int] {
     URL: $'($ERDA_HOST)/terminus/dop/projects/($query.data.projectID)/apps/($query.data.applicationID)/pipeline/obsoleted?pipelineID=($id)'
   }
   print $'(char nl)(ansi pb)Current Running Status of CICD ($id):(ansi reset)'
-  print '----------------------------------------------------------'
-  print $output
+  hr-line; print $output
   # print ($query | table -e)     # Just for debugging purpose
 }
 

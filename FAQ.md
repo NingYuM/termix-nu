@@ -35,4 +35,4 @@ Install git by `winget install Git.Git` and `cygpath` will be available in `C:\P
 ```sh
 rm '/Users/abc/Library/Application Support/nushell/plugin.nu'
 ```
-即可(这个配置文件在后续使用过程中会自动生成的)，如果你没有手工修改过 Nushell 的配置文件也可以通过执行 ` nu -c 'config reset -w' ` 命令重置下 Nushell 配置应该就可以了
+即可, 这个配置文件在后续使用过程中会自动生成的
