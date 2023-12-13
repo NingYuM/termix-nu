@@ -27,7 +27,7 @@ export def 'git diff-commit' [
       | par-each -k { git show -s --format=%cn---%h---%ci---%B $in | str trim }
       | split column '---'
       | rename Author SHA Date Message
-      | upsert Date { $in.Date | format date $_TIME_FMT }
+      | upsert Date {|it| $it.Date | format date $_TIME_FMT }
     )
   if ($diff | is-empty) {
     echo $'No modification between (ansi p)($from)(ansi reset) and (ansi p)($to)(ansi reset)'
