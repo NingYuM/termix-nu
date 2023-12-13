@@ -1,6 +1,18 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.53.0] - 2023-12-13
+
+### Bug Fixes
+
+- Fix upsert input param for Nu v0.88
+- Fix git-diff-commit for Nu v0.88
+
+### Miscellaneous Tasks
+
+- Add run/cast2gif.nu
+- Update Nushell config for v0.88.0
+
 ## [1.52.0] - 2023-12-05
 
 ### Bug Fixes
