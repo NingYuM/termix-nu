@@ -7,7 +7,7 @@
 # - download the archive
 # - give some hints about the version and the hash and how to extract the archive
 
-use ../utils/common.nu [is-installed, hr-line]
+use ../utils/common.nu [ECODE, is-installed, hr-line]
 
 export def get-latest-nightly-build [
   --list(-l),           # list all the available binary packages
@@ -22,7 +22,7 @@ export def get-latest-nightly-build [
 
   if $list {
     print 'Available packages:'; hr-line
-    $latest.assets | get name | where $it !~ 'msi' | print; exit 0
+    $latest.assets | get name | where $it !~ 'msi' | print; exit $ECODE.SUCCESS
   }
 
   if ($target | is-empty) and (not $interactive) {

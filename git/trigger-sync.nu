@@ -8,7 +8,7 @@
 #   just trigger-sync feature/latest
 
 use ../utils/git.nu [get-sync-ref do-sync]
-use ../utils/common.nu [get-conf get-env has-ref hr-line]
+use ../utils/common.nu [ECODE get-conf get-env has-ref hr-line]
 
 export-env {
   # FIXME: 去除前导空格背景色
@@ -31,7 +31,7 @@ export def 'git trigger-sync' [
   let selected = if ($branch | is-empty) { $current } else {
     if (has-ref $branch) { $branch } else {
       print $'Branch (ansi r)($branch)(ansi reset) does not exist, please check it again.'
-      exit 7
+      exit $ECODE.INVALID_PARAMETER
     }
   }
 
@@ -41,7 +41,7 @@ export def 'git trigger-sync' [
 
   if $list {
     show-available-syncs $allSyncs --repos $repos --ignored $ignored
-    exit 0
+    exit $ECODE.SUCCESS
   }
 
   let candidates = if $all {
@@ -67,7 +67,7 @@ def show-available-syncs [
   mut results = []
   let cross = $'(ansi light_gray)  x(ansi reset)'
   let mark = $'(ansi g)  √(ansi reset)'
-  if ($syncs | is-empty) { print $'No available syncing config found, Bye...'; exit 0 }
+  if ($syncs | is-empty) { print $'No available syncing config found, Bye...'; exit $ECODE.SUCCESS }
 
   echo $'(char nl)The following branches have code syncing config:'; hr-line -b
   for branch in ($syncs | columns) {
@@ -96,7 +96,7 @@ def update-branch [
     if ($current == $branch) { git pull origin $branch } else { git fetch origin $'($branch):($branch)' }
   } else {
     # Remote branch does not exit
-    git push origin $branch -u; exit 0
+    git push origin $branch -u; exit $ECODE.SUCCESS
   }
 
   let diff = (
@@ -109,7 +109,7 @@ def update-branch [
   # 如果本地分支超前于远程分支直接push就可以了，会自动触发批量同步
   if ($diff.remote.0 == 0 and $diff.local.0 > 0) {
     git push origin $branch
-    exit 0
+    exit $ECODE.SUCCESS
   }
 }
 
@@ -125,7 +125,7 @@ def get-push-config [
 
   if not (has-ref origin/($CONF_BRANCH)) {
     print $'Branch (ansi r)($CONF_BRANCH) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
-    exit 0
+    exit $ECODE.SUCCESS
   }
 
   git fetch origin $CONF_BRANCH -q    # 更新远程分支的最新提交
@@ -152,7 +152,7 @@ def sync-branch [
     [ { repo: $repo, dest: $branch } ]
   } else { $pushConf | query json $'branches.($escapedBranch)' }
   # 如果没有任何同步配置直接退出
-  if ($dests == null) { exit 0 }
+  if ($dests == null) { exit $ECODE.SUCCESS }
 
   let syncDests = ($dests | upsert SYNC {|d|
       $d | get repo | par-each { |it| if ($',($ignored),' =~ $',($it),') { '   x' } else { '   √' } }
@@ -165,7 +165,7 @@ def sync-branch [
       print $'(char nl)Found the following matched dests from (ansi g)`origin/($confBr):.termixrc`(ansi reset):(char nl)'
     }
     print ($syncDests | upsert lock {|it| if ('lock' in $it) { $it.lock } else { '-' }} | move lock --before SYNC)
-  } else { exit 0 }
+  } else { exit $ECODE.SUCCESS }
 
   $syncDests | where SYNC == '   √' | each { |iter|
     let syncFrom = (get-sync-ref $branch $iter)

@@ -5,7 +5,7 @@
 #   t git-batch-reset 3
 #   t git-batch-reset 3 develop master
 
-use ../utils/common.nu [hr-line has-ref]
+use ../utils/common.nu [ECODE, hr-line has-ref]
 
 # git reset --hard HEAD~3
 # 将指定Git分支硬回滚N个commit
@@ -17,7 +17,7 @@ export def 'git batch-reset' [
   let dest = ($branches | str trim | split row ' ' | compact)
   if ($branches | str trim | is-empty) {
     print $'You did not specify any branches to do reset, bye...(char nl)'
-    exit 3
+    exit $ECODE.MISSING_DEPENDENCY
   }
 
   cd $env.JUST_INVOKE_DIR

@@ -5,7 +5,7 @@
 #   This's a git push hook, don't call it manually
 
 use ../utils/git.nu [get-sync-ref do-sync]
-use ../utils/common.nu [get-conf get-env has-ref hr-line]
+use ../utils/common.nu [ECODE get-conf get-env has-ref hr-line]
 
 export-env {
   # FIXME: 去除前导空格背景色
@@ -31,7 +31,7 @@ export def 'git sync-branch' [
 
   if not (has-ref $'origin/($confBr)') {
     print $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
-    exit 0
+    exit $ECODE.SUCCESS
   }
 
   git fetch origin $confBr -q   # 更新远程分支的最新提交
@@ -44,7 +44,7 @@ export def 'git sync-branch' [
   # 获取待同步目的仓库及目的分支映射
   let dests = ($pushConf | query json $'branches.($escapedBranch)')
   # 如果没有任何同步配置直接退出
-  if ($dests == null) { exit 0 }
+  if ($dests == null) { exit $ECODE.SUCCESS }
 
   let syncDests = ($dests | upsert SYNC {|d|
       $d | get repo | par-each { |it| if ($',($ignored),' =~ $',($it),') { '   x' } else { '   √' } }
@@ -54,7 +54,7 @@ export def 'git sync-branch' [
   if ($syncDests | length) > 0 {
     print $'(char nl)Found the following matched dests from (ansi g)`origin/($confBr):.termixrc`(ansi reset):(char nl)'
     print ($syncDests | upsert lock {|it| if ('lock' in $it) { $it.lock } else { '-' }} | move lock --before SYNC)
-  } else { exit 0 }
+  } else { exit $ECODE.SUCCESS }
 
   $syncDests | where SYNC == '   √' | each { |iter|
     let syncFrom = (get-sync-ref $localBranch $iter)

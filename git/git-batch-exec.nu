@@ -6,7 +6,7 @@
 #   t git-batch-exec 'git show --abbrev-commit --no-patch'
 
 use ../utils/compose-cmd.nu [compose-command]
-use ../utils/common.nu [get-env hr-line has-ref]
+use ../utils/common.nu [ECODE get-env hr-line has-ref]
 
 # https://github.com/nushell/nushell/pull/3611
 # https://github.com/nushell/nushell/issues/3433
@@ -18,7 +18,7 @@ export def 'git batch-exec' [
   branches: string,  # The branches to have command be executed, default all local branches
 ] {
 
-  # echo $cmd; echo $branches; exit 0
+  # echo $cmd; echo $branches; exit $ECODE.SUCCESS
   let dest = ($branches | str trim | split row ' ' | compact)
   # fix: 'fatal: not a git repository (or any of the parent directories): .git'
   cd $env.JUST_INVOKE_DIR

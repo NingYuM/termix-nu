@@ -5,7 +5,7 @@
 #   t desc
 #   t desc master
 
-use ../utils/common.nu [has-ref, hr-line]
+use ../utils/common.nu [ECODE, has-ref, hr-line]
 
 # Show branch description from branch description file `d` of `i` branch
 export def main [
@@ -18,7 +18,7 @@ export def main [
   let remoteIExists = has-ref origin/i
   if not ($localIExists or $remoteIExists) {
     print $'You do not have an i branch, branch description query failed, bye...(char nl)'
-    exit 3
+    exit $ECODE.MISSING_DEPENDENCY
   }
 
   git fetch origin i:i -q   # 更新远程 i 分支到本地

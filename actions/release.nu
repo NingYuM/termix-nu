@@ -12,7 +12,7 @@
 # Usage:
 # 	just release
 
-use ../utils/common.nu [_UPGRADE_TAG, get-conf, is-lower-ver, has-ref]
+use ../utils/common.nu [ECODE, _UPGRADE_TAG, get-conf, is-lower-ver, has-ref]
 
 export def main [
   --update-log: bool,      # Set to `true` do enable updating CHANGELOG.md
@@ -25,16 +25,16 @@ export def main [
 
   if (has-ref $releaseVer) {
   	print $'The version ($releaseVer) already exists, Please choose another version.(char nl)'
-  	exit 5
+  	exit $ECODE.CONDITION_NOT_SATISFIED
   }
   if (is-lower-ver $releaseVer $greatestVer) {
   	print $'The release version should be greater than ($greatestVer), however, current release ver: ($releaseVer)(char nl)'
-  	exit 5
+  	exit $ECODE.CONDITION_NOT_SATISFIED
   }
   let statusCheck = (git status --porcelain)
   if not ($statusCheck | is-empty) {
   	print $'You have uncommit changes, please commit them and try `release` again!(char nl)'
-  	exit 5
+  	exit $ECODE.CONDITION_NOT_SATISFIED
   }
   if $update_log {
     git cliff --unreleased --tag ($releaseVer | str replace 'v' '') --prepend CHANGELOG.md;

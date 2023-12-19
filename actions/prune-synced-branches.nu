@@ -6,7 +6,7 @@
 #   just prune-synced-branches
 #   just prune-synced-branches false
 
-use ../utils/common.nu [hr-line has-ref get-tmp-path get-conf]
+use ../utils/common.nu [ECODE, hr-line has-ref get-tmp-path get-conf]
 
 # Clean possibly unused branches of synced dest repos
 export def main [
@@ -24,7 +24,7 @@ export def main [
 
   if not (has-ref $'origin/($confBr)') {
     print $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
-    exit 3
+    exit $ECODE.MISSING_DEPENDENCY
   }
   let pushConf = (git show $'origin/($confBr):.termixrc' | from toml | to json)
   let repos = ($pushConf | query json $'repos')
@@ -73,7 +73,7 @@ def prepare-repo [
 ] {
   if ($repos | is-empty) {
     print $'No dest repos to be cleaned, bye...(char nl)'
-    exit 3
+    exit $ECODE.MISSING_DEPENDENCY
   }
 
   let repoPath = (get-tmp-path)

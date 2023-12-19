@@ -30,7 +30,7 @@
 #   t dp dev --apps app1,app2; t dp test -a all
 #   t dq dev --apps app1,app2; t dq test -a all
 
-use ../utils/common.nu [get-tmp-path has-ref hr-line log]
+use ../utils/common.nu [ECODE, get-tmp-path has-ref hr-line log]
 
 const NA = 'N/A'
 const ERDA_HOST = 'https://erda.cloud'
@@ -54,7 +54,7 @@ def check-envs [] {
   let empties = ($envs | filter {|it| $env | get -i $it | is-empty })
   if ($empties | length) > 0 {
     print $'Please set (ansi r)($empties | str join ',')(ansi reset) in your environment first...'
-    exit 5
+    exit $ECODE.INVALID_PARAMETER
   }
 }
 
@@ -73,7 +73,7 @@ def renew-session [] {
   let RENEW_URL = $'https://openapi.erda.cloud/login?($query)'
   let renew = curl --silent -X POST $RENEW_URL | from json
   if ($renew | describe) == 'string' {
-    print $'Erda session renew failed with message: (ansi r)($renew)(ansi reset)'; exit 8
+    print $'Erda session renew failed with message: (ansi r)($renew)(ansi reset)'; exit $ECODE.AUTH_FAILED
   }
   open $TERMIX_CONF | from json
     | upsert erdaSession $renew.sessionid | to json
@@ -87,7 +87,7 @@ def check-pipeline-conf [pipeline: any] {
     let empties = ($keys | filter {|it| $conf | get -i $it | is-empty })
     if ($empties | length) > 0 {
       print $'Please set (ansi r)($empties | str join ',')(ansi reset) in the following pipeline config:'
-      print $conf; exit 1
+      print $conf; exit $ECODE.INVALID_PARAMETER
     }
   }
 }
@@ -104,7 +104,8 @@ def get-pipeline-conf [dest: string = 'dev', --apps: string, --list, --grep: str
   let useRc = ($LOCAL_CONFIG | path exists)
   let configFile = if $useI { 'origin/i:.termixrc' } else { $LOCAL_CONFIG }
   if not ($useI or $useRc) {
-    print $'No (ansi r)origin/i branch or ($LOCAL_CONFIG)(ansi reset) exits, please create it before running this command...'; exit 1
+    print $'No (ansi r)origin/i branch or ($LOCAL_CONFIG)(ansi reset) exits, please create it before running this command...'
+    exit $ECODE.MISSING_DEPENDENCY
   }
 
   let repoConf = if $useI {
@@ -115,11 +116,13 @@ def get-pipeline-conf [dest: string = 'dev', --apps: string, --list, --grep: str
 
   let pipeline = ($repoConf.erda | get -i $dest)
   if ($pipeline | is-empty) {
-    print $'Please set the App configs for (ansi r)erda.($dest)(ansi reset) in (ansi r)($configFile)(ansi reset) first...'; exit 1
+    print $'Please set the App configs for (ansi r)erda.($dest)(ansi reset) in (ansi r)($configFile)(ansi reset) first...'
+    exit $ECODE.INVALID_PARAMETER
   }
   # 批量处理模式必须指定 App
   if (not $useI) and ($apps | str trim | is-empty) {
-    print $'You are running the command in (ansi p)batch mode(ansi reset), Please specify the apps to handle by (ansi r)`--apps` or `-a`(ansi reset) flag(ansi reset)...'; exit 1
+    print $'You are running the command in (ansi p)batch mode(ansi reset), Please specify the apps to handle by (ansi r)`--apps` or `-a`(ansi reset) flag(ansi reset)...'
+    exit $ECODE.INVALID_PARAMETER
   }
   let batchMode = ($pipeline | describe) =~ 'table'
   let conf = if $batchMode { $pipeline } else { [$pipeline] }
@@ -166,7 +169,7 @@ def show-available-targets [
     print $deployTarget
     if $isRecord { print -n (char nl) }
   }
-  exit 0
+  exit $ECODE.SUCCESS
 }
 
 # 根据 AppID、Branch、Pipeline 查询最近的流水线执行记录
@@ -187,12 +190,13 @@ def query-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
   }
   # log 'Query CICD: ' ($ci.data.pipelines | select id commit status | table -e)
   if ($ci | describe) == 'string' or ($ci | is-empty) {
-    print $'Query CICD failed with message: (ansi r)($ci)(ansi reset)'; exit 1
+    print $'Query CICD failed with message: (ansi r)($ci)(ansi reset)'
+    exit $ECODE.SERVER_ERROR
   }
   if not $ci.success {
     print $'(ansi r)Query CICD failed, Please try again ...(ansi reset)'
     print ($ci | table -e)
-    exit 1
+    exit $ECODE.SERVER_ERROR
   }
   return $ci
 }
@@ -236,7 +240,8 @@ def query-latest-cicd [dest: string, --apps: string, --show-running-detail] {
     echo $'Querying latest CICDs for (ansi pb)($app.appName) on ($app.branch)(ansi reset) branch:'; hr-line -c pb
     let ci = (query-cicd $app.appid $app.appName $app.branch $app.env $app.pipeline 10)
     if ($ci.data.total == 0) {
-      echo $'No CICD found for (ansi pb)($app.appName)(ansi reset) on (ansi g)($app.branch)(ansi reset) branch'; exit 0
+      echo $'No CICD found for (ansi pb)($app.appName)(ansi reset) on (ansi g)($app.branch)(ansi reset) branch'
+      exit $ECODE.SUCCESS
     }
     let pipelines = (format-pipeline-data $ci.data.pipelines)
     echo ($pipelines | table -e)
@@ -294,11 +299,14 @@ def create-cicd [aid: int, appName: string, branch: string, pipeline: string] {
     renew-session
     $ci = (curl --silent -H (get-auth) --data-raw $'($cicd | to json)' $cicdUrl | from json)
   }
-  if ($ci | describe) == 'string' { print $'Initialize CICD failed with message: (ansi r)($ci)(ansi reset)'; exit 1 }
+  if ($ci | describe) == 'string' {
+    print $'Initialize CICD failed with message: (ansi r)($ci)(ansi reset)'
+    exit $ECODE.SERVER_ERROR
+  }
   if $ci.success { print $'(ansi g)Initialize CICD successfully...(ansi reset)'; return $ci.data.id }
   print $'(ansi r)Initialize CICD failed, Please try again ...(ansi reset)'
   print ($ci | table -e)
-  exit 1
+  exit $ECODE.SERVER_ERROR
 }
 
 # 执行指定 ID 的流水线
@@ -343,8 +351,14 @@ def query-cicd-by-id [id: int] {
     renew-session
     $query = (curl --silent -H (get-auth) $queryUrl | from json)
   }
-  if ($query | describe) == 'string' { print $'Query CICD failed with message: (ansi r)($query)(ansi reset)'; exit 1 }
-  if (not $query.success ) { print $'Query CICD failed with error message: (ansi r)($query.err.msg)(ansi reset)'; exit 1 }
+  if ($query | describe) == 'string' {
+    print $'Query CICD failed with message: (ansi r)($query)(ansi reset)'
+    exit $ECODE.SERVER_ERROR
+  }
+  if (not $query.success ) {
+    print $'Query CICD failed with error message: (ansi r)($query.err.msg)(ansi reset)'
+    exit $ECODE.SERVER_ERROR
+  }
   let timeEnd = if ($query.data.timeEnd | is-empty) { $'(ansi wd)---Not Yet!---(ansi reset)' } else { $query.data.timeEnd }
 
   let output = {
@@ -383,7 +397,7 @@ export def main [
     run | r => {
       # 根据流水线 ID 查询无需加载其他环境变量，也不需要 .termixrc 文件
       let isIdQuery = ($operation in ['query', 'q']) and ($cid > 0)
-      if not ($stop_by_id | is-empty) { stop-cicd $stop_by_id; exit 0 }
+      if not ($stop_by_id | is-empty) { stop-cicd $stop_by_id; exit $ECODE.SUCCESS }
       let apps = (if $list {
           get-pipeline-conf $dest --apps $apps --list --grep $grep
         } else if (not $isIdQuery) {
@@ -406,15 +420,16 @@ export def main [
     }
     query | q => {
       # 未指定 cid 则查询最近 10 条流水线执行结果
-      if ($cid | is-empty) { query-latest-cicd --apps $apps $dest; exit 0 }
+      if ($cid | is-empty) { query-latest-cicd --apps $apps $dest; exit $ECODE.SUCCESS }
       if ($cid | describe) != 'int' {
-        print $'Invalid value for --cid: (ansi r)($cid)(ansi reset), should be an integer number.'; exit 1
+        print $'Invalid value for --cid: (ansi r)($cid)(ansi reset), should be an integer number.'
+        exit $ECODE.INVALID_PARAMETER
       }
       query-cicd-by-id $cid
     }
     _ => {
       print $'Unsupported operation: (ansi r)($operation)(ansi reset), should be (ansi g)run(ansi reset) or (ansi g)query(ansi reset)'
-      exit 1
+      exit $ECODE.INVALID_PARAMETER
     }
   }
 }

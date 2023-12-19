@@ -5,7 +5,7 @@
 # Usage:
 #   just go
 
-use ../utils/common.nu [get-conf windows?]
+use ../utils/common.nu [ECODE, get-conf, windows?]
 
 export def go [
   nav_key?: string  # The nav key to go from `quickNavs` config in termix.toml
@@ -34,7 +34,7 @@ export def go [
 export def show-navs [] {
   print $'(ansi pb)(char nl)Available Nav Items:(char nl)(char nl)(ansi reset)'
   print (merge-navs | transpose | rename key url)
-  exit 0
+  exit $ECODE.SUCCESS
 }
 
 # Merge all nav items from termix.toml and .termixrc

@@ -10,6 +10,8 @@
 #   t ls-node v15
 #   t ls-node v15 true
 
+use ../utils/common.nu [ECODE]
+
 export def ls-node-remote [
   minVer: string,   # The node version you want to query
   isLts: bool,      # Filter the node versions that are LTS
@@ -20,7 +22,7 @@ export def ls-node-remote [
   let minVersion = if ($minVer | is-empty) { 10 } else { ($minVer | str replace 'v' '' | into int) }
   if $notInstalled {
     print $'You should install `fnm` and try again..., bye!'
-    exit 2
+    exit $ECODE.MISSING_BINARY
   }
 
   let vers = (fnm ls-remote | lines | str trim | wrap Version)

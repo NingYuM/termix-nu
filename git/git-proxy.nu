@@ -7,6 +7,8 @@
 #   git-proxy off
 #   git-proxy on ali
 
+use ../utils/common.nu [ECODE]
+
 # Turn on or off the proxies for git
 def --env git-proxy [
   status: string  # Set proxy status: on/off
@@ -37,7 +39,7 @@ def --env git-proxy [
     })
     if ($proxy | length) == 0 {
       print $'(ansi r)(char nl)Can not find Ali, ClashX or v2ray proxy, please start it and try again, bype...(ansi reset)(char nl)(char nl)'
-      exit 3
+      exit $ECODE.MISSING_DEPENDENCY
     }
 
     # export http_proxy=http://127.0.0.1:7890 https_proxy=http://127.0.0.1:7890 ALL_RROXY=http://127.0.0.1:7890
@@ -56,7 +58,7 @@ def --env git-proxy [
         print $'If you want to set proxy for the terminal, please run the following line in bash, zsh, sh, etc.:'
         print $"(ansi g)export http_proxy=http://($proxy) https_proxy=http://($proxy) ALL_RROXY=http://($proxy)(ansi reset)(char nl)"
       }
-      exit 0
+      exit $ECODE.SUCCESS
     }
     git config --global http.proxy $'socks5://($proxy)'
     git config --global https.proxy $'socks5://($proxy)'

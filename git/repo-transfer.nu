@@ -6,7 +6,7 @@
 # Ref:
 #   https://github.com/nushell/nushell/issues/4396
 
-use ../utils/common.nu [get-tmp-path hr-line]
+use ../utils/common.nu [ECODE get-tmp-path hr-line]
 
 # Transfer repo from source to dest
 export def 'git repo-transfer' [
@@ -34,7 +34,7 @@ export def 'git repo-transfer' [
       do-push $dest
     } else {
       print $'(ansi r)Path ($tmpPath)/($repoName) already exists(ansi reset), Please remove it and try again...(char nl)'
-      exit 5
+      exit $ECODE.CONDITION_NOT_SATISFIED
     }
   } else {
     print $'Cloning code to: (ansi g)($tmpPath)/($repoName)(ansi reset)(char nl)'

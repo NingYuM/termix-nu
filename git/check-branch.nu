@@ -4,7 +4,7 @@
 # Usage:
 #   t check-branch
 
-use ../utils/common.nu [has-ref]
+use ../utils/common.nu [ECODE, has-ref]
 
 # Check whether all remote branches have related description
 export def main [] {
@@ -16,7 +16,7 @@ export def main [] {
 
   if not ($localIExists or $remoteIExists) {
     print $'You do not have an i branch, branch description query failed, bye...(char nl)'
-    exit 3
+    exit $ECODE.MISSING_DEPENDENCY
   }
 
   git fetch origin i:i -q   # 更新远程 i 分支到本地

@@ -23,6 +23,18 @@ export const _DATE_FMT  = '%Y.%m.%d'
 export const _TIME_FMT =  '%Y/%m/%d %H:%M:%S'
 export const _UPGRADE_TAG = '$-FORCE-UPGRADE-$'
 
+# Commonly used exit codes
+export const ECODE = {
+  SUCCESS: 0,
+  OUTDATED: 1,
+  MISSING_BINARY: 2,
+  MISSING_DEPENDENCY: 3,
+  CONDITION_NOT_SATISFIED: 5,
+  SERVER_ERROR: 6,
+  INVALID_PARAMETER: 7,
+  AUTH_FAILED: 8,
+}
+
 export-env {
   # FIXME: 去除前导空格背景色
   $env.config.color_config.leading_trailing_space_bg = { attr: n }
@@ -75,7 +87,7 @@ export def get-tmp-path [] {
   } else { $tmpDir }
   if not ($tmpPath | path exists) {
     print $'(ansi r)Path ($tmpPath) does not exist, please create it and try again...(ansi reset)(char nl)(char nl)'
-    exit 3
+    exit $ECODE.MISSING_DEPENDENCY
   }
   # print $'Using (ansi g)($tmpPath)(ansi reset) as the temporary directory...(char nl)'
   $tmpPath
@@ -141,14 +153,14 @@ export def git-check [
   let isGitInstalled = (which git | length) > 0
   if (not $isGitInstalled) {
     print $'You should (ansi r)INSTALL git(ansi reset) first to run this command, bye...'
-    exit 2
+    exit $ECODE.MISSING_BINARY
   }
   # If we don't need repo check just quit now
   if ($check_repo != 0) {
     let checkRepo = (do -i { git rev-parse --is-inside-work-tree } | complete)
     if not ($checkRepo.stdout =~ 'true') {
       print $'Current directory is (ansi r)NOT(ansi reset) a git repo, bye...(char nl)'
-      exit 5
+      exit $ECODE.CONDITION_NOT_SATISFIED
     }
   }
 }

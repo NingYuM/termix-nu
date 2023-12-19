@@ -7,7 +7,7 @@
 #   t git-remote-branch origin true
 
 use ../utils/git.nu [append-desc]
-use ../utils/common.nu [has-ref hr-line windows?]
+use ../utils/common.nu [ECODE, has-ref hr-line windows?]
 
 # Creates a table listing the remote branches of
 # a git repository and the time of the last commit
@@ -35,7 +35,7 @@ export def git-remote-branch [
   )
   print (append-desc $basic)
 
-  if (not $show_tag) { exit 0 }
+  if (not $show_tag) { exit $ECODE.SUCCESS }
 
   print $'Tags of (ansi gb)($repoName)(ansi reset) for remote ($alias)'; hr-line
   # Git for Windows does't support sort by `creatordate` field?

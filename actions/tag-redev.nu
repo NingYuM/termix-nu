@@ -5,7 +5,7 @@
 #   t tag-redev v2.2.0.9
 #   t tag-redev v2.2.0.9 master true
 
-use ../utils/common.nu [_DATE_FMT, get-env, get-tmp-path, get-termix-conf, hr-line, has-ref]
+use ../utils/common.nu [ECODE, _DATE_FMT, get-env, get-tmp-path, get-termix-conf, hr-line, has-ref]
 
 # 给远程二开仓库批量打 Tag
 export def 'git tag-redev' [
@@ -36,7 +36,7 @@ export def 'git tag-redev' [
     print $filteredRepos
   } else {
     print $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'
-    exit 3
+    exit $ECODE.MISSING_DEPENDENCY
   }
 
   print $'Delete tag ($tagName) ---> (ansi r)($delete_tag)(ansi reset)(char nl)'

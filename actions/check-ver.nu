@@ -5,7 +5,7 @@
 # Usage:
 #   nu-ver
 
-use ../utils/common.nu [_DATE_FMT, _UPGRADE_TAG, get-tmp-path, get-conf, is-lower-ver]
+use ../utils/common.nu [ECODE, _DATE_FMT, _UPGRADE_TAG, get-tmp-path, get-conf, is-lower-ver]
 
 # Check min nushell version and show upgrading tips to the user
 export def nu-ver [] {
@@ -51,7 +51,7 @@ export def termix-ver [] {
     # Quit command right now if it's a force upgrade
     if ($forceUpgrade) {
       print $'(ansi r)很抱歉，为了更好地为您提供服务请先更新 termix-nu 并重试...(ansi reset)(char nl)(char nl)'
-      (query-ver $confName | ignore); exit 1    # Query and update latest version again.
+      (query-ver $confName | ignore); exit $ECODE.OUTDATED    # Query and update latest version again.
     }
     if (not $hasForceUpgrade) {
       query-ver $confName | ignore

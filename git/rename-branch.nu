@@ -12,7 +12,7 @@
 # Usage:
 #   t rename-branch old-name new-name
 
-use ../utils/common.nu [has-ref hr-line]
+use ../utils/common.nu [ECODE has-ref hr-line]
 
 # Rename remote branch, and delete old branch after rename
 export def 'git branch-rename' [
@@ -32,15 +32,15 @@ export def 'git branch-rename' [
   # Check if remote dest already exists.
   if ($remoteDestExists) {
     print $'Dest branch (ansi r)($remote)/($to)(ansi reset) already exists in the remote, please use another new name...(char nl)'
-    exit 5
+    exit $ECODE.CONDITION_NOT_SATISFIED
   }
   if ($localDestExists) {
     print $'Dest branch (ansi r)($to)(ansi reset) already exists in local, please use another new name...(char nl)'
-    exit 5
+    exit $ECODE.CONDITION_NOT_SATISFIED
   }
   if not ($remoteSrcExists or $localSrcExists) {
     print $'Branch (ansi r)($from) (ansi reset)does not exist in both remote and local, bye...(char nl)'
-    exit 5
+    exit $ECODE.CONDITION_NOT_SATISFIED
   }
 
   let statusCheck = (git status --porcelain)

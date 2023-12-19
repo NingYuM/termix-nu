@@ -21,6 +21,7 @@
 # let I18 = (get-i18n-conf)
 
 use std [repeat]
+use ../utils/common.nu [ECODE]
 
 let I18 = {
   b2c: { PID: 5, DESIGN_PID: 6 },
@@ -52,30 +53,31 @@ def main [
     print $'(ansi g)Description: (ansi reset)根据`业务类型`从本地清除指定业务类型文件夹下多余的国际化文案'
     print $'(ansi g)Supported bizTypes: (ansi reset)b2c / b2b / sea'
     print $'请确保参数输入无误并重试!(char nl)'
-    exit 7
+    exit $ECODE.INVALID_PARAMETER
   }
 
   let bizCheck = $bizType in ['b2c', 'b2b', 'sea']
   if (not $bizCheck) {
     print $'(ansi r)You have input the wrong biz type, Please try again!(ansi reset)(char nl)'
-    exit 7
+    exit $ECODE.INVALID_PARAMETER
   }
 
   # Check mall-$bizType dir exists
   if not ($'mall-($bizType)' | path exists) {
-    print $'[ERR] This directory: (ansi r)mall-($bizType) does not exist!(ansi reset) Bye~~'; exit 3
+    print $'[ERR] This directory: (ansi r)mall-($bizType) does not exist!(ansi reset) Bye~~'
+    exit $ECODE.MISSING_DEPENDENCY
   }
 
   if (is-installed 'termix') {
     print $'Current termix version: (ansi g)(termix --version | str trim)(ansi reset)'; hr-line
   } else {
     print $'(ansi r)Command `termix` could not be found, Please install it by `npm i -g @terminus/termix@latest`, and try again!(ansi reset)'
-    exit 2
+    exit $ECODE.MISSING_BINARY
   }
 
   if $bizType not-in $I18 {
     print $'Locale ID for biz type: ($bizType) has not been configured, please try again...'
-    exit 3
+    exit $ECODE.MISSING_DEPENDENCY
   }
 
   print $'Running clean locale for (ansi p)($bizType)(ansi reset)...'

@@ -6,7 +6,7 @@
 #   t ls-redev-refs true
 
 use ../git/branch.nu [git-branch]
-use ../utils/common.nu [get-tmp-path get-termix-conf windows?]
+use ../utils/common.nu [ECODE, get-tmp-path get-termix-conf windows?]
 
 # Show Branches and Tags of redevelop related repos
 export def 'git ls-redev-refs' [
@@ -22,7 +22,8 @@ export def 'git ls-redev-refs' [
   if ($filteredRepos | length) > 0 {
     print $'(ansi p)Found the following matched repos:(ansi reset)(char nl)(char nl)'; $filteredRepos
   } else {
-    print $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'; exit 3
+    print $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'
+    exit $ECODE.MISSING_DEPENDENCY
   }
   print $'(ansi p)---------------> List remote refs <--------------- (char nl)(ansi reset)'
 

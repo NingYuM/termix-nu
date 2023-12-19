@@ -7,7 +7,7 @@
 #   t git-diff-commit -f HEAD~9 -t HEAD
 #   t git-diff-commit -f develop -t feature/latest -g 'feat:'
 
-use ../utils/common.nu [has-ref, _TIME_FMT]
+use ../utils/common.nu [ECODE, has-ref, _TIME_FMT]
 
 # Show commit info diff between two commits, support grep in Author,SHA,Date and Message fields
 export def 'git diff-commit' [
@@ -18,8 +18,14 @@ export def 'git diff-commit' [
   --exclude-shas(-H): string,     # Exclude commits by SHAs
   --exclude-authors(-A): string,  # Exclude commits by authors
 ] {
-  if not (has-ref $from) { echo $'Commit hash or ref (ansi p)($from)(ansi reset) not found'; exit 7 }
-  if not (has-ref $to) { echo $'Commit hash or ref (ansi p)($to)(ansi reset) not found'; exit 7 }
+  if not (has-ref $from) {
+    echo $'Commit hash or ref (ansi p)($from)(ansi reset) not found'
+    exit $ECODE.INVALID_PARAMETER
+  }
+  if not (has-ref $to) {
+    echo $'Commit hash or ref (ansi p)($to)(ansi reset) not found'
+    exit $ECODE.INVALID_PARAMETER
+  }
 
   mut diff = (
     git rev-list --ancestry-path $'($from)..($to)'
@@ -27,11 +33,11 @@ export def 'git diff-commit' [
       | par-each -k { git show -s --format=%cn---%h---%ci---%B $in | str trim }
       | split column '---'
       | rename Author SHA Date Message
-      | upsert Date {|it| $it.Date | format date $_TIME_FMT }
+      | upsert Date { |it| $it.Date | format date $_TIME_FMT }
     )
   if ($diff | is-empty) {
     echo $'No modification between (ansi p)($from)(ansi reset) and (ansi p)($to)(ansi reset)'
-    exit 0
+    exit $ECODE.SUCCESS
   }
 
   if not ($not_contain | is-empty) {
