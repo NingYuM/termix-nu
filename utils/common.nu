@@ -199,3 +199,15 @@ export def parallel [...closures] {
     |c| do $c
   }
 }
+
+# Display a progress bar with specified length
+export def progress [
+  count: int,               # Total tick count of the progress bar
+  interval: float = 1.0,    # The interval between each tick
+  --char(-c): string = '█', # The char to display for each tick
+] {
+  mut x = 0
+  let duration = $'($interval)sec' | into duration
+  # Available chars: █ ▓ ▒ ░ = - ~ *
+  while $x < $count { print -n $char; $x = $x + 1; sleep $duration }
+}
