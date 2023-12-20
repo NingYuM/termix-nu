@@ -35,4 +35,13 @@ Install git by `winget install Git.Git` and `cygpath` will be available in `C:\P
 ```sh
 rm '/Users/abc/Library/Application Support/nushell/plugin.nu'
 ```
-即可, 这个配置文件在后续使用过程中会自动生成的
+即可, 这个配置文件在后续使用过程中会自动生成的。
+
+4. 用 CLI 执行 Erda 流水线的时候提示如下错误：
+  ```console
+    Renewing Erda session...
+    Erda session renew failed with message: failed to PwdLogin: pwdAuth: /oauth/token statuscode: 500, body: {"error": "server_error",
+    "error description": "Internal Server Error"}
+    error: Recipe 'deploy' failed on line 90 with exit code 8
+  ```
+如果大家都报这个错误那应该是 Erda 的用户中心后端服务有问题。如果其他人都是好的，只有个别人遇到这个问题，大概率是因为密码过期了，可以改一下密码试试。
