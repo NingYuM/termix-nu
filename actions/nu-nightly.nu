@@ -41,8 +41,7 @@ export def get-latest-nightly-build [
       error make {
         msg: $'(ansi red_bold)No_Match_Found(ansi reset)'
         label: {
-          start: $span.start
-          end: $span.end
+          span: $span
           text: $'No architecture matching this in ($latest.html_url)'
         }
       }
