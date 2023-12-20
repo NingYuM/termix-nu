@@ -10,6 +10,7 @@
 # [ ] Select the modules to sync or sync all
 # [ ] Add a config file for all the settings
 # [ ] Allow default settings, so we can run the script without any arguments
+# [ ] Update user manual for meta data syncing script
 # Usage:
 # 97ed2a8177c8c1b7b90940ae1cd2eb2ff63b7067239ecd628e8ebe66fbd314a5
 # https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/trantor2/console/export/44d99c6b-13fc-4c38-8a3e-f4ee01f86dc0/22-TERP-97ed2a8177c8c1b7b90940ae1cd2eb2ff63b7067239ecd628e8ebe66fbd314a5.zip
@@ -25,6 +26,7 @@ const TO_TEAM_ID = '22'
 const TO_TEAM_CODE = 'TERP'
 const SOURCE_HOST = 'https://back-terp-console-dev.app.terminus.io'
 const DEST_HOST = 'https://back-terp-console-test.app.terminus.io'
+const SELECTED_MODULES = [ERP_HR ERP_GEN TERP_PORTAL]
 const MODULE_CANDIDATES = [ERP_HR ERP_PRD ERP_PLN ERP_GEN ERP_SCM ERP_FI ERP_FIN ERP_CO TERP_PORTAL]
 
 # Test data
@@ -45,7 +47,7 @@ export def 'meta sync' [
   # let downloadUrl = handle-upload-snapshot 891a7cc3d936cba2ca1e826219770c9544fb40e21180ba1d9d3e78b54330ed25
   print $'Snapshot uploaded successfully with download Url:'
   print $'(ansi p)($downloadUrl)(ansi reset)'
-  handle-import-metadata $TO_TEAM_ID $TO_TEAM_CODE $snapshotOid $downloadUrl
+  handle-import-metadata $TO_TEAM_ID $TO_TEAM_CODE $snapshotOid $downloadUrl --modules $SELECTED_MODULES
   # handle-import-metadata $TO_TEAM_ID $TO_TEAM_CODE $TEST_OID $TEST_META
   let end = date now
   print $'Total time consumed: (ansi p)($end - $start)(ansi reset)'
@@ -121,9 +123,10 @@ def handle-import-metadata [
   teamCode: string,     # Specify the team code of the snapshot to upload
   rootOid: string,      # Specify the root oid of the snapshot to upload
   metaUrl: string,      # Specify the meta data download url for importing
+  --modules(-m): list,  # Specify the modules to sync
 ] {
   let start = date now
-  let taskId = import-metadata $teamId $teamCode $rootOid $metaUrl
+  let taskId = import-metadata $teamId $teamCode $rootOid $metaUrl --modules $modules
   print -n (char nl)
   print $'(ansi pr) STEP 3/3: (ansi reset) Meta data importing task started, id: (ansi p)($taskId)(ansi reset)'
   mut detail = fetch-task-detail $taskId $DEST_HOST
@@ -197,14 +200,19 @@ def import-metadata [
   teamCode: string,     # Specify the team code of the meta data to import
   rootOid: string,      # Specify the root OID of the meta data to import
   metaUrl: string,      # Specify the meta data download url for importing
+  --modules(-m): list,  # Specify the modules to sync
 ] {
   const destImportApi = '/api/trantor/task/exec/SyncAllInOneTask'
   let query = { teamId: $teamId, teamCode: $teamCode, userId: '1', verbose: 'false' } | url build-query
-  let importPayload = {
+  mut importPayload = {
     rootOid: $rootOid,
     downloadUrl: $metaUrl,
     ddlAutoUpdate: true,
     resetModuleForInstall: true,
+  }
+  if not ($modules | is-empty) {
+    $importPayload.resetModuleKeys = $modules
+    print $'Goint to import modules: ($modules | str join ",")'
   }
   let resp = http post --content-type application/json $'($DEST_HOST)($destImportApi)?($query)' $importPayload
   if not $resp.success {
