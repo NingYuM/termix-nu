@@ -6,8 +6,8 @@
 # [√] Upload meta data to OSS
 # [√] Update import meta data status for each task
 # [√] Import meta data from OSS to the destination
-# [ ] Confirm source and destination: teameId, teamCode, host
-# [ ] Select the modules to sync or sync all
+# [√] Confirm source and destination: teameId, teamCode, host
+# [√] Select the modules to sync or sync all the modules
 # [ ] Add a config file for all the settings
 # [ ] Allow default settings, so we can run the script without any arguments
 # [ ] Update user manual for meta data syncing script
@@ -26,8 +26,7 @@ const TO_TEAM_ID = '22'
 const TO_TEAM_CODE = 'TERP'
 const SOURCE_HOST = 'https://back-terp-console-dev.app.terminus.io'
 const DEST_HOST = 'https://back-terp-console-test.app.terminus.io'
-const SELECTED_MODULES = [ERP_HR ERP_GEN TERP_PORTAL]
-const MODULE_CANDIDATES = [ERP_HR ERP_PRD ERP_PLN ERP_GEN ERP_SCM ERP_FI ERP_FIN ERP_CO TERP_PORTAL]
+const AVAILABLE_MODULES = [ERP_HR ERP_PRD ERP_PLN ERP_GEN ERP_SCM ERP_FI ERP_FIN ERP_CO TERP_PORTAL]
 
 # Test data
 const TEST_OID = '130b77d9827a86cf7cbcd6b835a9d1272509662de4648d45480f842f384c919e'
@@ -41,6 +40,12 @@ export def 'meta sync' [
 ] {
   print -n (ellie); print '        Terminus TERP Meta Data Syncing Tool'; hr-line
   confirm-check
+  let modules = if $all { [] } else { get-selected-modules }
+  if ($modules | is-empty) {
+    print $'Becarefull, You are going to sync (ansi p)ALL(ansi reset) the modules...'
+  } else {
+    print $'You have selected the following modules to import: (ansi p)($modules | str join ",")(ansi reset)'
+  }
 
   let start = date now
   let snapshotOid = handle-create-snapshot $FROM_TEAM_ID $FROM_TEAM_CODE
@@ -50,7 +55,7 @@ export def 'meta sync' [
   # let downloadUrl = handle-upload-snapshot 891a7cc3d936cba2ca1e826219770c9544fb40e21180ba1d9d3e78b54330ed25
   print $'Snapshot uploaded successfully with download Url:'
   print $'(ansi p)($downloadUrl)(ansi reset)'
-  handle-import-metadata $TO_TEAM_ID $TO_TEAM_CODE $snapshotOid $downloadUrl --modules $SELECTED_MODULES
+  handle-import-metadata $TO_TEAM_ID $TO_TEAM_CODE $snapshotOid $downloadUrl --modules $modules
   # handle-import-metadata $TO_TEAM_ID $TO_TEAM_CODE $TEST_OID $TEST_META
   let end = date now
   print $'Total time consumed: (ansi p)($end - $start)(ansi reset)'
@@ -68,6 +73,17 @@ def confirm-check [] {
     echo $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($check)(ansi reset), bye...'
     exit $ECODE.INVALID_PARAMETER
   }
+}
+
+# Get the selected modules to sync by user selection or config file
+def get-selected-modules [] {
+  print -n (char nl)
+  let selected = $AVAILABLE_MODULES | input list --multi 'Please select the modules to sync (space to select, esc or q to quit, enter to confirm)'
+  if ($selected | is-empty) {
+    print $'You have not selected any modules, bye...'
+    exit $ECODE.SUCCESS
+  }
+  return $selected
 }
 
 # Create meta data snapshot and wait for the task to finish, return the snapshot SHA if success
