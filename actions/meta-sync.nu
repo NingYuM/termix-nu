@@ -34,10 +34,13 @@ const TEST_OID = '130b77d9827a86cf7cbcd6b835a9d1272509662de4648d45480f842f384c91
 const TEST_META = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/trantor2/console/export/68d44bfb-1e5b-4356-b6a7-cca59da9db40/22-TERP-130b77d9827a86cf7cbcd6b835a9d1272509662de4648d45480f842f384c919e.zip'
 
 export def 'meta sync' [
-  --from(-f): string,  # Specify the source meta data provider name
-  --to(-t): string,    # Specify the destination meta data provider name
+  --from(-f): string,   # Specify the source meta data provider name
+  --to(-t): string,     # Specify the destination meta data provider name
+  --all(-a),            # Specify whether to sync all the modules
+  --selected(-s),       # Sync the selected modules in config file
 ] {
   print -n (ellie); print '        Terminus TERP Meta Data Syncing Tool'; hr-line
+  confirm-check
 
   let start = date now
   let snapshotOid = handle-create-snapshot $FROM_TEAM_ID $FROM_TEAM_CODE
@@ -51,6 +54,20 @@ export def 'meta sync' [
   # handle-import-metadata $TO_TEAM_ID $TO_TEAM_CODE $TEST_OID $TEST_META
   let end = date now
   print $'Total time consumed: (ansi p)($end - $start)(ansi reset)'
+}
+
+# Make sure you know what you are doing
+def confirm-check [] {
+  print $'Attention:'; hr-line
+  print $'You are going to sync meta data from: (ansi p)($SOURCE_HOST) @ ($FROM_TEAM_CODE):($FROM_TEAM_ID)(ansi reset)'
+  print $'To: (ansi p)($DEST_HOST) @ ($TO_TEAM_CODE):($TO_TEAM_ID)(ansi reset), are you sure to continue?'
+  let check = $'($FROM_TEAM_ID)-to-($TO_TEAM_ID)'
+  let confirm = input $'Please confirm by typing (ansi r)($check)(ansi reset) to continue or (ansi p)q(ansi reset) to quit: '
+  if $confirm == 'q' { echo $'Syncing cancelled, Bye...'; exit $ECODE.SUCCESS }
+  if $confirm != $check {
+    echo $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($check)(ansi reset), bye...'
+    exit $ECODE.INVALID_PARAMETER
+  }
 }
 
 # Create meta data snapshot and wait for the task to finish, return the snapshot SHA if success
