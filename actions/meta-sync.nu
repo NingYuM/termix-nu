@@ -12,6 +12,7 @@
 # [√] Add a config file for all the settings
 # [√] Setting file validation check
 # [√] Allow default settings, so we can run the script without any arguments
+# [ ] Display resetModuleForInstall config somewhere
 # [ ] Allow to get selected modules from --modules flag
 # [ ] Must specify source and destination if no default source and destination was set
 # [ ] Add teamId, teamCode, host checking for each source and destination
@@ -78,8 +79,8 @@ def get-meta-setting [
   let metaConf = $env.META_CONF
   # print ($metaConf | table -e)
 
-  let defaultSource = $metaConf.source | values | where default == true
-  let defaultDest = $metaConf.destination | values | where default == true
+  let defaultSource = $metaConf.source | values | default false default | where default == true
+  let defaultDest = $metaConf.destination | values | default false default | where default == true
   # CHECK: Make sure at most one default source and destination was set
   default-check 'source' $defaultSource
   default-check 'destination' $defaultDest
