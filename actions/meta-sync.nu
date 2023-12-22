@@ -4,14 +4,20 @@
 # Description: A TUI tool for syncing meta data of TERP
 # [√] Create snapshot of meta data
 # [√] Upload meta data to OSS
-# [√] Update import meta data status for each task
-# [√] Import meta data from OSS to the destination
+# [√] Update meta data import status for each task
+# [√] Import meta data from OSS to the destination host
 # [√] Confirm source and destination: teameId, teamCode, host
 # [√] Select the modules to sync or sync all the modules
+# [ ] Confirm the selected modules and reselect if needed
 # [√] Add a config file for all the settings
 # [√] Setting file validation check
 # [√] Allow default settings, so we can run the script without any arguments
+# [ ] Allow to get selected modules from --modules flag
+# [ ] Must specify source and destination if no default source and destination was set
+# [ ] Add teamId, teamCode, host checking for each source and destination
+# [ ] Add --snapshot-only(-S) flag to only create snapshot
 # [ ] Update user manual for meta data syncing script
+# [ ] User authentication support
 # Usage:
 #   t msync --all
 #   t msync --selected
@@ -22,16 +28,12 @@ use ../utils/common.nu [ECODE, hr-line]
 
 const QUERY_INTERVAL = 1sec
 
-# Test data
-const TEST_OID = ''
-const TEST_META = ''
-
 # TERP Meta data syncing tool
 export def 'meta sync' [
-  --from(-f): string,   # Specify the source meta data provider name
-  --to(-t): string,     # Specify the destination meta data provider name
+  --from(-f): string,   # Specify the source meta data provider name from meta.source config
+  --to(-t): string,     # Specify the destination meta data provider name from meta.destination config
   --all(-a),            # Specify whether to sync all the modules
-  --selected(-s),       # Sync the selected modules in config file
+  --selected(-s),       # Sync the selected modules from config file of the specified source
 ] {
   print -n (ellie); print '        Terminus TERP Meta Data Syncing Tool'; hr-line
 
@@ -40,7 +42,6 @@ export def 'meta sync' [
   let dest = $usedSetting.dest
   let source = $usedSetting.source
   confirm-check --from $source --to $dest
-  # TODO: get selected modules from --modules flag
   let modules = if $all { [] } else { get-selected-modules --from $source }
   if ($modules | is-empty) {
     print $'Becarefull, You are going to sync (ansi p)ALL(ansi reset) the modules...'
@@ -53,11 +54,9 @@ export def 'meta sync' [
   hr-line
   print $'Snapshot created successfully with RootOID: (ansi p)($snapshotOid)(ansi reset)'
   let downloadUrl = handle-upload-snapshot $source $snapshotOid
-  # let downloadUrl = handle-upload-snapshot 891a7cc3d936cba2ca1e826219770c9544fb40e21180ba1d9d3e78b54330ed25
   print $'Snapshot uploaded successfully with download Url:'
   print $'(ansi p)($downloadUrl)(ansi reset)'
   handle-import-metadata $dest $snapshotOid $downloadUrl --modules $modules
-  # handle-import-metadata $dest $TEST_OID $TEST_META
   let end = date now
   print $'Total time consumed: (ansi p)($end - $start)(ansi reset)'
 }
@@ -71,39 +70,42 @@ def --env load-meta-conf [] {
 
 # Check meta data settings
 def get-meta-setting [
-  --from(-f): string,   # Specify the source meta data provider name
-  --to(-t): string,     # Specify the destination meta data provider name
+  --from(-f): string,   # Specify the source meta data provider name from meta.source config
+  --to(-t): string,     # Specify the destination meta data provider name from meta.destination config
   --all(-a),            # Specify whether to sync all the modules
   --selected(-s),       # Sync the selected modules in config file
 ] {
   let metaConf = $env.META_CONF
+  # print ($metaConf | table -e)
+
   let defaultSource = $metaConf.source | values | where default == true
   let defaultDest = $metaConf.destination | values | where default == true
-  # TODO: teamId, teamCode, host checking for each source and destination
+  # CHECK: Make sure at most one default source and destination was set
   default-check 'source' $defaultSource
   default-check 'destination' $defaultDest
-  if not ($from | is-empty) and ($from not-in ($metaConf.source | columns)) {
-    print $'The source name (ansi p)($from)(ansi reset) does`t exists in the meta.source settings, please check it again.'
+  if (not ($from | is-empty)) and ($from not-in $metaConf.source) {
+    print $'The source name (ansi p)($from)(ansi reset) does`t exists in the meta.source config, please check it again.'
     exit $ECODE.INVALID_PARAMETER
   }
-  if not ($to | is-empty) and ($to not-in ($metaConf.destination | columns)) {
-    print $'The source name (ansi p)($to)(ansi reset) does`t exists in the meta.source settings, please check it again.'
+  if (not ($to | is-empty)) and ($to not-in $metaConf.destination) {
+    print $'The source name (ansi p)($to)(ansi reset) does`t exists in the meta.source config, please check it again.'
     exit $ECODE.INVALID_PARAMETER
   }
   let source = if ($from | is-empty) { $defaultSource | get 0 } else { $metaConf.source | get $from }
   let destination = if ($to | is-empty) { $defaultDest | get 0 } else { $metaConf.destination | get $to }
   if $selected {
-    if ([selectedModules availableModules] | any {|| $in not-in ($source | columns) }) {
+    # CHECK: Make sure the selected and available modules was set in the source config
+    if ([selectedModules availableModules] | any {|| $in not-in $source }) {
       print $'The source (ansi p)($from)(ansi reset) must have (ansi p)selectedModules & availableModules(ansi reset) config.'
       exit $ECODE.INVALID_PARAMETER
     }
+    # CHECK: Make sure the selected modules was all in the available modules
     $source.selectedModules | each {|it| if $it not-in $source.availableModules {
       print $'The source (ansi p)($from)(ansi reset) selectedModules ($it) must be one of ($source.availableModules | str join ",")'
       exit $ECODE.INVALID_PARAMETER
     }}
     return { source: $source, dest: $destination, selectedModules: $source.selectedModules }
   }
-  print ($metaConf | table -e)
   { source: $source, dest: $destination }
 }
 
@@ -116,8 +118,8 @@ def default-check [name, value] {
 
 # Make sure you know what you are doing
 def confirm-check [
-  --from(-f): record,   # Specify the meta data source
-  --to(-t): record,     # Specify the meta data destination
+  --from(-f): record,   # Specify the meta data source config
+  --to(-t): record,     # Specify the meta data destination config
 ] {
   print $'Attention:'; hr-line
   print $'You are going to sync meta data from: (ansi p)($from.host) @ ($from.teamCode):($from.teamId)(ansi reset)'
@@ -133,7 +135,7 @@ def confirm-check [
 
 # Get the selected modules to sync by user selection or config file
 def get-selected-modules [
-  --from(-f): record,   # Specify the meta data source
+  --from(-f): record,   # Specify the meta data source config
 ] {
   print -n (char nl)
   let selected = $from.availableModules | input list --multi 'Please select the modules to sync (space to select, esc or q to quit, enter to confirm)'
@@ -146,7 +148,7 @@ def get-selected-modules [
 
 # Create meta data snapshot and wait for the task to finish, return the snapshot SHA if success
 def handle-create-snapshot [
-  source: record,       # Specify the meta source of the snapshot to create
+  source: record,       # Specify the meta source config of the snapshot to create
 ] {
   let start = date now
   let taskId = create-snapshot $source
@@ -176,7 +178,7 @@ def handle-create-snapshot [
 
 # Upload meta data snapshot and wait for the task to finish, return the meta data download url if success
 def handle-upload-snapshot [
-  source: record,       # Specify the meta source of the snapshot to upload
+  source: record,       # Specify the meta source config of the snapshot to upload
   rootOid: string,      # Specify the root oid of the snapshot to upload
 ] {
   let start = date now
@@ -208,7 +210,7 @@ def handle-upload-snapshot [
 
 # Import meta data to destination and wait for the task to finish
 def handle-import-metadata [
-  dest: record,         # Specify the meta dest of the snapshot to import
+  dest: record,         # Specify the meta dest config for the snapshot to import
   rootOid: string,      # Specify the root oid of the snapshot to import
   metaUrl: string,      # Specify the meta data download url for importing
   --modules(-m): list,  # Specify the modules to sync
@@ -268,7 +270,7 @@ def create-snapshot [
 
 # Upload meta data snapshot to OSS
 def upload-snapshot [
-  source: record,       # Specify the meta source of the snapshot to upload
+  source: record,       # Specify the meta source config of the snapshot to upload
   rootOid: string,      # Specify the root OID of the snapshot to upload
 ] {
   const snapShotUploadApi = '/api/trantor/task/exec/UploadObjectToOSSTask'
@@ -282,7 +284,7 @@ def upload-snapshot [
 
 # Import the meta data from OSS to destination
 def import-metadata [
-  dest: record,         # Specify the meta dest of the snapshot to import
+  dest: record,         # Specify the meta dest config for the snapshot to import
   rootOid: string,      # Specify the root OID of the meta data to import
   metaUrl: string,      # Specify the meta data download url for importing
   --modules(-m): list,  # Specify the modules to sync
@@ -293,7 +295,8 @@ def import-metadata [
     rootOid: $rootOid,
     downloadUrl: $metaUrl,
     ddlAutoUpdate: true,
-    resetModuleForInstall: true,
+    # If true, will reset the module keys for install, so you can't create any scene
+    resetModuleForInstall: ($dest | get -i resetModuleForInstall | default false),
   }
   if not ($modules | is-empty) {
     $importPayload.resetModuleKeys = $modules

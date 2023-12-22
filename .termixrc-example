@@ -45,6 +45,7 @@ availableModules = ['ERP_HR', 'ERP_PRD', 'ERP_PLN', 'ERP_GEN', 'ERP_SCM', 'ERP_F
 default = true
 teamId = 666
 teamCode = 'TERP'
+resetModuleForInstall = false
 host = 'https://abc-console-test.app.terminus.io'
 
 # 快捷导航
