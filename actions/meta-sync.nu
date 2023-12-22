@@ -254,7 +254,8 @@ def handle-import-metadata [
   # print ($detail.subTasks | table -e)
   print $'Time consumed for 3rd step: ($end - $start)'
   if ($stats.failed > 0) {
-    print $'(ansi r)Failed to import metadata, please try again later.(ansi reset)'
+    print $'(ansi r)Failed to import metadata with the following outputs:(ansi reset)'
+    hr-line; print $detail.outputs
     exit $ECODE.SERVER_ERROR
   }
   print $'(ansi p)Bravo! Meta data synchronized successfully.(ansi reset)'
