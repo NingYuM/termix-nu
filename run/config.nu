@@ -546,7 +546,7 @@ let carapace_completer = {|spans|
 # The default config record. This is where much of your global configuration is setup.
 $env.config = {
   # true or false to enable or disable the welcome banner at startup
-  show_banner: true
+  show_banner: false
   ls: {
     use_ls_colors: true         # use the LS_COLORS environment variable to colorize output
     clickable_links: true       # enable or disable clickable links. Your terminal has to support links.

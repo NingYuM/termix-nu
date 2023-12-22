@@ -1110,7 +1110,68 @@ alias main = dingtalk notify
 
 ---
 
-### 27. Homebrew 镜像加速{#brew-speed-up}
+### 27. TERP 静态资源云端同步{#terp-assets-transfer}
+
+**使用场景**:
+
+在 `TERP` 项目实施过程中，不希望在项目环境里面通过源码部署前端 Portal、H5-Portal、Console 等应用，而是统一采用标品的制品镜像部署，以降低项目与 Portal、Console 的耦合程度，如此以来就需要项目侧的自定义组件静态资源统一走线上云存储然后通过网关转发，这在线上存储在公网的情况下很容易做到，直接通过流水线发布到云上即可。但是假如线上存储在企业私有网络的 Minio 里面就没法通过流水线直接将资源发布过去（VPN问题暂时没法解决）这就导致了项目里面需要把项目特有的自定义组件资源打包到制品内部，而这就与前述降低耦合的初衷相悖。
+
+因此才有了本工具，其具有如下作用：
+
+- 允许操作者在本机连接 VPN，然后通过该脚本把项目需要的静态资源从某个公网云存储地址上下载下来，然后上传到项目私有化部署的 Minio 存储上。
+- 允许操作者在本机连接 VPN，然后通过该脚本把 Minio 预发环境经过测试验证的静态资源”同步“到 Minio 生产环境地址，以配合完成通过制品部署生产环境的目的。
+- 也允许比如 EMP 等产品在不用自己发布 `material-ui` 和 `terp-ui` 的情况下将二者的静态资源构建产物从标品发布地址同步到 EMP 环境里面，加上 EMP 自己开发的特有自定义组件满足其个性化搭建需求。
+
+**命令格式**: `terp-assets <action> <end> {flags}`
+
+其中 `action` 目前只支持两种 `download` & `transfer`:
+
+- 资源下载：`terp-assets download <end> --from <from> --to <to>`
+- 资源同步：`terp-assets transfer <end> --from <from> --to <to> --dest-store <store>`，资源同步时会先下载然后再上传，实际同步操作的时候不需要单独执行下载操作。资源上传需要在本机安装 `@terminus/t-package-tools`, 执行 `npm i -g @terminus/t-package-tools` 即可，版本不低于 `0.0.9-beta.9`
+
+**命令别名**: `terp-assets` 的别名为 `ta`
+
+**参数说明**:
+
+- `<end>` 目前的可能值为：`pc`, `mobile`, `mat`, `mmat`, `dors`, `iam`, `all`, 分别代表PC端自定义组件、移动端自定义组件、Material-UI PC端、Material-UI 移动端，Dors, IAM 以及全部静态资源。也可以同时指定多个触点类型用 `,` 分隔
+- `-f, --from <String>` - 资源的源挂载目录或者源 `lasted.json` 完整 URL 地址，`from` 的 host 为 `https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com` 时可以只指定资源挂载的目录，否则需要 `lasted.json` 的完整 URL 地址
+- `-t, --to <String>` - 对于 `download` 代表资源下载保存的本机路径，对于 `transfer` 代表资源的目标挂载目录
+- `-v, --verbose` - 显示命令更多执行信息
+- `-d, --dest-store <String>` - 对于 `transfer` 命令必须在 `.termixrc` 里面配置对应云存储的秘钥等信息
+- `-h, --help` - 显示本帮助信息
+
+**云存储配置**:
+
+Note: 参考 `termix-nu` 根目录下的 `.termixrc-example` 文件，可以将其拷贝到 `.termixrc` 然后修改其中的配置比如:
+
+```toml
+# Minio 配置, 后面几个配置项的 `minio` 前缀即为 `transfer` 操作 `--dest-store` 参数的候选值
+minio.TYPE = 'minio'       # MinIO 的 TYPE 值一定不要配错，否则会资源导致上传失败
+minio.OSS_AK = 'YOUR-MINIO-AK'
+minio.OSS_SK = 'YOUR-MINIO-SK'
+minio.OSS_BUCKET = 'YOUR-BUCKET-NAME'
+minio.OSS_REGION = 'oss-cn-hangzhou'
+minio.OSS_ENDPOINT = 'https://oss-cn-hangzhou.aliyuncs.com'
+```
+
+**使用举例**:
+
+```bash
+# 从 OSS 上 dev 目录（即 https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/fe-resources/dev/lasted.json）
+# 下载所有 TERP 依赖的静态资源到本地，注：实际资源同步的过程中是不需要单独执行该命令的，只需要执行后面的两条命令之一即可
+t ta download all -f dev
+# 当你从测试环境打制品部署预发环境时可以通过以下命令将测试环境的所有
+# TERP 需要的静态资源下载下来然后上传到 `minio` 的 staging 目录
+t ta transfer all --from test --to staging --dest-store minio -v
+# 在预发环境验证通过后即可将预发环境经过验证的所有 TERP 依赖静态资源下载到本地然后上传到 minio 的 prod 目录
+t ta transfer all --from http://minio.terp.terminus.com/terminus-trantor/fe-resources/staging/lasted.json --to prod --dest-store minio -v
+```
+
+资源同步完毕后记得修改网关配置以使线上的静态资源生效。
+
+---
+
+### 28. Homebrew 镜像加速{#brew-speed-up}
 
 **功能描述**: 由于众所周知的原因 `brew` 更新或者安装应用的时候会比较慢，本工具可以通过给 `brew` 设置国内镜像的方式来提速，同时允许用户恢复到初始设置。
 
@@ -1135,7 +1196,7 @@ t brew-speed-up off
 
 ---
 
-### 28. 查看团队成员当前 EMP 工时填报情况{#emp}
+### 29. 查看团队成员当前 EMP 工时填报情况{#emp}
 
 **功能描述**: 查看团队成员当前 EMP 工时填报情况
 
@@ -1166,7 +1227,7 @@ t emp true true
 
 ---
 
-### 29. 给标品源码仓库批量打 Tag{#gaia-release}
+### 30. 给标品源码仓库批量打 Tag{#gaia-release}
 
 **功能描述**: 在标品前端需要发布新版本的时候将标品 `gaia-mall,gaia-mobile,gaia-picker` 等源码仓库指定分支批量打 Release Tag, 也可以用于删除指定 Tag
 
@@ -1192,7 +1253,7 @@ t gaia-release v2.2.0.21-2021.11.09 mall,mobile
 
 ---
 
-### 30. 给远程二开仓库批量打 Tag{#tag-redev}
+### 31. 给远程二开仓库批量打 Tag{#tag-redev}
 
 **功能描述**: 给远程二开仓库指定分支批量打 Release Tag, 目前前端二开仓库含增量、全量及所有业态有 13 个，人工挨个仓库打 Tag 是不现实的，也很容易出错。另外，该命令也可以用于删除指定 Tag。
 
@@ -1220,7 +1281,7 @@ t tag-redev v2.2.0.21-2021.11.09 master
 
 ---
 
-### 31. 查询二开仓库的远程分支及 Tag 信息{#ls-redev-refs}
+### 32. 查询二开仓库的远程分支及 Tag 信息{#ls-redev-refs}
 
 **功能描述**:
 
@@ -1244,7 +1305,7 @@ t ls-redev-refs b2c,b2b true
 
 ---
 
-### 32. 批量更新远程二开仓库代码到本地{#pull-redev}
+### 33. 批量更新远程二开仓库代码到本地{#pull-redev}
 
 **功能描述**: 更新远程二开仓库代码到本地，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `TERMIX_TMP_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `termixTmpPath` 配置;
 
@@ -1265,7 +1326,7 @@ t pull-redev
 t pull-redev develop true
 ```
 
-### 33. 扫描(清理)同步仓库里面冗余分支{#prune-branches}
+### 34. 扫描(清理)同步仓库里面冗余分支{#prune-branches}
 
 **功能描述**: 随着时间的推移各个部署环境的仓库里面可能存在很多不需要的分支，尤其是之前通过流水线同步的方式不会自动清理源分支不存在的同步分支，这些分支需要被清理掉，否则部署的时候找流水线也不太方便(这真的不是强行加的理由)，本脚本的作用就是扫描出这些分支，但是安全起见不会直接执行删除操作，只是提示用户这些分支是可以被清理掉的，最终还是需要用户去手工确认删掉, 可清理分支的判定原则就是读取全局同步配置: `i` 分支上的 `.termixrc` 文件然后不在同步配置里面的**部署仓库分支**即为可删除分支，如果确认的时候该分支也不是部署中的分支大概率是可以删掉的了;
 
