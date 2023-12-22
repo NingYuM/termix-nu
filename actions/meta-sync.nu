@@ -27,6 +27,7 @@
 use std ellie
 use ../utils/common.nu [ECODE, hr-line]
 
+const POLL_TICK_CHAR = '*'
 const QUERY_INTERVAL = 1sec
 
 # TERP Meta data syncing tool
@@ -43,12 +44,13 @@ export def 'meta sync' [
   let dest = $usedSetting.dest
   let source = $usedSetting.source
   confirm-check --from $source --to $dest
-  let modules = if $all { [] } else { get-selected-modules --from $source }
+  let modules = if $all { [] } else { get-selected-modules --from $source --selected=$selected }
   if ($modules | is-empty) {
     print $'Becarefull, You are going to sync (ansi p)ALL(ansi reset) the modules...'
   } else {
     print $'You have selected the following modules to import: (ansi p)($modules | str join ",")(ansi reset)'
   }
+  print -n (char nl)
 
   let start = date now
   let snapshotOid = handle-create-snapshot $source
@@ -137,8 +139,10 @@ def confirm-check [
 # Get the selected modules to sync by user selection or config file
 def get-selected-modules [
   --from(-f): record,   # Specify the meta data source config
+  --selected(-s),       # Sync the selected modules from config file of the specified source
 ] {
   print -n (char nl)
+  if $selected { return $from.selectedModules }
   let selected = $from.availableModules | input list --multi 'Please select the modules to sync (space to select, esc or q to quit, enter to confirm)'
   if ($selected | is-empty) {
     print $'You have not selected any modules, bye...'
@@ -235,7 +239,7 @@ def handle-import-metadata [
     $detail = (fetch-task-detail $taskId $dest.host)
     $stats = $detail.progress
     sleep $QUERY_INTERVAL
-    print -n '#'
+    print -n $POLL_TICK_CHAR
     if ($stats.success > $successCount) {
       $successCount = $stats.success
       print (char nl)
@@ -250,7 +254,7 @@ def handle-import-metadata [
   # print ($detail.subTasks | table -e)
   print $'Time consumed for 3rd step: ($end - $start)'
   if ($stats.failed > 0) {
-    print $'Failed to import metadata, please try again later.'
+    print $'(ansi r)Failed to import metadata, please try again later.(ansi reset)'
     exit $ECODE.SERVER_ERROR
   }
   print $'(ansi p)Bravo! Meta data synchronized successfully.(ansi reset)'
