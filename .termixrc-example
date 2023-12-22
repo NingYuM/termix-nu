@@ -28,6 +28,25 @@ erda.prod = [
     { pid = 213, appid = 7542, appName = 'fe-docs', alias = 'docs', env = 'PROD', branch = 'master', pipeline = 'pipeline.yml', description = '备注' }
 ]
 
+# Meta data syncing source config
+# Make sure only one default source is set at most
+[meta.source.dev]
+default = true
+teamId = 666
+teamCode = 'TERP'
+host = 'https://abc-console-dev.app.terminus.io'
+selectedModules = ['ERP_HR', 'ERP_GEN', 'TERP_PORTAL']
+availableModules = ['ERP_HR', 'ERP_PRD', 'ERP_PLN', 'ERP_GEN', 'ERP_SCM', 'ERP_FI', 'ERP_FIN', 'ERP_CO', 'TERP_PORTAL']
+
+
+# Meta data syncing destination config
+# Make sure only one default destination is set at most
+[meta.destination.test]
+default = true
+teamId = 666
+teamCode = 'TERP'
+host = 'https://abc-console-test.app.terminus.io'
+
 # 快捷导航
 [quickNavs]
 erda = 'https://erda.cloud/'

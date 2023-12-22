@@ -84,6 +84,11 @@ go nav=('list'): _setup
   @overlay use {{ join(_termix, 'actions', 'quick-nav.nu') }}; \
     go {{nav}}
 
+# Terp Meta data syncing tool
+msync *OPTIONS: _setup
+  @overlay use {{ join(_termix, 'actions', 'meta-sync.nu') }}; \
+    meta sync {{OPTIONS}}
+
 # Run an Erda pipeline, the target can be queried by `dp -l`, default is `dev`, and use `--app` to specify the apps to deploy
 deploy *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'pipeline.nu') }}; \
