@@ -1171,7 +1171,88 @@ t ta transfer all --from http://minio.terp.terminus.com/terminus-trantor/fe-reso
 
 ---
 
-### 28. Homebrew 镜像加速{#brew-speed-up}
+### 28. TERP 元数据一站式极简同步工具{#meta-data-syncing}
+
+目前 `TERP` 后端元数据同步的操作较为复杂：需要用 `Postman` 之类工具手工调一个接口，产生一个异步任务，等异步任务结束后再调一个接口生成第二个异步任务，然后在第二个异步任务结束之后将其出参连同第一个异步任务的出参一起传给第三个手工调用的接口并等待该异步任务结束。整个操作连贯性较差：每个异步任务什么时候结束是未知的，导致操作者要么需要不断地去查询异步任务执行结果，要么就是任务结束很久才查觉，对操作者的精力牵扯也比较大。针对这种操作复杂、频率较高的刚性需求很有必要对其进行优化，这正是本工具的初衷，其具有如下特点：
+
+- 一站式同步：所有操作都可以在 CLI 里完成，不用切换到其他工具;
+- 配置检查：在开始同步前会对配置文件和入参进行检查，确保没问题后才会执行(可能还有些分支场景未考虑周全，有问题及时反馈)；
+- 操作简单：在配置得当的情况下只需一条命令即可，比如 `t msync -a`;
+- 支持同步所有模块或者选择指定模块同步(指定模块同步功能以后可能会被废弃，详询元数据团队);
+- 所有需要确认或者选择的操作前置，如此以来就可以提前把各种准备工作做好，剩下的只需要喝喝茶等待工具执行完成就可以了；
+- 对于所有的异步任务工具会定时轮询(目前每秒一次)并更新状态和进度（然而并不是真实的百分比进度，本质上是一个以进度条形式显示的计时器，告诉你程序还没挂掉）;
+- 分秒必争，所有的任务会无缝串行，同时会显示每条任务和任务总执行耗时；
+- 除 `Nushell` 之外不依赖其他二进制文件或者 Node Modules;
+- 后续会持续对接 `Trantor` 元数据团队，及时跟进最新的变化，确保工具持续可用；
+
+**命令格式**: `msync *OPTIONS`
+
+**参数说明**:
+
+-  `-f`, `--from` <String> - 指定同步源名称，可以从配置文件的 `meta.source` Key 值中获取，不传则使用默认同步源
+-  `-t`, `--to` <String> - 指定同步目标名称，可以从配置文件的 `meta.destination` Key 值中获取，不传则使用默认同步目标
+-  `-a`, `--all` - 传了这个开关就表示同步所有模块
+-  `-s`, `--selected` - 传了这个开关就表示同步指定同步源中的 `selectedModules` 包含的模块
+-  `-h`, `--help` - 查看帮助信息
+
+**配置说明**:
+
+为了简化命令执行，在使用本工具之前需要先修改配置文件，配置文件路径: `termix-nu/.termixrc`, 该文件为 `toml` 格式，有一个 `.termixrc-example` 文件可以作为参考，接下来详细解释具体配置：
+
+```toml
+# Meta data syncing source config
+# 此处将定义一个名为 dev 的同步源，可以作为后续 --from 参数的入参，你可以定义多个同步源，名字自定
+[meta.source.dev]
+# 默认启用的同步源：如果你在使用同步工具的时候没有通过 --from 指定同步源则使用该同步源，故而默认源最多只能有一个
+default = true
+# 同步源 Team ID
+teamId = 666
+# 同步源 Team Code
+teamCode = 'TERP'
+# 同步源 Console 地址，后面不要加 `/`
+host = 'https://abc-console-dev.app.terminus.io'
+# 预定义的待导入模块, 如果通过 --selected 参数调用命令则同步这些模块
+selectedModules = ['ERP_HR', 'ERP_GEN', 'TERP_PORTAL']
+# 所有可选择模块，如果调用命令的时候既没有使用 --selected 参数，也没有使用 --all 参数则会出现模块选择界面，可以手工选择需要导入的模块
+availableModules = ['ERP_HR', 'ERP_PRD', 'ERP_PLN', 'ERP_GEN', 'ERP_SCM', 'ERP_FI', 'ERP_FIN', 'ERP_CO', 'TERP_PORTAL']
+
+# [meta.source.dev0]
+# 若需配置更多同步源参考以上配置
+
+# Meta data syncing destination config
+# 此处将定义一个名为 test 的同步源，可以作为后续 --to 参数的入参，你可以定义多个同步目标，名字自定
+[meta.destination.test]
+# 默认使用的同步目标：如果你在使用同步工具的时候没有通过 --to 指定同步目标则使用该同步目标，故而默认目标最多只能有一个
+default = true
+# 同步目标 Team ID
+teamId = 666
+# 同步目标 Team Code
+teamCode = 'TERP'
+# 导入元数据时候的 resetModuleForInstall 配置值
+resetModuleForInstall = false
+# 同步目标 Console 地址，后面不要加 `/`
+host = 'https://abc-console-test.app.terminus.io'
+
+# [meta.destination.test0]
+# 若需配置更多同步目标参考以上配置
+```
+
+**使用举例**:
+
+```bash
+# 从默认同步源同步到默认同步目标，由于没有使用--all 或 --selected 参数在命令执行过程中会让你手工选择同步模块
+t msync
+# 从默认同步源同步到默认同步目标，导入所有模块
+t msync -a
+# 从默认同步源同步到默认同步目标，导入 selectedModules 中指定的模块
+t msync -s
+# 可以通过 --from --to 参数分别指定同步的源和目标，建议始终同步所有模块，因为同步指定模块功能未来可能废弃
+t msync -a --from dev0 --to test0
+```
+
+**输出样例**:
+
+### 29. Homebrew 镜像加速{#brew-speed-up}
 
 **功能描述**: 由于众所周知的原因 `brew` 更新或者安装应用的时候会比较慢，本工具可以通过给 `brew` 设置国内镜像的方式来提速，同时允许用户恢复到初始设置。
 
@@ -1196,7 +1277,7 @@ t brew-speed-up off
 
 ---
 
-### 29. 查看团队成员当前 EMP 工时填报情况{#emp}
+### 30. 查看团队成员当前 EMP 工时填报情况{#emp}
 
 **功能描述**: 查看团队成员当前 EMP 工时填报情况
 
@@ -1227,7 +1308,7 @@ t emp true true
 
 ---
 
-### 30. 给标品源码仓库批量打 Tag{#gaia-release}
+### 31. 给标品源码仓库批量打 Tag{#gaia-release}
 
 **功能描述**: 在标品前端需要发布新版本的时候将标品 `gaia-mall,gaia-mobile,gaia-picker` 等源码仓库指定分支批量打 Release Tag, 也可以用于删除指定 Tag
 
@@ -1253,7 +1334,7 @@ t gaia-release v2.2.0.21-2021.11.09 mall,mobile
 
 ---
 
-### 31. 给远程二开仓库批量打 Tag{#tag-redev}
+### 32. 给远程二开仓库批量打 Tag{#tag-redev}
 
 **功能描述**: 给远程二开仓库指定分支批量打 Release Tag, 目前前端二开仓库含增量、全量及所有业态有 13 个，人工挨个仓库打 Tag 是不现实的，也很容易出错。另外，该命令也可以用于删除指定 Tag。
 
@@ -1281,7 +1362,7 @@ t tag-redev v2.2.0.21-2021.11.09 master
 
 ---
 
-### 32. 查询二开仓库的远程分支及 Tag 信息{#ls-redev-refs}
+### 33. 查询二开仓库的远程分支及 Tag 信息{#ls-redev-refs}
 
 **功能描述**:
 
@@ -1305,7 +1386,7 @@ t ls-redev-refs b2c,b2b true
 
 ---
 
-### 33. 批量更新远程二开仓库代码到本地{#pull-redev}
+### 34. 批量更新远程二开仓库代码到本地{#pull-redev}
 
 **功能描述**: 更新远程二开仓库代码到本地，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `TERMIX_TMP_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `termixTmpPath` 配置;
 
@@ -1326,7 +1407,7 @@ t pull-redev
 t pull-redev develop true
 ```
 
-### 34. 扫描(清理)同步仓库里面冗余分支{#prune-branches}
+### 35. 扫描(清理)同步仓库里面冗余分支{#prune-branches}
 
 **功能描述**: 随着时间的推移各个部署环境的仓库里面可能存在很多不需要的分支，尤其是之前通过流水线同步的方式不会自动清理源分支不存在的同步分支，这些分支需要被清理掉，否则部署的时候找流水线也不太方便(这真的不是强行加的理由)，本脚本的作用就是扫描出这些分支，但是安全起见不会直接执行删除操作，只是提示用户这些分支是可以被清理掉的，最终还是需要用户去手工确认删掉, 可清理分支的判定原则就是读取全局同步配置: `i` 分支上的 `.termixrc` 文件然后不在同步配置里面的**部署仓库分支**即为可删除分支，如果确认的时候该分支也不是部署中的分支大概率是可以删掉的了;
 

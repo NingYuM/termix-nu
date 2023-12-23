@@ -8,12 +8,12 @@
 # [√] Import meta data from OSS to the destination host
 # [√] Confirm source and destination: teameId, teamCode, host
 # [√] Select the modules to sync or sync all the modules
-# [ ] Confirm the selected modules and reselect if needed
+# [x] Confirm the selected modules and reselect if needed
+# [x] Allow to get selected modules from --modules flag
 # [√] Add a config file for all the settings
 # [√] Setting file validation check
 # [√] Allow default settings, so we can run the script without any arguments
 # [ ] Display resetModuleForInstall config somewhere
-# [ ] Allow to get selected modules from --modules flag
 # [ ] Must specify source and destination if no default source and destination was set
 # [ ] Add teamId, teamCode, host checking for each source and destination
 # [ ] Add --snapshot-only(-S) flag to only create snapshot

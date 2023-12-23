@@ -29,24 +29,40 @@ erda.prod = [
 ]
 
 # Meta data syncing source config
-# Make sure only one default source is set at most
+# 此处将定义一个名为 dev 的同步源，可以作为后续 --from 参数的入参，你可以定义多个同步源，名字自定
 [meta.source.dev]
+# 默认启用的同步源：如果你在使用同步工具的时候没有通过 --from 指定同步源则使用该同步源，故而默认源最多只能有一个
 default = true
+# 同步源 Team ID
 teamId = 666
+# 同步源 Team Code
 teamCode = 'TERP'
+# 同步源 Console 地址，后面不要加 `/`
 host = 'https://abc-console-dev.app.terminus.io'
+# 预定义的待导入模块, 如果通过 --selected 参数调用命令则同步这些模块
 selectedModules = ['ERP_HR', 'ERP_GEN', 'TERP_PORTAL']
+# 所有可选择模块，如果调用命令的时候既没有使用 --selected 参数，也没有使用 --all 参数则会出现模块选择界面，可以手工选择需要导入的模块
 availableModules = ['ERP_HR', 'ERP_PRD', 'ERP_PLN', 'ERP_GEN', 'ERP_SCM', 'ERP_FI', 'ERP_FIN', 'ERP_CO', 'TERP_PORTAL']
 
+# [meta.source.dev0]
+# 若需配置更多同步源参考以上配置
 
 # Meta data syncing destination config
-# Make sure only one default destination is set at most
+# 此处将定义一个名为 test 的同步源，可以作为后续 --to 参数的入参，你可以定义多个同步目标，名字自定
 [meta.destination.test]
+# 默认使用的同步目标：如果你在使用同步工具的时候没有通过 --to 指定同步目标则使用该同步目标，故而默认目标最多只能有一个
 default = true
+# 同步目标 Team ID
 teamId = 666
+# 同步目标 Team Code
 teamCode = 'TERP'
+# 导入元数据时候的 resetModuleForInstall 配置值
 resetModuleForInstall = false
+# 同步目标 Console 地址，后面不要加 `/`
 host = 'https://abc-console-test.app.terminus.io'
+
+# [meta.destination.test0]
+# 若需配置更多同步目标参考以上配置
 
 # 快捷导航
 [quickNavs]
