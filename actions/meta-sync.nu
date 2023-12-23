@@ -13,12 +13,13 @@
 # [√] Add a config file for all the settings
 # [√] Setting file validation check
 # [√] Allow default settings, so we can run the script without any arguments
+# [√] Handle 500 error properly for the last step
 # [ ] Display resetModuleForInstall config somewhere
 # [ ] Must specify source and destination if no default source and destination was set
 # [ ] Add teamId, teamCode, host checking for each source and destination
-# [ ] Add --snapshot-only(-S) flag to only create snapshot
 # [ ] Update user manual for meta data syncing script
-# [ ] User authentication support
+# [?] Add --snapshot-only(-S) flag to only create snapshot
+# [?] User authentication support
 # Usage:
 #   t msync --all
 #   t msync --selected
@@ -322,10 +323,13 @@ def fetch-task-detail [
 ] {
   const queryApi = '/api/trantor/task/run-detail'
   let DETAIL_URL = $'($queryHost)($queryApi)/($taskId)'
-  let resp = try { http get $DETAIL_URL } catch {
-    try { http get $DETAIL_URL } catch { sleep 0.5sec; http get $DETAIL_URL }
-  }
+  let resp = try { http get $DETAIL_URL } catch { http get -e $DETAIL_URL }
   if not $resp.success {
+    # 对于“服务器异常”，需要重试
+    if $resp.err.code == 'O0003' {
+      print $'(char nl)Fetch task detail failed with error: ($resp.err.msg), retrying...'
+      return (fetch-task-detail $taskId $queryHost)
+    }
     print $'Fetch task detail failed with error: ($resp.err)'
   }
   $resp.data

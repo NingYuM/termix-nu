@@ -1191,8 +1191,8 @@ t ta transfer all --from http://minio.terp.terminus.com/terminus-trantor/fe-reso
 
 -  `-f`, `--from` <String> - 指定同步源名称，可以从配置文件的 `meta.source` Key 值中获取，不传则使用默认同步源
 -  `-t`, `--to` <String> - 指定同步目标名称，可以从配置文件的 `meta.destination` Key 值中获取，不传则使用默认同步目标
--  `-a`, `--all` - 传了这个开关就表示同步所有模块
--  `-s`, `--selected` - 传了这个开关就表示同步指定同步源中的 `selectedModules` 包含的模块
+-  `-a`, `--all` - 加上这个开关就表示同步所有模块
+-  `-s`, `--selected` - 加了这个开关就表示同步指定同步源中的 `selectedModules` 配置项包含的模块
 -  `-h`, `--help` - 查看帮助信息
 
 **配置说明**:
