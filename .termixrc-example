@@ -48,7 +48,7 @@ availableModules = ['ERP_HR', 'ERP_PRD', 'ERP_PLN', 'ERP_GEN', 'ERP_SCM', 'ERP_F
 # 若需配置更多同步源参考以上配置
 
 # Meta data syncing destination config
-# 此处将定义一个名为 test 的同步源，可以作为后续 --to 参数的入参，你可以定义多个同步目标，名字自定
+# 此处将定义一个名为 test 的同步目标，可以作为后续 --to 参数的入参，你可以定义多个同步目标，名字自定
 [meta.destination.test]
 # 默认使用的同步目标：如果你在使用同步工具的时候没有通过 --to 指定同步目标则使用该同步目标，故而默认目标最多只能有一个
 default = true
@@ -56,7 +56,7 @@ default = true
 teamId = 666
 # 同步目标 Team Code
 teamCode = 'TERP'
-# 导入元数据时候的 resetModuleForInstall 配置值
+# 导入元数据时的 resetModuleForInstall 配置值
 resetModuleForInstall = false
 # 同步目标 Console 地址，后面不要加 `/`
 host = 'https://abc-console-test.app.terminus.io'
