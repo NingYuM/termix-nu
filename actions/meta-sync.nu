@@ -86,20 +86,8 @@ def get-meta-setting [
   let metaConf = $env.META_CONF
   # print ($metaConf | table -e)
 
-  for src in ($metaConf.source | columns) {
-    let srcKeys = $metaConf.source | get $src | columns
-    [teamId teamCode host] | each {|it| if $it not-in $srcKeys {
-      print $'The source (ansi p)($src)(ansi reset) must have (ansi p)($it)(ansi reset) config.'
-      exit $ECODE.INVALID_PARAMETER
-    }}
-  }
-  for dest in ($metaConf.destination | columns) {
-    let destKeys = $metaConf.destination | get $dest | columns
-    [teamId teamCode host] | each {|it| if $it not-in $destKeys {
-      print $'The destination (ansi p)($dest)(ansi reset) must have (ansi p)($it)(ansi reset) config.'
-      exit $ECODE.INVALID_PARAMETER
-    }}
-  }
+  check-required source
+  check-required destination
   let defaultSource = $metaConf.source | values | default false default | where default == true
   let defaultDest = $metaConf.destination | values | default false default | where default == true
   # CHECK: Make sure at most one default source and destination was set
@@ -123,31 +111,33 @@ def get-meta-setting [
   { source: $source, dest: $destination }
 }
 
+# Make sure the required config was set in source and destination provider
+def check-required [name: string] {
+  let metaConf = $env.META_CONF
+  for provider in ($metaConf | get $name | columns) {
+    let keys = $metaConf | get $name | get $provider | columns
+    [teamId teamCode host] | each {|it| if $it not-in $keys {
+      print $'The ($name) (ansi p)($provider)(ansi reset) must have (ansi p)($it)(ansi reset) config.'
+      exit $ECODE.INVALID_PARAMETER
+    }}
+  }
+}
+
+# Check provider name and value along with the command flags
 def provider-check [name, value, --from: string, --to: string] {
   let metaConf = $env.META_CONF
   if ($value | length) > 1 {
     print $'Invalid meta data ($name) setting, at most one default ($name) was allowed.'
     exit $ECODE.INVALID_PARAMETER
   }
-  if $name == 'source' {
-    if ($from | is-empty) and ($value | length) == 0 {
-      print $'You must specify the ($name) name or set a default ($name) in the meta.($name) config.'
-      exit $ECODE.INVALID_PARAMETER
-    }
-    if (not ($from | is-empty)) and ($from not-in $metaConf.source) {
-      print $'The ($name) name (ansi p)($from)(ansi reset) does`t exists in the meta.($name) config, please check it again.'
-      exit $ECODE.INVALID_PARAMETER
-    }
+  let check = if $name == 'source' { $from } else { $to }
+  if ($check | is-empty) and ($value | length) == 0 {
+    print $'You must specify the ($name) name or set a default ($name) in the meta.($name) config.'
+    exit $ECODE.INVALID_PARAMETER
   }
-  if $name == 'destination' {
-    if ($to | is-empty) and ($value | length) == 0 {
-      print $'You must specify the ($name) name or set a default ($name) in the meta.($name) config.'
-      exit $ECODE.INVALID_PARAMETER
-    }
-    if (not ($to | is-empty)) and ($to not-in $metaConf.destination) {
-      print $'The ($name) name (ansi p)($to)(ansi reset) does`t exists in the meta.($name) config, please check it again.'
-      exit $ECODE.INVALID_PARAMETER
-    }
+  if (not ($check | is-empty)) and ($check not-in ($metaConf | get $name)) {
+    print $'The ($name) name (ansi p)($check)(ansi reset) does`t exists in the meta.($name) config, please check it again.'
+    exit $ECODE.INVALID_PARAMETER
   }
 }
 
