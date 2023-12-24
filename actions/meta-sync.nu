@@ -14,7 +14,7 @@
 # [√] Setting file validation check
 # [√] Allow default settings, so we can run the script without any arguments
 # [√] Handle 500 error properly for the last step
-# [ ] Display resetModuleForInstall config somewhere
+# [√] Display resetModuleForInstall config somewhere
 # [ ] Must specify source and destination if no default source and destination was set
 # [ ] Add teamId, teamCode, host checking for each source and destination
 # [ ] Update user manual for meta data syncing script
@@ -126,8 +126,15 @@ def confirm-check [
   --to(-t): record,     # Specify the meta data destination config
 ] {
   print $'Attention:'; hr-line
-  print $'You are going to sync meta data from: (ansi p)($from.host) @ ($from.teamCode):($from.teamId)(ansi reset)'
-  print $'To: (ansi p)($to.host) @ ($to.teamCode):($to.teamId)(ansi reset), are you sure to continue?'
+  print $'You are going to sync meta data with the following config: (char nl)'
+  let config = [
+    [Type Host TeamID TeamCode ResetModules];
+    [FROM ($from.host | trim-host) $'($from.teamId)' $from.teamCode '-']
+    ['' '↓' '↓' '↓' '']
+    [TO ($to.host | trim-host) $'($to.teamId)' $to.teamCode $to.resetModuleForInstall]]
+  # Theme: ascii_rounded,basic_compact,dots,psql,reinforced
+  print ($config | table -e --theme psql -i false)
+  print $'Are you sure to continue?'
   let check = $'($from.teamId)-to-($to.teamId)'
   let confirm = input $'Please confirm by typing (ansi r)($check)(ansi reset) to continue or (ansi p)q(ansi reset) to quit: '
   if $confirm == 'q' { echo $'Syncing cancelled, Bye...'; exit $ECODE.SUCCESS }
@@ -135,6 +142,10 @@ def confirm-check [
     echo $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($check)(ansi reset), bye...'
     exit $ECODE.INVALID_PARAMETER
   }
+}
+
+def trim-host [] {
+  $in | str replace 'http://' '' | str replace 'https://' ''
 }
 
 # Get the selected modules to sync by user selection or config file
