@@ -1195,6 +1195,7 @@ t ta transfer all --from http://minio.terp.terminus.com/terminus-trantor/fe-reso
 - `-a`, `--all` - 加上这个开关就表示同步所有模块
 - `-s`, `--selected` - 加了这个开关就表示同步指定同步源中的 `selectedModules` 配置项所包含的模块
 - `-h`, `--help` - 查看帮助信息
+- 如果在调用命令的时候没有传 `--all` 或 `--selected` 参数会让你选择需要同步的模块, 如下图所示，在这个交互中可以使用的快捷键: `Space` 选择某一项，`a` 选择所有或取消全部选择，`q` 或 `ESC` 取消并退出，上下箭头模块切换, `Enter` 确认选择；
 
 **配置说明**:
 

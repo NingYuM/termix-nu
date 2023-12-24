@@ -15,6 +15,7 @@
 # [√] Allow default settings, so we can run the script without any arguments
 # [√] Handle 500 error properly for the last step
 # [√] Display resetModuleForInstall config somewhere
+# [√] Select and show selected modules before confirmation
 # [ ] Must specify source and destination if no default source and destination was set
 # [ ] Add teamId, teamCode, host checking for each source and destination
 # [ ] Update user manual for meta data syncing script
@@ -44,14 +45,14 @@ export def 'meta sync' [
   let usedSetting = get-meta-setting --from $from --to $to --all=$all --selected=$selected
   let dest = $usedSetting.dest
   let source = $usedSetting.source
-  confirm-check --from $source --to $dest
   let modules = if $all { [] } else { get-selected-modules --from $source --selected=$selected }
   if ($modules | is-empty) {
-    print $'Becarefull, You are going to sync (ansi p)ALL(ansi reset) the modules...'
+    print $'You have selected to sync (ansi p)ALL(ansi reset) the modules...'
   } else {
     print $'You have selected the following modules to import: (ansi p)($modules | str join ",")(ansi reset)'
   }
   print -n (char nl)
+  confirm-check --from $source --to $dest
 
   let start = date now
   let snapshotOid = handle-create-snapshot $source
@@ -127,13 +128,13 @@ def confirm-check [
 ] {
   print $'Attention:'; hr-line
   print $'You are going to sync meta data with the following config: (char nl)'
-  let config = [
+  let setting = [
     [Type Host TeamID TeamCode ResetModules];
     [FROM ($from.host | trim-host) $'($from.teamId)' $from.teamCode '-']
     ['' '↓' '↓' '↓' '']
     [TO ($to.host | trim-host) $'($to.teamId)' $to.teamCode $to.resetModuleForInstall]]
   # Theme: ascii_rounded,basic_compact,dots,psql,reinforced
-  print ($config | table -e --theme psql -i false)
+  print ($setting | table -e --theme psql -i false)
   print $'Are you sure to continue?'
   let check = $'($from.teamId)-to-($to.teamId)'
   let confirm = input $'Please confirm by typing (ansi r)($check)(ansi reset) to continue or (ansi p)q(ansi reset) to quit: '
