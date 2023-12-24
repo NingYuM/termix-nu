@@ -17,7 +17,7 @@
 # [√] Display resetModuleForInstall config somewhere
 # [√] Select and show selected modules before confirmation
 # [√] Must specify source and destination if no default source and destination was set
-# [ ] Add teamId, teamCode, host checking for each source and destination
+# [√] Add teamId, teamCode, host checking for each source and destination
 # [ ] Update user manual for meta data syncing script
 # [?] Add --snapshot-only(-S) flag to only create snapshot
 # [?] User authentication support
@@ -83,6 +83,20 @@ def get-meta-setting [
   let metaConf = $env.META_CONF
   # print ($metaConf | table -e)
 
+  for src in ($metaConf.source | columns) {
+    let srcKeys = $metaConf.source | get $src | columns
+    [teamId teamCode host] | each {|it| if $it not-in $srcKeys {
+      print $'The source (ansi p)($src)(ansi reset) must have (ansi p)($it)(ansi reset) config.'
+      exit $ECODE.INVALID_PARAMETER
+    }}
+  }
+  for dest in ($metaConf.destination | columns) {
+    let destKeys = $metaConf.destination | get $dest | columns
+    [teamId teamCode host] | each {|it| if $it not-in $destKeys {
+      print $'The destination (ansi p)($dest)(ansi reset) must have (ansi p)($it)(ansi reset) config.'
+      exit $ECODE.INVALID_PARAMETER
+    }}
+  }
   let defaultSource = $metaConf.source | values | default false default | where default == true
   let defaultDest = $metaConf.destination | values | default false default | where default == true
   # CHECK: Make sure at most one default source and destination was set
