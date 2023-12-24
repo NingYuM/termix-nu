@@ -16,7 +16,7 @@
 # [√] Handle 500 error properly for the last step
 # [√] Display resetModuleForInstall config somewhere
 # [√] Select and show selected modules before confirmation
-# [ ] Must specify source and destination if no default source and destination was set
+# [√] Must specify source and destination if no default source and destination was set
 # [ ] Add teamId, teamCode, host checking for each source and destination
 # [ ] Update user manual for meta data syncing script
 # [?] Add --snapshot-only(-S) flag to only create snapshot
@@ -86,16 +86,8 @@ def get-meta-setting [
   let defaultSource = $metaConf.source | values | default false default | where default == true
   let defaultDest = $metaConf.destination | values | default false default | where default == true
   # CHECK: Make sure at most one default source and destination was set
-  default-check 'source' $defaultSource
-  default-check 'destination' $defaultDest
-  if (not ($from | is-empty)) and ($from not-in $metaConf.source) {
-    print $'The source name (ansi p)($from)(ansi reset) does`t exists in the meta.source config, please check it again.'
-    exit $ECODE.INVALID_PARAMETER
-  }
-  if (not ($to | is-empty)) and ($to not-in $metaConf.destination) {
-    print $'The source name (ansi p)($to)(ansi reset) does`t exists in the meta.source config, please check it again.'
-    exit $ECODE.INVALID_PARAMETER
-  }
+  provider-check 'source' $defaultSource --from $from
+  provider-check 'destination' $defaultDest --to $to
   let source = if ($from | is-empty) { $defaultSource | get 0 } else { $metaConf.source | get $from }
   let destination = if ($to | is-empty) { $defaultDest | get 0 } else { $metaConf.destination | get $to }
   if $selected {
@@ -114,10 +106,31 @@ def get-meta-setting [
   { source: $source, dest: $destination }
 }
 
-def default-check [name, value] {
+def provider-check [name, value, --from: string, --to: string] {
+  let metaConf = $env.META_CONF
   if ($value | length) > 1 {
     print $'Invalid meta data ($name) setting, at most one default ($name) was allowed.'
     exit $ECODE.INVALID_PARAMETER
+  }
+  if $name == 'source' {
+    if ($from | is-empty) and ($value | length) == 0 {
+      print $'You must specify the ($name) name or set a default ($name) in the meta.($name) config.'
+      exit $ECODE.INVALID_PARAMETER
+    }
+    if (not ($from | is-empty)) and ($from not-in $metaConf.source) {
+      print $'The ($name) name (ansi p)($from)(ansi reset) does`t exists in the meta.($name) config, please check it again.'
+      exit $ECODE.INVALID_PARAMETER
+    }
+  }
+  if $name == 'destination' {
+    if ($to | is-empty) and ($value | length) == 0 {
+      print $'You must specify the ($name) name or set a default ($name) in the meta.($name) config.'
+      exit $ECODE.INVALID_PARAMETER
+    }
+    if (not ($to | is-empty)) and ($to not-in $metaConf.destination) {
+      print $'The ($name) name (ansi p)($to)(ansi reset) does`t exists in the meta.($name) config, please check it again.'
+      exit $ECODE.INVALID_PARAMETER
+    }
   }
 }
 
