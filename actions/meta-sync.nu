@@ -39,7 +39,10 @@ export def 'meta sync' [
   --all(-a),            # Specify whether to sync all the modules
   --selected(-s),       # Sync the selected modules from config file of the specified source
 ] {
-  print -n (ellie); print '        Terminus TERP Meta Data Syncing Tool'; hr-line
+  cd $env.TERMIX_DIR
+  let currentBranch = git branch --show-current
+  let sha = do -i { git rev-parse $currentBranch | str substring 0..7 }
+  print -n (ellie); print $'        Terminus TERP Meta Data Syncing Tool @ ($sha)'; hr-line
 
   let confMeta = load-meta-conf
   let usedSetting = get-meta-setting --from $from --to $to --all=$all --selected=$selected
