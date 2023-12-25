@@ -14,6 +14,7 @@
 # [√] Setting file validation check
 # [√] Allow default settings, so we can run the script without any arguments
 # [√] Handle 500 error properly for the last step
+# [√] Display ddlAutoUpdate config somewhere
 # [√] Select and show selected modules before confirmation
 # [√] Must specify source and destination if no default source and destination was set
 # [√] Add teamId, teamCode, host checking for each source and destination
@@ -81,9 +82,9 @@ def --env load-meta-conf [] {
 # List available sources and destinations
 def show-available-providers [metaConf: record] {
   print $'Available meta data sources:'; hr-line
-  get-providers source $metaConf | print
+  get-providers source $metaConf | table -i false | print
   print $'(char nl)Available meta data destinations:'; hr-line
-  get-providers destination $metaConf | print
+  get-providers destination $metaConf | table -i false | print
 }
 
 def get-providers [type: string, metaConf: record] {
@@ -171,10 +172,10 @@ def confirm-check [
   print $'Attention:'; hr-line
   print $'You are going to sync meta data with the following config: (char nl)'
   let setting = [
-    [Type Host TeamID TeamCode];
-    [FROM ($from.host | trim-host) $'($from.teamId)' $from.teamCode]
-    ['' '↓' '↓' '↓']
-    [TO ($to.host | trim-host) $'($to.teamId)' $to.teamCode]]
+    [Type Host TeamID TeamCode ddlAutoUpdate];
+    [FROM ($from.host | trim-host) $'($from.teamId)' $from.teamCode '-']
+    ['' '↓' '↓' '↓' '']
+    [TO ($to.host | trim-host) $'($to.teamId)' $to.teamCode ($to | get -i ddlAutoUpdate | default true)]]
   # Theme: ascii_rounded,basic_compact,dots,psql,reinforced
   print ($setting | table -e --theme psql -i false)
   print $'Are you sure to continue?'
@@ -355,7 +356,7 @@ def import-metadata [
   mut importPayload = {
     rootOid: $rootOid,
     downloadUrl: $metaUrl,
-    ddlAutoUpdate: true,
+    ddlAutoUpdate: ($dest | get -i ddlAutoUpdate | default true),
   }
   if not ($modules | is-empty) {
     $importPayload.resetModuleKeys = $modules

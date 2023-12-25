@@ -58,6 +58,8 @@ default = true
 teamId = 666
 # 同步目标 Team Code
 teamCode = 'TERP'
+# 导入元数据时的 ddlAutoUpdate 配置值, 默认为 true
+ddlAutoUpdate = false
 # 同步目标 Console 地址，后面不要加 `/`
 host = 'https://abc-console-test.app.terminus.io'
 # 此描述信息会在使用 --list Flag 时展示

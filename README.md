@@ -1220,6 +1220,8 @@ host = 'https://abc-console-dev.app.terminus.io'
 selectedModules = ['ERP_HR', 'ERP_GEN', 'TERP_PORTAL']
 # 所有可选择模块，如果调用命令的时候既没有使用 --selected 参数，也没有使用 --all 参数则会出现模块选择界面，可以手工选择需要导入的模块
 availableModules = ['ERP_HR', 'ERP_PRD', 'ERP_PLN', 'ERP_GEN', 'ERP_SCM', 'ERP_FI', 'ERP_FIN', 'ERP_CO', 'TERP_PORTAL']
+# 此描述信息会在使用 --list Flag 时展示
+description = '标品 TERP 开发环境'
 
 # [meta.source.dev0]
 # 若需配置更多同步源参考以上配置
@@ -1233,8 +1235,12 @@ default = true
 teamId = 666
 # 同步目标 Team Code
 teamCode = 'TERP'
+# 导入元数据时的 ddlAutoUpdate 配置值, 默认为 true
+ddlAutoUpdate = false
 # 同步目标 Console 地址，后面不要加 `/`
 host = 'https://abc-console-test.app.terminus.io'
+# 此描述信息会在使用 --list Flag 时展示
+description = '标品 TERP 测试环境'
 
 # [meta.destination.test0]
 # 若需配置更多同步目标参考以上配置
