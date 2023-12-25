@@ -14,7 +14,6 @@
 # [√] Setting file validation check
 # [√] Allow default settings, so we can run the script without any arguments
 # [√] Handle 500 error properly for the last step
-# [√] Display resetModuleForInstall config somewhere
 # [√] Select and show selected modules before confirmation
 # [√] Must specify source and destination if no default source and destination was set
 # [√] Add teamId, teamCode, host checking for each source and destination
@@ -149,10 +148,10 @@ def confirm-check [
   print $'Attention:'; hr-line
   print $'You are going to sync meta data with the following config: (char nl)'
   let setting = [
-    [Type Host TeamID TeamCode ResetModules];
-    [FROM ($from.host | trim-host) $'($from.teamId)' $from.teamCode '-']
-    ['' '↓' '↓' '↓' '']
-    [TO ($to.host | trim-host) $'($to.teamId)' $to.teamCode $to.resetModuleForInstall]]
+    [Type Host TeamID TeamCode];
+    [FROM ($from.host | trim-host) $'($from.teamId)' $from.teamCode]
+    ['' '↓' '↓' '↓']
+    [TO ($to.host | trim-host) $'($to.teamId)' $to.teamCode]]
   # Theme: ascii_rounded,basic_compact,dots,psql,reinforced
   print ($setting | table -e --theme psql -i false)
   print $'Are you sure to continue?'
@@ -334,8 +333,6 @@ def import-metadata [
     rootOid: $rootOid,
     downloadUrl: $metaUrl,
     ddlAutoUpdate: true,
-    # If true, will reset the module keys for install, so you can't create any scene
-    resetModuleForInstall: ($dest | get -i resetModuleForInstall | default false),
   }
   if not ($modules | is-empty) {
     $importPayload.resetModuleKeys = $modules

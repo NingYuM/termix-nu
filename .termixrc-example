@@ -56,8 +56,6 @@ default = true
 teamId = 666
 # 同步目标 Team Code
 teamCode = 'TERP'
-# 导入元数据时的 resetModuleForInstall 配置值
-resetModuleForInstall = false
 # 同步目标 Console 地址，后面不要加 `/`
 host = 'https://abc-console-test.app.terminus.io'
 

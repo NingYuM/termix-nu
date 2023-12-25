@@ -1183,8 +1183,8 @@ t ta transfer all --from http://minio.terp.terminus.com/terminus-trantor/fe-reso
 - 任务本身仍然是 `Trantor` 的 **API** 完成的，本工具只是对这些接口进行 `TUI` 封装，结果跟原始的手工操作是一致的；
 - 对于所有的异步任务工具会定时轮询(目前每秒一次)并更新状态和进度（然而并不是真实的百分比进度，本质上是一个以进度条形式显示的计时器，告诉你程序还没挂掉）;
 - 分秒必争，所有的任务会无缝串行，同时会显示每条任务和任务总执行耗时；
-- 除 `Nushell` 之外不依赖其他二进制文件或者 Node Modules(`Just` 只提供一个命令入口，没有 `Just`仍然可以正常工作);
-- 后续会持续对接 `Trantor` 元数据团队，及时跟进最新的变化，确保工具持续可用；
+- 除 `Nushell` 之外不依赖其他二进制文件或者 `Node.js` 模块(`Just` 只提供一个命令入口，没有 `Just`仍然可以正常工作);
+- 后续会持续对接 `Trantor` 元数据团队，及时跟进最新的变化，确保工具一直可用；
 
 **命令格式**: `msync *OPTIONS`
 
@@ -1195,7 +1195,7 @@ t ta transfer all --from http://minio.terp.terminus.com/terminus-trantor/fe-reso
 - `-a`, `--all` - 加上这个开关就表示同步所有模块
 - `-s`, `--selected` - 加了这个开关就表示同步指定同步源中的 `selectedModules` 配置项所包含的模块
 - `-h`, `--help` - 查看帮助信息
-- 如果在调用命令的时候没有传 `--all` 或 `--selected` 参数会让你选择需要同步的模块, 如下图所示，在这个交互中可以使用的快捷键: `Space` 选择某一项，`a` 选择所有或取消全部选择，`q` 或 `ESC` 取消并退出，上下箭头模块切换, `Enter` 确认选择；
+- 如果在调用命令的时候没有传 `--all` 或 `--selected` 参数会让你选择需要同步的模块, 如下图所示，在这个交互中可以使用的快捷键: `Space` 选择某一项，`a` 选择所有或取消全部选择，`q` 或 `ESC` 取消并退出，上下箭头切换模块, `Enter` 确认选择；
 
 **配置说明**:
 
@@ -1203,7 +1203,7 @@ t ta transfer all --from http://minio.terp.terminus.com/terminus-trantor/fe-reso
 
 ```toml
 # Meta data syncing source config
-# 此处将定义一个名为 dev 的同步目标，可以作为后续 --from 参数的入参，你可以定义多个同步源，名字自定
+# 此处将定义一个名为 dev 的同步源，可以作为后续 --from 参数的入参，你可以定义多个同步源，名字自定
 [meta.source.dev]
 # 默认启用的同步源：如果你在使用同步工具的时候没有通过 --from 指定同步源则使用该同步源，故而默认源最多只能有一个
 default = true
@@ -1222,7 +1222,7 @@ availableModules = ['ERP_HR', 'ERP_PRD', 'ERP_PLN', 'ERP_GEN', 'ERP_SCM', 'ERP_F
 # 若需配置更多同步源参考以上配置
 
 # Meta data syncing destination config
-# 此处将定义一个名为 test 的同步源，可以作为后续 --to 参数的入参，你可以定义多个同步目标，名字自定
+# 此处将定义一个名为 test 的同步目标，可以作为后续 --to 参数的入参，你可以定义多个同步目标，名字自定
 [meta.destination.test]
 # 默认使用的同步目标：如果你在使用同步工具的时候没有通过 --to 指定同步目标则使用该同步目标，故而默认目标最多只能有一个
 default = true
@@ -1230,8 +1230,6 @@ default = true
 teamId = 666
 # 同步目标 Team Code
 teamCode = 'TERP'
-# 导入元数据时的 resetModuleForInstall 配置值
-resetModuleForInstall = false
 # 同步目标 Console 地址，后面不要加 `/`
 host = 'https://abc-console-test.app.terminus.io'
 
