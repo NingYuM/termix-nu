@@ -17,7 +17,8 @@
 # [√] Select and show selected modules before confirmation
 # [√] Must specify source and destination if no default source and destination was set
 # [√] Add teamId, teamCode, host checking for each source and destination
-# [ ] Update user manual for meta data syncing script
+# [√] List available sources and destinations by --list or -l flag
+# [√] Update user manual for meta data syncing script
 # [?] Add --snapshot-only(-S) flag to only create snapshot
 # [?] User authentication support
 # Usage:
@@ -37,6 +38,7 @@ export def 'meta sync' [
   --to(-t): string,     # Specify the destination meta data provider name from meta.destination config
   --all(-a),            # Specify whether to sync all the modules
   --selected(-s),       # Sync the selected modules from config file of the specified source
+  --list(-l),           # List all the available sources and destinations
 ] {
   cd $env.TERMIX_DIR
   let currentBranch = git branch --show-current
@@ -44,6 +46,7 @@ export def 'meta sync' [
   print -n (ellie); print $'        Terminus TERP Meta Data Syncing Tool @ ($sha)'; hr-line
 
   let confMeta = load-meta-conf
+  if $list { show-available-providers $confMeta; exit $ECODE.SUCCESS }
   let usedSetting = get-meta-setting --from $from --to $to --all=$all --selected=$selected
   let dest = $usedSetting.dest
   let source = $usedSetting.source
@@ -73,6 +76,26 @@ def --env load-meta-conf [] {
   let metaConf = open $'($env.TERMIX_DIR)/.termixrc' | from toml | get meta
   $env.META_CONF = $metaConf
   return $metaConf
+}
+
+# List available sources and destinations
+def show-available-providers [metaConf: record] {
+  print $'Available meta data sources:'; hr-line
+  get-providers source $metaConf | print
+  print $'(char nl)Available meta data destinations:'; hr-line
+  get-providers destination $metaConf | print
+}
+
+def get-providers [type: string, metaConf: record] {
+  mut providers = []
+  for provider in ($metaConf | get $type | columns) {
+    let option = $metaConf | get $type | get $provider | upsert name $provider
+    $providers = ($providers | append $option)
+  }
+  $providers
+    | default false default
+    | select name teamId teamCode default host description
+    | upsert host {|it| $it.host | trim-host }
 }
 
 # Check meta data settings
