@@ -99,6 +99,8 @@ def get-providers [type: string, metaConf: record] {
   }
   $providers
     | default false default
+    | default '-' description
+    | upsert default {|it| if $it.default { '√' } else { '' }}
     | select name teamId teamCode default host description
     | upsert host {|it| $it.host | trim-host }
 }
