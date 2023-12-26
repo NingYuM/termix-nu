@@ -20,7 +20,7 @@
 # [√] Add teamId, teamCode, host checking for each source and destination
 # [√] List available sources and destinations by --list or -l flag
 # [√] Update user manual for meta data syncing script
-# [?] Add --snapshot-only(-S) flag to only create snapshot
+# [√] Add --snapshot(-S) flag to only create snapshot
 # [?] User authentication support
 # Usage:
 #   t msync --all
@@ -40,6 +40,7 @@ export def 'meta sync' [
   --all(-a),            # Specify whether to sync all the modules
   --selected(-s),       # Sync the selected modules from config file of the specified source
   --list(-l),           # List all the available sources and destinations
+  --snapshot(-S),       # Only create and upload snapshot for meta data
 ] {
   cd $env.TERMIX_DIR
   let currentBranch = git branch --show-current
@@ -48,6 +49,7 @@ export def 'meta sync' [
 
   let confMeta = load-meta-conf
   if $list { show-available-providers $confMeta; exit $ECODE.SUCCESS }
+  if $snapshot { create-and-upload-snapshot --from $from; exit $ECODE.SUCCESS }
   let usedSetting = get-meta-setting --from $from --to $to --all=$all --selected=$selected
   let dest = $usedSetting.dest
   let source = $usedSetting.source
@@ -97,6 +99,47 @@ def get-providers [type: string, metaConf: record] {
     | default false default
     | select name teamId teamCode default host description
     | upsert host {|it| $it.host | trim-host }
+}
+
+# Create and upload meta data snapshot
+def create-and-upload-snapshot [--from: string] {
+  let metaConf = $env.META_CONF
+  check-required source
+  let defaultSource = $metaConf.source | values | default false default | where default == true
+  provider-check 'source' $defaultSource --from $from
+  let source = if ($from | is-empty) { $defaultSource | get 0 } else { $metaConf.source | get $from }
+  confirm-snapshot --from $source
+  let start = date now
+  let snapshotOid = handle-create-snapshot $source --snapshot-only
+  hr-line
+  print $'Snapshot created successfully with RootOID: (ansi p)($snapshotOid)(ansi reset)'
+  let downloadUrl = handle-upload-snapshot $source $snapshotOid --snapshot-only
+  print $'Snapshot uploaded successfully with download Url:'
+  print $'(ansi p)($downloadUrl)(ansi reset)'
+  let end = date now
+  print $'Total time consumed: (ansi p)($end - $start)(ansi reset)'
+}
+
+# Make sure you know what you are doing
+def confirm-snapshot [
+  --from(-f): record,   # Specify the meta data source config
+] {
+  print $'Attention:'; hr-line
+  print $'You are going to create and upload meta data snapshot with the following config: (char nl)'
+  let setting = [
+    [Host TeamID TeamCode];
+    [($from.host | trim-host) $'($from.teamId)' $from.teamCode]
+  ]
+  # Theme: ascii_rounded,basic_compact,dots,psql,reinforced
+  print ($setting | table -e --theme psql -i false)
+  print $'Are you sure to continue? '
+  let confirm = input $'Please press (ansi p)y(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
+  if $confirm == 'q' { echo $'Snapshot creating cancelled, Bye...'; exit $ECODE.SUCCESS }
+  if $confirm != 'y' {
+    echo $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)y(ansi reset), bye...'
+    exit $ECODE.INVALID_PARAMETER
+  }
+  print -n (char nl)
 }
 
 # Check meta data settings
@@ -186,6 +229,7 @@ def confirm-check [
     echo $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($check)(ansi reset), bye...'
     exit $ECODE.INVALID_PARAMETER
   }
+  print -n (char nl)
 }
 
 def trim-host [] {
@@ -210,10 +254,12 @@ def get-selected-modules [
 # Create meta data snapshot and wait for the task to finish, return the snapshot SHA if success
 def handle-create-snapshot [
   source: record,       # Specify the meta source config of the snapshot to create
+  --snapshot-only,      # Specify whether to only create and upload snapshot without importing
 ] {
   let start = date now
+  let total = if $snapshot_only { 2 } else { 3 }
   let taskId = create-snapshot $source
-  print $'(ansi pr) STEP 1/3: (ansi reset) Snapshot creating task started, id: (ansi p)($taskId)(ansi reset)'
+  print $'(ansi pr) STEP 1/($total): (ansi reset) Snapshot creating task started, id: (ansi p)($taskId)(ansi reset)'
   mut detail = fetch-task-detail $taskId $source.host
   print 'Task running detail:'; hr-line
   mut stats = $detail.progress
@@ -241,11 +287,13 @@ def handle-create-snapshot [
 def handle-upload-snapshot [
   source: record,       # Specify the meta source config of the snapshot to upload
   rootOid: string,      # Specify the root oid of the snapshot to upload
+  --snapshot-only,      # Specify whether to only create and upload snapshot without importing
 ] {
   let start = date now
+  let total = if $snapshot_only { 2 } else { 3 }
   let taskId = upload-snapshot $source $rootOid
   print -n (char nl)
-  print $'(ansi pr) STEP 2/3: (ansi reset) Snapshot uploading task started, id: (ansi p)($taskId)(ansi reset)'
+  print $'(ansi pr) STEP 2/($total): (ansi reset) Snapshot uploading task started, id: (ansi p)($taskId)(ansi reset)'
   mut detail = fetch-task-detail $taskId $source.host
   print 'Task running detail:'; hr-line
   mut stats = $detail.progress
