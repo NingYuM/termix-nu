@@ -168,12 +168,12 @@ def get-meta-setting [
   if $selected {
     # CHECK: Make sure the selected and available modules was set in the source config
     if ([selectedModules availableModules] | any {|| $in not-in $source }) {
-      print $'The source (ansi p)($from)(ansi reset) must have (ansi p)selectedModules & availableModules(ansi reset) config.'
+      print $'The (ansi p)($from | default default)(ansi reset) source must have (ansi p)selectedModules & availableModules(ansi reset) config.'
       exit $ECODE.INVALID_PARAMETER
     }
     # CHECK: Make sure the selected modules was all in the available modules
     $source.selectedModules | each {|it| if $it not-in $source.availableModules {
-      print $'The source (ansi p)($from)(ansi reset) selectedModules ($it) must be one of ($source.availableModules | str join ",")'
+      print $'The (ansi p)($from | default default)(ansi reset) source`s selectedModules ($it) must be one of ($source.availableModules | str join ",")'
       exit $ECODE.INVALID_PARAMETER
     }}
     return { source: $source, dest: $destination, selectedModules: $source.selectedModules }
