@@ -1258,6 +1258,8 @@ t msync -a
 t msync -s
 # 可以通过 --from --to 参数分别指定同步的源和目标，建议始终同步所有模块，因为同步指定模块功能未来可能废弃
 t msync -a --from dev0 --to test0
+# 从 dev 源创建元数据 SnapShot 并上传到 OSS，不做元数据导入操作
+t msync --snapshot --from dev
 ```
 
 **输出样例**:

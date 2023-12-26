@@ -84,7 +84,7 @@ go nav=('list'): _setup
   @overlay use {{ join(_termix, 'actions', 'quick-nav.nu') }}; \
     go {{nav}}
 
-# Terp Meta data syncing tool
+# TERP Meta data synchronization tool
 msync *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'meta-sync.nu') }}; \
     meta sync {{OPTIONS}}

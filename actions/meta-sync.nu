@@ -33,7 +33,9 @@ use ../utils/common.nu [ECODE, hr-line]
 const POLL_TICK_CHAR = '*'
 const QUERY_INTERVAL = 1sec
 
-# TERP Meta data syncing tool
+# TERP Meta data synchronization tool: create and upload snapshot to OSS, and import
+# meta data snapshot to the dest Console for all modules or selected modules.
+# User manual: https://fe-docs.app.terminus.io/termix/termix-nu#meta-data-syncing
 export def 'meta sync' [
   --from(-f): string,   # Specify the source meta data provider name from meta.source config
   --to(-t): string,     # Specify the destination meta data provider name from meta.destination config
