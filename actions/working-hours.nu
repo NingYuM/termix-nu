@@ -9,8 +9,8 @@
 
 export def main [
   code: string,
-  --show-all: bool,     # Set true to show all members even if the working hours filled correctly
-  --show-prev: bool,    # Set true to query working hours of previous week
+  --show-all,     # Set true to show all members even if the working hours filled correctly
+  --show-prev,    # Set true to query working hours of previous week
 ] {
 
   let monday = get-monday --prev=$show_prev
@@ -72,7 +72,7 @@ export def main [
       )
     }
 
-  handle-working-hours $allStaffs $workingHours $leavingHours --show-all $show_all --show-prev $show_prev
+  handle-working-hours $allStaffs $workingHours $leavingHours --show-all=$show_all --show-prev=$show_prev
 }
 
 # 显示工时统计信息
@@ -80,8 +80,8 @@ def handle-working-hours [
   allStaffs: any,
   workingHours: any,
   leavingHours: any,
-  --show-all: bool,
-  --show-prev: bool,
+  --show-all,
+  --show-prev,
 ] {
 
   let title = (get-env EMP_WORKING_HOUR_TITLE '本周工时填报')
@@ -142,7 +142,7 @@ def handle-working-hours [
 
 # Get the beginning time of monday, like 2021-12-06 00:00:00
 def get-monday [
-  --prev: bool
+  --prev
 ] {
   # FIXME
   let _TIME_FMT = '%Y-%m-%d %H:%M:%S'
@@ -156,7 +156,7 @@ def get-monday [
 
 # Get the ending time of sunday, like 2021-12-12 23:59:59
 def get-sunday [
-  --prev: bool
+  --prev
 ] {
   # FIXME
   let _TIME_FMT = '%Y-%m-%d %H:%M:%S'

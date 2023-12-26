@@ -16,7 +16,7 @@ export def do-sync [
   syncFrom: string,           # The git branch or commit hash to sync from
   gitUrl: string,             # The remote git repo url
   repo: any,                  # The git repo config options, such as: { repo: 'terp-rls', dest: 'main', lock: true }
-  --force-sync: bool = false, # Force to sync even if refused by the remote repo
+  --force-sync: any = false,  # Force to sync even if refused by the remote repo
 ] {
   print $'Sync from local (ansi g)($syncFrom)(ansi reset) to remote (ansi p)($repo.dest) of repo ($repo.repo)(ansi reset) -->(char nl)'
   let force = (get-env FORCE '0' | into int)

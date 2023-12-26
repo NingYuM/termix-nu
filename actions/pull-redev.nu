@@ -10,9 +10,9 @@ use ../utils/common.nu [ECODE, get-tmp-path get-env get-termix-conf has-ref hr-l
 
 # 列出远程二开仓库 Tags
 export def 'git pull-redev' [
-  branch: string,            # Specify the branch to pull
-  group: string,             # Specify the groups of repo to update
-  --show-diff(-d): bool,     # Set to 'true' if you want to see the files changed since prev tag
+  branch: string,           # Specify the branch to pull
+  group: string,            # Specify the groups of repo to update
+  --show-diff(-d),          # Set to 'true' if you want to see the files changed since prev tag
 ] {
 
   let _TERMIX_CONF = get-termix-conf

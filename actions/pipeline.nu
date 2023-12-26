@@ -384,9 +384,9 @@ def query-cicd-by-id [id: int] {
 export def main [
   operation: string,          # 目前支持两种操作类型，run 和 query, run 用于创建并执行 CICD, query 用于查询 CICD 执行结果
   dest?: string = 'dev',      # 当操作为 run 时必须指定，用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, query 时按需指定, 默认为 dev
-  --list(-l): bool,           # 当操作为 run 时生效，用于列出所有可用的执行目标
+  --list(-l),                 # 当操作为 run 时生效，用于列出所有可用的执行目标
   --grep(-g): string,         # 仅在与 `-l` 一起使用时生效，从部署配置里面搜索name,alias或description里包含特定字符串的部署目标
-  --force(-f): bool,          # 当操作为 run 时生效，即便已经有正在运行的流水线或者已经部署过也会强制重新执行
+  --force(-f),                # 当操作为 run 时生效，即便已经有正在运行的流水线或者已经部署过也会强制重新执行
   --cid(-i): int,             # 当操作为 query 时生效，用于查询 CICD 执行结果，如果不传则查询最近 10 条流水线执行结果
   --apps(-a): string,         # 指定需要批量部署的应用，多个应用以英文逗号分隔
   --stop-by-id(-s): int,      # 当操作为 run 时生效，用于根据流水线ID停止对应的正在运行的流水线
@@ -443,7 +443,7 @@ export def erda-deploy [
   --apps(-a): string,       # 指定需要批量部署的应用，多个应用以","分隔，在多应用模式下必须指定(`all` 代表所有)，单应用模式忽略
   --stop-by-id(-s): int,    # 根据流水线ID 停止对应的正在运行的流水线
 ] {
-  main run $dest --apps $apps --force $force --list $list --grep $grep --stop-by-id $stop_by_id
+  main run $dest --apps $apps --force=$force --list=$list --grep $grep --stop-by-id $stop_by_id
 }
 
 # 根据流水线 ID 或目标环境查询流水线执行结果, 例如: 单应用: t dq 997636681239659; t dq test, 多应用: t dq dev -a all

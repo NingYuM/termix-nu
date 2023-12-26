@@ -69,7 +69,7 @@ def get-msg-payload [
   --text: string,               # 消息内容, 对 `text`, `link`, `markdown` 类型消息有效
   --msg-url: string,            # 消息链接, 对 `link` 类型消息有效
   --pic-url: string,            # 图片链接, 对 `link` 类型消息有效
-  --at-all: bool = false,       # 是否@所有人, 若是则不再单独@指定人, 不支持 'link' 类型消息
+  --at-all: any = false,        # 是否@所有人, 若是则不再单独@指定人, 不支持 'link' 类型消息
   --at-mobiles: string = '',    # 被@人的手机号,多个手机号用 `,` 分隔, 不支持 'link' 类型消息
 ] {
   let mention = {

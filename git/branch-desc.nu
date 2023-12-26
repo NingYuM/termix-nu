@@ -9,8 +9,8 @@ use ../utils/common.nu [ECODE, has-ref, hr-line]
 
 # Show branch description from branch description file `d` of `i` branch
 export def main [
-  branch: string,        # The branch to query from description file
-  --show-notes: bool,    # Set to 'true' to show notes information
+  branch: string,       # The branch to query from description file
+  --show-notes,         # Set to 'true' to show notes information
 ] {
 
   let descFile = 'd.toml'

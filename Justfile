@@ -190,7 +190,7 @@ emp showAll=('false') showPrev=('false'): _setup
   @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
     overlay use {{ join(_termix, 'actions', 'working-hours.nu') }}; \
     let codes = (get-env EMP_PROJECT_CODE '' | split row ','); \
-    $codes | each { |code| working-hours $code --show-all {{showAll}} --show-prev {{showPrev}} } | flatten | uniq | ignore
+    $codes | each { |code| working-hours $code --show-all={{showAll}} --show-prev={{showPrev}} } | flatten | uniq | ignore
 
 # Get the latest nightly build of Nu
 [private]

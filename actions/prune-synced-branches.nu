@@ -10,9 +10,9 @@ use ../utils/common.nu [ECODE, hr-line has-ref get-tmp-path get-conf]
 
 # Clean possibly unused branches of synced dest repos
 export def main [
-  --user: string,        # Git repo access user name
-  --ak: string,          # Git repo access token
-  --dry-run(-d): bool,   # In dry-run mode no branch will be deleted, just show all deletable branches
+  --user: string,       # Git repo access user name
+  --ak: string,         # Git repo access token
+  --dry-run(-d),        # In dry-run mode no branch will be deleted, just show all deletable branches
 ] {
 
   cd $env.JUST_INVOKE_DIR

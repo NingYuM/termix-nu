@@ -35,7 +35,7 @@ export def 'git trigger-sync' [
     }
   }
 
-  let conf = get-push-config $current --all $all | get pushConf
+  let conf = get-push-config $current --all=$all | get pushConf
   let repos = $conf | query json 'repos'
   let allSyncs = $conf | query json 'branches'
 
@@ -54,7 +54,7 @@ export def 'git trigger-sync' [
   }
   for branch in $candidates {
     update-branch $branch
-    sync-branch $branch --all $all --ignored $ignored --repo $repo --force $force
+    sync-branch $branch --all=$all --ignored $ignored --repo $repo --force=$force
   }
 }
 
@@ -114,8 +114,8 @@ def update-branch [
 }
 
 def get-push-config [
-  branch: string,         # Local git branch/ref to push
-  --all(-a): bool,        # Whether to sync all branches that have syncing config
+  branch: string,       # Local git branch/ref to push
+  --all(-a),            # Whether to sync all branches that have syncing config
 ] {
   # Decide which branch to get `.termixrc` conf from ?
   let useConfBr = get-conf useConfFromBranch
@@ -135,13 +135,13 @@ def get-push-config [
 
 def sync-branch [
   branch: string,         # Local git branch/ref to sync
-  --all(-a): bool,        # Whether to sync all branches that have syncing config
+  --all(-a),              # Whether to sync all branches that have syncing config
   --ignored(-i): string,  # 代码同步需要忽略推送的仓库简称，多个仓库用英文逗号分隔
   --repo(-r): string,     # Specify which repo to sync to, and ignore the branch syncing config
-  --force(-f): bool,      # Whether to force sync even if refused by remote
+  --force(-f),            # Whether to force sync even if refused by remote
 ] {
 
-  let pushConf = get-push-config $branch --all $all
+  let pushConf = get-push-config $branch --all=$all
   let confBr = $pushConf.confBr
   let pushConf = $pushConf.pushConf
   # 处理分支名称包含‘.’的情况: `support/release-2.4`
