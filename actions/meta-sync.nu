@@ -21,6 +21,7 @@
 # [√] List available sources and destinations by --list or -l flag
 # [√] Update user manual for meta data syncing script
 # [√] Add --snapshot(-S) flag to only create snapshot
+# [√] Add ansi links to task ID
 # [?] User authentication support
 # Usage:
 #   t msync --all
@@ -236,6 +237,7 @@ def confirm-check [
   print -n (char nl)
 }
 
+# Trim http(s):// form host to make it shorter
 def trim-host [] {
   $in | str replace 'http://' '' | str replace 'https://' ''
 }
@@ -247,7 +249,8 @@ def get-selected-modules [
 ] {
   print -n (char nl)
   if $selected { return $from.selectedModules }
-  let selected = $from.availableModules | input list --multi 'Please select the modules to sync (space to select, esc or q to quit, enter to confirm)'
+  let selected = $from.availableModules
+    | input list --multi 'Please select the modules to sync (space to select, esc or q to quit, enter to confirm)'
   if ($selected | is-empty) {
     print $'You have not selected any modules, bye...'
     exit $ECODE.SUCCESS
@@ -263,7 +266,7 @@ def handle-create-snapshot [
   let start = date now
   let total = if $snapshot_only { 2 } else { 3 }
   let taskId = create-snapshot $source
-  print $'(ansi pr) STEP 1/($total): (ansi reset) Snapshot creating task started, id: (ansi p)($taskId)(ansi reset)'
+  print $'(ansi pr) STEP 1/($total): (ansi reset) Snapshot creating task started, id: (ansi p)(get-detail-link $source.host $taskId)(ansi reset)'
   mut detail = fetch-task-detail $taskId $source.host
   print 'Task running detail:'; hr-line
   mut stats = $detail.progress
@@ -297,7 +300,7 @@ def handle-upload-snapshot [
   let total = if $snapshot_only { 2 } else { 3 }
   let taskId = upload-snapshot $source $rootOid
   print -n (char nl)
-  print $'(ansi pr) STEP 2/($total): (ansi reset) Snapshot uploading task started, id: (ansi p)($taskId)(ansi reset)'
+  print $'(ansi pr) STEP 2/($total): (ansi reset) Snapshot uploading task started, id: (ansi p)(get-detail-link $source.host $taskId)(ansi reset)'
   mut detail = fetch-task-detail $taskId $source.host
   print 'Task running detail:'; hr-line
   mut stats = $detail.progress
@@ -331,7 +334,7 @@ def handle-import-metadata [
   let start = date now
   let taskId = import-metadata $dest $rootOid $metaUrl --modules $modules
   print -n (char nl)
-  print $'(ansi pr) STEP 3/3: (ansi reset) Meta data importing task started, id: (ansi p)($taskId)(ansi reset)'
+  print $'(ansi pr) STEP 3/3: (ansi reset) Meta data importing task started, id: (ansi p)(get-detail-link $dest.host $taskId)(ansi reset)'
   mut detail = fetch-task-detail $taskId $dest.host
   print 'Task running detail:'; hr-line
   mut stats = $detail.progress
@@ -419,6 +422,12 @@ def import-metadata [
     print $'Import meta data failed with error: ($resp.err)'
   }
   $resp.data.taskId
+}
+
+# Get ansi link of the specified taskId and host
+def get-detail-link [host: string, taskId: string] {
+  let webDetailUrl = $'($host)/task/run-detail?taskRunId=($taskId)'
+  ($webDetailUrl | ansi link --text $'($taskId)')
 }
 
 # Fetch task running detail by taskId
