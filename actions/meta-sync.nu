@@ -38,8 +38,8 @@ const QUERY_INTERVAL = 1sec
 # meta data snapshot to the dest Console for all modules or selected modules.
 # User manual: https://fe-docs.app.terminus.io/termix/termix-nu#meta-data-syncing
 export def 'meta sync' [
-  --from(-f): string,   # Specify the source meta data provider name from meta.source config
-  --to(-t): string,     # Specify the destination meta data provider name from meta.destination config
+  --from(-f): string@'nu-complete source',  # Specify the source meta data provider name from meta.source config
+  --to(-t): string@'nu-complete dest',      # Specify the destination meta data provider name from meta.destination config
   --all(-a),            # Specify whether to sync all the modules
   --selected(-s),       # Sync the selected modules from config file of the specified source
   --list(-l),           # List all the available sources and destinations
@@ -75,6 +75,16 @@ export def 'meta sync' [
   handle-import-metadata $dest $snapshotOid $downloadUrl --modules $modules
   let end = date now
   print $'Total time consumed: (ansi p)($end - $start)(ansi reset)'
+}
+
+# Tab complete for sources
+def 'nu-complete source' [] {
+  open $'($env.TERMIX_DIR)/.termixrc' | from toml | get meta.source | columns
+}
+
+# Tab complete for destinations
+def 'nu-complete dest' [] {
+  open $'($env.TERMIX_DIR)/.termixrc' | from toml | get meta.destination | columns
 }
 
 # Load meta data settings and store them to environment variable
