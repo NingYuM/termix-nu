@@ -23,7 +23,7 @@
 #   t ta transfer all --from dev --to ttt0 --dest-store oss --verbose
 #   t ta transfer all --from foran --to fs-test --dest-store fsmio -v
 
-use ../utils/common.nu [is-installed, hr-line, get-tmp-path, compare-ver]
+use ../utils/common.nu [is-installed, hr-line, get-tmp-path, compare-ver, _TIME_FMT]
 
 const JSON_ENTRY = 'latest.json'
 const VALID_ACTIONS = ['download', 'transfer']
@@ -223,8 +223,8 @@ def transfer [
 
 # Add transfer metadata to namespace.json and latest.json
 def update-transfer-meta [from: string] {
-  let syncBy = $env.DICE_OPERATOR_NAME? | default (git config --get user.name)
-  let syncAt = (date now | format date '%Y-%m-%d %H:%M:%S')
+  let syncBy = $env.DICE_OPERATOR_NAME? | default (git config --get user.name) | encode base64
+  let syncAt = (date now | format date $_TIME_FMT)
   let syncMeta = { syncBy: $syncBy, syncFrom: $from, syncAt: $syncAt }
   open namespace.json
     | upsert metadata {|it| $it.metadata? | default {} | merge $syncMeta }
