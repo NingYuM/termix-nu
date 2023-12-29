@@ -28,6 +28,22 @@ erda.prod = [
     { pid = 213, appid = 7542, appName = 'fe-docs', alias = 'docs', env = 'PROD', branch = 'master', pipeline = 'pipeline.yml', description = '备注' }
 ]
 
+# OSS 配置
+oss.TYPE = 'aliyun'
+oss.OSS_AK = 'YOUR-OSS-AK'
+oss.OSS_SK = 'YOUR-OSS-SK'
+oss.OSS_BUCKET = 'YOUR-BUCKET-NAME'
+oss.OSS_REGION = 'oss-cn-hangzhou'
+oss.OSS_ENDPOINT = 'https://oss-cn-hangzhou.aliyuncs.com'
+
+# Minio 配置
+minio.TYPE = 'minio'
+minio.OSS_AK = 'YOUR-MINIO-AK'
+minio.OSS_SK = 'YOUR-MINIO-SK'
+minio.OSS_BUCKET = 'YOUR-BUCKET-NAME'
+minio.OSS_REGION = 'oss-cn-hangzhou'
+minio.OSS_ENDPOINT = 'https://oss-cn-hangzhou.aliyuncs.com'
+
 # Meta data syncing source config
 # 此处将定义一个名为 dev 的同步源，可以作为后续 --from 参数的入参，你可以定义多个同步源，名字自定
 [meta.source.dev]

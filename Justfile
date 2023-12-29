@@ -44,6 +44,7 @@ _gstat_plugin := if os_family() == 'windows' { 'nu_plugin_gstat.exe' } else { 'n
 # alias lt := ls-redev-tags
 # alias rb := git-remote-branch
 alias dp := deploy
+alias ta := terp-assets
 alias dq := deploy-query
 alias gsync := trigger-sync
 
@@ -88,6 +89,11 @@ go nav=('list'): _setup
 msync *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'meta-sync.nu') }}; \
     meta sync {{OPTIONS}}
+
+# Download, transfer or sync TERP assets
+terp-assets *OPTIONS: _setup
+  @overlay use {{ join(_termix, 'actions', 'terp-assets.nu') }}; \
+    terp assets {{OPTIONS}}
 
 # Run an Erda pipeline, the target can be queried by `dp -l`, default is `dev`, and use `--app` to specify the apps to deploy
 deploy *OPTIONS: _setup
