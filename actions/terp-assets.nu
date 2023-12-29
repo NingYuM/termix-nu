@@ -13,6 +13,7 @@
 #   - https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/fe-resources/dev/latest.json
 #   - http://minio-tenant.terp.fsgas.com/terminus-trantor/fe-resources/fs-test/latest.json
 #   - https://min.io/docs/minio/linux/reference/minio-mc/mc-cp.html
+#   - https://docs.erda.cloud/2.2/manual/dop/guides/reference/pipeline.html
 #   - https://www.alibabacloud.com/help/zh/oss/developer-reference/install-ossutil#dda54a7096xfh
 # Usage:
 #   t ta download all -f dev
@@ -208,6 +209,8 @@ def transfer [
     | parse $'{base_url}/fe-resources/{mount}/($JSON_ENTRY)' | get mount | get 0
   for e in $end {
     cd $'($tmp)/assets-($mount)-($e)'
+    # Update namespace.json add transfer info
+    update-transfer-meta $from
     if ($type | str trim | str downcase) == 'minio' {
       package-tools s3 -c $ak $sk $bucket $endpoint $region -d . -m $to -s path
     } else {
@@ -216,6 +219,16 @@ def transfer [
     echo $'Assets for (ansi p)($e)(ansi reset) transferred successfully!'
   }
   echo "All transfer finished! \n"
+}
+
+# Add transfer metadata to namespace.json and latest.json
+def update-transfer-meta [from: string] {
+  let syncBy = $env.DICE_OPERATOR_NAME? | default (git config --get user.name)
+  let syncAt = (date now | format date '%Y-%m-%d %H:%M:%S')
+  let syncMeta = { syncBy: $syncBy, syncFrom: $from, syncAt: $syncAt }
+  open namespace.json
+    | upsert metadata {|it| $it.metadata? | default {} | merge $syncMeta }
+    | save -f namespace.json
 }
 
 alias main = terp assets
