@@ -33,6 +33,7 @@ _home_env := if os_family() == 'windows' { 'USERPROFILE' } else { 'HOME' }
 # FIXME: A just bug: invalid directory path by invoking invocation_directory
 JUST_INVOKE_DIR := replace(invocation_directory_native(), '/', _s)
 _default_just_file := join(env_var(_home_env), '.justfile')
+_null_device := if os_family() == 'windows' { '\\.\NUL' } else { '/dev/null' }
 _query_plugin := if os_family() == 'windows' { 'nu_plugin_query.exe' } else { 'nu_plugin_query' }
 _gstat_plugin := if os_family() == 'windows' { 'nu_plugin_gstat.exe' } else { 'nu_plugin_gstat' }
 
@@ -61,7 +62,7 @@ default: _setup
 # Display termix current version number
 ver: _setup
   @cd $env.TERMIX_DIR; let ver = (open termix.toml | get version); { \
-  version: $ver, commit: (git rev-parse $ver | str substring 0..7),   \
+  version: $ver, commit: (git rev-parse $ver e> {{_null_device}} | str substring 0..7), \
   manual: 'https://fe-docs.app.terminus.io/termix/termix-nu' } | print
 
 # Synchronize doc from termix-nu to fe-docs repo
