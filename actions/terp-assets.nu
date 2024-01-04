@@ -64,13 +64,13 @@ def get-ends [end: string] {
   if $end == 'all' {
     $VALID_END | where $it != 'all'
   } else {
-    let splitted = ($end | split row ',')
-    let invalid = ($splitted | filter {|it| $it not-in $VALID_END })
+    let splits = ($end | split row ',')
+    let invalid = ($splits | filter {|it| $it not-in $VALID_END })
     if ($invalid | length) > 0 {
       echo $'Invalid end ($invalid | str join ", "), supported end: ($VALID_END | str join ", ")'
       exit 7
     }
-    $splitted | filter {|it| $it in $VALID_END }
+    $splits | filter {|it| $it in $VALID_END }
   }
 }
 

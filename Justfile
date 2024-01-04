@@ -68,7 +68,8 @@ ver: _setup
 # Synchronize doc from termix-nu to fe-docs repo
 [private]
 sync-doc: _setup
-  @cd $env.TERMIX_DIR; cp README.md ../fe-docs/docs/termix/termix-nu.md
+  @let doc = '../fe-docs/docs/termix'; cd $env.TERMIX_DIR; cp README.md $'($doc)/termix-nu.md'; \
+    cp FAQ.md $'($doc)/termix-FAQ.md'; cp CHANGELOG.md $'($doc)/termix-CHANGELOG.md';
 
 # Upgrade termix-nu repo to the latest version
 upgrade:
