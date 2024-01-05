@@ -26,11 +26,29 @@ error: Recipe `_register_plugins` failed with exit code 1
 
 > 这可能是因为 `Nushell` 安装后还没有使用过，也没有为其初始化配置文件，可以尝试在命令行执行下 `nu`，然后会有两个交互式提问，直接输入 `y` 即可。这样就会为 `nu` 创建默认的配置文件。接下来可以再次执行 `t` 试试。
 
-5. "Could not find `cygpath` executable to translate recipe..." on Windows
+5. 首次执行 `t`（或者 `termix-nu` 目录的 `just`）命令的时候报错:
+
+```console
+Error: nu::parser::module_not_found
+
+  × Module not found.
+   ╭─[source:1:1]
+ 1 │ overlay use /Users/terminus/termix-nu/actions/check-ver.nu; termix-ver; nu-ver; just-ver
+   ·             ───────────────────────┬──────────────────────
+   ·                                    ╰── module not found
+   ╰────
+  help: module files and their paths must be available before your script is run as parsing occurs before anything is evaluated
+
+error: Recipe `_setup` failed on line 281 with exit code 1
+```
+
+> 请检查 .env 环境变量 `TERMIX_DIR` 的配置，确保其值为 `termix-nu` 的绝对路径，这个环境变量目前是必须要配的，其他环境变量可以根据使用情况选择配置。
+
+6. "Could not find `cygpath` executable to translate recipe..." on Windows
 
 > Install git by `winget install Git.Git` and `cygpath` will be available in `C:\Program Files\Git\usr\bin`, add this dir in global `PATH` environment variable should work.
 
-6. 执行 `t` 的时候报类似如下错误:
+7. 执行 `t` 的时候报类似如下错误:
 
 ```console
 Error: nu::parser::registered_file_not_found
@@ -53,7 +71,7 @@ rm '/Users/abc/Library/Application Support/nushell/plugin.nu'
 
 > 即可, 这个配置文件在后续使用过程中会自动生成的。
 
-7. 用 CLI 执行 Erda 流水线的时候提示如下错误：
+8. 用 CLI 执行 Erda 流水线的时候提示如下错误：
 
 ```console
   Renewing Erda session...
