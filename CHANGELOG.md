@@ -1,7 +1,7 @@
-# Changelog
+# CHANGELOG
 All notable changes to this project will be documented in this file.
 
-## [1.53.0] - 2023-12-13
+## 1.53.0 - 2023-12-13
 
 ### Bug Fixes
 
@@ -13,7 +13,7 @@ All notable changes to this project will be documented in this file.
 - Add run/cast2gif.nu
 - Update Nushell config for v0.88.0
 
-## [1.52.0] - 2023-12-05
+## 1.52.0 - 2023-12-05
 
 ### Bug Fixes
 
@@ -25,7 +25,7 @@ All notable changes to this project will be documented in this file.
 - Add `--repo` flag support for `trigger-sync` command
 - Add `--grep` flag for `t dp -l` command
 
-## [1.51.0] - 2023-11-15
+## 1.51.0 - 2023-11-15
 
 ### Bug Fixes
 
@@ -65,7 +65,7 @@ All notable changes to this project will be documented in this file.
 
 - Use `par-each` instead of `each` whenever possible for better performance
 
-## [1.50.0] - 2023-10-18
+## 1.50.0 - 2023-10-18
 
 ### Bug Fixes
 
@@ -102,13 +102,13 @@ All notable changes to this project will be documented in this file.
 - Change `$nothing` to `null` for Nu v0.86
 - Fix some `any` type
 
-## [1.38.1] - 2023-09-20
+## 1.38.1 - 2023-09-20
 
 ### Bug Fixes
 
 - Fix Nushell version check, do not exit if we don't have to update
 
-## [1.38.0] - 2023-09-20
+## 1.38.0 - 2023-09-20
 
 ### Features
 
@@ -130,7 +130,7 @@ All notable changes to this project will be documented in this file.
 - Use `reduce` for `build-line` for better compatibility
 - Change command naming style
 
-## [1.37.0] - 2023-09-04
+## 1.37.0 - 2023-09-04
 
 ### Features
 
@@ -140,7 +140,7 @@ All notable changes to this project will be documented in this file.
 
 - Update README.md
 
-## [1.36.0] - 2023-09-01
+## 1.36.0 - 2023-09-01
 
 ### Features
 
@@ -150,13 +150,13 @@ All notable changes to this project will be documented in this file.
 
 - Update README.md and use build-query for session renew
 
-## [1.35.0] - 2023-08-30
+## 1.35.0 - 2023-08-30
 
 ### Bug Fixes
 
 - Fix `just upgrade` bug
 
-## [1.33.0] - 2023-08-30
+## 1.33.0 - 2023-08-30
 
 ### Bug Fixes
 
@@ -171,7 +171,7 @@ All notable changes to this project will be documented in this file.
 
 - Change the proportional UI/title font family for `wezterm` config
 
-## [1.32.0] - 2023-08-23
+## 1.32.0 - 2023-08-23
 
 ### Bug Fixes
 
@@ -212,7 +212,7 @@ All notable changes to this project will be documented in this file.
 
 - Adapt to Nu v0.84 and use const and module if possible
 
-## [1.31.0] - 2023-08-01
+## 1.31.0 - 2023-08-01
 
 ### Miscellaneous Tasks
 
@@ -224,7 +224,7 @@ All notable changes to this project will be documented in this file.
 
 - Use `not` if necessary
 
-## [1.30.0] - 2023-07-10
+## 1.30.0 - 2023-07-10
 
 ### Bug Fixes
 
@@ -245,7 +245,7 @@ All notable changes to this project will be documented in this file.
 - Adapt to `nushell` v0.82
 - Add `.termixrc-example` config for batch deploy
 
-## [1.28.0] - 2023-07-06
+## 1.28.0 - 2023-07-06
 
 ### Features
 
@@ -260,7 +260,7 @@ All notable changes to this project will be documented in this file.
 - Use module if possible
 - Extract some small custom commands
 
-## [1.27.0] - 2023-07-04
+## 1.27.0 - 2023-07-04
 
 ### Bug Fixes
 
@@ -276,7 +276,7 @@ All notable changes to this project will be documented in this file.
 - Change the column header of the running pipelines to title case
 - Adapt to Nushell v0.82.1 and above
 
-## [1.26.0] - 2023-07-01
+## 1.26.0 - 2023-07-01
 
 ### Bug Fixes
 
@@ -292,7 +292,7 @@ All notable changes to this project will be documented in this file.
 
 - Some code refactor, extract Erda host variable, etc.
 
-## [1.25.0] - 2023-06-30
+## 1.25.0 - 2023-06-30
 
 ### Features
 
@@ -303,19 +303,19 @@ All notable changes to this project will be documented in this file.
 
 - Bump version to v1.25.0
 
-## [1.23.0] - 2023-06-29
+## 1.23.0 - 2023-06-29
 
 ### Bug Fixes
 
 - Fix pipeline query result return URL
 
-## [1.22.0] - 2023-06-29
+## 1.22.0 - 2023-06-29
 
 ### Miscellaneous Tasks
 
 - Remove unnecessary ERDA_TOKEN env var for Erda pipelines
 
-## [1.21.0] - 2023-06-29
+## 1.21.0 - 2023-06-29
 
 ### Bug Fixes
 
@@ -335,7 +335,7 @@ All notable changes to this project will be documented in this file.
 - Fix code indention for actions/pipeline.nu
 - Refactor code
 
-## [1.20.0] - 2023-06-28
+## 1.20.0 - 2023-06-28
 
 ### Bug Fixes
 
@@ -355,7 +355,7 @@ All notable changes to this project will be documented in this file.
 
 - Adapt to Nushell v0.82
 
-## [1.19.0] - 2023-05-23
+## 1.19.0 - 2023-05-23
 
 ### Bug Fixes
 
@@ -366,7 +366,7 @@ All notable changes to this project will be documented in this file.
 
 - Update tags from origin
 
-## [1.18.0] - 2023-05-17
+## 1.18.0 - 2023-05-17
 
 ### Features
 
@@ -384,7 +384,7 @@ All notable changes to this project will be documented in this file.
 - Fix git/remote-branch.nu
 - Update min nu ver to v0.80
 
-## [1.17.0] - 2023-04-10
+## 1.17.0 - 2023-04-10
 
 ### Bug Fixes
 
@@ -402,7 +402,7 @@ All notable changes to this project will be documented in this file.
 - Adapted to Nushell v0.78, set min required Nushell version to v0.78
 - Adapted to nu v0.78 fix `expected operator` error
 
-## [1.16.0] - 2023-03-21
+## 1.16.0 - 2023-03-21
 
 ### Bug Fixes
 
@@ -417,7 +417,7 @@ All notable changes to this project will be documented in this file.
 - Adapt to nu v0.77.1+, use `print` explicitly
 - Bump version v1.16.0
 
-## [1.15.0] - 2023-02-23
+## 1.15.0 - 2023-02-23
 
 ### Bug Fixes
 
@@ -432,7 +432,7 @@ All notable changes to this project will be documented in this file.
 
 - Update nu install command
 
-## [1.13.0] - 2023-02-01
+## 1.13.0 - 2023-02-01
 
 ### Bug Fixes
 
@@ -449,7 +449,7 @@ All notable changes to this project will be documented in this file.
 - Bump version v1.13 for nu v0.75
 - Adapt to nu v0.75
 
-## [1.12.0] - 2023-01-13
+## 1.12.0 - 2023-01-13
 
 ### Bug Fixes
 
@@ -463,7 +463,7 @@ All notable changes to this project will be documented in this file.
 
 - Optimize plugin register for nu v0.74
 
-## [1.11.0] - 2022-12-26
+## 1.11.0 - 2022-12-26
 
 ### Bug Fixes
 
@@ -486,7 +486,7 @@ All notable changes to this project will be documented in this file.
 - Bump v1.11.0
 - Fix `prune-synced-branches` for nu v0.73.1
 
-## [1.10.0] - 2022-12-02
+## 1.10.0 - 2022-12-02
 
 ### Bug Fixes
 
@@ -504,7 +504,7 @@ All notable changes to this project will be documented in this file.
 - Update config file for nu v0.72
 - Update min nu version to v0.72 and min just version to v1.9, bump version to v1.10.0
 
-## [1.9.0] - 2022-09-29
+## 1.9.0 - 2022-09-29
 
 ### Miscellaneous Tasks
 
@@ -513,7 +513,7 @@ All notable changes to this project will be documented in this file.
 - Change `str collect` to `str join` for nu 0.68.2+
 - Update bump version custom command
 
-## [1.8.0] - 2022-09-08
+## 1.8.0 - 2022-09-08
 
 ### Bug Fixes
 
@@ -533,7 +533,7 @@ All notable changes to this project will be documented in this file.
 - Rename variable name for flags
 - Adapted to Nu v0.68
 
-## [1.7.0] - 2022-07-27
+## 1.7.0 - 2022-07-27
 
 ### Features
 
@@ -560,7 +560,7 @@ All notable changes to this project will be documented in this file.
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [1.6.0] - 2022-06-22
+## 1.6.0 - 2022-06-22
 
 ### Bug Fixes
 
@@ -600,7 +600,7 @@ All notable changes to this project will be documented in this file.
 - Simplify bool flags for scripts
 - Optimize plugin register for nushell v0.61.0
 
-## [1.5.0] - 2022-03-26
+## 1.5.0 - 2022-03-26
 
 ### Bug Fixes
 
@@ -681,7 +681,7 @@ All notable changes to this project will be documented in this file.
 - Add common host os checking command
 - Improve get-icon.nu for a better user experience
 
-## [1.2.12] - 2022-01-17
+## 1.2.12 - 2022-01-17
 
 ### Bug Fixes
 
@@ -696,7 +696,7 @@ All notable changes to this project will be documented in this file.
 - Add feature of checking if local branch exists in remote repo for `git-age` command
 - Add `brew-speed-up` command to set much faster brew mirrors quickly
 
-## [1.2.11] - 2022-01-04
+## 1.2.11 - 2022-01-04
 
 ### Bug Fixes
 
@@ -712,7 +712,7 @@ All notable changes to this project will be documented in this file.
 
 - Add test case in comments for force upgrade feature
 
-## [1.2.10] - 2021-12-31
+## 1.2.10 - 2021-12-31
 
 ### Bug Fixes
 
@@ -731,7 +731,7 @@ All notable changes to this project will be documented in this file.
 
 - Bump version v1.2.10
 
-## [1.2.12] - 2022-01-17
+## 1.2.12 - 2022-01-17
 
 ### Bug Fixes
 
@@ -746,7 +746,7 @@ All notable changes to this project will be documented in this file.
 - Add feature of checking if local branch exists in remote repo for `git-age` command
 - Add `brew-speed-up` command to set much faster brew mirrors quickly
 
-## [1.2.11] - 2022-01-04
+## 1.2.11 - 2022-01-04
 
 ### Bug Fixes
 
@@ -762,7 +762,7 @@ All notable changes to this project will be documented in this file.
 
 - Add test case in comments for force upgrade feature
 
-## [1.2.10] - 2021-12-31
+## 1.2.10 - 2021-12-31
 
 ### Bug Fixes
 
@@ -781,7 +781,7 @@ All notable changes to this project will be documented in this file.
 
 - Bump version v1.2.10
 
-## [1.2.9] - 2021-12-30
+## 1.2.9 - 2021-12-30
 
 ### Bug Fixes
 
@@ -796,7 +796,7 @@ All notable changes to this project will be documented in this file.
 - REMOVE unused files
 - Update min nushell version to v0.42.0, bump version v1.2.9
 
-## [1.2.8] - 2021-12-23
+## 1.2.8 - 2021-12-23
 
 ### Bug Fixes
 
@@ -821,7 +821,7 @@ All notable changes to this project will be documented in this file.
 - Change FORCE_PUSH to FORCE, make it more simple to do a force push
 - Use internal `str find-replace` instead of external `tr`
 
-## [1.2.7] - 2021-12-16
+## 1.2.7 - 2021-12-16
 
 ### Bug Fixes
 
@@ -847,7 +847,7 @@ All notable changes to this project will be documented in this file.
 - Add b2b/srm/mbr repo navs
 - Update min nushell version to v0.41.0
 
-## [1.2.6] - 2021-12-06
+## 1.2.6 - 2021-12-06
 
 ### Bug Fixes
 
@@ -873,7 +873,7 @@ All notable changes to this project will be documented in this file.
 
 - Add global date format constant: _DATE_FMT
 
-## [1.2.5] - 2021-12-02
+## 1.2.5 - 2021-12-02
 
 ### Bug Fixes
 
@@ -900,7 +900,7 @@ All notable changes to this project will be documented in this file.
 - Use `path join` instead of string concatenation
 - Move redev related scripts from git to actions dir
 
-## [1.2.3] - 2021-11-26
+## 1.2.3 - 2021-11-26
 
 ### Bug Fixes
 
@@ -936,7 +936,7 @@ All notable changes to this project will be documented in this file.
 
 - Add `get-conf` common helper in utils/common.nu
 
-## [1.2.2] - 2021-11-22
+## 1.2.2 - 2021-11-22
 
 ### Bug Fixes
 
@@ -953,7 +953,7 @@ All notable changes to this project will be documented in this file.
 - Add changelog create instruction
 - Update CHANGELOG.md
 
-## [1.2.1] - 2021-11-22
+## 1.2.1 - 2021-11-22
 
 ### Features
 
@@ -970,7 +970,7 @@ All notable changes to this project will be documented in this file.
 
 - Refactor `working-hours` command: extract more functions
 
-## [1.2.0] - 2021-11-17
+## 1.2.0 - 2021-11-17
 
 ### Bug Fixes
 
@@ -1023,7 +1023,7 @@ All notable changes to this project will be documented in this file.
 - Add has-ref utils
 - Refactor show nav items
 
-## [1.0.0] - 2021-10-12
+## 1.0.0 - 2021-10-12
 
 ### Bug Fixes
 
