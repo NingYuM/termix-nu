@@ -13,7 +13,7 @@ version = 'v1.55.0'
 minNuVer = '0.88.1'
 
 # Min just version required to run termix-nu commands
-minJustVer = '1.21.0'
+minJustVer = '1.22.0'
 
 # 新增的二开标签备注
 redevTagComment = 'This is a release tag'
