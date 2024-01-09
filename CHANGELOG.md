@@ -1,6 +1,59 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## 1.55.0 - 2024-01-09
+
+### Features
+
+- Add initial meta data syncing feature
+- Enable import specified modules for `meta sync`
+- Add module select support for `meta sync`
+- Add meta data syncing related configs and validate it before synchronization
+- Select and show selected modules before confirmation of meta syncing
+- Must specify `source` and `destination` if no default source and destination was set for `meta sync`
+- Add `teamId`, `teamCode`, `host` checking for each source and destination before running `meta sync`
+- Add `asciinema` casts for meta data syncing operations
+- Show git commit SHA in `meta sync` command
+- Remove `resetModuleForInstall` param for meta data importing
+- Add `--list` flag support for `meta sync` command
+- Support adding `ddlAutoUpdate` param in `.termixrc` config for meta data syncing
+- Add `--snapshot` flag to create and upload snapshot of `TERP` meta data without importing
+- Add ansi links to task id for `t msync` command
+- Add tab completion support for `meta sync` command in Nushell REPL
+- Add `terp assets` command for static assets synchronization of `TERP`
+- Update `terp assets` command, add syncing meta data to `latest.json`
+- Add common `progress` custom command
+
+### Bug Fixes
+
+- Fix default source and destination filter for `meta sync`
+- Fix meta data syncing with `--selected` flag
+- Handle 500 error properly for the last step of meta data syncing
+- Fix `zoxide` init script for Nu v0.89.0
+- Fix `just ver` error for unpublished release
+- Fix `nu-use-nightly` command
+
+### Miscellaneous Tasks
+
+- Adapt `rio` config file to v0.0.33
+- Sync doc from feature/extra
+- Adapt bool flags for Nu v0.89.0
+- Update .env-example
+- Encode `syncBy` field of `terp-assets` syncing meta data
+- Upgrade min Nushell and Just version
+
+### Refactor
+
+- Refactor `compare-ver` and `is-lower-ver`
+- Use readable exit code by string enums
+
+### Documentation
+
+- Update docs for `t msync`(meta data synchronization) command
+- Update FAQ.md and CHANGELOG.md
+- Update FAQ.md add `.env` config error case
+- Update FAQ.md, add running Erda pipeline failed case
+
 ## 1.53.0 - 2023-12-13
 
 ### Bug Fixes
