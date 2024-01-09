@@ -1029,7 +1029,7 @@ def get-msg-payload [
   --text: string,               # 消息内容, 对 `text`, `link`, `markdown` 类型消息有效
   --msg-url: string,            # 消息链接, 对 `link` 类型消息有效
   --pic-url: string,            # 图片链接, 对 `link` 类型消息有效
-  --at-all: bool = false,       # 是否@所有人, 若是则不再单独@指定人, 不支持 'link' 类型消息
+  --at-all,                     # 是否@所有人, 若是则不再单独@指定人, 不支持 'link' 类型消息
   --at-mobiles: string = '',    # 被@人的手机号,多个手机号用 `,` 分隔, 不支持 'link' 类型消息
 ] {
   let mention = {
@@ -1086,7 +1086,7 @@ alias main = dingtalk notify
         version: '2.0'
         image: registry.erda.cloud/erda-actions/terminus-debian-node:18.17-lts
         commands: |-
-          pnpm i nushell@0.86 -g
+          pnpm i nushell@0.89 -g
           nu -c "version"
           cd ${{ dirs.git-checkout }}
           COMMIT_SHA=$(git rev-parse HEAD | cut -c 1-8)

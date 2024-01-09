@@ -10,10 +10,10 @@
 version = 'v1.55.0'
 
 # Min nushell version required to run termix-nu commands
-minNuVer = '0.88.1'
+minNuVer = '0.88.2'
 
 # Min just version required to run termix-nu commands
-minJustVer = '1.22.0'
+minJustVer = '1.22.1'
 
 # 新增的二开标签备注
 redevTagComment = 'This is a release tag'
