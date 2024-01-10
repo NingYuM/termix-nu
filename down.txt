@@ -1,9 +1,0 @@
-t-runtime-erp.designer.styles: ["assets/designer-3c8563d4.css"]
-t-runtime-erp.layout.styles: ["assets/layout-0d6fb19d.css", "assets/index-75a471d3.css"]
-t-runtime-erp.runtime.styles: ["assets/runtime-d51a5f8a.css", "assets/index-75a471d3.css"]
-
-
-brew install minio/stable/mc
-npm i -g @terminus/t-package-tools
-根据 lasted.json 下载上述资源，然后用 t-package-tools 上传到 佛燃 minio
-用 mc cp --recursive 命令把佛燃资源从测试拷贝到预发
