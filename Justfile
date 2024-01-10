@@ -195,9 +195,8 @@ git-proxy status=('on'): _setup
 
 # 查询电商前端团队本周工时填报情况
 emp showAll=('false') showPrev=('false'): _setup
-  @overlay use {{ join(_termix, 'utils', 'common.nu') }}; \
-    overlay use {{ join(_termix, 'actions', 'working-hours.nu') }}; \
-    let codes = (get-env EMP_PROJECT_CODE '' | split row ','); \
+  @overlay use {{ join(_termix, 'actions', 'working-hours.nu') }}; \
+    let codes = ($env.EMP_PROJECT_CODE | split row ','); \
     $codes | each { |code| working-hours $code --show-all={{showAll}} --show-prev={{showPrev}} } | flatten | uniq | ignore
 
 # Get the latest nightly build of Nu

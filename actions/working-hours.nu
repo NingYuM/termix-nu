@@ -7,6 +7,8 @@
 # Data Source
 #   https://emp.app.terminus.io/view/worktime_WorkTimeBO_DepartmentWorkTime
 
+use ../utils/common.nu [get-conf, get-env]
+
 export def main [
   code: string,
   --show-all,     # Set true to show all members even if the working hours filled correctly
@@ -16,20 +18,17 @@ export def main [
   let monday = get-monday --prev=$show_prev
   let sunday = get-sunday --prev=$show_prev
   let emp = get-conf empWorkingHour
-  # 先从环境变量里面查找用户在 emp Cookie 里面的登陆信息
-  let empUserCookie = get-env EMP_UC_COOKIE ''
-  if ($code == '' or $empUserCookie == '') {
-    print $'(ansi r)Not enough parameters, make sure you have set the EMP_UC_COOKIE and EMP_PROJECT_CODE var in .env file, bye...(char nl)(ansi reset)'
+  if ($code == '') {
+    print $'(ansi r)Not enough parameters, make sure you have set the EMP_PROJECT_CODE var in .env file, bye...(char nl)(ansi reset)'
     exit 3
   }
-  let userCookie = ($emp.cookie | str replace '_EMP_UC_COOKIE_' $empUserCookie)
   let staffPayload = ($emp.staffPayload
       | str replace '_last_day_' $sunday
       | str replace '_first_day_' $monday
       | str replace '_project_code_' $code
     )
   # Week No of now: [(date now)] | dfr into-df | dfr get-week
-  let staffs = (curl $emp.staffUrl -H $emp.type -H $userCookie -s --data-raw $staffPayload | str join)
+  let staffs = (curl $emp.staffUrl -H $emp.type -s --data-raw $staffPayload | str join)
 
   handle-exception $staffs
 
@@ -49,8 +48,8 @@ export def main [
     )
 
   let allStaffs = ($staffs | query json 'res' | select id name | rename id Name)
-  let hours = (curl $emp.timeUrl -H $emp.type -H $emp.app -H $userCookie -s --data-raw $timePayload | str join)
-  let leaves = (curl $emp.leaveUrl -H $emp.type -H $userCookie -s --data-raw $leavePayload | str join)
+  let hours = (curl $emp.timeUrl -H $emp.type -H $emp.app -s --data-raw $timePayload | str join)
+  let leaves = (curl $emp.leaveUrl -H $emp.type -s --data-raw $leavePayload | str join)
   let workingHours = ($hours | query json 'res')
   let workingHours = if ($workingHours | is-empty) { null } else {(
       $workingHours
