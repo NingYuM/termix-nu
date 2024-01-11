@@ -8,6 +8,7 @@
 #   - [DingTalk Robot API](https://open.dingtalk.com/document/robots/custom-robot-access)
 # TODO:
 #   - [x] 支持同时向多个机器人发送消息, 多个 Token 用 `,` 分隔
+#   - [x] 支持通过手机号码 @指定人
 #   - [ ] 支持 `actionCard`, `feedCard` 类型消息
 #   - [ ] 升级 OR 创建对应 Erda Action
 # Usage:

@@ -44,6 +44,23 @@ minio.OSS_BUCKET = 'YOUR-BUCKET-NAME'
 minio.OSS_REGION = 'oss-cn-hangzhou'
 minio.OSS_ENDPOINT = 'https://oss-cn-hangzhou.aliyuncs.com'
 
+[emp.messages]
+friday = '终于到周五了，EMP 工时记得填下哦'
+saturday = '周末了，本不想打扰您的，可是工时咋还没填完呢？'
+sunday = '这周要结束了，您的工时还没填满呢，麻烦填下工时吧'
+monday = 'OMG, 今天是可以补填上周工时的最后一天了，劳驾您填下工时吧'
+monthEnd = '掐指一算今天是月底？麻烦各位填下工时吧, 过了今天就没救了！重要！紧急！'
+
+[emp.teams.A]
+name = 'TERP前端'    # 终端查询的时候会显示标题: TERP前端本周工时填报
+code = '000'        # EMP Project Code, 从 worktime_GetStaffByBaseProjectFunc 接口的参数中获取
+alias = 'terp-fe'   # 需要配置 `TERP-FE_DINGTALK` 环境变量 `${DINGTALK_ROBOT_AK},${DINGTALK_ROBOT_SK}`
+users = [           # 群通知提醒的人员列表，真实用户名 + 手机号
+    { name = '张三', mobile = '18000000000'},
+    { name = '李四', mobile = '18000000000'},
+    { name = '王五', mobile = '18000000000'},
+  ]
+
 # Meta data syncing source config
 # 此处将定义一个名为 dev 的同步源，可以作为后续 --from 参数的入参，你可以定义多个同步源，名字自定
 [meta.source.dev]
