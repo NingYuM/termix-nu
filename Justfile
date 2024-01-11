@@ -193,11 +193,10 @@ git-proxy status=('on'): _setup
   @load-env { GIT_PROXY_STATUS: '{{status}}' }; \
     nu {{ join(_termix, 'git', 'git-proxy.nu') }}
 
-# 查询电商前端团队本周工时填报情况
-emp showAll=('false') showPrev=('false'): _setup
+# 查询电商前端团队本周工时填报情况, 需先配置 `EMP_PROJECT_CODE` 环境变量
+emp *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'working-hours.nu') }}; \
-    let codes = ($env.EMP_PROJECT_CODE | split row ','); \
-    $codes | each { |code| working-hours $code --show-all={{showAll}} --show-prev={{showPrev}} } | flatten | uniq | ignore
+    query-hours-by-team-codes $env.EMP_PROJECT_CODE {{OPTIONS}}
 
 # Get the latest nightly build of Nu
 [private]

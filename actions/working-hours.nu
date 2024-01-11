@@ -2,26 +2,48 @@
 # Author: hustcer
 # Created: 2021/10/22 15:36:56
 # Description: Check working hours filling status
+#   [√] Query working hours for muliple teams
+#   [√] Query working hours of previous week
+#   [ ] Notify the members who didn't fill the working hours by Dintalk Robot
+#   [ ] Add a config file to store the EMP_PROJECT_CODE, EMP_WORKING_HOUR_TITLE, etc.
+#   [ ] Add a crontab config example to run this script automatically
+#   [ ] Create a docker image to run this script in Erda pipeline
+#   [ ] Update the docs
 # Usage:
-#   working-hours
+#   t emp
 # Data Source
 #   https://emp.app.terminus.io/view/worktime_WorkTimeBO_DepartmentWorkTime
 
-use ../utils/common.nu [get-conf, get-env]
+use ../utils/common.nu [ECODE, get-conf, get-env]
 
-export def main [
-  code: string,
-  --show-all,     # Set true to show all members even if the working hours filled correctly
-  --show-prev,    # Set true to query working hours of previous week
+const _TIME_FMT = '%Y-%m-%d %H:%M:%S'
+
+# Query working hours from EMP and display the filling status of each team member
+export def query-hours-by-team-codes [
+  codes: string,      # Team codes, like '123,567,890'
+  --show-all(-a),     # Show all members even if the working hours filled correctly
+  --show-prev(-p),    # Query working hours of previous week
+  --notify(-n),       # Notify the members who didn't fill the working hours by Dintalk Robot
+] {
+  if ($codes | is-empty) {
+    print $'(ansi r)Not enough parameters, make sure you have set the EMP_PROJECT_CODE var in .env file, bye...(char nl)(ansi reset)'
+    exit $ECODE.INVALID_PARAMETER
+  }
+  $codes | split row ',' | each { |it|
+    query-hours-by-team-code $it --show-all=$show_all --show-prev=$show_prev --notify=$notify
+  } | ignore
+}
+
+export def query-hours-by-team-code [
+  code: string,       # Team code, like '123'
+  --show-all(-a),     # Show all members even if the working hours filled correctly
+  --show-prev(-p),    # Query working hours of previous week
+  --notify(-n),       # Notify the members who didn't fill the working hours by Dintalk Robot
 ] {
 
   let monday = get-monday --prev=$show_prev
   let sunday = get-sunday --prev=$show_prev
   let emp = get-conf empWorkingHour
-  if ($code == '') {
-    print $'(ansi r)Not enough parameters, make sure you have set the EMP_PROJECT_CODE var in .env file, bye...(char nl)(ansi reset)'
-    exit 3
-  }
   let staffPayload = ($emp.staffPayload
       | str replace '_last_day_' $sunday
       | str replace '_first_day_' $monday
@@ -82,7 +104,6 @@ def handle-working-hours [
   --show-all,
   --show-prev,
 ] {
-
   let title = (get-env EMP_WORKING_HOUR_TITLE '本周工时填报')
   # echo ($data | reject id isDeleted week year createdAt updatedAt updatedBy createdBy)
   print $'(char nl)  (ansi p)'
@@ -125,7 +146,7 @@ def handle-working-hours [
     ($allMembers | where { |it| $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8 })
   })
 
-  if ($result | is-empty) { print $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; exit 0 }
+  if ($result | is-empty) { print $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; exit $ECODE.SUCCESS }
 
   let hourMap = (
     $result | upsert Gap { |it| $total * 8 - ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave) }
@@ -143,8 +164,6 @@ def handle-working-hours [
 def get-monday [
   --prev
 ] {
-  # FIXME
-  let _TIME_FMT = '%Y-%m-%d %H:%M:%S'
   let today = (date now | date to-table | select year month day)
   let pastDays = ([(date now)] | dfr into-df | dfr get-weekday).0 - 1
   let duration = ($'($pastDays)day' | into duration)
@@ -157,8 +176,6 @@ def get-monday [
 def get-sunday [
   --prev
 ] {
-  # FIXME
-  let _TIME_FMT = '%Y-%m-%d %H:%M:%S'
   let sunday = ((get-monday | into datetime) + 7day - 1sec)
   let sunday = if $prev == true { $sunday - 7day } else { $sunday }
   ($sunday | format date $_TIME_FMT)
@@ -181,12 +198,12 @@ def handle-exception [
   # 未登录或者Cookie过期提示, use `do -i` to ignore 'error: Coercion error'
   do -i {
     if ($res | is-empty) or ($res | query json 'status') == 401 {
-      print $'(ansi r)Your login COOKIE info is outdated or empty，please update it and try again!(char nl)(ansi reset)'
-      exit 3
+      print $'(ansi r)You did`t have permission to call this API !(char nl)(ansi reset)'
+      exit $ECODE.AUTH_FAILED
     }
     if (($res | query json 'status') == 500) {
       print $'(ansi r)Backend internal server error，please try again later!(char nl)(ansi reset)'
-      exit 6
+      exit $ECODE.SERVER_ERROR
     }
   }
 }
