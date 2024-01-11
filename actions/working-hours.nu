@@ -4,6 +4,7 @@
 # Description: Check working hours filling status
 #   [√] Query working hours for muliple teams
 #   [√] Query working hours of previous week
+#   [√] Don't print the result if --silent is set
 #   [ ] Notify the members who didn't fill the working hours by Dintalk Robot
 #   [ ] Add a config file to store the EMP_PROJECT_CODE, EMP_WORKING_HOUR_TITLE, etc.
 #   [ ] Add a crontab config example to run this script automatically
@@ -24,13 +25,14 @@ export def query-hours-by-team-codes [
   --show-all(-a),     # Show all members even if the working hours filled correctly
   --show-prev(-p),    # Query working hours of previous week
   --notify(-n),       # Notify the members who didn't fill the working hours by Dintalk Robot
+  --silent(-s),       # Don't print the result
 ] {
   if ($codes | is-empty) {
     print $'(ansi r)Not enough parameters, make sure you have set the EMP_PROJECT_CODE var in .env file, bye...(char nl)(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
   $codes | split row ',' | each { |it|
-    query-hours-by-team-code $it --show-all=$show_all --show-prev=$show_prev --notify=$notify
+    query-hours-by-team-code $it --show-all=$show_all --show-prev=$show_prev --notify=$notify --silent=$silent
   } | ignore
 }
 
@@ -39,6 +41,7 @@ export def query-hours-by-team-code [
   --show-all(-a),     # Show all members even if the working hours filled correctly
   --show-prev(-p),    # Query working hours of previous week
   --notify(-n),       # Notify the members who didn't fill the working hours by Dintalk Robot
+  --silent(-s),       # Don't print the result
 ] {
 
   let monday = get-monday --prev=$show_prev
@@ -54,7 +57,11 @@ export def query-hours-by-team-code [
 
   handle-exception $staffs
 
-  print $'(char nl)Query working hours from ($monday) to ($sunday) --->'
+  if $silent {
+    print $'Query working hours from ($monday) to ($sunday) for team (ansi p)($code)(ansi reset)'
+  } else {
+    print $'(char nl)Query working hours from ($monday) to ($sunday) --->'
+  }
   # 此处把中文名字字段过滤掉，否则在Windows下数据传到后端接口会发生解析错误
   let staffPayload = ($staffs | query json 'res' | select id | to json -r)
   let timePayload = ($emp.timePayload
@@ -93,7 +100,7 @@ export def query-hours-by-team-code [
       )
     }
 
-  handle-working-hours $allStaffs $workingHours $leavingHours --show-all=$show_all --show-prev=$show_prev
+  handle-working-hours $allStaffs $workingHours $leavingHours --show-all=$show_all --show-prev=$show_prev --silent=$silent
 }
 
 # 显示工时统计信息
@@ -103,12 +110,15 @@ def handle-working-hours [
   leavingHours: any,
   --show-all,
   --show-prev,
+  --silent,
 ] {
   let title = (get-env EMP_WORKING_HOUR_TITLE '本周工时填报')
   # echo ($data | reject id isDeleted week year createdAt updatedAt updatedBy createdBy)
-  print $'(char nl)  (ansi p)'
-  print $'-------------------------> ($title) <-------------------------'
-  print $'(ansi reset)(char nl)'
+  if not $silent {
+    print $'(char nl)  (ansi p)'
+    print $'-------------------------> ($title) <-------------------------'
+    print $'(ansi reset)(char nl)'
+  }
   let week = [Mon, Tue, Wen, Thu, Fri, Sat, Sun]
   # 当前是一年中的第几周
   let weekNo = if $show_prev == true { ([((date now) - 7day)] | dfr into-df | dfr get-week).0 } else { ([(date now)] | dfr into-df | dfr get-week).0 }
@@ -157,7 +167,7 @@ def handle-working-hours [
         }
       | sort-by WARN Gap Name
     )
-  print $hourMap
+  if not $silent { print $hourMap }
 }
 
 # Get the beginning time of monday, like 2021-12-06 00:00:00
