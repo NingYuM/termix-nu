@@ -198,6 +198,12 @@ emp *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'working-hours.nu') }}; \
     query-hours-by-team-codes {{OPTIONS}}
 
+# 手工执行定时任务检查 EMP 工时填报情况并提醒
+[private]
+emp-daily *OPTIONS: _setup
+  @overlay use {{ join(_termix, 'actions', 'working-hours.nu') }}; \
+    working-hours-daily-checking {{OPTIONS}}
+
 # Get the latest nightly build of Nu
 [private]
 nu-use-nightly *OPTIONS: _setup

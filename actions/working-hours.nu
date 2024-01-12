@@ -12,8 +12,8 @@
 #   [ ] Create a docker image to run this script in Erda pipeline
 #   [ ] Update the docs
 #   [√] 只有周五、周六、周日、月底才发送提醒消息
-#   [ ] 每周一查询上周工时填报情况，如果有人未填报，发送提醒消息
-#   [ ] 确保该脚本可以每天运行，但是只有符合上述情况才提醒
+#   [√] 每周一查询上周工时填报情况，如果有人未填报，发送提醒消息
+#   [√] 确保该脚本可以每天运行，但是只有符合上述情况才提醒
 # Usage:
 #   t emp
 # Data Source
@@ -23,6 +23,27 @@ use ../utils/common.nu [ECODE, get-conf, get-env]
 use dingtalk-notify.nu ['dingtalk notify']
 
 const _TIME_FMT = '%Y-%m-%d %H:%M:%S'
+const CHECK_DURATION = 0day
+
+# Make sure the script can be run every day, but only send notifications when the above conditions are met
+export def working-hours-daily-checking [] {
+  let checkPoint = (date now) + $CHECK_DURATION
+  let confEMP = load-emp-conf
+  let messages = $confEMP | get messages
+  # Get monday, ..., friday, saturday, sunday
+  let weekday = $checkPoint | format date '%A' | str downcase
+  let isMonthEnd = ($checkPoint | format date '%m') != (($checkPoint + 1day) | format date '%m')
+  # 非周五、六、日、一直接返回
+  if not (($weekday in $messages) or $isMonthEnd) {
+    print $'Skip notify at (ansi p)($weekday)(ansi reset)...';
+    exit $ECODE.SUCCESS
+  }
+  if $weekday == 'monday' {
+    print $'Query working hours of previeous week...'
+    query-hours-by-team-codes --show-prev=true --notify --silent
+  }
+  query-hours-by-team-codes --notify --silent
+}
 
 # Query working hours from EMP and display the filling status of each team member
 export def query-hours-by-team-codes [
@@ -193,10 +214,11 @@ def handle-working-hours [
 }
 
 def notify-filling-hours [hours: any, --team: record] {
+  let checkPoint = (date now) + $CHECK_DURATION
   let messages = $env.EMP_CONF | get messages
   # Get monday, ..., friday, saturday, sunday
-  let weekday = date now | format date '%A' | str downcase
-  let isMonthEnd = (date now | format date '%m') != (((date now) + 1day) | format date '%m')
+  let weekday = $checkPoint | format date '%A' | str downcase
+  let isMonthEnd = ($checkPoint | format date '%m') != (($checkPoint + 1day) | format date '%m')
   # 非周五、六、日、一直接返回
   if not (($weekday in $messages) or $isMonthEnd) {
     print $'Skip notify at (ansi p)($weekday)(ansi reset)...';
@@ -215,7 +237,7 @@ def notify-filling-hours [hours: any, --team: record] {
   let DINGTALK_AK_SK = $env | get $DINGTALK_KEY | split row ','
   let mentions = $hours | where Gap > 0 | get name
   let mobiles = $users | where name in $mentions | get mobile | str join ','
-  let message = $messages | get $weekday | default $messages.monthEnd
+  let message = $messages | get -i $weekday | default $messages.monthEnd
   load-env { DINGTALK_ROBOT_AK: $DINGTALK_AK_SK.0, DINGTALK_ROBOT_SECRET: $DINGTALK_AK_SK.1 }
   dingtalk notify --text $message --at-mobiles $mobiles
 }
