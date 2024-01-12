@@ -7,6 +7,7 @@
 #   [√] Don't print the result if --silent is set
 #   [√] Notify the members who didn't fill the working hours by Dintalk Robot
 #   [√] Add a config file to store the EMP_PROJECT_CODE, etc.
+#   [√] EMP global enviroment setting to turn on or off the notification
 #   [ ] Add a crontab config example to run this script automatically
 #   [ ] Create a docker image to run this script in Erda pipeline
 #   [ ] Update the docs
@@ -183,7 +184,12 @@ def handle-working-hours [
       | sort-by WARN Gap Name
     )
   if not $silent { print $hourMap }
-  if $notify { notify-filling-hours $hourMap --team $team }
+  let empSwitchEnv = $env | get -i EMP_WORKING_HOURS_NOTIFY | default 'off'
+  if $empSwitchEnv == 'off' {
+    print $'WARN: `EMP_WORKING_HOURS_NOTIFY` is (ansi p)off(ansi reset), stop sending notifications...(char nl)'
+    return
+  }
+  if $notify and $empSwitchEnv == 'on' { notify-filling-hours $hourMap --team $team }
 }
 
 def notify-filling-hours [hours: any, --team: record] {
