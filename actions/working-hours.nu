@@ -2,37 +2,41 @@
 # Author: hustcer
 # Created: 2021/10/22 15:36:56
 # Description: Check working hours filling status
-#   [√] Query working hours for muliple teams
+#   [√] Query working hours for multiple teams
 #   [√] Query working hours of previous week
 #   [√] Don't print the result if --silent is set
 #   [√] Notify the members who didn't fill the working hours by Dintalk Robot
 #   [√] Add a config file to store the EMP_PROJECT_CODE, etc.
-#   [√] EMP global enviroment setting to turn on or off the notification
-#   [ ] Add a crontab config example to run this script automatically
-#   [ ] Create a docker image to run this script in Erda pipeline
-#   [ ] Update the docs
+#   [√] EMP global environment setting to turn on or off the notification
+#   [√] Create a docker image to run this script in Erda pipeline
 #   [√] 只有周五、周六、周日、月底才发送提醒消息
 #   [√] 每周一查询上周工时填报情况，如果有人未填报，发送提醒消息
 #   [√] 确保该脚本可以每天运行，但是只有符合上述情况才提醒
+#   [√] Lastday(Monday and Month end) keep polling and notify with specified interval
+#   [ ] Update the docs
 # Usage:
 #   t emp
+#   t emp-daily
+#   0 0 17 * * ?  # 每天下午 5 点执行 working-hours-daily-checking
 # Data Source
 #   https://emp.app.terminus.io/view/worktime_WorkTimeBO_DepartmentWorkTime
 
-use ../utils/common.nu [ECODE, get-conf, get-env]
 use dingtalk-notify.nu ['dingtalk notify']
+use ../utils/common.nu [ECODE, get-conf, get-env]
 
+const _WEEK_FMT = '%A'
+const _MONTH_FMT = '%m'
 const _TIME_FMT = '%Y-%m-%d %H:%M:%S'
 const CHECK_DURATION = 0day
 
-# Make sure the script can be run every day, but only send notifications when the above conditions are met
+# Run EMP working hours checking job everyday, but only send notifications for Monday, Friday, Saturday, Sunday and Month end
 export def working-hours-daily-checking [] {
-  let checkPoint = (date now) + $CHECK_DURATION
   let confEMP = load-emp-conf
-  let messages = $confEMP | get messages
+  let messages = $confEMP | get settings?.messages? | default {}
+  let checkPoint = (date now) + $CHECK_DURATION
+  let isMonthEnd = is-month-end $checkPoint
   # Get monday, ..., friday, saturday, sunday
-  let weekday = $checkPoint | format date '%A' | str downcase
-  let isMonthEnd = ($checkPoint | format date '%m') != (($checkPoint + 1day) | format date '%m')
+  let weekday = $checkPoint | format date $_WEEK_FMT | str downcase
   # 非周五、六、日、一直接返回
   if not (($weekday in $messages) or $isMonthEnd) {
     print $'Skip notify at (ansi p)($weekday)(ansi reset)...';
@@ -40,17 +44,18 @@ export def working-hours-daily-checking [] {
   }
   if $weekday == 'monday' {
     print $'Query working hours of previeous week...'
-    query-hours-by-team-codes --show-prev=true --notify --silent
+    query-hours-by-team-codes --show-prev --notify --silent --keep-polling
   }
-  query-hours-by-team-codes --notify --silent
+  query-hours-by-team-codes --notify --silent --keep-polling=$isMonthEnd
 }
 
-# Query working hours from EMP and display the filling status of each team member
+# Query working hours for each team from EMP and display the filling status of each team member
 export def query-hours-by-team-codes [
   --silent(-s),       # Don't print the result
   --notify(-n),       # Notify the members who didn't fill the working hours by Dintalk Robot
   --show-prev(-p),    # Query working hours of previous week
   --show-all(-a),     # Show all members even if the working hours have been filled correctly
+  --keep-polling,     # Keep polling until all members have filled the working hours
 ] {
   let confEMP = load-emp-conf
   let codes = $confEMP.teams | values | get code
@@ -58,9 +63,21 @@ export def query-hours-by-team-codes [
     print $'(ansi r)Please set the `code` field in all `emp.teams`, bye...(char nl)(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
-  $codes | each { |it|
-    query-hours-by-team-code $it --show-all=$show_all --show-prev=$show_prev --notify=$notify --silent=$silent
-  } | ignore
+  if not $keep_polling {
+    $confEMP.teams | values | each { |it|
+      query-hours-by-team $it --show-all=$show_all --show-prev=$show_prev --notify=$notify --silent=$silent
+    } | ignore
+    return
+  }
+
+  loop {
+    $confEMP.teams | values | each { |it|
+      query-hours-by-team $it --show-all=$show_all --show-prev=$show_prev --notify=$notify --silent=$silent
+    } | ignore
+    let interval = $confEMP.settings?.lastdayNotifyInterval? | default '30min' | into duration
+    print $'Wait ($interval) to check again...'
+    sleep $interval
+  }
 }
 
 # Load emp settings and store them to environment variable
@@ -70,34 +87,34 @@ def --env load-emp-conf [] {
   return $empConf
 }
 
-export def query-hours-by-team-code [
-  code: string,       # Team code, like '123'
+# Query working hours of the specified team from EMP and display the filling status of each team member
+export def query-hours-by-team [
+  team: record,       # Team record, contains name,code,alias,users,etc.
   --notify(-n),       # Notify the members who didn't fill the working hours by Dintalk Robot
   --silent(-s),       # Don't print the result
   --show-prev(-p),    # Query working hours of previous week
   --show-all(-a),     # Show all members even if the working hours filled correctly
 ] {
-
   let monday = get-monday --prev=$show_prev
   let sunday = get-sunday --prev=$show_prev
   let emp = get-conf empWorkingHour
   let staffPayload = ($emp.staffPayload
       | str replace '_last_day_' $sunday
       | str replace '_first_day_' $monday
-      | str replace '_project_code_' $code
+      | str replace '_project_code_' $team.code
     )
   # Week No of now: [(date now)] | dfr into-df | dfr get-week
-  let staffs = (curl $emp.staffUrl -H $emp.type -s --data-raw $staffPayload | str join)
+  let staffs = curl $emp.staffUrl -H $emp.type -s --data-raw $staffPayload | str join
 
   handle-exception $staffs
 
   if $silent {
-    print $'Query working hours from ($monday) to ($sunday) for team (ansi p)($code)(ansi reset)'
+    print $'Query working hours from ($monday) to ($sunday) for team (ansi p)($team.name)(ansi reset)'
   } else {
     print $'(char nl)Query working hours from ($monday) to ($sunday) --->'
   }
   # 此处把中文名字字段过滤掉，否则在Windows下数据传到后端接口会发生解析错误
-  let staffPayload = ($staffs | query json 'res' | select id | to json -r)
+  let staffPayload = $staffs | from json | get res | select id | to json -r
   let timePayload = ($emp.timePayload
       | str replace '_last_day_' $sunday
       | str replace '_first_day_' $monday
@@ -110,10 +127,10 @@ export def query-hours-by-team-code [
       | str replace '_staffs_' $staffPayload
     )
 
-  let allStaffs = ($staffs | query json 'res' | select id name | rename id Name)
+  let allStaffs = $staffs | from json | get res | select id name | rename id Name
   let hours = (curl $emp.timeUrl -H $emp.type -H $emp.app -s --data-raw $timePayload | str join)
   let leaves = (curl $emp.leaveUrl -H $emp.type -s --data-raw $leavePayload | str join)
-  let workingHours = ($hours | query json 'res')
+  let workingHours = $hours | from json | get res
   let workingHours = if ($workingHours | is-empty) { null } else {(
       $workingHours
         | default 0.00 percentage
@@ -122,7 +139,7 @@ export def query-hours-by-team-code [
         | reject staff
     )}
 
-  let leavingHours = ($leaves | query json 'res')
+  let leavingHours = $leaves | from json | get res
 
   # Set a default leaving record
   let leavingHours = if ($leavingHours | is-empty) { [[beginTime, duration, staffId]; [0, 0, 0]] } else {
@@ -134,7 +151,7 @@ export def query-hours-by-team-code [
       )
     }
 
-  handle-working-hours $allStaffs $workingHours $leavingHours --code $code --notify=$notify --show-all=$show_all --show-prev=$show_prev --silent=$silent
+  handle-working-hours $allStaffs $workingHours $leavingHours --team $team --notify=$notify --show-all=$show_all --show-prev=$show_prev --silent=$silent
 }
 
 # 显示工时统计信息
@@ -142,13 +159,12 @@ def handle-working-hours [
   allStaffs: any,
   workingHours: any,
   leavingHours: any,
-  --code: string,
+  --team: record,
   --notify(-n),       # Notify the members who didn't fill the working hours by Dintalk Robot
   --show-all,
   --show-prev,
   --silent,
 ] {
-  let team = $env.EMP_CONF | get teams | values | where code == $code | get 0
   let title = $'($team.name)本周工时填报'
   # echo ($data | reject id isDeleted week year createdAt updatedAt updatedBy createdBy)
   if not $silent {
@@ -158,9 +174,9 @@ def handle-working-hours [
   }
   let week = [Mon, Tue, Wen, Thu, Fri, Sat, Sun]
   # 当前是一年中的第几周
-  let weekNo = if $show_prev == true { ([((date now) - 7day)] | dfr into-df | dfr get-week).0 } else { ([(date now)] | dfr into-df | dfr get-week).0 }
+  let weekNo = if $show_prev == true { (date now) - 7day | format date %V } else { date now | format date %V }
   # 此刻是一周中的第几天，周一为第 0 天
-  let weekDay = ([(date now)] | dfr into-df | dfr get-weekday).0
+  let weekDay = date now | format date %u | into int
   # 正常情况下一周工作 5 天
   let total = if ($weekDay >= 5 or $show_prev == true) { 5 } else { $weekDay }
 
@@ -213,12 +229,14 @@ def handle-working-hours [
   if $notify and $empSwitchEnv == 'on' { notify-filling-hours $hourMap --team $team }
 }
 
+# Notify the members who didn't fill the working hours by Dintalk Robot
 def notify-filling-hours [hours: any, --team: record] {
+  print 'Try to send notifications by DingTalk Robot...'
   let checkPoint = (date now) + $CHECK_DURATION
-  let messages = $env.EMP_CONF | get messages
+  let messages = $env.EMP_CONF | get settings?.messages? | default {}
   # Get monday, ..., friday, saturday, sunday
-  let weekday = $checkPoint | format date '%A' | str downcase
-  let isMonthEnd = ($checkPoint | format date '%m') != (($checkPoint + 1day) | format date '%m')
+  let weekday = $checkPoint | format date $_WEEK_FMT | str downcase
+  let isMonthEnd = is-month-end $checkPoint
   # 非周五、六、日、一直接返回
   if not (($weekday in $messages) or $isMonthEnd) {
     print $'Skip notify at (ansi p)($weekday)(ansi reset)...';
@@ -238,7 +256,7 @@ def notify-filling-hours [hours: any, --team: record] {
   let mentions = $hours | where Gap > 0 | get name
   let mobiles = $users | where name in $mentions | get mobile | str join ','
   let message = $messages | get -i $weekday | default $messages.monthEnd
-  load-env { DINGTALK_ROBOT_AK: $DINGTALK_AK_SK.0, DINGTALK_ROBOT_SECRET: $DINGTALK_AK_SK.1 }
+  load-env { DINGTALK_ROBOT_AK: $DINGTALK_AK_SK.0, DINGTALK_ROBOT_SECRET: $DINGTALK_AK_SK.1, DINGTALK_NOTIFY: 'on' }
   dingtalk notify --text $message --at-mobiles $mobiles
 }
 
@@ -272,6 +290,11 @@ def get-hr-per-staff [
   if ($hour | length) == 0 { 0 } else { ($hour | select 0).0.Hrs }
 }
 
+# 判断是否是月底
+def is-month-end [time: datetime] {
+  ($time | format date $_MONTH_FMT) != (($time + 1day) | format date $_MONTH_FMT)
+}
+
 # 处理未登录、超时、服务器错误等
 def handle-exception [
   res: string
@@ -279,13 +302,15 @@ def handle-exception [
 
   # 未登录或者Cookie过期提示, use `do -i` to ignore 'error: Coercion error'
   do -i {
-    if ($res | is-empty) or ($res | query json 'status') == 401 {
+    if ($res | is-empty) or ($res | from json | get status) == 401 {
       print $'(ansi r)You did`t have permission to call this API !(char nl)(ansi reset)'
       exit $ECODE.AUTH_FAILED
     }
-    if (($res | query json 'status') == 500) {
+    if (($res | from json | get status) == 500) {
       print $'(ansi r)Backend internal server error，please try again later!(char nl)(ansi reset)'
       exit $ECODE.SERVER_ERROR
     }
   }
 }
+
+alias main = working-hours-daily-checking
