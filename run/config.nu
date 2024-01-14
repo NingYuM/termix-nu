@@ -57,12 +57,12 @@ $env.PROMPT_INDICATOR = $"(ansi y)$> (ansi reset)"
 
 $env.HOMEBREW_BOTTLE_DOMAIN = https://mirrors.ustc.edu.cn/homebrew-bottles/bottles
 
-# $env.PATH = (
-#   $env.PATH
-#     | prepend `/Applications/Sublime Text.app/Contents/SharedSupport/bin/`
-#     | prepend `/Applications/Sublime Merge.app/Contents/SharedSupport/bin/`
-#     | uniq
-# )
+$env.PATH = (
+  $env.PATH
+    | append `/Applications/Ghostty.app/Contents/MacOS/`
+    # | prepend `/Applications/Sublime Merge.app/Contents/SharedSupport/bin/`
+    | uniq
+)
 
 # -------------------- Custom Commands -------------------------
 
@@ -540,7 +540,7 @@ let light_theme = {
 }
 
 let carapace_completer = {|spans|
-  carapace $spans.0 nushell $spans | from json
+  carapace $spans.0 nushell ...$spans | from json
 }
 
 # The default config record. This is where much of your global configuration is setup.

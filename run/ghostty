@@ -1,0 +1,51 @@
+# Ghostty terminal emulator configuration file.
+# The syntax is "key = value". The whitespace around the equals doesn't matter.
+# REF:
+# - https://github.com/search?q=path%3Aghostty%2Fconfig&type=code
+# - https://github.com/mitchellh/ghostty/blob/main/src/config/Config.zig
+# - https://github.com/mitchellh/ghostty/blob/main/src/input/Binding.zig
+# Useful Tips:
+# - ghostty +list-fonts
+# - ghostty +list-themes
+
+title = Ghostty
+
+# Favorite themes: Dracula, Dracula+, DoomOne, Doom Peacock, Desert, DotGov, Earthsong
+# Fairyfloss, GruvboxDark, Hopscotch, Monokai Remastered, PaleNightHC, Paraiso Dark
+# Rebecca,
+theme = Rebecca
+background-opacity = 0.9
+background-blur-radius = 30
+unfocused-split-opacity = 0.95
+
+#-----------Fonts Settings-----------#
+font-size = 20
+font-style = Light
+font-feature = -calt
+font-feature = -dlig
+font-feature = -liga
+# Does not work on macOS?
+font-variation = wght=300
+font-family = 'Fira Code'
+font-family = 'Cascadia Code'
+font-family = 'JetBrains Mono'
+font-family = 'Source Code Pro'
+grapheme-width-method = unicode
+
+# window-decoration = false
+gtk-titlebar = false
+# This config does not work on macOS?
+gtk-wide-tabs = false
+window-width = 80
+window-height = 20
+window-theme = dark
+copy-on-select = clipboard
+mouse-hide-while-typing = true
+macos-non-native-fullscreen = false
+
+keybind = command+right=next_tab
+keybind = command+left=previous_tab
+keybind = command+shift+k=clear_screen
+keybind = command+ctrl+shift+v=new_split:down
+keybind = command+ctrl+shift+h=new_split:right
+
