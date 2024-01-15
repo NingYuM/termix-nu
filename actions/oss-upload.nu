@@ -81,6 +81,8 @@ def sync-latest-assets [
 
   let latestMeta = {
     version: $assetMeta.tag_name,
+    publishAt: $assetMeta.published_at,
+    repo: $'https://github.com/($repo)',
     assets: (ls -s $name | to json),
   }
 
