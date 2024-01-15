@@ -137,7 +137,7 @@ def get-pipeline-conf [dest: string = 'dev', --apps: string, --list, --grep: str
 # 列出所有可用的执行目标
 def show-available-targets [
   configFile: string,  # 配置文件路径
-  repoConf: table,     # 配置文件内容
+  repoConf: record,    # 配置文件内容
   --grep(-g): string,  # 仅在与 `-l` 一起使用时生效，从部署配置里面搜索name,alias或description里包含特定字符串的部署目标
 ] {
   if ($grep | is-empty) {
@@ -202,7 +202,7 @@ def query-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
 }
 
 # 格式化流水线查询结果，以更友好的方式呈现
-def format-pipeline-data [pipelines: list] {
+def format-pipeline-data [pipelines: any] {
   return (
     $pipelines
       | select -i id commit status normalLabels extra timeBegin timeUpdated filterLabels
