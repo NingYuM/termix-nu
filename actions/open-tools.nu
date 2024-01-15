@@ -1,11 +1,11 @@
-# pull down the latest nightly build of Nushell
+# Upgrade the latest release of a tool from the OSS storage
 #
-# this command will
-# - get the metadata of the latest build of Nushell in the nightly repo
+# This command will
+# - get the metadata of the latest tool release from the OSS storage
 # - filter the assets that match the search pattern `target`
 # - fuzzy-ask one of them or use the single match
 # - download the archive
-# - give some hints about the version and the hash and how to extract the archive
+# - extract the archive and replace the old binary
 
 use ../utils/common.nu [ECODE, is-installed, hr-line]
 
@@ -28,13 +28,13 @@ export def upgrade-latest-tool [
 
   if $list {
     print 'Available packages:'; hr-line
-    $latest.assets | from json | get name | print; exit $ECODE.SUCCESS
+    $latest.assets | get name | print; exit $ECODE.SUCCESS
   }
 
   if ($target | is-empty) and (not $interactive) {
     $target = $'($nu.os-info.arch)-((sys).host.name | str downcase)'
   }
-  let matches = $latest.assets | from json | get name | where $it =~ $target
+  let matches = $latest.assets | get name | where $it =~ $target
 
   let arch = match ($matches | length) {
     0 => {
@@ -59,7 +59,7 @@ export def upgrade-latest-tool [
     },
   }
 
-  let target = $latest.assets | from json | where name =~ $arch
+  let target = $latest.assets | where name =~ $arch
   if ($target | length) != 1 {
     error make --unspanned {
       msg: (
@@ -82,15 +82,15 @@ export def upgrade-latest-tool [
   }
 
   print $"Latest ($name) of version: ($latest.version) saved as `(ansi default_dimmed)($target.name)(ansi reset)`\n"
-  print $'Contents of ($destDir)'; hr-line
-  print (ls $destDir)
+  # print $'Contents of ($destDir)'; hr-line
+  # print (ls $destDir)
 
   let extension = if ($target.name ends-with '.tar.gz') { 'tar.gz' } else { 'zip' }
 
   match $extension {
     'tar.gz' => {
       cd $destDir
-      tar xvf $'($bin)-*.tar.gz' --directory $destDir
+      tar xf $'($bin)-*.tar.gz' --directory $destDir
       rm $'($bin)-*.tar*gz'; cd ..
       # `sudo` is required to move the files to `/usr/local/bin` on macOS
       glob $'($destDir)/**/($bin)*' | each {|it| if ($it | path type) == 'file' { sudo cp $it . } }
@@ -104,14 +104,21 @@ export def upgrade-latest-tool [
     'zip' => {
       print $'Try to unpack the archive...'
       cd $destDir
-      tar xvf $'($name)-*.zip'
-      rm $'($name)-*.zip'; cd ..
+      tar xf $'($bin)-*.zip'
+      rm $'($bin)-*.zip'; cd ..
       if $name == 'nushell' {
         cp $'($destDir)/nu_plugin_*' .
+        print 'Nushell plugins have been updated successfully'
+        cp $'($destDir)/($bin).exe' $'($bin)-latest.exe'
+        print $'(ansi r)Please replace ($bin).exe with ($bin)-latest.exe manually in ($destDir | path dirname) directory(ansi reset)'
+        rm -rf $destDir
+        return
       }
-      cp $'($destDir)/nu.exe' $'($name)-latest.exe'
+      cp $'($destDir)/($bin).exe' $'($bin).exe'
       rm -rf $destDir
-      print $'Please replace ($name).exe with ($name)-latest.exe manually'
+      let version = nu -c $'./($bin).exe --version'
+      print $'(char nl)Update to ($name): (ansi g)($version)(ansi reset)'
+      print $'($name) has been updated successfully'
     },
     _ => {
       print $"Unknown extension ($extension), you'll have to figure out how to extract this archive ;)"

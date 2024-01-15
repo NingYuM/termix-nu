@@ -1,13 +1,13 @@
 #!/usr/bin/env nu
 # Author: hustcer
 # Created: 2024/01/15 13:56:56
-# Description: Upload commonly used tools to OSS
+# Description: Upload commonly used tools to OSS, such as nushell and just
 # TODO:
-# [√] Setup ossutil
-# [√] Upload Nushell to OSS
-# [√] Upload Just to OSS
-# [√] Create meta info for uploaded assets
-# [√] Create a Github action to upload assets automatically
+#   [√] Setup ossutil
+#   [√] Upload Nushell to OSS
+#   [√] Upload Just to OSS
+#   [√] Create meta info for uploaded assets
+#   [√] Create a Github action to upload assets automatically
 
 use ../utils/common.nu [ECODE, compare-ver]
 
@@ -84,7 +84,7 @@ def sync-latest-assets [
   let assetMeta = http get $'https://api.github.com/repos/($repo)/releases/latest'
   mut assets = $assetMeta | get assets.browser_download_url
   if ($name == 'nushell') {
-    $assets = ($assets | where $it =~ 'full')
+    $assets = ($assets | where $it =~ 'full' | where $it !~ 'msi')
   }
   print $'Syncing latest assets of ($name) to OSS...'
   ossutil rm --force -r $toolPath
@@ -108,7 +108,7 @@ def sync-latest-assets [
     version: $assetMeta.tag_name,
     publishAt: $assetMeta.published_at,
     repo: $'https://github.com/($repo)',
-    assets: (ls -s $name | to json),
+    assets: (ls -s $name),
   }
 
   $latestMeta | save $'($name)/latest.json'
