@@ -14,10 +14,22 @@ use ../utils/common.nu [ECODE, compare-ver]
 const ASSET_PREFIX = 'open-tools'
 
 const TOOL_MAP = {
-    just: 'casey/just',
-    nushell: 'nushell/nushell',
-    # nushell: 'nushell/nightly',
+  just: 'casey/just',
+  nushell: 'nushell/nushell',
+  # nushell: 'nushell/nightly',
+}
+
+const NAME_MAP = {
+  just: {
+    'x86_64-apple-darwin': 'x86_64-darwin',
+    'aarch64-apple-darwin': 'aarch64-darwin',
+    'x86_64-pc-windows-msvc': 'x86_64-windows-msvc',
+    'x86_64-unknown-linux-musl': 'x86_64-linux-musl',
+    'aarch64-unknown-linux-musl': 'aarch64-linux-musl',
+    'arm-unknown-linux-musleabihf': 'arm-linux-musleabihf',
+    'armv7-unknown-linux-musleabihf': 'armv7-linux-musleabihf',
   }
+}
 
 export def setup-oss-util [
   --endpoint(-e): string,    # The endpoint of OSS
@@ -77,7 +89,20 @@ def sync-latest-assets [
   print $'Syncing latest assets of ($name) to OSS...'
   ossutil rm --force -r $toolPath
   mkdir $name
-  $assets | each {|it| aria2c $it -d $name }
+  $assets | each {|it|
+    mut assetName = $it | split row '/' | last
+    $assetName = if ($name not-in $NAME_MAP) { $assetName } else {
+      let maps = $NAME_MAP | get $name
+      for m in ($maps | columns) {
+        if ($assetName =~ $m) {
+          $assetName = ($assetName | str replace $m ($maps | get $m))
+          break
+        }
+      }
+      $assetName
+    }
+    aria2c $it -d $name -o $assetName
+  }
 
   let latestMeta = {
     version: $assetMeta.tag_name,
