@@ -9,6 +9,9 @@ on:
     branches:
       - develop
       - feature/oss
+  # This schedule will run only from the default branch
+  schedule:
+    - cron: '15 0 * * *' # run at 00:15 AM UTC
 
 jobs:
   Upload-Assets:
