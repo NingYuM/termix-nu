@@ -15,7 +15,8 @@
 #   [√] Lastday(Monday and Month end) keep polling and notify with specified interval
 #   [√] Ignore some team with `ignore = true` in config file
 #   [ ] 考虑调休、补班等情况下工时是否填满的判定
-#   [ ] Update the docs
+#   [ ] 支持通过设置 LAST_DAY 将某天设置为最后期限以启动间隔提醒；
+#   [√] Update the docs
 # Usage:
 #   t emp
 #   t emp-daily
