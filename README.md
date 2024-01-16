@@ -164,7 +164,20 @@ winget install Nushell.Nushell
 
 此工具箱里面的脚本每天第一次执行的时候会检查远程是否有新版本，如果有可以通过 `t upgrade` 命令更新 `termix-nu` 到最新版本, 本质上是将本地脚本仓库更新到远程最新的 Release Tag 对应的提交，所以如果命令更新失败你也可以进入到 `termix-nu` 代码仓库所在目录直接更新 `master` 分支代码;
 
-`termix-nu` 的版本与 `nushell` 的版本是对应的，前者往往依赖 `nushell` 最新版本的一些特性, 所以如果通过 `t upgrade` 命令更新 `termix-nu` 后发现功能不正常或者提示 Nushell 版本过低可以通过 `brew outdated; brew upgrade nushell`（对于 Windows 系统可以通过 `scoop update nushell` 或者 `winget upgrade Nushell.Nushell`）命令更新。
+`termix-nu` 的版本与 `nushell` 的版本是对应的，前者往往依赖 `nushell` 最新版本的一些特性, 所以如果通过 `t upgrade` 命令更新 `termix-nu` 后发现功能不正常或者提示 Nushell 版本过低可以通过 `brew outdated; brew upgrade nushell`（对于 Windows 系统可以通过 `scoop update nushell` 或者 `winget upgrade Nushell.Nushell`）命令更新 `nushell`。
+
+考虑到通过 `brew` 等工具更新 `nushell` 和 `just` 时候可能会从 GitHub 上下载对应的包，这个速度通常会比较慢，从 `v1.60.0` 开始 `t upgrade` 内置支持更新 `nushell` & `just` 只需要执行 `t upgrade nu` 和 `t upgrade just` 即可，这两个命令会从 Aliyun OSS 上下载最新的 `nushell` & `just` 并安装到本地，直接替换原来老的二进制文件。工具会根据你的操作系统和CPU架构自动选择正确的发行版，所以你也不用操心到底该下载哪个安装包。
+
+:::info
+如何确保 Aliyun OSS 上的 `nushell` 和 `just` 是最新的？
+
+这个当然不是靠人工上传的，实际上背后是通过 Github 的 WorkFlow 每天定时执行，自动检查有没有新的 `nushell` 或 `just` 发布，如果有就把 Aliyun OSS 上老的安装包删掉并上传最新的安装包，所以 OSS 上始终只有一个版本的 `nushell` 和 `just` 并且应该是官方最新发布的版本。只要这个机制不出问题你应该可以相信 `t upgrade` 可以帮你安装最新的版本。
+
+不过通过`t upgrade`更新 `nushell` 和 `just` 也是有瑕疵的：
+
+1. 如果你是通过 `brew` 安装的 `nushell` 和 `just` 安装路径上会有版本信息，比如 `/usr/local/Cellar/just/1.21.0`，通过 `t upgrade` 升级是直接进行二进制文件替换，但是路径不变，所以你会看到一个低版本的文件路径里面放的可能是一个最新版本的二进制文件，不过这个不影响使用；
+2. Windows 不支持对正在运行的可执行文件进行写操作，由于 `t upgrade` 是 `nushell` 脚本驱动的，所以在执行 `t upgrade nu` 的时候会在 `nu.exe` 所在的目录里面创建一个 `nu-latest.exe` 文件，这个文件需要你后续自己手工替换下，好在其他 `nu_plugin_*` 文件会自动更新掉。不过只有在更新 `nu` 的时候有这个问题，而且仅限于 `Windows` 系统；
+:::
 
 ---
 
