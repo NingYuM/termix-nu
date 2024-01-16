@@ -1,4 +1,5 @@
 # CHANGELOG
+
 All notable changes to this project will be documented in this file.
 
 ## 1.55.0 - 2024-01-09
@@ -610,9 +611,6 @@ All notable changes to this project will be documented in this file.
 - Remove unnecessary brackets if possible
 - Upgrade min nu version to v0.66, and min just version to v1.3.0, bump to v1.7.0
 
-# Changelog
-All notable changes to this project will be documented in this file.
-
 ## 1.6.0 - 2022-06-22
 
 ### Bug Fixes
@@ -924,7 +922,7 @@ All notable changes to this project will be documented in this file.
 
 ### Refactor
 
-- Add global date format constant: _DATE_FMT
+- Add global date format constant: \_DATE_FMT
 
 ## 1.2.5 - 2021-12-02
 
