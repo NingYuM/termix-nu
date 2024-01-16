@@ -72,6 +72,9 @@ export def upgrade-latest-tool [
   let target = $target | first
   let bin = $BIN_MAP | get $name
 
+  print $'You are going to upgrade (ansi p)($name)(ansi reset) to (ansi p)($latest.version)(ansi reset)'
+  hr-line
+
   let destDir = (which $bin).path | path dirname | path join 'latest'
   if not ($destDir | path exists) { mkdir $destDir }
 
@@ -96,7 +99,7 @@ export def upgrade-latest-tool [
       glob $'($destDir)/**/($bin)*' | each {|it| if ($it | path type) == 'file' { sudo cp $it . } }
       rm -rf $destDir
       let version = nu -c $'./($bin) --version'
-      print $'(char nl)Update to ($name): (ansi g)($version)(ansi reset)'
+      print $'(char nl)Upgrade to ($name): (ansi g)($version)(ansi reset)'
       if $name == 'nushell' {
         print $'Please restart Nu session to use the latest release...'
       }
@@ -108,7 +111,7 @@ export def upgrade-latest-tool [
       rm $'($bin)-*.zip'; cd ..
       if $name == 'nushell' {
         cp $'($destDir)/nu_plugin_*' .
-        print 'Nushell plugins have been updated successfully'
+        print 'Nushell plugins have been upgraded successfully'
         cp $'($destDir)/($bin).exe' $'($bin)-latest.exe'
         print $'(ansi r)Please replace ($bin).exe with ($bin)-latest.exe manually in ($destDir | path dirname) directory(ansi reset)'
         rm -rf $destDir
@@ -117,8 +120,8 @@ export def upgrade-latest-tool [
       cp $'($destDir)/($bin).exe' $'($bin).exe'
       rm -rf $destDir
       let version = nu -c $'./($bin).exe --version'
-      print $'(char nl)Update to ($name): (ansi g)($version)(ansi reset)'
-      print $'($name) has been updated successfully'
+      print $'(char nl)Upgrade to ($name): (ansi g)($version)(ansi reset)'
+      print $'($name) has been upgraded successfully'
     },
     _ => {
       print $"Unknown extension ($extension), you'll have to figure out how to extract this archive ;)"

@@ -71,9 +71,9 @@ sync-doc: _setup
   @let doc = '../fe-docs/docs/termix'; cd $env.TERMIX_DIR; cp README.md $'($doc)/termix-nu.md'; \
     cp FAQ.md $'($doc)/termix-FAQ.md'; cp CHANGELOG.md $'($doc)/termix-CHANGELOG.md';
 
-# Upgrade termix-nu repo to the latest version
-upgrade:
-  @cd {{_termix}}; git checkout master; git pull --tags; git pull origin (git tag -l --sort=-v:refname | lines | select 0) --ff-only;
+# Upgrade termix-nu repo, just or nushell to the latest version
+upgrade *OPTIONS:
+  @overlay use {{ join(_termix, 'actions', 'upgrade.nu') }}; upgrade-tool {{OPTIONS}}
 
 # Release a new version for termix-nu
 release  updateLog=('false') forceUpgrade=('false'): _setup
