@@ -13,6 +13,8 @@
 #   [√] 每周一查询上周工时填报情况，如果有人未填报，发送提醒消息
 #   [√] 确保该脚本可以每天运行，但是只有符合上述情况才提醒
 #   [√] Lastday(Monday and Month end) keep polling and notify with specified interval
+#   [√] Ignore some team with `ignore = true` in config file
+#   [ ] 考虑调休、补班等情况下工时是否填满的判定
 #   [ ] Update the docs
 # Usage:
 #   t emp
@@ -22,7 +24,7 @@
 #   https://emp.app.terminus.io/view/worktime_WorkTimeBO_DepartmentWorkTime
 
 use dingtalk-notify.nu ['dingtalk notify']
-use ../utils/common.nu [ECODE, get-conf, get-env]
+use ../utils/common.nu [ECODE, get-conf, get-env, log]
 
 const _WEEK_FMT = '%A'
 const _MONTH_FMT = '%m'
@@ -58,20 +60,20 @@ export def query-hours-by-team-codes [
   --keep-polling,     # Keep polling until all members have filled the working hours
 ] {
   let confEMP = load-emp-conf
-  let codes = $confEMP.teams | values | get code
-  if ($codes | is-empty) {
+  let teams = $confEMP.teams | values | default false ignore | where ignore != true
+  if ($teams | get code | is-empty) {
     print $'(ansi r)Please set the `code` field in all `emp.teams`, bye...(char nl)(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
   if not $keep_polling {
-    $confEMP.teams | values | each { |it|
+    $teams | each { |it|
       query-hours-by-team $it --show-all=$show_all --show-prev=$show_prev --notify=$notify --silent=$silent
     } | ignore
     return
   }
 
   loop {
-    $confEMP.teams | values | each { |it|
+    $teams | each { |it|
       query-hours-by-team $it --show-all=$show_all --show-prev=$show_prev --notify=$notify --silent=$silent
     } | ignore
     let interval = $confEMP.settings?.lastdayNotifyInterval? | default '30min' | into duration
@@ -106,6 +108,8 @@ export def query-hours-by-team [
   # Week No of now: [(date now)] | dfr into-df | dfr get-week
   let staffs = curl $emp.staffUrl -H $emp.type -s --data-raw $staffPayload | str join
 
+  # log 'staffs' $staffs
+
   handle-exception $staffs
 
   if $silent {
@@ -121,6 +125,12 @@ export def query-hours-by-team [
       | str replace '_staffs_' $staffPayload
     )
 
+  let timeSummaryPayload = ($emp.timeSummaryPayload
+    | str replace '_last_day_' $sunday
+    | str replace '_first_day_' $monday
+    | str replace '_staffs_' $staffPayload
+  )
+
   let leavePayload = ($emp.leavePayload
       | str replace '_last_day_' $sunday
       | str replace '_first_day_' $monday
@@ -130,6 +140,10 @@ export def query-hours-by-team [
   let allStaffs = $staffs | from json | get res | select id name | rename id Name
   let hours = (curl $emp.timeUrl -H $emp.type -H $emp.app -s --data-raw $timePayload | str join)
   let leaves = (curl $emp.leaveUrl -H $emp.type -s --data-raw $leavePayload | str join)
+  # log 'hours' ($hours | from json | table -e); # log 'leaves' $leaves
+
+  # curl $emp.timeSummaryUrl -H $emp.type -H $emp.app -s --data-raw $timeSummaryPayload | str join | print
+
   let workingHours = $hours | from json | get res
   let workingHours = if ($workingHours | is-empty) { null } else {(
       $workingHours
@@ -209,7 +223,7 @@ def handle-working-hours [
     ($allMembers | where { |it| $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8 })
   })
 
-  if ($result | is-empty) { print $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; exit $ECODE.SUCCESS }
+  if ($result | is-empty) { print $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; return }
 
   let hourMap = (
     $result | upsert Gap { |it| $total * 8 - ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave) }
