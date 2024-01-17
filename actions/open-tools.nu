@@ -7,9 +7,14 @@
 # - download the archive
 # - extract the archive and replace the old binary
 
-use ../utils/common.nu [ECODE, is-installed, hr-line]
+use ../utils/common.nu [ECODE, is-installed, hr-line, compare-ver]
 
 const TOOL_PREFIX = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/open-tools'
+
+const BIN_MAP = {
+  just: 'just',
+  nushell: 'nu',
+}
 
 export def upgrade-latest-tool [
   name: string,         # The name of the tool, e.g. `nushell`
@@ -18,13 +23,12 @@ export def upgrade-latest-tool [
   --interactive(-i),    # Ask the user to choose the target architecture
 ]: nothing -> nothing {
 
-  const BIN_MAP = {
-    just: 'just',
-    nushell: 'nu',
-  }
-
   mut target = $target
   let latest = http get $'($TOOL_PREFIX)/($name)/latest.json'
+  # Check current version and compare with the latest one stop upgrading if lower than or equal to the latest one
+  if (not (should-upgrade $name $latest)) { return }
+
+  print $'Upgrading ($name | str title-case)...'; hr-line
 
   if $list {
     print 'Available packages:'; hr-line
@@ -127,4 +131,18 @@ export def upgrade-latest-tool [
       print $"Unknown extension ($extension), you'll have to figure out how to extract this archive ;)"
     },
   }
+}
+
+def should-upgrade [name: string, latest: record] {
+  let VERSION_CHECK = {
+    nushell: { nu --version | str trim },
+    just: { just --version | str replace 'just' '' | str trim },
+  }
+
+  let currentVer = do ($VERSION_CHECK | get $name)
+  if (compare-ver $latest.version $currentVer) <= 0 {
+    print $'($name | str title-case) is already the latest version: (ansi g)($latest.version)(ansi reset), upgrade skipped...'
+    return false
+  }
+  return true
 }

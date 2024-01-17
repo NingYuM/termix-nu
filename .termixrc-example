@@ -57,7 +57,7 @@ monthEnd = '掐指一算今天是月底？麻烦填下工时吧, 过了今天就
 [emp.teams.A]
 name = 'TERP前端'    # 终端查询的时候会显示标题: TERP前端本周工时填报
 code = '000'        # EMP Project Code, 从 emp 查看部门工时的 worktime_GroupCountStaffWorkTimeSummaryFunc 接口参数中获取
-alias = 'terp-fe'   # 需要配置 `TERP_FE_DINGTALK` 环境变量格式：`${DINGTALK_ROBOT_AK},${DINGTALK_ROBOT_SK}` 以使用钉钉提醒
+alias = 'terp-fe'   # 需要对应配置 `TERP_FE_DINGTALK` 环境变量格式：`${DINGTALK_ROBOT_AK},${DINGTALK_ROBOT_SK}` 以使用钉钉群机器人提醒
 ignore = false      # 设置为 `true` 的时候会忽略对该组的查询和钉钉提醒，也可以不填，默认值为 `false`
 users = [           # 群通知提醒的人员列表，真实用户名 + 手机号
     { name = '张三', mobile = '18000000000'},
