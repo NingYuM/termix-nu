@@ -21,6 +21,7 @@ export def upgrade-latest-tool [
   target: string = ''   # The target architecture, matches all of them by default
   --list(-l),           # List all the available binary packages
   --interactive(-i),    # Ask the user to choose the target architecture
+  --no-aria2c,          # Don't use aria2c to download tools
 ]: nothing -> nothing {
 
   mut target = $target
@@ -82,7 +83,7 @@ export def upgrade-latest-tool [
   let destDir = (which $bin).path | path dirname | path join 'latest'
   if not ($destDir | path exists) { mkdir $destDir }
 
-  if (is-installed aria2c) {
+  if (is-installed aria2c) and (not $no_aria2c) {
     aria2c $'($TOOL_PREFIX)/($name)/($target.name)' --dir $destDir --out $target.name
   } else {
     http get $'($TOOL_PREFIX)/($name)/($target.name)' | save --progress --force $'($destDir)/($target.name)'

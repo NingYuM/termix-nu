@@ -23,8 +23,8 @@ export def upgrade-tool [
 ] {
   if $all {
     upgrade-termix-nu
-    upgrade-latest-tool just
-    upgrade-latest-tool nushell
+    upgrade-latest-tool just --no-aria2c
+    upgrade-latest-tool nushell --no-aria2c
     exit $ECODE.SUCCESS
   }
 
@@ -38,7 +38,7 @@ export def upgrade-tool [
     exit $ECODE.SUCCESS
   }
   let tool = if $tool == 'just' { $tool } else { 'nushell' }
-  upgrade-latest-tool $tool
+  upgrade-latest-tool $tool --no-aria2c
 }
 
 def upgrade-termix-nu [] {
