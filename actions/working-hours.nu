@@ -254,7 +254,7 @@ def notify-filling-hours [hours: any, --team: record] {
     print $'(ansi r)No users found in team ($team.name), stop sending notifications...(char nl)(ansi reset)'
     return
   }
-  let DINGTALK_KEY = $'($team.alias | str upcase | str replace '-' '_')_DINGTALK'
+  let DINGTALK_KEY = $'($team.alias | str upcase | str replace -a '-' '_')_DINGTALK'
   if $DINGTALK_KEY not-in $env {
     print $'(ansi r)Please set the ($DINGTALK_KEY) in environment variable to send DingTalk notifications...(char nl)(ansi reset)'
     return
