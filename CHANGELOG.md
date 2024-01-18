@@ -1,6 +1,18 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## 1.61.0 - 2024-01-18
+
+### Bug Fixes
+
+- Fix WezTerm config for Nushell that installed by Homebrew
+- Fixed DingTalk Robot Ak&Sk env key naming to work properly with EMP man-hour filling notification
+- Try to fix `Nushell` & `just` upgrade for macOS of M chip set
+
+### Features
+
+- Add `--force` flag to `t upgrade` to do a force upgrade of open source tools
+
 ## 1.60.1 - 2024-01-18
 
 ### Bug Fixes
