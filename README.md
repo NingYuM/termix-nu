@@ -160,13 +160,13 @@ winget install Nushell.Nushell
 
 ---
 
-### 2. 更新 `termix-nu` 及相关依赖{#upgrade}
+### 2. 30秒极速更新 `termix-nu` 及相关依赖{#upgrade}
 
 此工具箱里面的脚本每天第一次执行的时候会检查远程是否有新版本，如果有可以通过 `t upgrade` 命令更新 `termix-nu` 到最新版本, 本质上是将本地脚本仓库更新到远程最新的 Release Tag 对应的提交，所以如果命令更新失败你也可以进入到 `termix-nu` 代码仓库所在目录直接更新 `master` 分支代码;
 
 `termix-nu` 的版本与 `nushell` 的版本是对应的，前者往往依赖 `nushell` 最新版本的一些特性, 所以如果通过 `t upgrade` 命令更新 `termix-nu` 后发现功能不正常或者提示 Nushell 版本过低可以通过 `brew outdated; brew upgrade nushell`（对于 Windows 系统可以通过 `scoop update nushell` 或者 `winget upgrade Nushell.Nushell`）命令更新 `nushell`。
 
-考虑到通过 `brew` 等工具更新 `nushell` 和 `just` 时候可能会从 GitHub 上下载对应的包，这个速度通常会比较慢，从 `v1.60.0` 开始 `t upgrade` 内置支持更新 `nushell` & `just` 只需要执行 `t upgrade nu` 和 `t upgrade just` 即可，这两个命令会检查本地是不是最新版本，如果不是则从 Aliyun OSS 上下载最新的 `nushell` & `just` 并安装到本地，直接替换原来老的二进制文件。工具会根据你的操作系统和CPU架构自动选择正确的发行版，所以你也不用操心到底该下载哪个安装包。最重要的是不用在意一墙之隔，下载速度可达 10MB/s+, 让您不再畏惧升级。
+考虑到通过 `brew` 等工具更新 `nushell` 和 `just` 时候可能会从 GitHub 上下载对应的包，这个速度通常会比较慢，从 `v1.60.0` 开始 `t upgrade` 内置支持更新 `nushell` & `just` 只需要执行 `t upgrade nu` 和 `t upgrade just` 即可，这两个命令会检查本地是不是最新版本，如果不是则从 Aliyun OSS 上下载最新的 `nushell` & `just` 并安装到本地，直接替换原来老的二进制文件。工具会根据你的操作系统和CPU架构自动选择正确的发行版，所以你也不用操心到底该下载哪个安装包。最重要的是不用在意一墙之隔，下载速度可达 10MB/s 左右, 让您不再畏惧升级。
 
 终极更新大法：`t upgrade --all` 或 `t upgrade -a` 同时更新 `termix-nu`, `just` & `nushell`，从此升级不用愁。
 

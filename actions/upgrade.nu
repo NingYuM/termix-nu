@@ -41,6 +41,7 @@ export def upgrade-tool [
   upgrade-latest-tool $tool --no-aria2c
 }
 
+# Upgrade termix-nu script source repo
 def upgrade-termix-nu [] {
   print $'Upgrading termix-nu...'; hr-line
   cd $env.TERMIX_DIR

@@ -126,12 +126,6 @@ export def query-hours-by-team [
       | str replace '_staffs_' $staffPayload
     )
 
-  let timeSummaryPayload = ($emp.timeSummaryPayload
-    | str replace '_last_day_' $sunday
-    | str replace '_first_day_' $monday
-    | str replace '_staffs_' $staffPayload
-  )
-
   let leavePayload = ($emp.leavePayload
       | str replace '_last_day_' $sunday
       | str replace '_first_day_' $monday
@@ -142,8 +136,6 @@ export def query-hours-by-team [
   let hours = (curl $emp.timeUrl -H $emp.type -H $emp.app -s --data-raw $timePayload | str join)
   let leaves = (curl $emp.leaveUrl -H $emp.type -s --data-raw $leavePayload | str join)
   # log 'hours' ($hours | from json | table -e); # log 'leaves' $leaves
-
-  # curl $emp.timeSummaryUrl -H $emp.type -H $emp.app -s --data-raw $timeSummaryPayload | str join | print
 
   let workingHours = $hours | from json | get res
   let workingHours = if ($workingHours | is-empty) { null } else {(

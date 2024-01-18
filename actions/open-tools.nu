@@ -11,11 +11,13 @@ use ../utils/common.nu [ECODE, is-installed, hr-line, compare-ver]
 
 const TOOL_PREFIX = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/open-tools'
 
+# Mapping from package name to executable binary name
 const BIN_MAP = {
   just: 'just',
   nushell: 'nu',
 }
 
+# Upgrade the latest release of a tool from the OSS storage, currently supported: Nushell & Just
 export def upgrade-latest-tool [
   name: string,         # The name of the tool, e.g. `nushell`
   target: string = ''   # The target architecture, matches all of them by default
@@ -29,7 +31,7 @@ export def upgrade-latest-tool [
   # Check current version and compare with the latest one stop upgrading if lower than or equal to the latest one
   if (not (should-upgrade $name $latest)) { return }
 
-  print $'Upgrading ($name | str title-case)...'; hr-line
+  print $'Upgrading ($name | str title-case) to ($latest.version)...'; hr-line
 
   if $list {
     print 'Available packages:'; hr-line
@@ -134,8 +136,11 @@ export def upgrade-latest-tool [
   }
 }
 
+# Check if local version is lower than the remote version
 def should-upgrade [name: string, latest: record] {
   let VERSION_CHECK = {
+    # just: { echo '1.22.0' },
+    # nushell: { echo '0.88.0' },
     nushell: { nu --version | str trim },
     just: { just --version | str replace 'just' '' | str trim },
   }
