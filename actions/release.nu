@@ -21,7 +21,7 @@ export def main [
 
   cd $env.TERMIX_DIR
   let releaseVer = (get-conf version)
-  let greatestVer = (git tag -l --sort=-v:refname | lines | select 0)
+  let greatestVer = (git tag -l --sort=-v:refname | lines | select 0).0
 
   if (has-ref $releaseVer) {
   	print $'The version ($releaseVer) already exists, Please choose another version.(char nl)'
