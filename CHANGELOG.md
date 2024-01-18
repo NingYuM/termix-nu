@@ -1,6 +1,12 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## 1.60.1 - 2024-01-18
+
+### Bug Fixes
+
+- Fix open source tools upgrade
+
 ## 1.60.0 - 2024-01-18
 
 ### Bug Fixes
