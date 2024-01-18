@@ -29,7 +29,7 @@ export def upgrade-latest-tool [
   mut target = $target
   let latest = http get $'($TOOL_PREFIX)/($name)/latest.json'
   # Check current version and compare with the latest one stop upgrading if lower than or equal to the latest one
-  if (not (should-upgrade $name $latest)) { return }
+  # if (not (should-upgrade $name $latest)) { return }
 
   print $'Upgrading ($name) to ($latest.version)...'; hr-line
 
@@ -82,7 +82,7 @@ export def upgrade-latest-tool [
   print $'You are going to upgrade (ansi p)($name)(ansi reset) to (ansi p)($latest.version)(ansi reset)'
   hr-line
 
-  let destDir = (which $bin).path | path dirname | path join 'latest'
+  let destDir = (which $bin).path | path expand | path dirname | path join 'latest'
   if not ($destDir | path exists) { mkdir $destDir }
 
   if (is-installed aria2c) and (not $no_aria2c) {
