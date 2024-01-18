@@ -1,6 +1,41 @@
 # CHANGELOG
-
 All notable changes to this project will be documented in this file.
+
+## 1.60.0 - 2024-01-18
+
+### Bug Fixes
+
+- Fix latest version check of termix-nu
+- Fix Erda pipeline deploy and query for Nu v0.89.1
+- Fix open source tools install for windows
+
+### Documentation
+
+- Update doc for `t upgrade` command
+- Update doc for `t emp` and `t emp-daily` command
+
+### Features
+
+- Don't print the result if `--silent` is set for `t emp` command
+- Notify the members who didn't fill the working hours by DingTalk Robot for `t emp -n` command
+- Add `EMP_WORKING_HOURS_NOTIFY` env var to turn on or off EMP working hour notify by DingTalk Robot
+- Add `working-hours-daily-checking` job for EMP working hours notify
+- Last day(Monday and Month end) keep on polling and notify with specified interval for `t emp-daily`
+- Add Github action to upload latest version of `nushell` and `just` packages to Aliyun OSS everyday automatically
+- Add `t upgrade` command to upgrade `nushell`, `just` or `termix-nu`
+- Ignore teams with `ignore = true` in config file for EMP working hours query and notify
+- Add `t upgrade --all` command to upgrade `Nushell`, `Just` and `Termix-nu` all at once
+
+### Miscellaneous Tasks
+
+- Add a config file for `ghostty` terminal (beta)
+- Add `publishAt` and `repo` fields for `latest.json` of uploaded open source tools
+- Standarize released package names of open tools
+- Add upgrade nu and just cast
+
+### Refactor
+
+- Simplify the usage of query working hours by `t emp` command
 
 ## 1.55.0 - 2024-01-09
 
