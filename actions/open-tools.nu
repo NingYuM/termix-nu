@@ -147,7 +147,7 @@ def should-upgrade [name: string, latest: record] {
 
   let currentVer = do ($VERSION_CHECK | get $name)
   if (compare-ver $latest.version $currentVer) <= 0 {
-    print $'($name | str title-case) is already the latest version: (ansi g)($latest.version)(ansi reset), upgrade skipped...'
+    print $'($name | str title-case) is already the latest version: (ansi g)($currentVer)(ansi reset), upgrade skipped...'
     return false
   }
   return true
