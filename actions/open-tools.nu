@@ -22,6 +22,7 @@ export def upgrade-latest-tool [
   name: string,         # The name of the tool, e.g. `nushell`
   target: string = ''   # The target architecture, matches all of them by default
   --list(-l),           # List all the available binary packages
+  --force(-f),          # Force to upgrade even if the local version is the same as or above the latest one
   --interactive(-i),    # Ask the user to choose the target architecture
   --no-aria2c,          # Don't use aria2c to download tools
 ]: nothing -> nothing {
@@ -29,7 +30,7 @@ export def upgrade-latest-tool [
   mut target = $target
   let latest = http get $'($TOOL_PREFIX)/($name)/latest.json'
   # Check current version and compare with the latest one stop upgrading if lower than or equal to the latest one
-  # if (not (should-upgrade $name $latest)) { return }
+  if (not (should-upgrade $name $latest --force=$force)) { return }
 
   print $'Upgrading ($name) to ($latest.version)...'; hr-line
 
@@ -136,8 +137,9 @@ export def upgrade-latest-tool [
   }
 }
 
-# Check if local version is lower than the remote version
-def should-upgrade [name: string, latest: record] {
+# Check if local version is lower than the remote version or if `--force` is specified
+def should-upgrade [name: string, latest: record, --force] {
+  if $force { return true }
   let VERSION_CHECK = {
     # just: { echo '1.22.0' },
     # nushell: { echo '0.88.0' },

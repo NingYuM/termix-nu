@@ -20,11 +20,12 @@ const VALID_TOOLS = ['just', 'nu', 'nushell', 'termix-nu']
 export def upgrade-tool [
   tool?: string = 'termix-nu',    # The tool to upgrade, currently support just, nushell or nu and termix-nu
   --all(-a),                      # Upgrade all tools: termix-nu, just and nushell
+  --force(-f),                    # Force upgrade, even if the latest version is already installed
 ] {
   if $all {
     upgrade-termix-nu
-    upgrade-latest-tool just --no-aria2c
-    upgrade-latest-tool nushell --no-aria2c
+    upgrade-latest-tool just --no-aria2c --force=$force
+    upgrade-latest-tool nushell --no-aria2c --force=$force
     exit $ECODE.SUCCESS
   }
 
@@ -38,7 +39,7 @@ export def upgrade-tool [
     exit $ECODE.SUCCESS
   }
   let tool = if $tool == 'just' { $tool } else { 'nushell' }
-  upgrade-latest-tool $tool --no-aria2c
+  upgrade-latest-tool $tool --no-aria2c --force=$force
 }
 
 # Upgrade termix-nu script source repo
