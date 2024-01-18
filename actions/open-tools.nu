@@ -31,7 +31,7 @@ export def upgrade-latest-tool [
   # Check current version and compare with the latest one stop upgrading if lower than or equal to the latest one
   if (not (should-upgrade $name $latest)) { return }
 
-  print $'Upgrading ($name | str title-case) to ($latest.version)...'; hr-line
+  print $'Upgrading ($name) to ($latest.version)...'; hr-line
 
   if $list {
     print 'Available packages:'; hr-line
@@ -147,7 +147,7 @@ def should-upgrade [name: string, latest: record] {
 
   let currentVer = do ($VERSION_CHECK | get $name)
   if (compare-ver $latest.version $currentVer) <= 0 {
-    print $'($name | str title-case) is already the latest version: (ansi g)($currentVer)(ansi reset), upgrade skipped...'
+    print $'($name) is already the latest version: (ansi g)($currentVer)(ansi reset), upgrade skipped...'
     return false
   }
   return true
