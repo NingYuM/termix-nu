@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - Fix WezTerm config for Nushell that installed by Homebrew
 - Fixed DingTalk Robot Ak&Sk env key naming to work properly with EMP man-hour filling notification
 - Try to fix `Nushell` & `just` upgrade for macOS of M chip set
+- Add no emp config tip for `t emp*` command
 
 ### Features
 

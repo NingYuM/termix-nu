@@ -85,7 +85,11 @@ export def query-hours-by-team-codes [
 
 # Load emp settings and store them to environment variable
 def --env load-emp-conf [] {
-  let empConf = open $'($env.TERMIX_DIR)/.termixrc' | from toml | get emp
+  let empConf = open $'($env.TERMIX_DIR)/.termixrc' | from toml | get -i emp | default null
+  if ($empConf | is-empty) {
+    print $'(ansi r)Please set `emp` related configs in `($env.TERMIX_DIR)/.termixrc`, bye...(char nl)(ansi reset)'
+    exit $ECODE.INVALID_PARAMETER
+  }
   $env.EMP_CONF = $empConf
   return $empConf
 }
