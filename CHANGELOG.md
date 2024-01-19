@@ -1,6 +1,12 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## 1.62.0 - 2024-01-19
+
+### Bug Fixes
+
+- Allow apps downloaded from anywhere in MacOS
+
 ## 1.61.0 - 2024-01-18
 
 ### Bug Fixes
