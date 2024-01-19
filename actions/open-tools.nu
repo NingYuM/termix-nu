@@ -7,14 +7,49 @@
 # - download the archive
 # - extract the archive and replace the old binary
 
+use brew-speed-up.nu [fast-brew]
 use ../utils/common.nu [ECODE, is-installed, hr-line, compare-ver]
 
+const BREW_BOTTLES = 'https://mirrors.ustc.edu.cn/homebrew-bottles/bottles/'
 const TOOL_PREFIX = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/open-tools'
 
 # Mapping from package name to executable binary name
 const BIN_MAP = {
   just: 'just',
   nushell: 'nu',
+}
+
+# Install tools from USTC mirror
+export def install-from-brew [name: string, --force(-f)] {
+  if not (is-installed brew) {
+    print '(ansi r)Homebrew is not installed, please install it first...(ansi reset)'; exit $ECODE.MISSING_BINARY
+  }
+  if (sys).host.name != 'Darwin' {
+    print '(ansi r)Only macOS is supported to install by brew for now...(ansi reset)'; exit $ECODE.INVALID_PARAMETER
+  }
+
+  let latest = get-version-from-brew $name
+  # Check current version and compare with the latest one stop upgrading if lower than or equal to the latest one
+  if (not (should-upgrade $name $latest --force=$force)) { return }
+  print $'Upgrading ($name) to ($latest.version)...'; hr-line
+  if $force and (is-installed ($BIN_MAP | get $name)) {
+    fast-brew reinstall $name; return
+  }
+  fast-brew install $name
+}
+
+# Get latest version of tools from USTC mirror
+export def get-version-from-brew [name: string] {
+  let packages =  http get $BREW_BOTTLES
+    | query web --query a --attribute href
+    | where $it =~ $name
+  let version = $packages
+    | where $it =~ 'arm64_sonoma.bottle.tar.gz'
+    | get 0
+    | parse '{name}-{version}.arm64_sonoma.bottle.tar.gz'
+    | get version
+    | get 0
+  { version: $version, packages: $packages }
 }
 
 # Upgrade the latest release of a tool from the OSS storage, currently supported: Nushell & Just
@@ -27,6 +62,7 @@ export def upgrade-latest-tool [
   --no-aria2c,          # Don't use aria2c to download tools
 ]: nothing -> nothing {
 
+  if $nu.os-info.arch == 'aarch64' { install-from-brew $name --force=$force; return }
   mut target = $target
   let latest = http get $'($TOOL_PREFIX)/($name)/latest.json'
   # Check current version and compare with the latest one stop upgrading if lower than or equal to the latest one

@@ -183,10 +183,10 @@ ls-tags by=('time'): _setup
       | upsert time {|e| $'($e.date) ($e.time)' } \
       | select tag time
 
-# 开启或者关闭 Brew 国内镜像加速
-brew-speed-up status=('on'): _setup
+# 通过 Brew 国内镜像加速执行 brew 相关命令
+brew *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'brew-speed-up.nu') }}; \
-    brew-speed-up {{status}}
+    fast-brew {{OPTIONS}}
 
 # 开启或者关闭 git 代理, 目前仅支持在阿里郎加速模式下开启 git 代理
 git-proxy status=('on'): _setup
@@ -293,6 +293,7 @@ _setup: _register_plugins
 _register_plugins:
   #!/usr/bin/env nu
   let gstatExists = not (scope commands | where name == 'gstat' | is-empty)
+  let webExists = not (scope commands | where name == 'query web' | is-empty)
   let queryExists = not (scope commands | where name == 'query json' | is-empty)
   if not $queryExists { register {{ join(NU_DIR, _query_plugin) }} }
   if not $gstatExists { register {{ join(NU_DIR, _gstat_plugin) }} }
