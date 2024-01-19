@@ -103,6 +103,8 @@ export def upgrade-latest-tool [
       cd $destDir
       tar xf $'($bin)-*.tar.gz' --directory $destDir
       rm $'($bin)-*.tar*gz'; cd ..
+      # Allow apps downloaded from anywhere in Mac
+      if ((sys).host.name == 'Darwin') { sudo spctl --master-disable }
       # `sudo` is required to move the files to `/usr/local/bin` on macOS
       glob $'($destDir)/**/($bin)*' | each {|it| if ($it | path type) == 'file' { sudo cp $it . } }
       rm -rf $destDir
