@@ -6,9 +6,13 @@
 # REF:
 #   - https://mirrors.ustc.edu.cn/help/brew.git.html
 #   - https://mirrors.tuna.tsinghua.edu.cn/help/homebrew/
+#   - https://developer.aliyun.com/mirror/homebrew
 # TODO:
 #   [√] Check brew install status
-#   [√] Switch mirror between TUNA and USTC
+#   [√] Add USTC mirror support
+#   [√] Add TUNA mirror support
+#   [√] Add Aliyun mirror support
+#   [√] Switch between all the mirrors
 # Usage:
 #   Install homebrew: /bin/bash -c "$(curl -fsSL https://mirrors.ustc.edu.cn/misc/brew-install.sh)"
 # 	just fast-brew
@@ -30,9 +34,18 @@ const USTC_MIRROR = {
   HOMEBREW_CORE_GIT_REMOTE: 'https://mirrors.ustc.edu.cn/homebrew-core.git',
 }
 
+const ALIYUN_MIRROR = {
+  HOMEBREW_API_DOMAIN: 'https://mirrors.aliyun.com/homebrew-bottles/api',
+  HOMEBREW_BREW_GIT_REMOTE: 'https://mirrors.aliyun.com/homebrew/brew.git',
+  HOMEBREW_BOTTLE_DOMAIN: 'https://mirrors.aliyun.com/homebrew/homebrew-bottles',
+  HOMEBREW_CORE_GIT_REMOTE: 'https://mirrors.aliyun.com/homebrew/homebrew-core.git',
+}
+
+# A wrapper for homebrew, which can switch between all the China mirrors
 export def --wrapped fast-brew [
-  --tuna-mirror,
-  ...rest
+  --tuna,     # Use TUNA mirror
+  --aliyun,   # Use Aliyun mirror
+  ...rest,    # Other brew commands and options
 ] {
   if not (is-installed brew) {
     print $'(ansi p)Homebrew is not installed, please install it by running:(ansi reset)'; hr-line
@@ -40,7 +53,7 @@ export def --wrapped fast-brew [
     print -n (char nl)
     exit $ECODE.MISSING_BINARY
   }
-  let MIRROR = if $tuna_mirror { $TUNA_MIRROR } else { $USTC_MIRROR }
+  let MIRROR = if $tuna { $TUNA_MIRROR } else if $aliyun { $ALIYUN_MIRROR } else { $USTC_MIRROR }
   load-env $MIRROR
   # Tapping homebrew/cask is no longer typically necessary.
   # brew tap --custom-remote --force-auto-update homebrew/cask https://mirrors.ustc.edu.cn/homebrew-cask.git

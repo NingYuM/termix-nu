@@ -21,9 +21,6 @@ const BIN_MAP = {
 
 # Install tools from USTC mirror
 export def install-from-brew [name: string, --force(-f)] {
-  if not (is-installed brew) {
-    print '(ansi r)Homebrew is not installed, please install it first...(ansi reset)'; exit $ECODE.MISSING_BINARY
-  }
   if (sys).host.name != 'Darwin' {
     print '(ansi r)Only macOS is supported to install by brew for now...(ansi reset)'; exit $ECODE.INVALID_PARAMETER
   }
@@ -62,7 +59,8 @@ export def upgrade-latest-tool [
   --no-aria2c,          # Don't use aria2c to download tools
 ]: nothing -> nothing {
 
-  if $nu.os-info.arch == 'aarch64' { install-from-brew $name --force=$force; return }
+  # $nu.os-info.arch == 'aarch64'
+  if (sys).host.name == 'Darwin' { install-from-brew $name --force=$force; return }
   mut target = $target
   let latest = http get $'($TOOL_PREFIX)/($name)/latest.json'
   # Check current version and compare with the latest one stop upgrading if lower than or equal to the latest one
