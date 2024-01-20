@@ -5,15 +5,33 @@
 # Description: Script to speed up homebrew using CN mirrors
 # REF:
 #   - https://mirrors.ustc.edu.cn/help/brew.git.html
+#   - https://mirrors.tuna.tsinghua.edu.cn/help/homebrew/
 # TODO:
-# [ ] Check brew install status
+#   [√] Check brew install status
+#   [√] Switch mirror between TUNA and USTC
 # Usage:
 #   Install homebrew: /bin/bash -c "$(curl -fsSL https://mirrors.ustc.edu.cn/misc/brew-install.sh)"
 # 	just fast-brew
 
 use ../utils/common.nu [ECODE, is-installed, hr-line]
 
+const TUNA_MIRROR = {
+  HOMEBREW_PIP_INDEX_URL: 'https://pypi.tuna.tsinghua.edu.cn/simple',
+  HOMEBREW_API_DOMAIN: 'https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles/api',
+  HOMEBREW_BOTTLE_DOMAIN: 'https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles',
+  HOMEBREW_BREW_GIT_REMOTE: 'https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git',
+  HOMEBREW_CORE_GIT_REMOTE: 'https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git',
+}
+
+const USTC_MIRROR = {
+  HOMEBREW_BREW_GIT_REMOTE: 'https://mirrors.ustc.edu.cn/brew.git',
+  HOMEBREW_BOTTLE_DOMAIN: 'https://mirrors.ustc.edu.cn/homebrew-bottles',
+  HOMEBREW_API_DOMAIN: 'https://mirrors.ustc.edu.cn/homebrew-bottles/api',
+  HOMEBREW_CORE_GIT_REMOTE: 'https://mirrors.ustc.edu.cn/homebrew-core.git',
+}
+
 export def --wrapped fast-brew [
+  --tuna-mirror,
   ...rest
 ] {
   if not (is-installed brew) {
@@ -22,12 +40,8 @@ export def --wrapped fast-brew [
     print -n (char nl)
     exit $ECODE.MISSING_BINARY
   }
-  load-env {
-    HOMEBREW_BREW_GIT_REMOTE: 'https://mirrors.ustc.edu.cn/brew.git',
-    HOMEBREW_BOTTLE_DOMAIN: 'https://mirrors.ustc.edu.cn/homebrew-bottles',
-    HOMEBREW_API_DOMAIN: 'https://mirrors.ustc.edu.cn/homebrew-bottles/api',
-    HOMEBREW_CORE_GIT_REMOTE: 'https://mirrors.ustc.edu.cn/homebrew-core.git',
-  }
+  let MIRROR = if $tuna_mirror { $TUNA_MIRROR } else { $USTC_MIRROR }
+  load-env $MIRROR
   # Tapping homebrew/cask is no longer typically necessary.
   # brew tap --custom-remote --force-auto-update homebrew/cask https://mirrors.ustc.edu.cn/homebrew-cask.git
   # Disable the following taps for prebuild binary install
