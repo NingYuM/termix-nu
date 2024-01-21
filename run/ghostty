@@ -11,10 +11,11 @@
 title = Ghostty
 
 # Favorite themes: Dracula, Dracula+, DoomOne, Doom Peacock, Desert, DotGov, Earthsong
-# Fairyfloss, GruvboxDark, Hopscotch, Monokai Remastered, PaleNightHC, Paraiso Dark
-# Rebecca,
-theme = Rebecca
-background-opacity = 0.9
+# Fairyfloss, GruvboxDark, Hopscotch, Monokai Remastered, Paraiso Dark, Rebecca, Seti
+# Rippedcasts, Snazzy, Synthwave-Everything, Tinacious Design (Dark), TokyoNight, Wez
+# Tomorrow Night Blue, Tomorrow Night Eighties, UltraDark, Wombat, Whimsy, WildCherry
+theme = Synthwave-Everything
+background-opacity = 1
 background-blur-radius = 30
 unfocused-split-opacity = 0.95
 
@@ -25,11 +26,13 @@ font-feature = -calt
 font-feature = -dlig
 font-feature = -liga
 # Does not work on macOS?
-font-variation = wght=300
-font-family = 'Fira Code'
-font-family = 'Cascadia Code'
-font-family = 'JetBrains Mono'
-font-family = 'Source Code Pro'
+font-variation = wght=500
+font-family = Fira Code
+font-family = Hack Nerd Font Mono
+font-family = Source Code Pro
+font-family = Cascadia Code
+font-family = JetBrains Mono
+font-thicken = true
 grapheme-width-method = unicode
 
 # window-decoration = false
