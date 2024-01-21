@@ -166,7 +166,9 @@ winget install Nushell.Nushell
 
 `termix-nu` 的版本与 `nushell` 的版本是对应的，前者往往依赖 `nushell` 最新版本的一些特性, 所以如果通过 `t upgrade` 命令更新 `termix-nu` 后发现功能不正常或者提示 Nushell 版本过低可以通过 `brew outdated; brew upgrade nushell`（对于 Windows 系统可以通过 `scoop update nushell` 或者 `winget upgrade Nushell.Nushell`）命令更新 `nushell`。
 
-考虑到通过 `brew` 等工具更新 `nushell` 和 `just` 时候可能会从 GitHub 上下载对应的包，这个速度通常会比较慢，从 `v1.60.0` 开始 `t upgrade` 内置支持更新 `nushell` & `just` 只需要执行 `t upgrade nu` 和 `t upgrade just` 即可，这两个命令会检查本地是不是最新版本，如果不是则从 Aliyun OSS 上下载最新的 `nushell` & `just` 并安装到本地，直接替换原来老的二进制文件。工具会根据你的操作系统和CPU架构自动选择正确的发行版，所以你也不用操心到底该下载哪个安装包。最重要的是不用在意一墙之隔，下载速度可达 10MB/s 左右, 让您不再畏惧升级。
+考虑到通过 `brew` 等工具更新 `nushell` 和 `just` 时候可能会从 GitHub 上下载对应的包，这个速度通常会比较慢，从 `v1.60.0` 开始 `t upgrade` 内置支持更新 `nushell` & `just` 只需要执行 `t upgrade nu` 和 `t upgrade just` 即可，这两个命令会检查本地是不是最新版本，如果不是对于`Windows` & `Linux` 系统会从 Aliyun OSS 上下载最新的 `nushell` & `just` 并安装到本地，直接替换原来老的二进制文件。工具会根据你的操作系统和CPU架构自动选择正确的发行版，所以你也不用操心到底该下载哪个安装包。最重要的是不用在意一墙之隔，下载速度可达 10MB/s 左右, 让您不再畏惧升级。
+
+而对于 `MacOS` 会使用 `brew` 命令通过国内的镜像升级`nushell` & `just`，这样由于二进制文件是从国内镜像下载的，更新速度依然飞快，眨眼间即可完成。
 
 终极更新大法：`t upgrade --all` 或 `t upgrade -a` 同时更新 `termix-nu`, `just` & `nushell`，从此升级不用愁。
 
@@ -178,8 +180,7 @@ winget install Nushell.Nushell
 
 不过通过`t upgrade`更新 `nushell` 和 `just` 也是有瑕疵的：
 
-1. 如果你是通过 `brew` 安装的 `nushell` 和 `just` 安装路径上会有版本信息，比如 `/usr/local/Cellar/just/1.21.0`，通过 `t upgrade` 升级是直接进行二进制文件替换，但是路径不变，所以你会看到一个低版本的文件路径里面放的可能是一个最新版本的二进制文件，不过这个不影响使用；
-2. Windows 不支持对正在运行的可执行文件进行写操作，由于 `t upgrade` 是 `nushell` 脚本驱动的，所以在执行 `t upgrade nu` 的时候会在 `nu.exe` 所在的目录里面创建一个 `nu-latest.exe` 文件，这个文件需要你后续自己手工替换下，好在其他 `nu_plugin_*` 文件会自动更新掉。不过只有在更新 `nu` 的时候有这个问题，而且仅限于 `Windows` 系统；
+`Windows` 不支持对正在运行的可执行文件进行写操作，由于 `t upgrade` 是 `nushell` 脚本驱动的，所以在执行 `t upgrade nu` 的时候会在 `nu.exe` 所在的目录里面创建一个 `nu-latest.exe` 文件，这个文件需要你后续自己手工替换下，好在其他 `nu_plugin_*` 文件会自动更新掉。不过只有在更新 `nu` 的时候有这个问题，而且仅限于 `Windows` 系统；
 
 :::
 
@@ -1379,27 +1380,28 @@ t emp -a -p
 
 ---
 
-### 30. Homebrew 镜像加速{#brew-speed-up}
+### 30. 让 Homebrew 飞起来{#brew-speed-up}
 
-**功能描述**: 由于众所周知的原因 `brew` 更新或者安装应用的时候会比较慢，本工具可以通过给 `brew` 设置国内镜像的方式来提速，同时允许用户恢复到初始设置。
+**功能描述**: 由于众所周知的原因 `brew` 更新或者安装应用的时候会比较慢，本工具可以通过给 `brew` 设置国内镜像的方式来提速。具有如下特点：
 
-**命令格式**: `brew-speed-up status=('on')`
+- 这种设置对 `brew` 是无侵入的，只在运行时有效，运行结束后恢复原来状态；
+- 无论你是使用 `bash`, `zsh`, `sh` 还是 `fish` 都有效（因为脚本是由 `nushell` 驱动的）；
+- 使用简单: 只需要在你使用 `brew` 命令的时候在前面加个 `t ` 即可，比如 `t brew install ...`，且对 `brew` 命令的使用没有限制，不加 `t ` 则使用系统原本的 `brew`；
+- 默认使用 `USTC`(中国科学技术大学)的镜像进行加速，经测试这个下载速度很快，不过你可以切换镜像，加上 `--tuna` 则会通过清华大学镜像加速；
+
+**命令格式**: `t brew ...`
 
 **参数说明**:
 
-- `status`: 选填，默认值为 `on`, 表示启用 brew 国内镜像加速，如需关闭国内镜像可以执行 `brew-speed-up off`;
-
-**补充说明**:
-
-- 执行完以上命令后还需要根据提示对当前 **Shell** 的配置文件进行相应修改，如果你使用的是`bash`需要修改的配置文件为 `~/.bashrc`, 如果你使用的是`zsh`需要修改的配置文件为 `~/.zshrc`，修改完配置文件需要使用 `source <配置文件名>` 使当前配置生效；
+- `--tuna`: 通过清华大学镜像加速, 默认使用中科大镜像加速;
 
 **使用举例**:
 
 ```bash
-# 启用 brew 国内镜像加速
-t brew-speed-up
-# 关闭国内镜像加速恢复初始设置
-t brew-speed-up off
+# 通过默认镜像加速安装 docker
+t brew install docker
+# 通过清华镜像加速安装 nushell
+t brew install --tuna nushell
 ```
 
 ---
