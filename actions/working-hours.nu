@@ -15,6 +15,8 @@
 #   [√] Lastday(Monday and Month end) keep polling and notify with specified interval
 #   [√] Ignore some team with `ignore = true` in config file
 #   [√] Valid user mobile number before notify
+#   [√] Add --debug flag to print more debug info
+#   [√] Add --no-ignore flag to query working hours for all teams
 #   [ ] 考虑调休、补班等情况下工时是否填满的判定
 #   [ ] 支持通过设置 LAST_DAY 将某天设置为最后期限以启动间隔提醒；
 #   [√] Update the docs
@@ -55,28 +57,31 @@ export def working-hours-daily-checking [] {
 
 # Query working hours for each team from EMP and display the filling status of each team member
 export def query-hours-by-team-codes [
+  --debug(-d),        # Print more debug info
   --silent(-s),       # Don't print the result
   --notify(-n),       # Notify the members who didn't fill the working hours by Dintalk Robot
   --show-prev(-p),    # Query working hours of previous week
   --show-all(-a),     # Show all members even if the working hours have been filled correctly
+  --no-ignore(-I),    # Don't ignore the team with `ignore = true` in config file
   --keep-polling,     # Keep polling until all members have filled the working hours
 ] {
   let confEMP = load-emp-conf
-  let teams = $confEMP.teams | values | default false ignore | where ignore != true
+  mut teams = $confEMP.teams | values | default false ignore | where ignore != true
+  if $no_ignore { $teams = ($confEMP.teams | values | default false ignore) }
   if ($teams | get code | is-empty) {
     print $'(ansi r)Please set the `code` field in all `emp.teams`, bye...(char nl)(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
   if not $keep_polling {
     $teams | each { |it|
-      query-hours-by-team $it --show-all=$show_all --show-prev=$show_prev --notify=$notify --silent=$silent
+      query-hours-by-team $it --show-all=$show_all --show-prev=$show_prev --notify=$notify --silent=$silent --debug=$debug
     } | ignore
     return
   }
 
   loop {
     $teams | each { |it|
-      query-hours-by-team $it --show-all=$show_all --show-prev=$show_prev --notify=$notify --silent=$silent
+      query-hours-by-team $it --show-all=$show_all --show-prev=$show_prev --notify=$notify --silent=$silent --debug=$debug
     } | ignore
     let interval = $confEMP.settings?.lastdayNotifyInterval? | default '30min' | into duration
     print $'Wait ($interval) to check again...'
@@ -98,6 +103,7 @@ def --env load-emp-conf [] {
 # Query working hours of the specified team from EMP and display the filling status of each team member
 export def query-hours-by-team [
   team: record,       # Team record, contains name,code,alias,users,etc.
+  --debug(-d),        # Print more debug info
   --notify(-n),       # Notify the members who didn't fill the working hours by Dintalk Robot
   --silent(-s),       # Don't print the result
   --show-prev(-p),    # Query working hours of previous week
@@ -113,7 +119,6 @@ export def query-hours-by-team [
     )
   # Week No of now: [(date now)] | dfr into-df | dfr get-week
   let staffs = curl $emp.staffUrl -H $emp.type -s --data-raw $staffPayload | str join
-  # log 'staffs' $staffs
 
   handle-exception $staffs
 
@@ -149,6 +154,7 @@ export def query-hours-by-team [
         | reject staff
     )}
 
+  if $debug { log 'allStaffs' $allStaffs; log 'workingHours' $workingHours }
   let leavingHours = $leaves | from json | get res
 
   # Set a default leaving record
