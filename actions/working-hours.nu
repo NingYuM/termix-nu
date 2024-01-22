@@ -140,7 +140,6 @@ export def query-hours-by-team [
   let allStaffs = $staffs | from json | get res | select id name | rename id Name
   let hours = (curl $emp.timeUrl -H $emp.type -H $emp.app -s --data-raw $timePayload | str join)
   let leaves = (curl $emp.leaveUrl -H $emp.type -s --data-raw $leavePayload | str join)
-  # log 'hours' ($hours | from json | table -e); # log 'leaves' $leaves
 
   let workingHours = $hours | from json | get res
   let workingHours = if ($workingHours | is-empty) { null } else {(
@@ -168,9 +167,9 @@ export def query-hours-by-team [
 
 # 显示工时统计信息
 def handle-working-hours [
-  allStaffs: any,
-  workingHours: any,
-  leavingHours: any,
+  allStaffs: table,
+  workingHours: table,
+  leavingHours: table,
   --team: record,
   --notify(-n),       # Notify the members who didn't fill the working hours by Dintalk Robot
   --show-all,
@@ -187,7 +186,7 @@ def handle-working-hours [
   let week = [Mon, Tue, Wen, Thu, Fri, Sat, Sun]
   # 当前是一年中的第几周
   let weekNo = if $show_prev == true { (date now) - 7day | format date %V } else { date now | format date %V }
-  # 此刻是一周中的第几天，周一为第 0 天
+  # 此刻是一周中的第几天，周一为第 1 天
   let weekDay = date now | format date %u | into int
   # 正常情况下一周工作 5 天
   let total = if ($weekDay >= 5 or $show_prev == true) { 5 } else { $weekDay }
@@ -204,18 +203,17 @@ def handle-working-hours [
       } | select staffId day Hrs
     )
 
-  let allMembers = ($allStaffs
-      | upsert Mon { |staff| (get-hr-per-staff $staff.id 'Mon' $hours) }
-      | upsert Tue { |staff| (get-hr-per-staff $staff.id 'Tue' $hours) }
-      | upsert Wen { |staff| (get-hr-per-staff $staff.id 'Wen' $hours) }
-      | upsert Thu { |staff| (get-hr-per-staff $staff.id 'Thu' $hours) }
-      | upsert Fri { |staff| (get-hr-per-staff $staff.id 'Fri' $hours) }
+  let allMembers = $allStaffs
+      | upsert Mon { |staff| get-hr-per-staff $staff.id Mon $hours }
+      | upsert Tue { |staff| get-hr-per-staff $staff.id Tue $hours }
+      | upsert Wen { |staff| get-hr-per-staff $staff.id Wen $hours }
+      | upsert Thu { |staff| get-hr-per-staff $staff.id Thu $hours }
+      | upsert Fri { |staff| get-hr-per-staff $staff.id Fri $hours }
       | upsert 'WeekNO.' $weekNo
       | upsert Leave { |staff|
         let leaves = ($leavingHours | where staffId == $staff.id)
         if ($leaves | length) == 0 { 0 } else { ($leaves | get duration | math sum) * 8 | into int }
       } | reject id
-    )
 
   let result = (if $show_all { $allMembers } else {
     ($allMembers | where { |it| $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8 })
@@ -272,6 +270,15 @@ def notify-filling-hours [hours: any, --team: record] {
   dingtalk notify --text $message --at-mobiles $mobiles
 }
 
+def get-hr-per-staff [
+  id: int,
+  weekDay: string,
+  hours: any,
+] {
+  let hour = ($hours | where staffId == $id and day == $weekDay)
+  if ($hour | length) == 0 { 0 } else { ($hour | select 0).0.Hrs }
+}
+
 # Get the beginning time of monday, like 2021-12-06 00:00:00
 def get-monday [
   --prev
@@ -291,15 +298,6 @@ def get-sunday [
   let sunday = ((get-monday | into datetime) + 7day - 1sec)
   let sunday = if $prev == true { $sunday - 7day } else { $sunday }
   ($sunday | format date $_TIME_FMT)
-}
-
-def get-hr-per-staff [
-  id: string,
-  weekDay: string,
-  hours: any,
-] {
-  let hour = ($hours | where staffId == $id and day == $weekDay)
-  if ($hour | length) == 0 { 0 } else { ($hour | select 0).0.Hrs }
 }
 
 # 判断是否是月底
