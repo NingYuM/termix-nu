@@ -14,7 +14,7 @@
 #   [√] 确保该脚本可以每天运行，但是只有符合上述情况才提醒
 #   [√] Lastday(Monday and Month end) keep polling and notify with specified interval
 #   [√] Ignore some team with `ignore = true` in config file
-#   [ ] Valid user mobile number before notify
+#   [√] Valid user mobile number before notify
 #   [ ] 考虑调休、补班等情况下工时是否填满的判定
 #   [ ] 支持通过设置 LAST_DAY 将某天设置为最后期限以启动间隔提醒；
 #   [√] Update the docs
@@ -113,7 +113,6 @@ export def query-hours-by-team [
     )
   # Week No of now: [(date now)] | dfr into-df | dfr get-week
   let staffs = curl $emp.staffUrl -H $emp.type -s --data-raw $staffPayload | str join
-
   # log 'staffs' $staffs
 
   handle-exception $staffs
@@ -253,6 +252,7 @@ def notify-filling-hours [hours: any, --team: record] {
     return $ECODE.SUCCESS
   }
   let users = $team | get -i users | default []
+  valid-user-mobiles $users
   if ($users | is-empty) {
     print $'(ansi r)No users found in team ($team.name), stop sending notifications...(char nl)(ansi reset)'
     return
@@ -263,11 +263,25 @@ def notify-filling-hours [hours: any, --team: record] {
     return
   }
   let DINGTALK_AK_SK = $env | get $DINGTALK_KEY | split row ','
+  if ($hours | where Gap > 0 | is-empty) {
+    print $'(ansi g) All filled! Skip notify...(char nl)(ansi reset)'
+    return
+  }
   let mentions = $hours | where Gap > 0 | get name
   let mobiles = $users | where name in $mentions | get mobile | str join ','
   let message = $messages | get -i $weekday | default $messages.monthEnd
   load-env { DINGTALK_ROBOT_AK: $DINGTALK_AK_SK.0, DINGTALK_ROBOT_SECRET: $DINGTALK_AK_SK.1, DINGTALK_NOTIFY: 'on' }
   dingtalk notify --text $message --at-mobiles $mobiles
+}
+
+# Validate the mobile number of each user, display a warning message if the mobile is invalid
+def valid-user-mobiles [users: table] {
+  for user in $users {
+    let valid = $user.mobile | str replace -r '1\d{10}' '' | is-empty
+    if not $valid {
+      print $'WARNNING: (ansi r)($user.name)(ansi reset) has invalid mobile number (ansi r)($user.mobile)(ansi reset), please check it again...'
+    }
+  }
 }
 
 def get-hr-per-staff [
