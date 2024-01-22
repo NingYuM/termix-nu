@@ -1,6 +1,18 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## 1.63.0 - 2024-01-22
+
+### Documentation
+
+- Update docs for `t brew` and `t upgrade` command
+
+### Features
+
+- Install `just` and `nushell` by `brew` for `macOS`
+- Add `tuna` mirror support for `t brew` command by adding `--tuna` flag
+- Add `aliyun` mirror support for `t brew` command by adding `--aliyun` flag
+
 ## 1.62.0 - 2024-01-19
 
 ### Bug Fixes
