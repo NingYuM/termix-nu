@@ -21,18 +21,20 @@ unfocused-split-opacity = 0.95
 
 #-----------Fonts Settings-----------#
 font-size = 20
-font-style = Light
+font-style = Regular
 font-feature = -calt
 font-feature = -dlig
 font-feature = -liga
 # Does not work on macOS?
 font-variation = wght=500
+font-family = Lilex
+font-family = Sarasa Term SC
 font-family = Fira Code
 font-family = Hack Nerd Font Mono
 font-family = Source Code Pro
 font-family = Cascadia Code
 font-family = JetBrains Mono
-font-thicken = true
+font-thicken = false
 grapheme-width-method = unicode
 
 # window-decoration = false

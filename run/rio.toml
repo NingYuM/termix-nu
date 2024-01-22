@@ -120,8 +120,9 @@ disable-ctlseqs-alt = false
 [fonts]
 size = 26
 extras = [
+  { family = "Lilex" },
+  { family = "Sarasa Term SC" },
   { family = "PingFang SC" },
-  { family = "Sarasa Gothic SC" },
 ]
 
 # # You can also set family on root to overwrite all fonts

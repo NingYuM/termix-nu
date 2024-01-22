@@ -17,8 +17,9 @@
 #   [√] Valid user mobile number before notify
 #   [√] Add --debug flag to print more debug info
 #   [√] Add --no-ignore flag to query working hours for all teams
+#   [ ] 工时填满后间隔提醒定时任务需要退出
 #   [ ] 考虑调休、补班等情况下工时是否填满的判定
-#   [ ] 支持通过设置 LAST_DAY 将某天设置为最后期限以启动间隔提醒；
+#   [ ] 支持通过设置 LAST_DAY 将某天设置为最后期限以启动间隔提醒
 #   [√] Update the docs
 # Usage:
 #   t emp

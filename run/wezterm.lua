@@ -111,10 +111,12 @@ return {
 
   -- Font settings
   font = wezterm.font_with_fallback {
+    'Lilex',
+    'Sarasa Term SC',
     'Fira Code',
+    'Cascadia Code',
     'JetBrains Mono',
     'Source Code Pro',
-    'Cascadia Code',
   },
 
   -- Change the proportional UI/title font family that is used by default.
