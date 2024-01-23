@@ -113,11 +113,11 @@ ding-msg *OPTIONS: _setup
     dingtalk notify {{OPTIONS}}
 
 # Listing the branches of a git repo and the time of the last commit
-git-branch: _setup
+git-branch *OPTIONS: _setup
   @# The following two statement must be written in one line
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
     overlay use {{ join(_termix, 'git', 'branch.nu') }}; \
-    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git-branch {{JUST_INVOKE_DIR}}
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git-branch {{OPTIONS}}
 
 # Show insertions/deletions and number of files changed for each commit
 git-stat *OPTIONS: _setup
