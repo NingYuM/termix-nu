@@ -120,10 +120,10 @@ git-branch: _setup
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git-branch {{JUST_INVOKE_DIR}}
 
 # Show insertions/deletions and number of files changed for each commit
-git-stat count=('20') author=('*'): _setup
+git-stat *OPTIONS: _setup
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
     overlay use {{ join(_termix, 'git', 'git-stat.nu') }}; \
-    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git stat {{JUST_INVOKE_DIR}} --count={{count}} --author={{author}}
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git stat {{OPTIONS}}
 
 # Listing the remote branches of a git repo with the extra info
 git-remote-branch *OPTIONS: _setup
@@ -265,11 +265,11 @@ prune-synced-branches dryRun=('true') user=('git') ak=('-'): _setup
     prune-synced-branches --dry-run={{dryRun}} --user={{user}} --ak={{ak}}
 
 # 复用 utils 里面定义的公用方法: nu 不支持动态 source 只能拼接下了
-# 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用空格分隔
-git-batch-exec cmd +branches=(''): _setup
+# 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用`,`分隔
+git-batch-exec *OPTIONS: _setup
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
     overlay use {{ join(_termix, 'git', 'git-batch-exec.nu') }}; \
-    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git batch-exec '{{cmd}}' '{{branches}}'
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git batch-exec {{OPTIONS}}
 
 # 将指定Git分支硬回滚N个commit
 [private]
@@ -278,11 +278,10 @@ git-batch-reset n +branches=(''): _setup
     overlay use {{ join(_termix, 'git', 'git-batch-reset.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git batch-reset {{n}} '{{branches}}'
 
-# 拼接复用 utils 里面定义的公用方法: https://github.com/nushell/nushell/issues/2990
 # 在指定目录(支持'*'通配符)或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
-dir-batch-exec cmd +DIRS=(''): _setup
+dir-batch-exec *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'dir-batch-exec.nu') }}; \
-    dir-batch-exec "{{cmd}}" "{{DIRS}}" --parent={{JUST_INVOKE_DIR}}
+    dir-batch-exec {{OPTIONS}}
 
 # 版本检查前置操作
 _setup: _register_plugins
@@ -293,7 +292,6 @@ _setup: _register_plugins
 _register_plugins:
   #!/usr/bin/env nu
   let gstatExists = not (scope commands | where name == 'gstat' | is-empty)
-  let webExists = not (scope commands | where name == 'query web' | is-empty)
   let queryExists = not (scope commands | where name == 'query json' | is-empty)
   if not $queryExists { register {{ join(NU_DIR, _query_plugin) }} }
   if not $gstatExists { register {{ join(NU_DIR, _gstat_plugin) }} }
