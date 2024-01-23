@@ -8,7 +8,8 @@
 
 use ../utils/common.nu [ECODE get-tmp-path hr-line]
 
-# Transfer repo from source to dest
+# Transfer repo from source to dest, eg:
+# t repo-transfer https://erda.cloud/terminus/dop/t-erp/a.git https://erda.cloud/terminus/dop/t-erp/b.git
 export def 'git repo-transfer' [
   source: string,   # The source repo git url
   dest: string,     # The dest repo git url

@@ -8,18 +8,18 @@
 # Usage:
 #   t ls-node
 #   t ls-node v15
-#   t ls-node v15 true
+#   t ls-node v15 --lts
 
 use ../utils/common.nu [ECODE]
 
 export def ls-node-remote [
-  minVer: string,   # The node version you want to query
-  isLts: bool,      # Filter the node versions that are LTS
+  minVer?: string,    # The min node version you want to query
+  --lts,              # Filter the node versions that are LTS
 ] {
 
   # brew install fnm to install it, see: https://github.com/Schniz/fnm
   let notInstalled = (which fnm | length) == 0
-  let minVersion = if ($minVer | is-empty) { 10 } else { ($minVer | str replace 'v' '' | into int) }
+  let minVersion = if ($minVer | is-empty) { 16 } else { ($minVer | str replace 'v' '' | into int) }
   if $notInstalled {
     print $'You should install `fnm` and try again..., bye!'
     exit $ECODE.MISSING_BINARY
@@ -37,7 +37,7 @@ export def ls-node-remote [
         | into int
     )} | upsert isLTS { |node| ($node.Version | str contains '(') }
   )
-  if $isLts {
+  if $lts {
     # ($vRow | where {|node| $node.NO >= $minVersion and $node.isLTS } | select Version)
     print ($vRow | where NO >= $minVersion | where isLTS == true | select Version)
   } else {

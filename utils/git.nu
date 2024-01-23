@@ -52,7 +52,7 @@ export def get-sync-ref [
 
 # Append the `has-desc` column to a git summary table to indicate if that branch has a description
 export def append-desc [
-  records: table    # The table to append a `has-desc` column witch must has a `name` column for the git branch name
+  records: list    # The table to append a `has-desc` column witch must has a `name` column for the git branch name
 ] {
 
   let descFile = 'd.toml'

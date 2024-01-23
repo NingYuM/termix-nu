@@ -76,11 +76,11 @@ upgrade *OPTIONS:
   @overlay use {{ join(_termix, 'actions', 'upgrade.nu') }}; upgrade-tool {{OPTIONS}}
 
 # Release a new version for termix-nu
-release  updateLog=('false') forceUpgrade=('false'): _setup
+release  *OPTIONS: _setup
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
     overlay use {{ join(_termix, 'actions', 'release.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; \
-    release --update-log={{updateLog}} --force-upgrade={{forceUpgrade}}
+    release {{OPTIONS}}
 
 # Quickly open the matched nav url in default browser, for mac or windows with powershell
 go nav=('list'): _setup
@@ -126,11 +126,11 @@ git-stat count=('20') author=('*'): _setup
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git stat {{JUST_INVOKE_DIR}} --count={{count}} --author={{author}}
 
 # Listing the remote branches of a git repo with the extra info
-git-remote-branch remote=('origin')  showTag=('false'): _setup
+git-remote-branch *OPTIONS: _setup
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
     overlay use {{ join(_termix, 'git', 'remote-branch.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; \
-    git-remote-branch {{JUST_INVOKE_DIR}} {{remote}} --show-tag={{showTag}}
+    git-remote-branch {{OPTIONS}}
 
 # Show commit info diff between two commits, e.g. t git-diff-commit 051da464 0ab1df2d
 git-diff-commit *OPTIONS: _setup
@@ -140,11 +140,11 @@ git-diff-commit *OPTIONS: _setup
     git diff-commit {{OPTIONS}}
 
 # Show branch description from branch description file `d` of `i` branch
-desc branch=(`git branch --show-current`) showNotes=('false'): _setup
+desc *OPTIONS: _setup
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
     overlay use {{ join(_termix, 'git', 'branch-desc.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; \
-    branch-desc {{branch}} --show-notes={{showNotes}}
+    branch-desc {{OPTIONS}}
 
 # Check whether all remote branches have descriptions or whether synced branches exist in the remote repo
 check-branch: _setup
@@ -159,10 +159,10 @@ pull-all: _setup
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git pull-all {{JUST_INVOKE_DIR}} 'origin'
 
 # Rename remote branch, and delete old branch after rename
-rename-branch from=('') to=('') remote=('origin'): _setup
+rename-branch *OPTIONS: _setup
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
     overlay use {{ join(_termix, 'git', 'rename-branch.nu') }}; \
-    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git branch-rename {{from}} {{to}} {{remote}}
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git branch-rename {{OPTIONS}}
 
 # 显示本机安装应用版本及环境变量相关信息
 show-env: _setup
@@ -170,9 +170,9 @@ show-env: _setup
     show-env
 
 # 查询已发布Node版本，支持指定最低版本号
-ls-node minVer=('12') isLts=('false'): _setup
+ls-node *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'ls-node.nu') }}; \
-    ls-node-remote '{{minVer}}' {{isLts}}
+    ls-node-remote {{OPTIONS}}
 
 # 按时间顺序列出所有的 git tags, 默认按 `time` 排序，可选按 `tag` 排序：ls-tags tag
 ls-tags by=('time'): _setup
@@ -216,9 +216,9 @@ gaia-release version=('') repos=('mall,mobile,picker') delete=('false'): _setup
     gaia-release {{version}} {{repos}} --delete-tag={{delete}}
 
 # Transfer a git repo from source to the dest
-repo-transfer from=('') to=(''): _setup
+repo-transfer *OPTIONS: _setup
   @overlay use {{ join(_termix, 'git', 'repo-transfer.nu') }}; \
-    git repo-transfer {{from}} {{to}}
+    git repo-transfer {{OPTIONS}}
 
 # t pull-redev true
 # 更新远程二开仓库代码到本地, 可以指定分支和仓库分组多个分组之间用`,`隔开

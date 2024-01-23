@@ -15,8 +15,8 @@
 use ../utils/common.nu [ECODE, _UPGRADE_TAG, get-conf, is-lower-ver, has-ref]
 
 export def main [
-  --update-log,      # Set to `true` do enable updating CHANGELOG.md
-  --force-upgrade,   # Add `$-FORCE-UPGRADE-$` to release tag commit message
+  --update-log(-l),      # Enable updating CHANGELOG.md
+  --force-upgrade(-f),   # Add `$-FORCE-UPGRADE-$` to release tag commit message
 ] {
 
   cd $env.TERMIX_DIR
