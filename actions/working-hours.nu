@@ -17,8 +17,8 @@
 #   [√] Valid user mobile number before notify
 #   [√] Add --debug flag to print more debug info
 #   [√] Add --no-ignore flag to query working hours for all teams
+#   [√] 考虑调休、补班等情况下工时是否填满的判定: 由 EMP 接口返回的数据中的 `surplusPercentage` 字段判断
 #   [ ] 工时填满后间隔提醒定时任务需要退出
-#   [ ] 考虑调休、补班等情况下工时是否填满的判定
 #   [ ] 支持通过设置 LAST_DAY 将某天设置为最后期限以启动间隔提醒
 #   [√] Update the docs
 # Usage:
@@ -136,6 +136,13 @@ export def query-hours-by-team [
       | str replace '_staffs_' $staffPayload
     )
 
+  let timeSummaryPayload = ($emp.timeSummaryPayload
+      | str replace '_last_day_' $sunday
+      | str replace '_first_day_' $monday
+      | str replace '_staffs_' $staffPayload
+      | str replace '_department_' ({id: $team.code} | to json -r)
+    )
+
   let leavePayload = ($emp.leavePayload
       | str replace '_last_day_' $sunday
       | str replace '_first_day_' $monday
@@ -145,6 +152,16 @@ export def query-hours-by-team [
   let allStaffs = $staffs | from json | get res | select id name | rename id Name
   let hours = (curl $emp.timeUrl -H $emp.type -H $emp.app -s --data-raw $timePayload | str join)
   let leaves = (curl $emp.leaveUrl -H $emp.type -s --data-raw $leavePayload | str join)
+
+  let summary = (curl $emp.timeSummaryUrl -H $emp.type -H $emp.app -s --data-raw $timeSummaryPayload | str join)
+  let hourSummary = (
+    $summary | from json | get res | select staffWorkTimeFillResponseList | flatten
+      | get staffWorkTimeFillResponseList | where ($it | describe) =~ 'record' and ($it.staffBO?.id | default 0) > 0
+      | reject @id | rename --column {
+        leavePercentage: leave, otherPercentage: other, theoryPercentage: theory, actualPercentage: actual, surplusPercentage: surplus
+    })
+
+  if $debug { log 'hourSummary' ($hourSummary | table -e) }
 
   let workingHours = $hours | from json | get res
   let workingHours = if ($workingHours | is-empty) { null } else {(
@@ -168,7 +185,7 @@ export def query-hours-by-team [
       )
     }
 
-  handle-working-hours $allStaffs $workingHours $leavingHours --team $team --notify=$notify --show-all=$show_all --show-prev=$show_prev --silent=$silent
+  handle-working-hours $allStaffs $workingHours $leavingHours $hourSummary --team $team --notify=$notify --show-all=$show_all --show-prev=$show_prev --silent=$silent
 }
 
 # 显示工时统计信息
@@ -176,6 +193,7 @@ def handle-working-hours [
   allStaffs: table,
   workingHours: table,
   leavingHours: table,
+  hourSummary: list,
   --team: record,
   --notify(-n),       # Notify the members who didn't fill the working hours by Dintalk Robot
   --show-all,
@@ -217,32 +235,25 @@ def handle-working-hours [
       | upsert Fri { |staff| get-hr-per-staff $staff.id Fri $hours }
       | upsert 'WeekNO.' $weekNo
       | upsert Leave { |staff|
-        let leaves = ($leavingHours | where staffId == $staff.id)
-        if ($leaves | length) == 0 { 0 } else { ($leaves | get duration | math sum) * 8 | into int }
-      } | reject id
+          let leaves = ($leavingHours | where staffId == $staff.id)
+          if ($leaves | length) == 0 { 0 } else { ($leaves | get duration | math sum) * 8 | into int }
+        }
+      | upsert Gap { |staff| ($hourSummary | where $it.staffBO.name == $staff.Name | get 0 | get surplus) * 8 | into int }
+      | upsert WARN { |it| if ($it.Gap > 0) { $'(ansi r)('*' | fill -a r -w 6 -c $'(char sp)')(ansi reset)' } }
+      | sort-by WARN Gap Name
+      | reject id
 
-  let result = (if $show_all { $allMembers } else {
-    ($allMembers | where { |it| $it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8 })
-  })
+  let result = if $show_all { $allMembers } else { ($allMembers | where Gap > 0) }
 
   if ($result | is-empty) { print $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; return }
 
-  let hourMap = (
-    $result | upsert Gap { |it| $total * 8 - ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave) }
-      | upsert WARN { |it|
-          if ($it.Mon + $it.Tue + $it.Wen + $it.Thu + $it.Fri + $it.Leave < $total * 8) {
-            $'(ansi r)('*' | fill -a r -w 6 -c $'(char sp)')(ansi reset)'
-          }
-        }
-      | sort-by WARN Gap Name
-    )
-  if not $silent { print $hourMap }
+  if not $silent { print $result }
   let empSwitchEnv = $env | get -i EMP_WORKING_HOURS_NOTIFY | default 'off'
   if $empSwitchEnv == 'off' {
     print $'WARN: `EMP_WORKING_HOURS_NOTIFY` is (ansi p)off(ansi reset), stop sending notifications...(char nl)'
     return
   }
-  if $notify and $empSwitchEnv == 'on' { notify-filling-hours $hourMap --team $team }
+  if $notify and $empSwitchEnv == 'on' { notify-filling-hours $result --team $team }
 }
 
 # Notify the members who didn't fill the working hours by Dintalk Robot

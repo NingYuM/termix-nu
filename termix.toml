@@ -95,8 +95,8 @@ leaveUrl = 'https://gateway.app.terminus.io/compass/emp-worktime/worktime/17096/
 staffUrl = 'https://gateway.app.terminus.io/compass/emp-worktime/worktime/17096/api/trantor/func/worktime_GetStaffByBaseProjectFunc'
 timeSummaryUrl = 'https://gateway.app.terminus.io/compass/emp-worktime/worktime/17096/api/trantor/func/worktime_GroupCountStaffWorkTimeSummaryFunc'
 timePayload = '[{"beginDate":"_first_day_","endDate":"_last_day_","staffs": _staffs_}]'
-timeSummaryPayload = '[{"beginDate":"_first_day_","endDate":"_last_day_","staffs": _staffs_}]'
 leavePayload = '[{"beginDate":"_first_day_","endDate":"_last_day_","staffBOS": _staffs_}]'
+timeSummaryPayload = '[{"beginDate":"_first_day_","endDate":"_last_day_","staffs": _staffs_,"department": _department_}]'
 staffPayload = '[{"beginDate":"_first_day_","endDate":"_last_day_","baseProjectTOS":[{"type":"DEPARTMENT","projectCode":"_project_code_"}]}]'
 
 # 快捷导航
