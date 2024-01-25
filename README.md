@@ -71,35 +71,37 @@ winget install Nushell.Nushell
    ```bash
    ➜  $ just
    Available recipes:
-   ··· brew-speed-up status=('on')   # 开启或者关闭 Brew 国内镜像加速
-   ··· check-branch                  # Check whether all remote branches have descriptions or whether synced branches exist in the remote repo
-   ··· default                       # List available commands by default
-   ··· deploy *OPTIONS               # Run an Erda pipeline, the target can be queried by `dp -l`, default is `dev`, and use `--app` to specify the apps to deploy
-   ··· dp *OPTIONS                   # alias for `deploy`
-   ··· deploy-query *OPTIONS         # Query the Erda pipeline running status by CICD id or `--app`
-   ··· dq *OPTIONS                   # alias for `deploy-query`
-   ··· desc branch=(`git branch --show-current`) showNotes=('false') # Show branch description from branch description file `d` of `i` branch
-   ··· ding-msg *OPTIONS             # Send a message to DingTalk Group by a custom robot
-   ··· dir-batch-exec cmd +DIRS=('') # 在指定目录(支持'*'通配符)或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
-   ··· emp showAll=('false') showPrev=('false') # 查询电商前端团队本周工时填报情况
-   ··· git-batch-exec cmd +branches=('') # 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用空格分隔
-   ··· git-branch                    # Listing the branches of a git repo and the time of the last commit
-   ··· git-diff-commit *OPTIONS      # Show commit info diff between two commits, e.g. t git-diff-commit 051da464 0ab1df2d
-   ··· git-proxy status=('on')       # 开启或者关闭 git 代理, 目前仅支持在阿里郎加速模式下开启 git 代理
-   ··· git-remote-branch remote=('origin') showTag=('false') # Listing the remote branches of a git repo with the extra info
-   ··· git-stat count=('20') author=('*') # Show insertions/deletions and number of files changed for each commit
-   ··· go nav=('list')               # Quickly open the matched nav url in default browser, for mac or windows with powershell
-   ··· ls-node minVer=('12') isLts=('false') # 查询已发布Node版本，支持指定最低版本号
-   ··· ls-tags by=('time')           # 按时间顺序列出所有的 git tags, 默认按 `time` 排序，可选按 `tag` 排序：ls-tags tag
-   ··· pull-all                      # Pull all local branches from remote repo
-   ··· release updateLog=('false') forceUpgrade=('false') # Release a new version for termix-nu
-   ··· rename-branch from=('') to=('') remote=('origin') # Rename remote branch, and delete old branch after rename
-   ··· repo-transfer from=('') to=('') # Transfer a git repo from source to the dest
-   ··· show-env                      # 显示本机安装应用版本及环境变量相关信息
-   ··· trigger-sync branch=(`git branch --show-current`) # 手工触发批量同步本地分支到远程指定分支
-   ··· gsync branch=(`git branch --show-current`) # alias for `trigger-sync`
-   ··· upgrade                       # Upgrade termix-nu repo to the latest version
-   ··· ver                           # Display termix current version number
+   ··· brew *OPTIONS              # 通过 Brew 国内镜像加速执行 brew 相关命令
+   ··· check-branch               # Check whether all remote branches have descriptions or whether synced branches exist in the remote repo
+   ··· default                    # List available commands by default
+   ··· deploy *OPTIONS            # Run an Erda pipeline, the target can be queried by `dp -l`, default is `dev`, and use `--app` to specify the apps to deploy
+   ··· dp *OPTIONS                # alias for `deploy`
+   ··· deploy-query *OPTIONS      # Query the Erda pipeline running status by CICD id or `--app`
+   ··· dq *OPTIONS                # alias for `deploy-query`
+   ··· desc *OPTIONS              # Show branch description from branch description file `d` of `i` branch
+   ··· ding-msg *OPTIONS          # Send a message to DingTalk Group by a custom robot
+   ··· dir-batch-exec *OPTIONS    # 在指定目录(支持'*'通配符)或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
+   ··· emp *OPTIONS               # 查询团队本周工时填报情况
+   ··· git-batch-exec *OPTIONS    # 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用`,`分隔
+   ··· git-branch *OPTIONS        # Listing the branches of a git repo and the time of the last commit
+   ··· git-diff-commit *OPTIONS   # Show commit info diff between two commits, e.g. t git-diff-commit 051da464 0ab1df2d
+   ··· git-proxy status=('on')    # 开启或者关闭 git 代理, 目前仅支持在阿里郎加速模式下开启 git 代理
+   ··· git-remote-branch *OPTIONS # Listing the remote branches of a git repo with the extra info
+   ··· git-stat *OPTIONS          # Show insertions/deletions and number of files changed for each commit
+   ··· go nav=('list')            # Quickly open the matched nav url in default browser, for mac or windows with powershell
+   ··· ls-node *OPTIONS           # 查询已发布Node版本，支持指定最低版本号
+   ··· ls-tags by=('time')        # 按时间顺序列出所有的 git tags, 默认按 `time` 排序，可选按 `tag` 排序：ls-tags tag
+   ··· msync *OPTIONS             # TERP Meta data synchronization tool
+   ··· pull-all                   # Pull all local branches from remote repo
+   ··· rename-branch *OPTIONS     # Rename remote branch, and delete old branch after rename
+   ··· repo-transfer *OPTIONS     # Transfer a git repo from source to the dest
+   ··· show-env                   # 显示本机安装应用版本及环境变量相关信息
+   ··· terp-assets *OPTIONS       # Download, transfer or sync TERP assets
+   ··· ta *OPTIONS                # alias for `terp-assets`
+   ··· trigger-sync *OPTIONS      # 手工触发批量同步本地分支到远程指定分支
+   ··· gsync *OPTIONS             # alias for `trigger-sync`
+   ··· upgrade *OPTIONS           # Upgrade termix-nu repo, just or nushell to the latest version
+   ··· ver                        # Display termix current version number
    ```
 
 4. 如果你希望在本机任意位置都可以使用`termix-nu`提供的功能，需要建立软连接:
@@ -195,14 +197,14 @@ winget install Nushell.Nushell
 
 发布新版本的过程主要做了如下操作：
 
-1. 如果 `updateLog=('true')`则会利用 [git-cliff](https://github.com/orhun/git-cliff) 根据 commit 记录更新最新的`CHANGELOG.md`(需要大家在创建 commit 的过程中遵循[Commit 规范](https://fe-docs.app.terminus.io/docs/mall/spec/git))并提交，`updateLog`默认值为`false`;
+1. 如果加上 `--update-log(-l)`则会利用 [git-cliff](https://github.com/orhun/git-cliff) 根据 commit 记录更新最新的`CHANGELOG.md`(需要大家在创建 commit 的过程中遵循[Commit 规范](https://fe-docs.app.terminus.io/docs/mall/spec/git))并提交;
 2. 新建了一个以版本号命名的 Tag 并推送到远程；
 
-**命令格式**: `t release updateLog=('false')`
+**命令格式**: `t release *OPTIONS`
 
 **参数说明**:
 
-- `updateLog`: 选填，是否需要通过提交记录生成最新的`CHANGELOG.md`并提交，默认`false`(需要自己手工生成并检查、更正)；
+- `-l, --update-log`: 是否需要通过提交记录生成最新的`CHANGELOG.md`并提交；
 
 **使用举例**:
 
@@ -210,7 +212,7 @@ winget install Nushell.Nushell
 # 根据`termix.toml`文件里面的`version`配置生成对应版本的Release Tag并推送至远程，但不自动更新`CHANGELOG.md`
 t release
 # 自动更新`CHANGELOG.md`，然后根据`termix.toml`文件里面的`version`配置生成对应版本的Release Tag并推送至远程
-t release true
+t release --update-log
 ```
 
 ---
@@ -264,18 +266,20 @@ docs = 'https://erda.cloud/terminus/dop/projects/213/apps/7542/repo'
 
 **功能描述**: 在指定目录里面执行特定命令，如果没有指定目录则会在当前目录的所有子目录内执行对应命令
 
-**命令格式**: `t dir-batch-exec cmd +DIRS=('')`
+**命令格式**: `t dir-batch-exec {flags} <cmd> (dirs)`
 
 **参数说明**:
 
 - `cmd`: 必填，待执行的命令，如果有空格需要用引号包裹，`cmd`参数对应命令默认通过`bash`执行(默认值在 `termix.toml` 的 `shellToRunCmd.currentSelected`里面指定)，如果你需要更改命令解释、执行器可以修改`.env`里面的`SHELL_TO_RUN_CMD`环境变量，可选值：`nu`/`sh`/`cmd`/`zsh`/`fish`/`node`/`bash`/`python3`/`powershell`等;
-- `DIRS`: 可选，需要执行上述命令的目录，目录可以指定一个或者多个，多个目录中间用空格隔开，也可以为空，为空则会在当前目录的所有子目录内执行对应命令;
+- `dirs`: 可选，需要执行上述命令的目录，目录可以指定一个或者多个，多个目录中间用`,`隔开，也可以为空，为空则会在当前目录的所有子目录内执行对应命令;
+- `-p` 或 `--parent`：如果 `dirs` 参数为空则会在该参数指定目录的所有子目录内执行对应命令;
+- `-h` 或 `--help`: 查看帮助文档
 
 **使用举例**:
 
 ```bash
 # 更新gaia-mall gaia-mobile gaia-picker这三个仓库的develop分支到本地
-t dir-batch-exec 'git co develop; git pull' gaia-mall gaia-mobile gaia-picker
+t dir-batch-exec 'git co develop; git pull' gaia-mall,gaia-mobile,gaia-picker
 # 在 mall-base/packages 目录下通过 `npm-check-updates` 检查所有 lerna 管理的包的依赖是否有新版本:
 cd ./mall-base/packages;
 t dir-batch-exec 'pwd;ncu'
@@ -287,12 +291,13 @@ t dir-batch-exec 'pwd;ncu'
 
 **功能描述**: 通过[`fnm`](https://github.com/Schniz/fnm)查询已发布 `Node` 版本，支持指定最低版本号, 虽然目前依赖`fnm`, 但是若想去除该依赖是很容易的，以后有需求再说吧。
 
-**命令格式**: `t ls-node minVer=('12') isLts=('false')`
+**命令格式**: `t ls-node {flags} (minVer)`
 
 **参数说明**:
 
 - `minVer`: 可选，指定查询`Node.js`的最小起始版本号，可以为空，默认值为 12, 版本号前面可以加`v`也可以不加;
-- `isLts`: 可选，是否只查询`LTS`版本，可以为空，默认值为`false`;
+- `--lts`: 是否只查询`LTS`版本;
+- `-h` 或 `--help`: 查看帮助文档;
 
 **使用举例**:
 
@@ -304,7 +309,7 @@ t ls-node 16
 # OR
 t ls-node v16
 # 查询`12`及以后已经发布的Node LTS 版本号
-t ls-node 12 true
+t ls-node 12 --lts
 ```
 
 ---
@@ -313,9 +318,13 @@ t ls-node 12 true
 
 **功能描述**: 查看本地 Git 仓库的分支及其最后提交时间, 按最后提交时间升序排序
 
-**命令格式**: `t git-branch`
+**命令格式**: `t git-branch {flags} (path)`
 
-**参数说明**: N/A
+**参数说明**:
+
+- `path` - 可选，Git 仓库路径，默认为当前路径
+-  `-t` 或 `--show-tags` - 按时间倒序显示所有本地 Tag
+-  `-h` 或 `--help `- 显示此命令相关帮助文档
 
 **使用举例**: Run `t git-branch` in a git repo.
 
@@ -331,12 +340,13 @@ t ls-node 12 true
 
 **功能描述**: 显示当前 Git 仓库远程地址所有的分支及其最后提交信息
 
-**命令格式**: `t git-remote-branch remote=('origin') showTag=('false')`
+**命令格式**: `t git-remote-branch {flags} (remote)`
 
 **参数说明**:
 
-- `remote`: 可选，远程仓库地址对应的 alias 名称，默认值 `origin`;
-- `showTag`: 可选，是否需要显示仓库已有标签信息，默认值`false`;
+- `remote`: 可选，远程仓库地址对应的 alias 名称，默认值 `origin`
+- `-t` 或 `--show-tags`: 显示仓库已有 TAG 列表
+- `-h` 或 `--help `：显示此命令相关帮助文档
 
 **使用举例**:
 
@@ -344,7 +354,7 @@ t ls-node 12 true
 # 执行该命令前先切换到一个Git仓库
 t git-remote-branch
 # 显示远程分支及分支最后提交时间，同时显示已有Tag及其创建时间
-t git-remote-branch origin true
+t git-remote-branch origin --show-tags
 ```
 
 **输出样例**:
@@ -359,18 +369,18 @@ t git-remote-branch origin true
 
 **功能描述**: 在指定 Git 分支上执行指定命令
 
-**命令格式**: `t git-batch-exec cmd +branches=('')`
+**命令格式**: `git-batch-exec <cmd> (branches)`
 
 **参数说明**:
 
 - `cmd`: 必填，待执行的命令，如果有空格需要用引号包裹，`cmd`参数对应命令默认通过`bash`执行(默认值在 `termix.toml` 的 `shellToRunCmd.currentSelected`里面指定)，如果你需要更改命令解释、执行器可以修改`.env`里面的`SHELL_TO_RUN_CMD`环境变量，可选值：`nu`/`sh`/`cmd`/`zsh`/`fish`/`node`/`bash`/`python3`/`powershell`等;
-- `branches`: 必填，需要执行上述命令的分支，分支可以指定一个或者多个，多个分支中间用空格隔开；
+- `branches`: 必填，需要执行上述命令的分支，分支可以指定一个或者多个，多个分支中间用 `,` 隔开；
 
 **使用举例**:
 
 ```bash
 # 在 develop feature/latest 这两个分支上 cherry-pick 特定的 commit并推送到远程
-t git-batch-exec 'git cherry-pick abcxyzuvw; git push' develop feature/latest
+t git-batch-exec 'git cherry-pick abcxyzuvw; git push' develop,feature/latest
 ```
 
 ---
@@ -379,12 +389,13 @@ t git-batch-exec 'git cherry-pick abcxyzuvw; git push' develop feature/latest
 
 **功能描述**: 统计各 git commit 的增加、删除代码行数以及所修改文件数
 
-**命令格式**: `t git-stat count=('20') author=('*')`
+**命令格式**: `t git-stat *OPTIONS`
 
 **参数说明**:
 
-- `count`: 选填，需要统计的 commit 记录数，默认前 20 条;
-- `author`: 选填，需要统计的 commit 提交者 ID，默认所有提交者；
+- `-c` 或 `--count`: 需要统计的 commit 记录数，默认前 20 条;
+- `-a` 或 `--author`: 需要统计的 commit 提交者 ID，默认所有提交者；
+- `-h` 或 `--help`: 查看该命令的相关帮助；
 
 **使用举例**:
 
@@ -392,7 +403,7 @@ t git-batch-exec 'git cherry-pick abcxyzuvw; git push' develop feature/latest
 # 统计当前仓库当前分支的 commit 数据
 t git-stat
 # 统计当前仓库当前分支 git 账号为 hustcer 的用户的 前30条 commit 数据
-t git-stat 30 hustcer
+t git-stat -c 30 -a hustcer
 ```
 
 **输出样例**:
@@ -450,7 +461,7 @@ t git-batch-reset 2 develop feature/latest
 
 **功能描述**: Git 远程分支重命名, 重命名成功之后会删除旧的分支
 
-**命令格式**: `t rename-branch from=('') to=('') remote=('origin')`
+**命令格式**: `t rename-branch <from> <to> (remote)`
 
 **参数说明**:
 
@@ -470,12 +481,12 @@ t rename-branch feature/old feature/new
 
 **功能描述**: 将 Git 仓库迁移到新的地址：迁移内容包含代码、提交历史记录、分支、Tag 等
 
-**命令格式**: `t repo-transfer from=('') to=('')`
+**命令格式**: `t repo-transfer <source> <dest>`
 
 **参数说明**:
 
-- `from`: 必填，源仓库 Git 地址;
-- `to`: 必填，目的仓库 Git 地址;
+- `source`: 必填，源仓库 Git 地址;
+- `dest`: 必填，目的仓库 Git 地址;
 
 **使用举例**:
 
@@ -542,12 +553,13 @@ develop = "国内版移动端最新开发分支，support/seldon2可以合并到
 support/master 可以合并到该分支'''
 ```
 
-**命令格式**: `t desc branch=(`git branch --show-current`) showNotes=('false')`
+**命令格式**: `t desc {flags} (branch)`
 
 **参数说明**:
 
 - `branch`: 选填，待查看描述信息的分支名，默认`git branch --show-current`输出的当前分支;
-- `showNotes`: 选填，是否显示分支描述说明文档, `true` 则显示, 默认 `false`;
+- `-n` 或 `--show-notes`: 是否显示分支描述说明文档;
+- `-h` 或 `--help`: 显示该命令的帮助文档;
 
 **使用举例**:
 
@@ -555,7 +567,7 @@ support/master 可以合并到该分支'''
 # 查看当前分支描述信息
 t desc
 # 查看 develop 分支描述信息以及分支描述说明文档
-t desc develop true
+t desc develop --show-notes
 ```
 
 ---
@@ -1140,7 +1152,7 @@ alias main = dingtalk notify
 - 允许操作者在本机连接 VPN，然后通过该脚本把 Minio 预发环境经过测试验证的静态资源”同步“到 Minio 生产环境地址，以配合完成通过制品部署生产环境的目的。
 - 也允许比如 EMP 等产品在不用自己发布 `material-ui` 和 `terp-ui` 的情况下将二者的静态资源构建产物从标品发布地址同步到 EMP 环境里面，加上 EMP 自己开发的特有自定义组件满足其个性化搭建需求。
 
-**命令格式**: `terp-assets <action> <end> {flags}`
+**命令格式**: `terp-assets {flags} <action> <end>`
 
 其中 `action` 目前只支持两种 `download` & `transfer`:
 

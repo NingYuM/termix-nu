@@ -76,6 +76,7 @@ upgrade *OPTIONS:
   @overlay use {{ join(_termix, 'actions', 'upgrade.nu') }}; upgrade-tool {{OPTIONS}}
 
 # Release a new version for termix-nu
+[private]
 release  *OPTIONS: _setup
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
     overlay use {{ join(_termix, 'actions', 'release.nu') }}; \
