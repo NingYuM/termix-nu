@@ -90,7 +90,7 @@ All notable changes to this project will be documented in this file.
 
 - Add a config file for `ghostty` terminal (beta)
 - Add `publishAt` and `repo` fields for `latest.json` of uploaded open source tools
-- Standarize released package names of open tools
+- Standardize released package names of open tools
 - Add upgrade nu and just cast
 
 ### Refactor
