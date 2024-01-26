@@ -89,7 +89,7 @@ def upgrade-tip [
       print $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
       print $'        -----> Your ($cmd) is (ansi r)OUTDATED(ansi reset), latest ver: (ansi p)($min)(ansi reset) <----- (char nl)'
       print $'         Please run (ansi g)`just upgrade`(ansi reset) to upgrade to the latest version.(char nl)'
-      print $'(ansi lpr) You may need to run `brew update && brew upgrade nushell` to upgrade nu, too. (ansi reset)'
+      print $'(ansi lpr)      You may need to run `t upgrade -a` to upgrade `nu` and `just`, too.      (ansi reset)'
       print $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
     } else {
       print $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
