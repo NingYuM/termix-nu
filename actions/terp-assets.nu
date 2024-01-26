@@ -236,6 +236,9 @@ def transfer [
     echo $'Assets for (ansi p)($e)(ansi reset) transferred successfully!'
   }
   echo "All transfer finished! \n"
+
+  let destUrl = $fromUrl | str replace $'/($mount)/' $'/($to)/'
+  print $"You can visit the latest.json from: ($destUrl)\n"
 }
 
 # Add transfer metadata to namespace.json and latest.json
