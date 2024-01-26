@@ -28,7 +28,7 @@ use ../utils/common.nu [ECODE, is-installed, hr-line, get-tmp-path, compare-ver,
 
 const JSON_ENTRY = 'latest.json'
 const VALID_ACTIONS = ['download', 'transfer']
-const ENDPOINT_ALIASES = ['pc', 'mobile', 'mat', 'mmat', 'dors', 'mdors', 'iam', 'all']
+const MODULE_ALIASES = ['pc', 'mobile', 'mat', 'mmat', 'dors', 'mdors', 'iam', 'all']
 const ENDPOINT = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com'
 
 const PKG_TOOLS_VER = '0.3.0-beta.1'
@@ -46,45 +46,45 @@ const END_KEY_MAP = {
 # Download TERP static assets or transfer assets to other path of the specified cloud storage
 export def 'terp assets' [
   action: string,             # Available actions: download, transfer
-  endpoints: string,          # Available values: pc/mobile/mat/mmat/iam/dors/mdors/all. Multiple ends separated by `,`
+  modules: string,            # Available values: pc/mobile/mat/mmat/iam/dors/mdors/all. Multiple modules separated by `,`
   --from(-f): string,         # Source mount point or source URL
-  --to(-t): string,           # Dest mount point
+  --to(-t): string,           # Destination mount point
   --verbose(-v),              # Show verbose info
   --dest-store(-d): string,   # Destination store, should be configured in .termixrc
 ] {
-  pre-check $action $endpoints --to $to --dest-store $dest_store
+  pre-check $action $modules --to $to --dest-store $dest_store
   let latestMeta = get-latest-meta $from
-  let endpoints = get-endpoints $endpoints $latestMeta
+  let modules = get-modules $modules $latestMeta
 
   match $action {
-    'download' => { download $endpoints $latestMeta $to --verbose=$verbose },
-    'transfer' => { transfer $endpoints $latestMeta $to --dest-store $dest_store --verbose=$verbose },
+    'download' => { download $modules $latestMeta $to --verbose=$verbose },
+    'transfer' => { transfer $modules $latestMeta $to --dest-store $dest_store --verbose=$verbose },
   }
 }
 
-# Get valid endpoints from input and exit if any invalid endpoint is found
-def get-endpoints [endpoints: string, latestMeta: record] {
+# Get valid modules from input and exit if any invalid module is found
+def get-modules [modules: string, latestMeta: record] {
   let allModules = $latestMeta.latest | columns
-  if $endpoints == 'all' {
+  if $modules == 'all' {
     $allModules
   } else {
-    let splits = ($endpoints | split row ',')
-    let validAliases = ($splits | filter {|it| $it in $ENDPOINT_ALIASES })
+    let splits = ($modules | split row ',')
+    let validAliases = ($splits | filter {|it| $it in $MODULE_ALIASES })
     if ($validAliases | length) > 0 {
       let unexists = ($validAliases | filter {|it| ($END_KEY_MAP | get -i $it) not-in $allModules })
       if ($unexists | length) > 0 {
-        print $'Invalid end (ansi r)($unexists | str join ",")(ansi reset), the module you specified does not exists in latest.json(ansi reset)'
+        print $'Invalid modules (ansi r)($unexists | str join ",")(ansi reset), the module you specified does not exists in latest.json(ansi reset)'
         exit $ECODE.INVALID_PARAMETER
       }
     }
-    let filterAlias = ($splits | filter {|it| $it not-in $ENDPOINT_ALIASES })
+    let filterAlias = ($splits | filter {|it| $it not-in $MODULE_ALIASES })
     let invalid = ($filterAlias | filter {|it| $it not-in $allModules })
     if ($invalid | length) > 0 {
-      print $'Invalid end (ansi r)($invalid | str join ",")(ansi reset), available endpoint aliases: (ansi g)($ENDPOINT_ALIASES | str join ",")(ansi reset)'
-      print $'And all available endpoint modules: (ansi g)($allModules | str join ",")(ansi reset)'
+      print $'Invalid modules (ansi r)($invalid | str join ",")(ansi reset), available module aliases: (ansi g)($MODULE_ALIASES | str join ",")(ansi reset)'
+      print $'And all available modules: (ansi g)($allModules | str join ",")(ansi reset)'
       exit $ECODE.INVALID_PARAMETER
     }
-    $splits | filter {|it| $it in [...$ENDPOINT_ALIASES, ...$allModules] }
+    $splits | filter {|it| $it in [...$MODULE_ALIASES, ...$allModules] }
   }
 }
 
@@ -97,22 +97,21 @@ def get-latest-meta [from: string] {
   { from: $from, latestUrl: $fromUrl, mountpoint: $mount, latest: (http get $fromUrl) }
 }
 
-# Load dest OSS settings and store them to environment variable
-def --env load-dest-conf [destStore: string] {
+# Get dest OSS settings
+def --env get-dest-oss [destStore: string] {
   let LOCAL_CONFIG = if ('.termixrc' | path exists) { '.termixrc' } else { $'($env.TERMIX_DIR)/.termixrc' }
   let ossConf = open $LOCAL_CONFIG | from toml | get -i $destStore
   if ($ossConf | is-empty) {
     echo $'The storage you specified (ansi p)($destStore)(ansi reset) does not exist in (ansi p)($LOCAL_CONFIG)(ansi reset).'
     exit $ECODE.INVALID_PARAMETER
   }
-  $env.DEST_OSS_CONF = $ossConf
   return $ossConf
 }
 
 # Check if it's a valid action, and if the required tools are installed.
 def pre-check [
   action: string,
-  endpoints: string,
+  modules: string,
   --to(-t): string,          # Destination
   --dest-store(-d): string,  # Destination store, should be configured in .termixrc
 ] {
@@ -140,8 +139,8 @@ def pre-check [
     exit $ECODE.INVALID_PARAMETER
   }
   if $action == 'transfer' {
-    load-dest-conf $dest_store
-    print $'Attention: You are going to TRANSFER (ansi p)($endpoints)(ansi reset) assets to (ansi p)($to)@($dest_store)(ansi reset)'; hr-line
+    get-dest-oss $dest_store
+    print $'Attention: You are going to TRANSFER (ansi p)($modules)(ansi reset) assets to (ansi p)($to)@($dest_store)(ansi reset)'; hr-line
     let dest = input $'Please confirm by typing (ansi r)($to)(ansi reset) to continue or (ansi p)q(ansi reset) to quit: '
     if $dest == 'q' { echo $'Transfer cancelled, Bye...'; exit $ECODE.SUCCESS }
     if $dest != $to {
@@ -152,7 +151,7 @@ def pre-check [
 
 # Download static assets from OSS to specified directory
 def download [
-  endpoints: list,      # End point, available values: pc, mobile, all
+  modules: list,      # End point, available values: pc, mobile, all
   latestMeta: record,   # Latest meta info
   to?: string,          # Destination dir
   --verbose(-v),        # Show verbose info
@@ -169,7 +168,7 @@ def download [
   let entryConf = open $entry
 
   # Download assets for each end point
-  $endpoints | each { |e|
+  $modules | each { |e|
     let endKey = $END_KEY_MAP | get -i $e | default $e
     let assetsDir = $'($dest)/assets-($mount)-($e)'
     # 每次下载前先清空目录
@@ -203,7 +202,7 @@ def download [
 
 # Transfer static assets from OSS to OSS or Minio's other path
 def transfer [
-  endpoints: list,            # End point, available values: pc, mobile, all
+  modules: list,              # Module name or alias available values: pc, mobile, all, etc.
   latestMeta: record,         # Latest meta info
   to: string,
   --verbose(-v),              # Show verbose info
@@ -212,10 +211,10 @@ def transfer [
   let tmp = $'(get-tmp-path)/terp'
   if (not ($tmp | path exists)) { mkdir $tmp }
 
-  download $endpoints $latestMeta $tmp --verbose=$verbose
+  download $modules $latestMeta $tmp --verbose=$verbose
   echo $'Start to transfer assets from (ansi p)($latestMeta.from) to ($dest_store) ($to)(ansi reset)'
 
-  let ossConf = $env.DEST_OSS_CONF
+  let ossConf = get-dest-oss $dest_store
   let type = $ossConf | get -i TYPE | default 'aliyun'
   let ak = $ossConf | get -i OSS_AK | default ''
   let sk = $ossConf | get -i OSS_SK | default ''
@@ -225,7 +224,7 @@ def transfer [
 
   let mount = $latestMeta.mountpoint
   let fromUrl = $latestMeta.latestUrl
-  for e in $endpoints {
+  for e in $modules {
     cd $'($tmp)/assets-($mount)-($e)'
     # Update namespace.json add transfer info
     update-transfer-meta $latestMeta.from
