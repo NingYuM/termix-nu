@@ -244,7 +244,7 @@ def handle-working-hours [
           let leaves = ($leavingHours | where staffId == $staff.id)
           if ($leaves | length) == 0 { 0 } else { ($leaves | get duration | math sum) * 8 | into int }
         }
-      | upsert Gap { |staff| ($hourSummary | where $it.staffBO.name == $staff.Name | get 0 | get surplus) * 8 | into int }
+      | upsert Gap { |staff| ($hourSummary | where $it.staffBO.name == $staff.Name | get 0 | get surplus) * 8 | math ceil }
       | upsert WARN { |it| if ($it.Gap > 0) { $'(ansi r)('*' | fill -a r -w 6 -c $'(char sp)')(ansi reset)' } }
       | sort-by WARN Gap Name
       | reject id
@@ -299,7 +299,7 @@ def notify-filling-hours [hours: any, --summary: list, --team: record, --debug] 
     ($mobileFilled | default $mobileFetched)
   }
   if $debug { log 'mentions' $mentions }
-  let mobiles = $mentions | get mobile | str join ','
+  let mobiles = $mentions | get Mobile | str join ','
   let message = $messages | get -i $weekday | default $messages.monthEnd
   load-env { DINGTALK_ROBOT_AK: $DINGTALK_AK_SK.0, DINGTALK_ROBOT_SECRET: $DINGTALK_AK_SK.1, DINGTALK_NOTIFY: 'on' }
   dingtalk notify --text $message --at-mobiles $mobiles
