@@ -18,7 +18,7 @@
 #   [√] Add --debug flag to print more debug info
 #   [√] Add --no-ignore flag to query working hours for all teams
 #   [√] 考虑调休、补班等情况下工时是否填满的判定: 由 EMP 接口返回的数据中的 `surplusPercentage` 字段判断
-#   [ ] 团队成员名单及手机号自动从接口更新，免去手动维护
+#   [√] 团队成员名单及手机号自动从接口更新，免去手动维护
 #   [ ] 工时填满后间隔提醒定时任务需要退出
 #   [ ] 支持通过设置 LAST_DAY 将某天设置为最后期限以启动间隔提醒
 #   [√] Update the docs
@@ -186,7 +186,11 @@ export def query-hours-by-team [
       )
     }
 
-  handle-working-hours $allStaffs $workingHours $leavingHours $hourSummary --team $team --notify=$notify --show-all=$show_all --show-prev=$show_prev --silent=$silent
+  (
+    handle-working-hours $allStaffs $workingHours $leavingHours $hourSummary
+                          --team $team --notify=$notify --show-all=$show_all
+                          --show-prev=$show_prev --silent=$silent --debug=$debug
+  )
 }
 
 # 显示工时统计信息
@@ -200,6 +204,7 @@ def handle-working-hours [
   --show-all,
   --show-prev,
   --silent,
+  --debug,
 ] {
   let title = $'($team.name)本周工时填报'
   # echo ($data | reject id isDeleted week year createdAt updatedAt updatedBy createdBy)
@@ -254,11 +259,13 @@ def handle-working-hours [
     print $'WARN: `EMP_WORKING_HOURS_NOTIFY` is (ansi p)off(ansi reset), stop sending notifications...(char nl)'
     return
   }
-  if $notify and $empSwitchEnv == 'on' { notify-filling-hours $result --team $team }
+  if $notify and $empSwitchEnv == 'on' {
+    notify-filling-hours $result --summary $hourSummary --team $team --debug=$debug
+  }
 }
 
 # Notify the members who didn't fill the working hours by Dintalk Robot
-def notify-filling-hours [hours: any, --team: record] {
+def notify-filling-hours [hours: any, --summary: list, --team: record, --debug] {
   print 'Try to send notifications by DingTalk Robot...'
   let checkPoint = (date now) + $CHECK_DURATION
   let messages = $env.EMP_CONF | get settings?.messages? | default {}
@@ -272,9 +279,9 @@ def notify-filling-hours [hours: any, --team: record] {
   }
   let users = $team | get -i users | default []
   valid-user-mobiles $users
+
   if ($users | is-empty) {
-    print $'(ansi r)No users found in team ($team.name), stop sending notifications...(char nl)(ansi reset)'
-    return
+    print $'(ansi y)No users found in team ($team.name), fallback to get users from API...(char nl)(ansi reset)'
   }
   let DINGTALK_KEY = $'($team.alias | str upcase | str replace -a '-' '_')_DINGTALK'
   if $DINGTALK_KEY not-in $env {
@@ -286,15 +293,21 @@ def notify-filling-hours [hours: any, --team: record] {
     print $'(ansi g) All filled! Skip notify...(char nl)(ansi reset)'
     return
   }
-  let mentions = $hours | where Gap > 0 | get name
-  let mobiles = $users | where name in $mentions | get mobile | str join ','
+  let mentions = $hours | where Gap > 0 | upsert Mobile {|m|
+    let mobileFetched = $summary | where $it.staffBO.name == $m.Name | get 0 | get staffBO.phone
+    let mobileFilled = $users | where name == $m.Name | get -i 0 | get -i mobile
+    ($mobileFilled | default $mobileFetched)
+  }
+  if $debug { log 'mentions' $mentions }
+  let mobiles = $mentions | get mobile | str join ','
   let message = $messages | get -i $weekday | default $messages.monthEnd
   load-env { DINGTALK_ROBOT_AK: $DINGTALK_AK_SK.0, DINGTALK_ROBOT_SECRET: $DINGTALK_AK_SK.1, DINGTALK_NOTIFY: 'on' }
   dingtalk notify --text $message --at-mobiles $mobiles
 }
 
 # Validate the mobile number of each user, display a warning message if the mobile is invalid
-def valid-user-mobiles [users: table] {
+def valid-user-mobiles [users: any] {
+  if ($users | is-empty) { return }
   for user in $users {
     let valid = $user.mobile | str replace -r '1\d{10}' '' | is-empty
     if not $valid {
