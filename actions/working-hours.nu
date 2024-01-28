@@ -216,10 +216,6 @@ def handle-working-hours [
   let week = [Mon, Tue, Wen, Thu, Fri, Sat, Sun]
   # 当前是一年中的第几周
   let weekNo = if $show_prev == true { (date now) - 7day | format date %V } else { date now | format date %V }
-  # 此刻是一周中的第几天，周一为第 1 天
-  let weekDay = date now | format date %u | into int
-  # 正常情况下一周工作 5 天
-  let total = if ($weekDay >= 5 or $show_prev == true) { 5 } else { $weekDay }
 
   # Set a default working hour record
   let workingHours = if ($workingHours | compact | length) == 0 { [[fillDate, percentage, staffId]; [0, 0, 0]] } else { $workingHours }
@@ -244,7 +240,7 @@ def handle-working-hours [
           let leaves = ($leavingHours | where staffId == $staff.id)
           if ($leaves | length) == 0 { 0 } else { ($leaves | get duration | math sum) * 8 | into int }
         }
-      | upsert Gap { |staff| ($hourSummary | where $it.staffBO.name == $staff.Name | get 0 | get surplus) * 8 | math ceil }
+      | upsert Gap { |staff| ($hourSummary | where $it.staffBO.name == $staff.Name | get 0 | get surplus) * 8 }
       | upsert WARN { |it| if ($it.Gap > 0) { $'(ansi r)('*' | fill -a r -w 6 -c $'(char sp)')(ansi reset)' } }
       | sort-by WARN Gap Name
       | reject id
@@ -329,12 +325,11 @@ def get-hr-per-staff [
 def get-monday [
   --prev
 ] {
-  let today = (date now | date to-table | select year month day)
-  let pastDays = ([(date now)] | dfr into-df | dfr get-weekday).0 - 1
-  let duration = ($'($pastDays)day' | into duration)
-  let beginOfToday = ($'($today.year.0)-($today.month.0)-($today.day.0)' | into datetime)
-  let beginOfToday = if $prev == true { $beginOfToday - 7day } else { $beginOfToday }
-  (($beginOfToday - $duration) | format date $_TIME_FMT)
+  let today = (date now | format date %u | into int)
+  let monday = ((date now) - ($'($today - 1)day' | into duration ))
+  let beginOfMonday = $monday | format date '%Y-%m-%d 00:00:00' | into datetime
+  let queryBegin = if $prev == true { $beginOfMonday - 7day } else { $beginOfMonday }
+  ($queryBegin| format date $_TIME_FMT)
 }
 
 # Get the ending time of sunday, like 2021-12-12 23:59:59
