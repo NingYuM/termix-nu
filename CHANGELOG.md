@@ -1,6 +1,21 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## 1.66.0 - 2024-01-29
+
+### Bug Fixes
+
+- Fix working hours rounding bug for `t emp` command
+- Fix query begin and end date calc for `t emp` command
+
+### Features
+
+- `t terp-assets` add Syncing modules by their full name support
+- `t terp-assets transfer all` will sync all assets registered in `latest.json`
+- Display dest latest.json url after transfer TERP static assets
+- Fallback to get users from API if not configured in `.termixrc` for `t emp` command
+- Add `atAllMinCount` option to mention all if the count of mention users is above specified count for `t emp` command
+
 ## 1.65.0 - 2024-01-25
 
 ### Bug Fixes
