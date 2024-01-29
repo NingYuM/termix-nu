@@ -20,6 +20,7 @@
 #   [√] 考虑调休、补班等情况下工时是否填满的判定: 由 EMP 接口返回的数据中的 `surplusPercentage` 字段判断
 #   [√] 团队成员名单及手机号自动从接口更新，免去手动维护
 #   [√] Add `atAllMinCount` option to mention all if the count of mention users is above specified number
+#   [√] Add `WORKDAYS_TILL_MONTH_END` environment variable to specify total workdays till month end of current week
 #   [ ] Add `remindSince` option to specify the time to start reminding
 #   [√] 工时填满后间隔提醒定时任务需要退出
 #   [ ] 支持通过设置 LAST_DAY 将某天设置为最后期限以启动间隔提醒
@@ -223,6 +224,11 @@ def handle-working-hours [
   let week = [Mon, Tue, Wen, Thu, Fri, Sat, Sun]
   # 当前是一年中的第几周
   let weekNo = if $show_prev == true { (date now) - 7day | format date %V } else { date now | format date %V }
+  # 此刻是一周中的第几天，周一为第 1 天
+  let weekDay = date now | format date %u | into int
+  let totalDays = $env | get -i WORKDAYS_TILL_MONTH_END | default '0' | into int
+  let totalDays = if $totalDays == 0 { $weekDay } else { $totalDays }
+  let isMonthEnd = is-month-end ((date now) + $CHECK_DURATION)
 
   # Set a default working hour record
   let workingHours = if ($workingHours | compact | length) == 0 { [[fillDate, percentage, staffId]; [0, 0, 0]] } else { $workingHours }
@@ -247,7 +253,11 @@ def handle-working-hours [
           let leaves = ($leavingHours | where staffId == $staff.id)
           if ($leaves | length) == 0 { 0 } else { ($leaves | get duration | math sum) * 8 | into int }
         }
-      | upsert Gap { |staff| ($hourSummary | where $it.staffBO.name == $staff.Name | get 0 | get surplus) * 8 }
+      | upsert Gap { |staff|
+          let staffDetail = $hourSummary | where $it.staffBO.name == $staff.Name | get 0
+          let calcRemain = ($totalDays - $staffDetail.actual - $staffDetail.leave) * 8
+          if $isMonthEnd { $calcRemain } else { $staffDetail.surplus * 8 }
+        }
       | upsert WARN { |it| if ($it.Gap > 0) { $'(ansi r)('*' | fill -a r -w 6 -c $'(char sp)')(ansi reset)' } }
       | sort-by WARN Gap Name
       | reject id
@@ -294,6 +304,7 @@ def notify-filling-hours [hours: any, --summary: list, --team: record, --debug] 
   }
   let DINGTALK_AK_SK = $env | get $DINGTALK_KEY | split row ','
   let notifyCandidates = $hours | where Gap > 0
+  if $debug { log 'Notify Candidates' $notifyCandidates }
   if ($notifyCandidates | is-empty) {
     print $'(ansi g) All filled! Skip notify...(char nl)(ansi reset)'
     return
