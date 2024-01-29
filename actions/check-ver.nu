@@ -74,7 +74,11 @@ def query-ver [
   let msg = (git show --oneline --no-patch $latestVer)
   let forceUpgrade = ($msg | str contains $_UPGRADE_TAG)
   let config = { 'latestVer': $latestVer, 'checkDate': $checkDate, 'forceUpgrade': $forceUpgrade }
-  $config | to json | save -f $conf
+  if ($conf | path exists) {
+    open $conf | from json | merge $config | to json | save -f $conf
+  } else {
+    $config | to json | save -f $conf
+  }
   $latestVer
 }
 
