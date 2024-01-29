@@ -40,7 +40,7 @@ const _TIME_FMT = '%Y-%m-%d %H:%M:%S'
 const CHECK_DURATION = 0day
 
 # Run EMP working hours checking job everyday, but only send notifications for Monday, Friday, Saturday, Sunday and Month end
-export def working-hours-daily-checking [] {
+export def working-hours-daily-checking [--debug(-d)] {
   let confEMP = load-emp-conf
   let messages = $confEMP | get settings?.messages? | default {}
   let checkPoint = (date now) + $CHECK_DURATION
@@ -54,9 +54,9 @@ export def working-hours-daily-checking [] {
   }
   if $weekday == 'monday' {
     print $'Query working hours of previeous week...'
-    query-hours-by-team-codes --show-prev --notify --silent --keep-polling
+    query-hours-by-team-codes --show-prev --notify --silent --keep-polling --debug=$debug
   }
-  query-hours-by-team-codes --notify --silent --keep-polling=$isMonthEnd
+  query-hours-by-team-codes --notify --silent --keep-polling=$isMonthEnd --debug=$debug
 }
 
 # Query working hours for each team from EMP and display the filling status of each team member
@@ -258,7 +258,7 @@ def handle-working-hours [
     return
   }
   if $notify and $empSwitchEnv == 'on' {
-    notify-filling-hours $result --summary $hourSummary --team $team --debug=$debug
+    notify-filling-hours $allMembers --summary $hourSummary --team $team --debug=$debug
   }
 }
 
@@ -287,13 +287,13 @@ def notify-filling-hours [hours: any, --summary: list, --team: record, --debug] 
     return
   }
   let DINGTALK_AK_SK = $env | get $DINGTALK_KEY | split row ','
-  if ($hours | where Gap > 0 | is-empty) {
+  let notifyCandidates = $hours | where Gap > 0
+  if ($notifyCandidates | is-empty) {
     print $'(ansi g) All filled! Skip notify...(char nl)(ansi reset)'
     return
   }
 
   let message = $messages | get -i $weekday | default $messages.monthEnd
-  let notifyCandidates = $hours | where Gap > 0
   let notifyCount = $notifyCandidates | length
   load-env { DINGTALK_ROBOT_AK: $DINGTALK_AK_SK.0, DINGTALK_ROBOT_SECRET: $DINGTALK_AK_SK.1, DINGTALK_NOTIFY: 'on' }
   if ($notifyCount == ($hours | length) or $notifyCount >= ($team.atAllMinCount | default 30)) {
