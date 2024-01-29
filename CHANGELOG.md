@@ -7,6 +7,9 @@ All notable changes to this project will be documented in this file.
 
 - Fix working hours rounding bug for `t emp` command
 - Fix query begin and end date calc for `t emp` command
+- Fix @All checking for `t emp-daily` command
+- Fix type convert error for `t gsync -l` command
+- Fix working-hours polling on monday for `t emp-daily` command
 
 ### Features
 
@@ -15,6 +18,7 @@ All notable changes to this project will be documented in this file.
 - Display dest latest.json url after transfer TERP static assets
 - Fallback to get users from API if not configured in `.termixrc` for `t emp` command
 - Add `atAllMinCount` option to mention all if the count of mention users is above specified count for `t emp` command
+- Quit `t emp-daily` scheduled task if all teams have finished filling their working-hours
 
 ## 1.65.0 - 2024-01-25
 

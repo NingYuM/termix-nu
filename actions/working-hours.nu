@@ -55,6 +55,7 @@ export def working-hours-daily-checking [--debug(-d)] {
   if $weekday == 'monday' {
     print $'Query working hours of previeous week...'
     query-hours-by-team-codes --show-prev --notify --silent --keep-polling --debug=$debug
+    return
   }
   query-hours-by-team-codes --notify --silent --keep-polling=$isMonthEnd --debug=$debug
 }
