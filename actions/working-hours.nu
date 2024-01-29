@@ -19,6 +19,8 @@
 #   [√] Add --no-ignore flag to query working hours for all teams
 #   [√] 考虑调休、补班等情况下工时是否填满的判定: 由 EMP 接口返回的数据中的 `surplusPercentage` 字段判断
 #   [√] 团队成员名单及手机号自动从接口更新，免去手动维护
+#   [√] Add `atAllMinCount` option to mention all if the count of mention users is above specified number
+#   [ ] Add `remindSince` option to specify the time to start reminding
 #   [ ] 工时填满后间隔提醒定时任务需要退出
 #   [ ] 支持通过设置 LAST_DAY 将某天设置为最后期限以启动间隔提醒
 #   [√] Update the docs
@@ -251,7 +253,7 @@ def handle-working-hours [
 
   if not $silent { print $result }
   let empSwitchEnv = $env | get -i EMP_WORKING_HOURS_NOTIFY | default 'off'
-  if $empSwitchEnv == 'off' {
+  if $notify and $empSwitchEnv == 'off' {
     print $'WARN: `EMP_WORKING_HOURS_NOTIFY` is (ansi p)off(ansi reset), stop sending notifications...(char nl)'
     return
   }
@@ -289,15 +291,21 @@ def notify-filling-hours [hours: any, --summary: list, --team: record, --debug] 
     print $'(ansi g) All filled! Skip notify...(char nl)(ansi reset)'
     return
   }
-  let mentions = $hours | where Gap > 0 | upsert Mobile {|m|
+
+  let message = $messages | get -i $weekday | default $messages.monthEnd
+  let notifyCandidates = $hours | where Gap > 0
+  let notifyCount = $notifyCandidates | length
+  load-env { DINGTALK_ROBOT_AK: $DINGTALK_AK_SK.0, DINGTALK_ROBOT_SECRET: $DINGTALK_AK_SK.1, DINGTALK_NOTIFY: 'on' }
+  if ($notifyCount == ($hours | length) or $notifyCount >= ($team.atAllMinCount | default 30)) {
+    dingtalk notify --text $message --at-all; return
+  }
+  let mentions = $notifyCandidates | upsert Mobile {|m|
     let mobileFetched = $summary | where $it.staffBO.name == $m.Name | get 0 | get staffBO.phone
     let mobileFilled = $users | where name == $m.Name | get -i 0 | get -i mobile
     ($mobileFilled | default $mobileFetched)
   }
   if $debug { log 'mentions' $mentions }
   let mobiles = $mentions | get Mobile | str join ','
-  let message = $messages | get -i $weekday | default $messages.monthEnd
-  load-env { DINGTALK_ROBOT_AK: $DINGTALK_AK_SK.0, DINGTALK_ROBOT_SECRET: $DINGTALK_AK_SK.1, DINGTALK_NOTIFY: 'on' }
   dingtalk notify --text $message --at-mobiles $mobiles
 }
 
