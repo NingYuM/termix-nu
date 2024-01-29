@@ -21,7 +21,7 @@
 #   [√] 团队成员名单及手机号自动从接口更新，免去手动维护
 #   [√] Add `atAllMinCount` option to mention all if the count of mention users is above specified number
 #   [ ] Add `remindSince` option to specify the time to start reminding
-#   [ ] 工时填满后间隔提醒定时任务需要退出
+#   [√] 工时填满后间隔提醒定时任务需要退出
 #   [ ] 支持通过设置 LAST_DAY 将某天设置为最后期限以启动间隔提醒
 #   [√] Update the docs
 # Usage:
@@ -83,10 +83,14 @@ export def query-hours-by-team-codes [
     return
   }
 
+  mut teamWatcher = {}
   loop {
-    $teams | each { |it|
-      query-hours-by-team $it --show-all=$show_all --show-prev=$show_prev --notify=$notify --silent=$silent --debug=$debug
-    } | ignore
+    for it in $teams {
+      let finished = query-hours-by-team $it --show-all=$show_all --show-prev=$show_prev --notify=$notify --silent=$silent --debug=$debug
+      $teamWatcher = ($teamWatcher | upsert $it.code $finished)
+    }
+    log 'teamWatcher' $teamWatcher
+    if ($teamWatcher | values | all { $in == true }) { break }
     let interval = $confEMP.settings?.lastdayNotifyInterval? | default '30min' | into duration
     print $'Wait ($interval) to check again...'
     sleep $interval
@@ -249,17 +253,18 @@ def handle-working-hours [
 
   let result = if $show_all { $allMembers } else { ($allMembers | where Gap > 0) }
 
-  if ($result | is-empty) { print $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; return }
+  if ($result | is-empty) { print $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; return true }
 
   if not $silent { print $result }
   let empSwitchEnv = $env | get -i EMP_WORKING_HOURS_NOTIFY | default 'off'
   if $notify and $empSwitchEnv == 'off' {
     print $'WARN: `EMP_WORKING_HOURS_NOTIFY` is (ansi p)off(ansi reset), stop sending notifications...(char nl)'
-    return
+    return false
   }
   if $notify and $empSwitchEnv == 'on' {
     notify-filling-hours $allMembers --summary $hourSummary --team $team --debug=$debug
   }
+  return false
 }
 
 # Notify the members who didn't fill the working hours by Dintalk Robot
