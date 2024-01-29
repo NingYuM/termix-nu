@@ -60,7 +60,7 @@ export def 'git trigger-sync' [
 
 # Show All available branch syncing configs with a readable output
 def show-available-syncs [
-  syncs: table,           # All available branch syncing configs
+  syncs: record,          # All available branch syncing configs
   --repos: record,        # All available repos
   --ignored(-i): string,  # 代码同步需要忽略推送的仓库简称，多个仓库用英文逗号分隔
 ] {
