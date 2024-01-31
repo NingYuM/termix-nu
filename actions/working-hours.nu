@@ -313,7 +313,7 @@ def notify-filling-hours [hours: any, --summary: list, --team: record, --debug] 
   let message = $messages | get -i $weekday | default $messages.monthEnd
   let notifyCount = $notifyCandidates | length
   load-env { DINGTALK_ROBOT_AK: $DINGTALK_AK_SK.0, DINGTALK_ROBOT_SECRET: $DINGTALK_AK_SK.1, DINGTALK_NOTIFY: 'on' }
-  if ($notifyCount == ($hours | length) or $notifyCount >= ($team.atAllMinCount | default 30)) {
+  if ($notifyCount == ($hours | length) or $notifyCount >= ($team.atAllMinCount? | default 30)) {
     dingtalk notify --text $message --at-all; return
   }
   let mentions = $notifyCandidates | upsert Mobile {|m|
