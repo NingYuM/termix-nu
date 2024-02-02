@@ -8,13 +8,13 @@
 # - ghostty +list-fonts
 # - ghostty +list-themes
 
-title = Ghostty
+title = Ghostty!
 
-# Favorite themes: Dracula, Dracula+, DoomOne, Doom Peacock, Desert, DotGov, Earthsong
+# Favorite themes: Dracula, Dracula+, DoomOne, Doom Peacock, Desert, Earthsong
 # Fairyfloss, GruvboxDark, Hopscotch, Monokai Remastered, Paraiso Dark, Rebecca, Seti
 # Rippedcasts, Snazzy, Synthwave-Everything, Tinacious Design (Dark), TokyoNight, Wez
 # Tomorrow Night Blue, Tomorrow Night Eighties, UltraDark, Wombat, Whimsy, WildCherry
-theme = Synthwave-Everything
+theme = Desert
 background-opacity = 1
 background-blur-radius = 30
 unfocused-split-opacity = 0.95
@@ -26,7 +26,7 @@ font-feature = -calt
 font-feature = -dlig
 font-feature = -liga
 # Does not work on macOS?
-font-variation = wght=500
+font-variation = wght=300
 font-family = Lilex
 font-family = Sarasa Term SC
 font-family = Fira Code
@@ -46,6 +46,7 @@ window-height = 20
 window-theme = dark
 copy-on-select = clipboard
 mouse-hide-while-typing = true
+macos-titlebar-tabs = true
 macos-non-native-fullscreen = false
 
 keybind = command+right=next_tab
