@@ -122,11 +122,11 @@ export def query-hours-by-team [
   let monday = get-monday --prev=$show_prev
   let sunday = get-sunday --prev=$show_prev
   let emp = get-conf empWorkingHour
-  let staffPayload = ($emp.staffPayload
+  let staffPayload = $emp.staffPayload
       | str replace '_last_day_' $sunday
       | str replace '_first_day_' $monday
       | str replace '_project_code_' $team.code
-    )
+
   # Week No of now: [(date now)] | dfr into-df | dfr get-week
   let staffs = curl $emp.staffUrl -H $emp.type -s --data-raw $staffPayload | str join
 
@@ -139,30 +139,27 @@ export def query-hours-by-team [
   }
   # 此处把中文名字字段过滤掉，否则在Windows下数据传到后端接口会发生解析错误
   let staffPayload = $staffs | from json | get res | select id | to json -r
-  let timePayload = ($emp.timePayload
+  let timePayload = $emp.timePayload
       | str replace '_last_day_' $sunday
       | str replace '_first_day_' $monday
       | str replace '_staffs_' $staffPayload
-    )
 
-  let timeSummaryPayload = ($emp.timeSummaryPayload
+  let timeSummaryPayload = $emp.timeSummaryPayload
       | str replace '_last_day_' $sunday
       | str replace '_first_day_' $monday
       | str replace '_staffs_' $staffPayload
       | str replace '_department_' ({id: $team.code} | to json -r)
-    )
 
-  let leavePayload = ($emp.leavePayload
+  let leavePayload = $emp.leavePayload
       | str replace '_last_day_' $sunday
       | str replace '_first_day_' $monday
       | str replace '_staffs_' $staffPayload
-    )
 
   let allStaffs = $staffs | from json | get res | select id name | rename id Name
-  let hours = (curl $emp.timeUrl -H $emp.type -H $emp.app -s --data-raw $timePayload | str join)
-  let leaves = (curl $emp.leaveUrl -H $emp.type -s --data-raw $leavePayload | str join)
+  let hours = curl $emp.timeUrl -H $emp.type -H $emp.app -s --data-raw $timePayload | str join
+  let leaves = curl $emp.leaveUrl -H $emp.type -s --data-raw $leavePayload | str join
 
-  let summary = (curl $emp.timeSummaryUrl -H $emp.type -H $emp.app -s --data-raw $timeSummaryPayload | str join)
+  let summary = curl $emp.timeSummaryUrl -H $emp.type -H $emp.app -s --data-raw $timeSummaryPayload | str join
   let hourSummary = (
     $summary | from json | get res | select staffWorkTimeFillResponseList | flatten
       | get staffWorkTimeFillResponseList | where ($it | describe) =~ 'record' and ($it.staffBO?.id | default 0) > 0
@@ -186,12 +183,7 @@ export def query-hours-by-team [
 
   # Set a default leaving record
   let leavingHours = if ($leavingHours | is-empty) { [[beginTime, duration, staffId]; [0, 0, 0]] } else {
-      (
-        $leavingHours
-          | select beginTime duration staff
-          | upsert staffId {|staff| $staff.staff.id }
-          | reject staff
-      )
+      $leavingHours | select beginTime duration staff | upsert staffId {|staff| $staff.staff.id } | reject staff
     }
 
   (
@@ -233,14 +225,14 @@ def handle-working-hours [
   # Set a default working hour record
   let workingHours = if ($workingHours | compact | length) == 0 { [[fillDate, percentage, staffId]; [0, 0, 0]] } else { $workingHours }
 
-  let hours = ($workingHours | upsert day { |work|
-        let day = ($work.fillDate * 1000_000 | into datetime)
-        let idx = ([$day] | dfr into-df | dfr get-weekday).0 mod 7
-        ($week | select $idx).0
-      } | upsert Hrs { |work|
-        ($work.percentage * 8) | into int
-      } | select staffId day Hrs
-    )
+  let hours = $workingHours
+      | upsert day { |work|
+          let day = ($work.fillDate * 1000_000 | into datetime)
+          let idx = ([$day] | dfr into-df | dfr get-weekday).0 mod 7
+          ($week | select $idx).0
+        }
+      | upsert Hrs { |work| ($work.percentage * 8) | into int }
+      | select staffId day Hrs
 
   let allMembers = $allStaffs
       | upsert Mon { |staff| get-hr-per-staff $staff.id Mon $hours }
@@ -262,7 +254,7 @@ def handle-working-hours [
       | sort-by WARN Gap Name
       | reject id
 
-  let result = if $show_all { $allMembers } else { ($allMembers | where Gap > 0) }
+  let result = if $show_all { $allMembers } else { $allMembers | where Gap > 0 }
 
   if ($result | is-empty) { print $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; return true }
 
@@ -350,18 +342,18 @@ def get-hr-per-staff [
 def get-monday [
   --prev
 ] {
-  let today = (date now | format date %u | into int)
-  let monday = ((date now) - ($'($today - 1)day' | into duration ))
+  let today = date now | format date %u | into int
+  let monday = (date now) - ($'($today - 1)day' | into duration )
   let beginOfMonday = $monday | format date '%Y-%m-%d 00:00:00' | into datetime
   let queryBegin = if $prev == true { $beginOfMonday - 7day } else { $beginOfMonday }
-  ($queryBegin| format date $_TIME_FMT)
+  ($queryBegin | format date $_TIME_FMT)
 }
 
 # Get the ending time of sunday, like 2021-12-12 23:59:59
 def get-sunday [
   --prev
 ] {
-  let sunday = ((get-monday | into datetime) + 7day - 1sec)
+  let sunday = (get-monday | into datetime) + 7day - 1sec
   let sunday = if $prev == true { $sunday - 7day } else { $sunday }
   ($sunday | format date $_TIME_FMT)
 }
