@@ -113,6 +113,13 @@ ding-msg *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'dingtalk-notify.nu') }}; \
     dingtalk notify {{OPTIONS}}
 
+# Query node dependencies in all package.json files on specified branches
+query-deps *OPTIONS: _setup
+  @# The following two statement must be written in one line
+  @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
+    overlay use {{ join(_termix, 'actions', 'query-deps.nu') }}; \
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; query deps {{OPTIONS}}
+
 # Listing the branches of a git repo and the time of the last commit
 git-branch *OPTIONS: _setup
   @# The following two statement must be written in one line
