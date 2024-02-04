@@ -6,7 +6,7 @@
 # Usage:
 #   t query-deps @terminus/approval-flow --all-branches
 
-use ../utils/common.nu [hr-line, _TIME_FMT]
+use ../utils/common.nu [hr-line, windows?, _TIME_FMT]
 
 # Query node dependencies in all package.json files from the specified branches
 export def 'query deps' [
@@ -58,7 +58,12 @@ def get-branches [--branches: string, --all-local-branches, --all-remote-branche
 }
 
 def get-commit-summary [branch: string, file: string, keyword: string] {
-  let summary = git blame --line-porcelain $branch -- $file | grep $'\"($keyword)\"' -B 12 | lines | select 0 5 7 12
+  let blame = git blame --line-porcelain $branch -- $file
+  let grepKeyword = if (windows?) { $'"($keyword)"' } else { $'\"($keyword)\"' }
+  let hasPrevious = ($blame | grep $grepKeyword -B 3) =~ 'previous'
+  let count = if $hasPrevious { 12 } else { 11 }
+  let selections = if $hasPrevious { [0 5 7 12] } else { [0 5 7 11] }
+  let summary = ($blame | grep $grepKeyword -B $count | lines | select $selections)
   let SHA = $summary.0 | str substring 0..9
   let committer = $summary.1 | str trim | split row ' ' | get 1
   let commitAt = (($summary.2 | str trim | split row ' ' | get 1 | into int) * 1000 * 1000 * 1000 | into datetime) + 8hr
