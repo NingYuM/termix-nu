@@ -29,7 +29,7 @@ export def 'query deps' [
       if ($content | is-empty) { continue }
       let ver = $content | query json $query
       if ($ver | is-empty) { continue }
-      let commit = get-commit-summary $br $pkg $dep
+      let commit = get-commit-meta $br $pkg $dep
       $result = ($result | append [{ branch: $br, file: $pkg, dependency: $dep, version: $ver, ...$commit }])
     }
   }
@@ -57,6 +57,7 @@ def get-branches [--branches: string, --all-local-branches, --all-remote-branche
   return [(git branch --show-current)]
 }
 
+# Get the commit summary of the specified file and keyword
 def get-commit-summary [branch: string, file: string, keyword: string] {
   let blame = git blame --line-porcelain $branch -- $file
   let grepKeyword = if (windows?) { $'"($keyword)"' } else { $'\"($keyword)\"' }
@@ -69,6 +70,17 @@ def get-commit-summary [branch: string, file: string, keyword: string] {
   let commitAt = (($summary.2 | str trim | split row ' ' | get 1 | into int) * 1000 * 1000 * 1000 | into datetime) + 8hr
     | format date $_TIME_FMT
   return { SHA: $SHA, committer: $committer, commitAt: $commitAt }
+}
+
+# Same as get-commit-summary but remove usage of `grep`
+# Get the commit meta of the specified file and keyword
+def get-commit-meta [branch: string, file: string, keyword: string] {
+  let blame = git blame $branch -- $file | lines | find $'"($keyword)"'
+                      | split column ')' | rename meta content | get 0
+  let meta = $blame.meta | detect columns -n
+  let meta = if ($meta | columns | length) == 2 { $meta | rename a c } else { $meta | rename a b c }
+  let commit = $meta.c.0 | split row ' ' | compact --empty
+  { SHA: $meta.a.0, committer: ($commit.0 | str trim -c '('), commitAt: $'($commit.1) ($commit.2)' }
 }
 
 alias main = query deps
