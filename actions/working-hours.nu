@@ -55,12 +55,16 @@ export def working-hours-daily-checking [--debug(-d)] {
     print $'Skip notify at (ansi p)($weekday)(ansi reset)...';
     exit $ECODE.SUCCESS
   }
+  if $isLastDay {
+    query-hours-by-team-codes --notify --silent --keep-polling --debug=$debug
+    return
+  }
   if $weekday == 'monday' {
     print $'Query working hours of previeous week...'
     query-hours-by-team-codes --show-prev --notify --silent --keep-polling --debug=$debug
     return
   }
-  query-hours-by-team-codes --notify --silent --keep-polling=($isMonthEnd or $isLastDay) --debug=$debug
+  query-hours-by-team-codes --notify --silent --keep-polling=$isMonthEnd --debug=$debug
 }
 
 # Query working hours for each team from EMP and display the filling status of each team member
