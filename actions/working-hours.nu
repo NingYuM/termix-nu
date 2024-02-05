@@ -21,9 +21,9 @@
 #   [√] 团队成员名单及手机号自动从接口更新，免去手动维护
 #   [√] Add `atAllMinCount` option to mention all if the count of mention users is above specified number
 #   [√] Add `WORKDAYS_TILL_MONTH_END` environment variable to specify total workdays till month end of current week
-#   [ ] Add `remindSince` option to specify the time to start reminding
 #   [√] 工时填满后间隔提醒定时任务需要退出
-#   [ ] 支持通过设置 LAST_DAY 将某天设置为最后期限以启动间隔提醒
+#   [√] 支持通过设置 LAST_DAY, LASTDAY_MSG 将某天设置为最后期限以启动间隔提醒
+#   [ ] Add `remindSince` option to specify the time to start reminding
 #   [√] Update the docs
 # Usage:
 #   t emp
@@ -39,6 +39,7 @@ const _WEEK_FMT = '%A'
 const _MONTH_FMT = '%m'
 const _TIME_FMT = '%Y-%m-%d %H:%M:%S'
 const CHECK_DURATION = 0day
+const DEFAULT_LASTDAY_MSG = '特别提醒：马上要放假了，请务必在今天完成本周工时填写，因为接下来机器人也要休假了。'
 
 # Run EMP working hours checking job everyday, but only send notifications for Monday, Friday, Saturday, Sunday and Month end
 export def working-hours-daily-checking [--debug(-d)] {
@@ -46,10 +47,11 @@ export def working-hours-daily-checking [--debug(-d)] {
   let messages = $confEMP | get settings?.messages? | default {}
   let checkPoint = (date now) + $CHECK_DURATION
   let isMonthEnd = is-month-end $checkPoint
+  let isLastDay = $env.LAST_DAY? == 'on'
   # Get monday, ..., friday, saturday, sunday
   let weekday = $checkPoint | format date $_WEEK_FMT | str downcase
   # 非周五、六、日、一直接返回
-  if not (($weekday in $messages) or $isMonthEnd) {
+  if not (($weekday in $messages) or $isMonthEnd or $isLastDay) {
     print $'Skip notify at (ansi p)($weekday)(ansi reset)...';
     exit $ECODE.SUCCESS
   }
@@ -58,7 +60,7 @@ export def working-hours-daily-checking [--debug(-d)] {
     query-hours-by-team-codes --show-prev --notify --silent --keep-polling --debug=$debug
     return
   }
-  query-hours-by-team-codes --notify --silent --keep-polling=$isMonthEnd --debug=$debug
+  query-hours-by-team-codes --notify --silent --keep-polling=($isMonthEnd or $isLastDay) --debug=$debug
 }
 
 # Query working hours for each team from EMP and display the filling status of each team member
@@ -278,8 +280,9 @@ def notify-filling-hours [hours: any, --summary: list, --team: record, --debug] 
   # Get monday, ..., friday, saturday, sunday
   let weekday = $checkPoint | format date $_WEEK_FMT | str downcase
   let isMonthEnd = is-month-end $checkPoint
+  let isLastDay = $env.LAST_DAY? == 'on'
   # 非周五、六、日、一直接返回
-  if not (($weekday in $messages) or $isMonthEnd) {
+  if not (($weekday in $messages) or $isMonthEnd or $isLastDay) {
     print $'Skip notify at (ansi p)($weekday)(ansi reset)...';
     return $ECODE.SUCCESS
   }
@@ -303,6 +306,7 @@ def notify-filling-hours [hours: any, --summary: list, --team: record, --debug] 
   }
 
   let message = $messages | get -i $weekday | default $messages.monthEnd
+  let message = if $isLastDay { $env.LASTDAY_MSG? | default $DEFAULT_LASTDAY_MSG } else { $message }
   let notifyCount = $notifyCandidates | length
   load-env { DINGTALK_ROBOT_AK: $DINGTALK_AK_SK.0, DINGTALK_ROBOT_SECRET: $DINGTALK_AK_SK.1, DINGTALK_NOTIFY: 'on' }
   if ($notifyCount == ($hours | length) or $notifyCount >= ($team.atAllMinCount? | default 30)) {
