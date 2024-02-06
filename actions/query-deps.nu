@@ -78,9 +78,11 @@ def get-commit-meta [branch: string, file: string, keyword: string] {
   let blame = git blame $branch -- $file | lines | find $'"($keyword)"'
                       | split column ')' | rename meta content | get 0
   let meta = $blame.meta | detect columns -n
-  let meta = if ($meta | columns | length) == 2 { $meta | rename a c } else { $meta | rename a b c }
-  let commit = $meta.c.0 | split row ' ' | compact --empty
-  { SHA: $meta.a.0, committer: ($commit.0 | str trim -c '('), commitAt: $'($commit.1) ($commit.2)' }
+  let meta = if ($meta | columns | length) == 2 { $meta | rename SHA commit } else { $meta | rename SHA file commit }
+  let commit = $meta.commit.0 | split row ' ' | compact --empty
+  let commitAt = $commit | last 4 | first 2 | str join ' '
+  let committer = $commit | first (($commit | length) - 4) | str join ' ' | str trim -c '('
+  { SHA: $meta.SHA.0, committer: $committer, commitAt: $commitAt }
 }
 
 alias main = query deps
