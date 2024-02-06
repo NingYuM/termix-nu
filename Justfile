@@ -47,7 +47,6 @@ _gstat_plugin := if os_family() == 'windows' { 'nu_plugin_gstat.exe' } else { 'n
 alias dp := deploy
 alias ta := terp-assets
 alias dq := deploy-query
-alias gsync := trigger-sync
 
 # To pass arguments to a dependency, put the dependency
 # in parentheses along with the arguments, just like:
@@ -262,7 +261,7 @@ git-sync-branch localRef localOid remoteRef: _setup
     git sync-branch {{localRef}} {{localOid}} {{remoteRef}}
 
 # 手工触发批量同步本地分支到远程指定分支
-trigger-sync *OPTIONS: _setup
+gsync *OPTIONS: _setup
   @overlay use {{ join(_termix, 'git', 'trigger-sync.nu') }}; \
     git trigger-sync {{OPTIONS}}
 
