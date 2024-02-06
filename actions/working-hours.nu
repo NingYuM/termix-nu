@@ -23,7 +23,7 @@
 #   [√] Add `WORKDAYS_TILL_MONTH_END` environment variable to specify total workdays till month end of current week
 #   [√] 工时填满后间隔提醒定时任务需要退出
 #   [√] 支持通过设置 LAST_DAY, LASTDAY_MSG 将某天设置为最后期限以启动间隔提醒
-#   [ ] Add `remindSince` option to specify the time to start reminding
+#   [√] Add `SKIP_UNTIL` env variable to specify the time to start reminding
 #   [√] Update the docs
 # Usage:
 #   t emp
@@ -50,6 +50,11 @@ export def working-hours-daily-checking [--debug(-d)] {
   let isLastDay = $env.LAST_DAY? == 'on'
   # Get monday, ..., friday, saturday, sunday
   let weekday = $checkPoint | format date $_WEEK_FMT | str downcase
+  # Skip notify until the specified time
+  if (not ($env.SKIP_UNTIL? | is-empty)) and $checkPoint < ($env.SKIP_UNTIL | into datetime) {
+    print $'Skip notify until ($env.SKIP_UNTIL)...'
+    exit $ECODE.SUCCESS
+  }
   # 非周五、六、日、一直接返回
   if not (($weekday in $messages) or $isMonthEnd or $isLastDay) {
     print $'Skip notify at (ansi p)($weekday)(ansi reset)...';
