@@ -229,7 +229,7 @@ def handle-working-hours [
   let weekNo = if $show_prev == true { (date now) - 7day | format date %V } else { date now | format date %V }
   # 此刻是一周中的第几天，周一为第 1 天
   let weekDay = date now | format date %u | into int
-  let totalDays = $env | get -i WORKDAYS_TILL_MONTH_END | default '0' | into int
+  let totalDays = $env.WORKDAYS_TILL_MONTH_END? | default '0' | into int
   let totalDays = if $totalDays == 0 { $weekDay } else { $totalDays }
   let isMonthEnd = is-month-end ((date now) + $CHECK_DURATION)
 
@@ -270,7 +270,7 @@ def handle-working-hours [
   if ($result | is-empty) { print $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; return true }
 
   if not $silent { print $result }
-  let empSwitchEnv = $env | get -i EMP_WORKING_HOURS_NOTIFY | default 'off'
+  let empSwitchEnv = $env.EMP_WORKING_HOURS_NOTIFY? | default 'off'
   if $notify and $empSwitchEnv == 'off' {
     print $'WARN: `EMP_WORKING_HOURS_NOTIFY` is (ansi p)off(ansi reset), stop sending notifications...(char nl)'
     return false
@@ -295,7 +295,7 @@ def notify-filling-hours [hours: any, --summary: list, --team: record, --debug] 
     print $'Skip notify at (ansi p)($weekday)(ansi reset)...';
     return $ECODE.SUCCESS
   }
-  let users = $team | get -i users | default []
+  let users = $team.users? | default []
   valid-user-mobiles $users
 
   if ($users | is-empty) {
