@@ -1,4 +1,3 @@
-
 ### From sh to nu
 
 - [x] get-icon.sh

@@ -323,9 +323,9 @@ t ls-node 12 --lts
 **参数说明**:
 
 - `path` - 可选，Git 仓库路径，默认为当前路径
--  `-c` 或 `--contains` - 在分支上查询是否有 Commit Message 里面包含指定字符串的提交，有则在结果中显示，如果要查找的字符串包含空格需要用两重引号，比如：`-c '"A B C"'`，如果你希望知道某一个 Commit 被 `cherry-pick` 到了哪些分支上可以使用此参数；
--  `-t` 或 `--show-tags` - 按时间倒序显示所有本地 Tag
--  `-h` 或 `--help `- 显示此命令相关帮助文档
+- `-c` 或 `--contains` - 在分支上查询是否有 Commit Message 里面包含指定字符串的提交，有则在结果中显示，如果要查找的字符串包含空格需要用两重引号，比如：`-c '"A B C"'`，如果你希望知道某一个 Commit 被 `cherry-pick` 到了哪些分支上可以使用此参数；
+- `-t` 或 `--show-tags` - 按时间倒序显示所有本地 Tag
+- `-h` 或 `--help `- 显示此命令相关帮助文档
 
 **使用举例**:
 
@@ -1432,13 +1432,46 @@ t brew install docker
 t brew install --tuna nushell
 ```
 
+### 31. 查询各分支上某依赖的版本及提交信息{#query-deps}
+
+**使用场景**:
+
+一个前端仓库里面可能有一个或者多个 `package.json`, 其中又会有很多 `devDependencies` & `dependencies`，在日常的开发过程中通常又会有很多个分支，某个依赖模块在每个分支上是什么版本？该依赖又是谁在什么时候升级的？或者有个依赖的版本有问题，哪些分支引入了有问题的依赖版本？或者你需要在所有的分支上对某个依赖进行升级。在这些情况下知道各个分支上某个依赖的版本及其对应提交信息无疑是很有帮助的，而且本工具会搜索Git仓库里面所有的 `package.json` 文件, 并在结果中显示对应文件路径。
+
+**命令格式**: `t query-deps {flags} <dep>`
+
+**参数说明**:
+
+- `-d`, `--dev` - 查询 `devDependencies` 里的依赖。如果不加该参数则查询 `dependencies` 里的依赖；
+- `-b`, `--branches <String>` - 想要查询的分支, 多个分支间可以用 `,` 分隔；
+- `-l`, `--all-local-branches` - 查询所有本地分支里的依赖；
+- `-r`, `--all-remote-branches` - 查询所有远程分支里的依赖；
+- `-h`, `--help` - 显示帮助信息；
+
+**使用举例**:
+
+```bash
+# 查询所有远程分支上的 @terminus/nusi-slim 版本及提交信息
+t query-deps @terminus/nusi-slim -r
+
+# 查询所有本地分支上的 vite 版本及提交信息
+t query-deps vite -dl
+
+# 查询develop,feature/latest,master三个分支上的 vite 版本及提交信息
+t query-deps vite -d -b develop,feature/latest,master
+```
+
+**输出样例**:
+
+![Query Node Deps Output](https://img.alicdn.com/imgextra/i3/O1CN018vHMfQ1XYHNPsRY9L_!!6000000002935-0-tps-1345-426.jpg)
+
 ---
 
 ## 业务脚本工具{#biz-cmd}
 
 ---
 
-### 31. 给标品源码仓库批量打 Tag{#gaia-release}
+### 32. 给标品源码仓库批量打 Tag{#gaia-release}
 
 **功能描述**: 在标品前端需要发布新版本的时候将标品 `gaia-mall,gaia-mobile,gaia-picker` 等源码仓库指定分支批量打 Release Tag, 也可以用于删除指定 Tag
 
@@ -1464,7 +1497,7 @@ t gaia-release v2.2.0.21-2021.11.09 mall,mobile
 
 ---
 
-### 32. 给远程二开仓库批量打 Tag{#tag-redev}
+### 33. 给远程二开仓库批量打 Tag{#tag-redev}
 
 **功能描述**: 给远程二开仓库指定分支批量打 Release Tag, 目前前端二开仓库含增量、全量及所有业态有 13 个，人工挨个仓库打 Tag 是不现实的，也很容易出错。另外，该命令也可以用于删除指定 Tag。
 
@@ -1492,7 +1525,7 @@ t tag-redev v2.2.0.21-2021.11.09 master
 
 ---
 
-### 33. 查询二开仓库的远程分支及 Tag 信息{#ls-redev-refs}
+### 34. 查询二开仓库的远程分支及 Tag 信息{#ls-redev-refs}
 
 **功能描述**:
 
@@ -1516,7 +1549,7 @@ t ls-redev-refs b2c,b2b true
 
 ---
 
-### 34. 批量更新远程二开仓库代码到本地{#pull-redev}
+### 35. 批量更新远程二开仓库代码到本地{#pull-redev}
 
 **功能描述**: 更新远程二开仓库代码到本地，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `TERMIX_TMP_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `termixTmpPath` 配置;
 
@@ -1537,7 +1570,7 @@ t pull-redev
 t pull-redev develop true
 ```
 
-### 35. 扫描(清理)同步仓库里面冗余分支{#prune-branches}
+### 36. 扫描(清理)同步仓库里面冗余分支{#prune-branches}
 
 **功能描述**: 随着时间的推移各个部署环境的仓库里面可能存在很多不需要的分支，尤其是之前通过流水线同步的方式不会自动清理源分支不存在的同步分支，这些分支需要被清理掉，否则部署的时候找流水线也不太方便(这真的不是强行加的理由)，本脚本的作用就是扫描出这些分支，但是安全起见不会直接执行删除操作，只是提示用户这些分支是可以被清理掉的，最终还是需要用户去手工确认删掉, 可清理分支的判定原则就是读取全局同步配置: `i` 分支上的 `.termixrc` 文件然后不在同步配置里面的**部署仓库分支**即为可删除分支，如果确认的时候该分支也不是部署中的分支大概率是可以删掉的了;
 
@@ -1556,6 +1589,5 @@ t prune-synced-branches
 
 ## TODO{#todo}
 
-- [] `just emp` 支持团队群接入，自动@工时未填满的团队成员；
 - [] `ls-node` 去除对 `fnm` 的依赖;
 - [] 常用应用安装脚本? 帮助新 mac 快速配置开发环境;
