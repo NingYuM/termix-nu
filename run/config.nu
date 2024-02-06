@@ -85,6 +85,11 @@ export def hr-line [
   if $blank_line { char nl }
 }
 
+# Reload Nushell Config by setting `RELOAD_NU` environment variable
+export def --env rc [] {
+	$env.RELOAD_NU = true
+}
+
 # Display my IP info
 def get-ip [] {
   $env.config.table.mode = 'basic'
@@ -649,6 +654,10 @@ $env.config = {
         if ('FNM_DIR' in $env) and ([.nvmrc .node-version] | path exists | any { |it| $it }) {
           fnm use
         }
+      }],
+      RELOAD_NU: [{
+        condition: {|before, after|  $after }
+        code: "$env.RELOAD_NU = false; source $nu.env-path;source $nu.config-path;print 'Reloaded Nu Config'"
       }]
     }
     # run before the output of a command is drawn, example: `{ if (term size).columns >= 100 { table -e } else { table } }`
