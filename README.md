@@ -565,6 +565,7 @@ support/master 可以合并到该分支'''
 **参数说明**:
 
 - `branch`: 选填，待查看描述信息的分支名，默认`git branch --show-current`输出的当前分支;
+- `-a` 或 `--all`: 显示所有分支描述信息;
 - `-n` 或 `--show-notes`: 是否显示分支描述说明文档;
 - `-h` 或 `--help`: 显示该命令的帮助文档;
 
@@ -573,6 +574,8 @@ support/master 可以合并到该分支'''
 ```bash
 # 查看当前分支描述信息
 t desc
+# 查看当前仓库所有分支描述信息
+t desc -a
 # 查看 develop 分支描述信息以及分支描述说明文档
 t desc develop --show-notes
 ```
