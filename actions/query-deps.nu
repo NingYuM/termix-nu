@@ -12,7 +12,7 @@ use ../utils/common.nu [hr-line, windows?, _TIME_FMT]
 export def 'query deps' [
   dep: string,                # The node dependency package name
   --dev(-d),                  # Query from `devDependencies`
-  --branches(-b): string,     # The branches to query, mutiple branches should be separated by `,`
+  --branches(-b): string,     # The branches to query, multiple branches should be separated by `,`
   --all-local-branches(-l),   # Query from all local branches
   --all-remote-branches(-r),  # Query from all remote branches
 ] {

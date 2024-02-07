@@ -17,8 +17,8 @@ def main [
         | where $it.mergeCommit =~ $fromSha
         | get 0.mergedAt
         | into datetime
-    let filterd = $prs | where ($it.mergedAt | into datetime) >= $startPRMergedAt
-    $filterd | drop | each {|it|
+    let filtered = $prs | where ($it.mergedAt | into datetime) >= $startPRMergedAt
+    $filtered | drop | each {|it|
         if ($it.milestone | is-empty) {
             print $'Try to add milestone (ansi p)($milestone)(ansi reset) to PR (ansi p)($it.url)(ansi reset) ...'
             gh pr edit $it.url --milestone $milestone
