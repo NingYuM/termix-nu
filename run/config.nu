@@ -1,6 +1,6 @@
 # Nushell Config File
-# Update config from: 188aca8fe
-# version = 0.89.1
+# Update config from: c2992d5d8
+# version = 0.90.1
 
 # source ~/.config/nushell/config.nu
 # Ref:
@@ -682,8 +682,10 @@ $env.config = {
       }
       style: {
         text: green
-        selected_text: green_reverse
+        selected_text: {attr: r}
         description_text: yellow
+        match_text: {attr: u}
+        selected_match_text: {attr: ur}
       }
     }
     {
@@ -696,18 +698,27 @@ $env.config = {
         max_completion_width: 50,
         # max_completion_height: 10, # will be limited by the available lines in the terminal
         padding: 0,
-        border: false,
+        border: true,
         cursor_offset: 0,
         description_mode: "prefer_right"
         min_description_width: 0
         max_description_width: 50
         max_description_height: 10
         description_offset: 1
+        # If true, the cursor pos will be corrected, so the suggestions match up with the typed text
+        #
+        # C:\> str
+        #      str join
+        #      str trim
+        #      str split
+        correct_cursor_pos: false
       }
       style: {
         text: green
-        selected_text: green_reverse
+        selected_text: {attr: r}
         description_text: yellow
+        match_text: {attr: u}
+        selected_match_text: {attr: ur}
       }
     }
     {
