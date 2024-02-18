@@ -435,14 +435,14 @@ def import-metadata [
 }
 
 # Get ansi link of the specified taskId and host
-def get-detail-link [host: string, taskId: string] {
+def get-detail-link [host: string, taskId: int] {
   let webDetailUrl = $'($host)/task/run-detail?taskRunId=($taskId)'
   ($webDetailUrl | ansi link --text $'($taskId)')
 }
 
 # Fetch task running detail by taskId
 def fetch-task-detail [
-  taskId: string,       # Specify the task id of the detail to fetch
+  taskId: int,          # Specify the task id of the detail to fetch
   queryHost: string,    # Specify the query url prefix of the detail to fetch
 ] {
   const queryApi = '/api/trantor/task/run-detail'
