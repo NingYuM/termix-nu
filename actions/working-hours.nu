@@ -181,7 +181,9 @@ export def query-hours-by-team [
   if $debug { log 'hourSummary' ($hourSummary | table -e) }
 
   let workingHours = $hours | from json | get res
-  let workingHours = if ($workingHours | is-empty) { null } else {(
+  let workingHours = if ($workingHours | is-empty) {
+      $allStaffs | rename -c { id: staffId } | default 0.00 percentage
+    } else {(
       $workingHours
         | default 0.00 percentage
         | select percentage fillDate staff
@@ -238,9 +240,11 @@ def handle-working-hours [
 
   let hours = $workingHours
       | upsert day { |work|
-          let day = ($work.fillDate * 1000_000 | into datetime)
-          let idx = ([$day] | dfr into-df | dfr get-weekday).0 mod 7
-          ($week | select $idx).0
+          if ($work.fillDate? | is-empty) { 'N/A' } else {
+            let day = $work.fillDate * 1000_000 | into datetime
+            let idx = ([$day] | dfr into-df | dfr get-weekday).0 mod 7
+            ($week | select $idx).0
+          }
         }
       | upsert Hrs { |work| ($work.percentage * 8) | into int }
       | select staffId day Hrs
@@ -347,7 +351,7 @@ def get-hr-per-staff [
   weekDay: string,
   hours: any,
 ] {
-  let hour = ($hours | where staffId == $id and day == $weekDay)
+  let hour = $hours | default 'N/A' day | where staffId == $id and day == $weekDay
   if ($hour | length) == 0 { 0 } else { ($hour | select 0).0.Hrs }
 }
 
