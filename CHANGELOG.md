@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Fix `t msync` int to string converting error
+- Fix `t msync` int to string converting error after upgrading to `Nu` v0.90.1
 
 ## 1.67.0 - 2024-02-07
 
