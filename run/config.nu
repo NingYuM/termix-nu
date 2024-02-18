@@ -74,6 +74,23 @@ def sum [] { reduce {|acc, item| $acc + $item } }
 # Display Nu version info in markdown format
 def ver [] { (version | transpose key value | to md --pretty) }
 
+# Get help on commands using fzf
+def 'get help' [] {
+  do {
+    # doesn't work well with nushell due to escaping issues. if you use nushell
+    # as your login shell, you can set SHELL env var to an alternative shell
+    # temporarily like zsh below, and it will still work.
+    # $env.SHELL = /bin/zsh
+    help commands | where command_type == builtin
+    | each {|c|
+      let search_terms = if ($c.search_terms == "") {""} else {$"\(($c.search_terms))"}
+      let category = if ($c.category == "") {""} else {$"\(Category: ($c.category))"}
+      $"(ansi default)($c.name?):(ansi light_blue) ($c.usage?) (ansi cyan)($search_terms) ($category)(ansi reset)" }
+    | to text
+    | fzf --ansi --tiebreak=begin,end,chunk --exact --preview="echo -n {} | nu --stdin -c 'help ($in | parse "{c}:{u}" | get c.0)'" --bind 'ctrl-/:change-preview-window(right,70%|right)'
+  }
+}
+
 # Print a horizontal line
 export def hr-line [
   width?: int = 90,
