@@ -1,6 +1,12 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## 1.67.1 - 2024-02-18
+
+### Bug Fixes
+
+- Fix `t msync` int to string converting error
+
 ## 1.67.0 - 2024-02-07
 
 ### Bug Fixes
