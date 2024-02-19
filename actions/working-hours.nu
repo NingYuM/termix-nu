@@ -17,6 +17,7 @@
 #   [√] Valid user mobile number before notify
 #   [√] Add --debug flag to print more debug info
 #   [√] Add --no-ignore flag to query working hours for all teams
+#   [√] Add --month flag to query working hours by specified month
 #   [√] 考虑调休、补班等情况下工时是否填满的判定: 由 EMP 接口返回的数据中的 `surplusPercentage` 字段判断
 #   [√] 团队成员名单及手机号自动从接口更新，免去手动维护
 #   [√] Add `atAllMinCount` option to mention all if the count of mention users is above specified number
@@ -76,6 +77,7 @@ export def working-hours-daily-checking [--debug(-d)] {
 export def query-hours-by-team-codes [
   --debug(-d),        # Print more debug info
   --silent(-s),       # Don't print the result
+  --month(-m): int,   # Query working hours by specified month
   --notify(-n),       # Notify the members who didn't fill the working hours by Dintalk Robot
   --show-prev(-p),    # Query working hours of previous week
   --show-all(-a),     # Show all members even if the working hours have been filled correctly
@@ -88,6 +90,10 @@ export def query-hours-by-team-codes [
   if ($teams | get code | is-empty) {
     print $'(ansi r)Please set the `code` field in all `emp.teams`, bye...(char nl)(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
+  }
+  if not ($month | is-empty) {
+    $teams | each { |it| query-monthly-hours-by-team $it --debug=$debug --show-all=$show_all --month=$month }
+    return
   }
   if not $keep_polling {
     $teams | each { |it|
@@ -121,6 +127,92 @@ def --env load-emp-conf [] {
   return $empConf
 }
 
+# Query working hours filling status by specified month
+export def query-monthly-hours-by-team [
+  team: record,       # Team record, contains name,code,alias,users,etc.
+  --debug(-d),        # Print more debug info
+  --month(-m): int,   # Query working hours by specified month
+  --show-all(-a),     # Show all members even if the working hours filled correctly
+] {
+  if ($month > 12) or ($month < 1) {
+    print $'The specified month (ansi r)($month)(ansi reset) should lay in (ansi p)1 ~ 12(char nl)(ansi reset)'
+    exit $ECODE.INVALID_PARAMETER
+  }
+  # let currentMonth = date now | format date %m | into int
+  # if ($month > $currentMonth) {
+  #   print $'(ansi r)The specified month ($month) is greater than the current month ($currentMonth), bye...(char nl)(ansi reset)'
+  #   exit $ECODE.INVALID_PARAMETER
+  # }
+  let monday = get-monday
+  let sunday = get-sunday
+  let emp = get-conf empWorkingHour
+  let staffs = query-staffs-by-team $team.code $monday $sunday
+
+  let iptMonth = $month | fill --alignment right -w 2 -c '0'
+  let nextMonth = ($month + 1) | fill --alignment right -w 2 -c '0'
+  let monthStart = (date now) | format date $'%Y-($iptMonth)-01 00:00:00'
+  let monthEnd = if ($month + 1) == 13 { ($monthStart | into datetime) + 31day } else { ((date now) | format date $'%Y-($nextMonth)-01 00:00:00' | into datetime) }
+  let monthEnd = $monthEnd - 1sec | format date $_TIME_FMT
+  print $'Query working hours from ($monthStart) to ($monthEnd) for team (ansi p)($team.name)(ansi reset)'
+  let title = $"($team.name) (ansi g)($month)(ansi reset) 月工时填报\(人/天\)"
+  print $"\n-------------------------> (ansi p)($title) <-------------------------(ansi reset)\n"
+
+  let timeSummaryPayload = $emp.timeSummaryPayload
+    | str replace '_last_day_' $monthEnd
+    | str replace '_first_day_' $monthStart
+    | str replace '_staffs_' $staffs.staffPayload
+    | str replace '_department_' ({id: $team.code} | to json -r)
+  let summary = curl $emp.timeSummaryUrl -H $emp.type -H $emp.app -s --data-raw $timeSummaryPayload | str join
+  let hourSummary = (
+      ($summary | from json | get res | select staffWorkTimeFillResponseList | flatten
+        | get staffWorkTimeFillResponseList
+        | where ($it | describe) =~ 'record' and ($it.staffBO?.id | default 0) > 0
+        | rename --column {
+            otherPercentage: Other,
+            leavePercentage: 请假人天,
+            theoryPercentage: 理论人天,
+            actualPercentage: 实际人天,
+            surplusPercentage: Surplus,
+        })
+      | upsert 剩余应填 { |it| $it.baseProjectWorkTimeSummaryList | where name == '剩余应填' | get 0 | get percentage }
+      | upsert 空闲人天 { |it| $it.baseProjectWorkTimeSummaryList | where name == '空闲工时' | get 0 | get percentage }
+      | upsert Name { |it| if $it.空闲人天 > 0 { $'(ansi r)($it.staffBO.name)(ansi reset)' } else { $it.staffBO.name } }
+      | reject @id staffBO baseProjectWorkTimeSummaryList Other Surplus
+      | move Name --before 理论人天
+      | sort-by -r 空闲人天
+    )
+
+  if $show_all { $hourSummary | print } else {
+    if ($hourSummary | where 空闲人天 > 0 | is-empty) {
+      print $'(ansi g)All filled! (char nl)(ansi reset)'
+    } else {
+      $hourSummary | where 空闲人天 > 0 | print
+    }
+  }
+}
+
+# Query staffs by team code
+def query-staffs-by-team [
+  code: string,       # Team code
+  from: string,       # Start date, like 2023-12-11 00:00:00
+  to: string,         # End date, like 2023-12-17 23:59:59
+] {
+  let emp = get-conf empWorkingHour
+  let staffPayload = $emp.staffPayload
+      | str replace '_last_day_' $from
+      | str replace '_first_day_' $to
+      | str replace '_project_code_' $code
+
+  # Week No of now: [(date now)] | dfr into-df | dfr get-week
+  let staffs = curl $emp.staffUrl -H $emp.type -s --data-raw $staffPayload | str join
+
+  handle-exception $staffs
+  # 此处把中文名字字段过滤掉，否则在Windows下数据传到后端接口会发生解析错误
+  let staffPayload = $staffs | from json | get res | select id | to json -r
+  let allStaffs = $staffs | from json | get res | select id name | rename id Name
+  return { staffPayload: $staffPayload, allStaffs: $allStaffs }
+}
+
 # Query working hours of the specified team from EMP and display the filling status of each team member
 export def query-hours-by-team [
   team: record,       # Team record, contains name,code,alias,users,etc.
@@ -130,43 +222,34 @@ export def query-hours-by-team [
   --show-prev(-p),    # Query working hours of previous week
   --show-all(-a),     # Show all members even if the working hours filled correctly
 ] {
+  let emp = get-conf empWorkingHour
   let monday = get-monday --prev=$show_prev
   let sunday = get-sunday --prev=$show_prev
-  let emp = get-conf empWorkingHour
-  let staffPayload = $emp.staffPayload
-      | str replace '_last_day_' $sunday
-      | str replace '_first_day_' $monday
-      | str replace '_project_code_' $team.code
-
-  # Week No of now: [(date now)] | dfr into-df | dfr get-week
-  let staffs = curl $emp.staffUrl -H $emp.type -s --data-raw $staffPayload | str join
-
-  handle-exception $staffs
 
   if $silent {
     print $'Query working hours from ($monday) to ($sunday) for team (ansi p)($team.name)(ansi reset)'
   } else {
     print $'(char nl)Query working hours from ($monday) to ($sunday) --->'
   }
-  # 此处把中文名字字段过滤掉，否则在Windows下数据传到后端接口会发生解析错误
-  let staffPayload = $staffs | from json | get res | select id | to json -r
+
+  let staffs = query-staffs-by-team $team.code $monday $sunday
   let timePayload = $emp.timePayload
       | str replace '_last_day_' $sunday
       | str replace '_first_day_' $monday
-      | str replace '_staffs_' $staffPayload
+      | str replace '_staffs_' $staffs.staffPayload
 
   let timeSummaryPayload = $emp.timeSummaryPayload
       | str replace '_last_day_' $sunday
       | str replace '_first_day_' $monday
-      | str replace '_staffs_' $staffPayload
+      | str replace '_staffs_' $staffs.staffPayload
       | str replace '_department_' ({id: $team.code} | to json -r)
 
   let leavePayload = $emp.leavePayload
       | str replace '_last_day_' $sunday
       | str replace '_first_day_' $monday
-      | str replace '_staffs_' $staffPayload
+      | str replace '_staffs_' $staffs.staffPayload
 
-  let allStaffs = $staffs | from json | get res | select id name | rename id Name
+  let allStaffs = $staffs.allStaffs
   let hours = curl $emp.timeUrl -H $emp.type -H $emp.app -s --data-raw $timePayload | str join
   let leaves = curl $emp.leaveUrl -H $emp.type -s --data-raw $leavePayload | str join
 
