@@ -46,15 +46,16 @@ const END_KEY_MAP = {
 # Download TERP static assets or transfer assets to other path of the specified cloud storage
 export def 'terp assets' [
   action: string,             # Available actions: download, transfer
-  modules: string,            # Available values: pc/mobile/mat/mmat/iam/dors/mdors/all. Multiple modules separated by `,`
+  modules?: string,           # Available values: pc/mobile/mat/mmat/iam/dors/mdors/all. Multiple modules separated by `,`
   --from(-f): string,         # Source mount point or source URL
   --to(-t): string,           # Destination mount point
   --verbose(-v),              # Show verbose info
   --dest-store(-d): string,   # Destination store, should be configured in .termixrc
 ] {
-  pre-check $action $modules --to $to --dest-store $dest_store
+  pre-check $action --to $to --dest-store $dest_store
   let latestMeta = get-latest-meta $from
-  let modules = get-modules $modules $latestMeta
+  let modules = get-modules $modules --latest-meta $latestMeta
+  confirm-action $action $modules --to $to --dest-store $dest_store
 
   match $action {
     'download' => { download $modules $latestMeta $to --verbose=$verbose },
@@ -63,29 +64,41 @@ export def 'terp assets' [
 }
 
 # Get valid modules from input and exit if any invalid module is found
-def get-modules [modules: string, latestMeta: record] {
-  let allModules = $latestMeta.latest | columns
-  if $modules == 'all' {
-    $allModules
-  } else {
-    let splits = ($modules | split row ',')
-    let validAliases = ($splits | filter {|it| $it in $MODULE_ALIASES })
-    if ($validAliases | length) > 0 {
-      let unexists = ($validAliases | filter {|it| ($END_KEY_MAP | get -i $it) not-in $allModules })
-      if ($unexists | length) > 0 {
-        print $'Invalid modules (ansi r)($unexists | str join ",")(ansi reset), the module you specified does not exists in latest.json(ansi reset)'
-        exit $ECODE.INVALID_PARAMETER
-      }
+def get-modules [modules?: string, --latest-meta: record] {
+  # Choose modules from latest.json if modules is empty
+  let allModules = $latest_meta.latest | columns
+  if ($modules | is-empty) {
+    print $'No module specified, please select the modules manually...'; hr-line
+    let tips = $"Select the modules to sync or download (ansi grey66)\(space to select, esc or q to quit, enter to confirm\)(ansi reset)"
+    let selected = $allModules | input list --multi $tips
+    if ($selected | is-empty) {
+      print $'You have not selected any modules, bye...'
+      exit $ECODE.SUCCESS
     }
-    let filterAlias = ($splits | filter {|it| $it not-in $MODULE_ALIASES })
-    let invalid = ($filterAlias | filter {|it| $it not-in $allModules })
-    if ($invalid | length) > 0 {
-      print $'Invalid modules (ansi r)($invalid | str join ",")(ansi reset), available module aliases: (ansi g)($MODULE_ALIASES | str join ",")(ansi reset)'
-      print $'And all available modules: (ansi g)($allModules | str join ",")(ansi reset)'
+    return $selected
+  }
+
+  # Sync all modules if 'all' is specified
+  if $modules == 'all' { return $allModules }
+
+  # Validate and sync specified modules
+  let splits = ($modules | split row ',')
+  let validAliases = ($splits | filter {|it| $it in $MODULE_ALIASES })
+  if ($validAliases | length) > 0 {
+    let unexists = ($validAliases | filter {|it| ($END_KEY_MAP | get -i $it) not-in $allModules })
+    if ($unexists | length) > 0 {
+      print $'Invalid modules (ansi r)($unexists | str join ",")(ansi reset), the module you specified does not exists in latest.json(ansi reset)'
       exit $ECODE.INVALID_PARAMETER
     }
-    $splits | filter {|it| $it in [...$MODULE_ALIASES, ...$allModules] }
   }
+  let filterAlias = ($splits | filter {|it| $it not-in $MODULE_ALIASES })
+  let invalid = ($filterAlias | filter {|it| $it not-in $allModules })
+  if ($invalid | length) > 0 {
+    print $'Invalid modules (ansi r)($invalid | str join ",")(ansi reset), available module aliases: (ansi g)($MODULE_ALIASES | str join ",")(ansi reset)'
+    print $'And all available modules: (ansi g)($allModules | str join ",")(ansi reset)'
+    exit $ECODE.INVALID_PARAMETER
+  }
+  $splits | filter {|it| $it in [...$MODULE_ALIASES, ...$allModules] }
 }
 
 # Get latest.json from specified mount point
@@ -111,7 +124,6 @@ def --env get-dest-oss [destStore: string] {
 # Check if it's a valid action, and if the required tools are installed.
 def pre-check [
   action: string,
-  modules: string,
   --to(-t): string,          # Destination
   --dest-store(-d): string,  # Destination store, should be configured in .termixrc
 ] {
@@ -138,14 +150,23 @@ def pre-check [
     }
     exit $ECODE.INVALID_PARAMETER
   }
-  if $action == 'transfer' {
-    get-dest-oss $dest_store
-    print $'Attention: You are going to TRANSFER (ansi p)($modules)(ansi reset) assets to (ansi p)($to)@($dest_store)(ansi reset)'; hr-line
-    let dest = input $'Please confirm by typing (ansi r)($to)(ansi reset) to continue or (ansi p)q(ansi reset) to quit: '
-    if $dest == 'q' { echo $'Transfer cancelled, Bye...'; exit $ECODE.SUCCESS }
-    if $dest != $to {
-      echo $'You input (ansi p)($dest)(ansi reset) does not match (ansi p)($to)(ansi reset), bye...'; exit $ECODE.INVALID_PARAMETER
-    }
+}
+
+# Confirm before the transfer action
+def confirm-action [
+  action: string,
+  modules: list,
+  --to(-t): string,          # Destination
+  --dest-store(-d): string,  # Destination store, should be configured in .termixrc
+] {
+  if $action != 'transfer' { return }
+
+  get-dest-oss $dest_store
+  print $'Attention: You are going to TRANSFER (ansi p)($modules | str join ",")(ansi reset) assets to (ansi p)($to)@($dest_store)(ansi reset)'; hr-line
+  let dest = input $'Please confirm by typing (ansi r)($to)(ansi reset) to continue or (ansi p)q(ansi reset) to quit: '
+  if $dest == 'q' { echo $'Transfer cancelled, Bye...'; exit $ECODE.SUCCESS }
+  if $dest != $to {
+    echo $'You input (ansi p)($dest)(ansi reset) does not match (ansi p)($to)(ansi reset), bye...'; exit $ECODE.INVALID_PARAMETER
   }
 }
 
@@ -215,12 +236,12 @@ def transfer [
   echo $'Start to transfer assets from (ansi p)($latestMeta.from) to ($dest_store) ($to)(ansi reset)'
 
   let ossConf = get-dest-oss $dest_store
-  let type = $ossConf | get -i TYPE | default 'aliyun'
-  let ak = $ossConf | get -i OSS_AK | default ''
-  let sk = $ossConf | get -i OSS_SK | default ''
-  let bucket = $ossConf | get -i OSS_BUCKET | default ''
-  let region = $ossConf | get -i OSS_REGION | default ''
-  let endpoint = $ossConf | get -i OSS_ENDPOINT | default ''
+  let type = $ossConf.TYPE? | default 'aliyun'
+  let ak = $ossConf.OSS_AK? | default ''
+  let sk = $ossConf.OSS_SK? | default ''
+  let bucket = $ossConf.OSS_BUCKET? | default ''
+  let region = $ossConf.OSS_REGION? | default ''
+  let endpoint = $ossConf.OSS_ENDPOINT? | default ''
 
   let mount = $latestMeta.mountpoint
   let fromUrl = $latestMeta.latestUrl
