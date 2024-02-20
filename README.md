@@ -1173,7 +1173,11 @@ alias main = dingtalk notify
 
 **参数说明**:
 
-- `<modules>` 目前的可能值为：`pc`, `mobile`, `mat`, `mmat`, `dors`, `iam`, `all`, 分别代表PC端自定义组件、移动端自定义组件、Material-UI PC端、Material-UI 移动端，Dors, IAM 以及所有模块静态资源。也可以同时指定多个前端模块用 `,` 分隔。对于没有别名的静态资源可以使用 `latest.json` 里面的完整模块名，比如 `t-b2b-ui`。当传入模块为 `all` 时会自动下载或者同步 `latest.json` 里面的所有模块，最终目标和源的静态资源应该是完全一致的。
+- `<modules>` - 待下载或者同步的前端模块
+  1. 目前的可能值为：`pc`, `mobile`, `mat`, `mmat`, `dors`, `iam`, `all`, 分别代表PC端自定义组件、移动端自定义组件、Material-UI PC端、Material-UI 移动端，Dors, IAM 以及所有模块静态资源。也可以同时指定多个前端模块用 `,` 分隔。
+  2. 对于没有别名的静态资源可以使用 `latest.json` 里面的完整模块名，比如 `t-b2b-ui`。
+  3. 当传入模块为 `all` 时会自动下载或者同步 `latest.json` 里面的所有模块，最终目标和源的静态资源应该是完全一致的。
+  4. 从 `v1.68.0` 开始该参数改为可选，如果没有传则会自动出现前端静态资源模块选择界面，可以手工选择模块并进行同步或者下载。在这个交互中可以使用的快捷键: `Space` 选择某一项，`a` 选择所有或取消全部选择，`q` 或 `ESC` 取消并退出，上下箭头切换模块, `Enter` 确认选择；
 - `-f, --from <String>` - 资源的源挂载目录或者源 `latest.json` 完整 URL 地址，`from` 的 host 为 `https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com` 时可以只指定资源挂载的目录，否则需要 `latest.json` 的完整 URL 地址
 - `-t, --to <String>` - 对于 `download` 代表资源下载保存的本机路径，对于 `transfer` 代表资源上传到云存储后的目标挂载目录
 - `-v, --verbose` - 显示命令更多执行信息
