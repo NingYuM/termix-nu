@@ -1,0 +1,47 @@
+#!/usr/bin/env nu
+# Author: hustcer
+# Created: 2023/01/02 13:55:20
+
+use ../utils/common.nu [ECODE, get-tmp-path]
+
+const NA = 'N/A'
+
+# Check if the required environment variable was set, quit if not
+export def check-erda-envs [] {
+  # 部署/查询 Pipeline 操作需要先配置 ERDA_USERNAME & ERDA_PASSWORD
+  let envs = ['ERDA_USERNAME' 'ERDA_PASSWORD']
+  let empties = ($envs | filter {|it| $env | get -i $it | is-empty })
+  if ($empties | length) > 0 {
+    print $'Please set (ansi r)($empties | str join ',')(ansi reset) in your environment first...'
+    exit $ECODE.INVALID_PARAMETER
+  }
+}
+
+# Get Erda OpenAPI session token from .termix-conf file
+export def get-erda-auth [] {
+  let TERMIX_CONF = $'(get-tmp-path)/.termix-conf'
+  let erdaSession = open $TERMIX_CONF | from json | get -i erdaSession | default $NA
+  $'cookie: OPENAPISESSION=($erdaSession)'
+}
+
+# Renew Erda session by username and password if expired
+export def renew-erda-session [] {
+  print 'Renewing Erda session...'
+  let TERMIX_CONF = $'(get-tmp-path)/.termix-conf'
+  let query = { username: $env.ERDA_USERNAME, password: $env.ERDA_PASSWORD } | url build-query
+  let RENEW_URL = $'https://openapi.erda.cloud/login?($query)'
+  let renew = curl --silent -X POST $RENEW_URL | from json
+  if ($renew | describe) == 'string' {
+    print $'Erda session renew failed with message: (ansi r)($renew)(ansi reset)'; exit $ECODE.AUTH_FAILED
+  }
+  open $TERMIX_CONF | from json
+    | upsert erdaSession $renew.sessionid | to json
+    | save -rf $TERMIX_CONF
+}
+
+# 判断是否需要重试，如果返回 true 则重试，否则不重试
+export def should-retry-req [resp: any] {
+  let isEmpty = ($resp | is-empty)
+  let noAuth = ($resp | describe) == 'string' and ($resp =~ 'auth failed')
+  $isEmpty or $noAuth
+}
