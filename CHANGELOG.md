@@ -1,6 +1,19 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## 1.68.0 - 2024-02-22
+
+### Bug Fixes
+
+- Fix `t emp` working hours query for unfilled teams
+
+### Features
+
+- Add `get help` custom command to Nu config
+- Add `--month` flag for `t emp` command to query working hours filling status by month
+- Add module selection support for TERP static assets download and sync command: `t ta`
+- Add `--watch` flag for `t dq` command to watch a running pipeline by pipeline ID
+
 ## 1.67.1 - 2024-02-18
 
 ### Bug Fixes
