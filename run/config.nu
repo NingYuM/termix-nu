@@ -74,6 +74,8 @@ def sum [] { reduce {|acc, item| $acc + $item } }
 # Display Nu version info in markdown format
 def ver [] { (version | transpose key value | to md --pretty) }
 
+def kq [] { do -i { ps | where name == xbar | get 0 | kill -f $in.pid } }
+
 # Get help on commands using fzf
 def 'get help' [] {
   do {
