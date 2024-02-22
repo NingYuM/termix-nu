@@ -2,18 +2,21 @@
 # Author: hustcer
 # Created: 2023/06/28 15:33:15
 # TODO:
-#  [x] 执行流水线要求在仓库目录下，且要有 i 分支 & .termixrc 文件里面的配置正确
-#  [x] `t dp -l` 列出所有可用的执行目标
-#  [x] 查询流水线可以在任意目录下执行，不一定要在仓库目录下，只要流水线 ID 正确即可
-#  [x] 根据流水线 ID 查询流水线执行结果
-#  [x] 根据流水线 ID 终止对应的流水线
-#  [x] 执行新流水线之前可以查询是否有正在运行的流水线，如果有则停止执行，也可以加上 `-f` 强制执行
-#  [x] 执行新流水线之前可以查询同一 Commit 是否已经被部署过，如果部署过则停止执行，也可以加上 `-f` 强制执行
-#  [x] 允许查询某个 target 下的最近20条流水线记录
-#  [x] 批量部署模式下不会检查该 Commit 是否部署过，但是会检查同一分支上是否有流水线正在部署
-#  [x] 支持一次部署多个应用，比如 `t dp dev --apps app1,app2,app3` or `t dp --apps all`
-#  [x] 支持一次查询多个应用的部署情况，比如 `t dq dev --apps app1,app2,app3`
-#  [x] Erda OpenAPI Session 过期后自动续期
+#  [✓] 执行流水线要求在仓库目录下，且要有 i 分支 & .termixrc 文件里面的配置正确
+#  [✓] `t dp -l` 列出所有可用的执行目标
+#  [✓] 查询流水线可以在任意目录下执行，不一定要在仓库目录下，只要流水线 ID 正确即可
+#  [✓] 根据流水线 ID 查询流水线执行结果
+#  [✓] 根据流水线 ID 终止对应的流水线
+#  [✓] 执行新流水线之前可以查询是否有正在运行的流水线，如果有则停止执行，也可以加上 `-f` 强制执行
+#  [✓] 执行新流水线之前可以查询同一 Commit 是否已经被部署过，如果部署过则停止执行，也可以加上 `-f` 强制执行
+#  [✓] 允许查询某个 target 下的最近20条流水线记录
+#  [✓] 批量部署模式下不会检查该 Commit 是否部署过，但是会检查同一分支上是否有流水线正在部署
+#  [✓] 支持一次部署多个应用，比如 `t dp dev --apps app1,app2,app3` or `t dp --apps all`
+#  [✓] 支持一次查询多个应用的部署情况，比如 `t dq dev --apps app1,app2,app3`
+#  [✓] Erda OpenAPI Session 过期后自动续期
+#  [✓] 详情轮询模式下显示各阶段子任务名称/执行状态及耗时
+#  [✓] 详情轮询模式下显示各阶段流水线执行耗时及阶段执行状态
+#  [✓] 详情轮询模式下显示总 Stage 数，总耗时，整体执行状态
 # Description: 创建 Erda 流水线并执行，同时可以查询流水线执行结果
 #   可以 deploy 的 target 可以为 dev、test 等，对应的流水线配置文件为 .termixrc 中的 erda.dev、erda.test, etc.
 #   执行流水线时要求在仓库的 i 分支上的 .termixrc 文件中配置了对应 dest 的 pid、appid、appName、alias、branch、pipeline 信息
@@ -21,6 +24,8 @@
 #   查询流水线结果时可以通过流水线ID，应用名，或者单应用模式下不输入也可以
 # Note:
 #   curl -X POST 'https://openapi.erda.cloud/login?username=username&password=password'
+#   Emojis: https://www.emojiall.com/zh-hans/all-emojis?type=normal
+#   Test CICD: 1526920533510163, 1526835893764223, 1307076224876661
 # Usage:
 #   t dp -l
 #   t dp; t dp dev; t dp test -f
@@ -35,6 +40,8 @@ use ../utils/erda.nu [check-erda-envs, get-erda-auth, renew-erda-session, should
 
 const NA = 'N/A'
 const ERDA_HOST = 'https://erda.cloud'
+const PIPELINE_POLLING_INTERVAL = 2sec
+const PIPELINE_TASK_COLUMNS = [id name type status costTimeSec queueTimeSec timeBegin timeEnd extra]
 
 export-env {
   # FIXME: 去除前导空格背景色
@@ -302,8 +309,75 @@ def stop-cicd [id: int] {
   }
 }
 
-# 根据流水线 ID 查询流水线执行结果
-def query-cicd-by-id [id: int] {
+# 根据流水线 ID 轮询流水线执行结果并显示, 轮询间隔为 2 秒
+export def watch-cicd-status [id: int] {
+  let stages = polling-stage-status $id
+  let total = $stages | length
+  const UNFINISH_STATUS = [Created, Analyzed, Queue, Running]
+  const FINISH_STATUS = [Success, Failed, StopByUser, NoNeedBySystem]
+  print $'(char nl)Pipeline Running Detail:'; hr-line
+
+  # pipelineTasks status: Created,Analyzed,Success,Queue,Running,Failed,StopByUser,NoNeedBySystem
+  for stage in $stages -n {
+    let stageStatus = $stage.item.pipelineTasks | get status
+    let tasks = $stage.item.pipelineTasks | get name | str join ', '
+    let duration = $'($stage.item.pipelineTasks | get costTimeSec | math sum)sec' | into duration
+    let stageSuccess = $stageStatus | all {|it| $it == 'Success' }
+    let stageFailed = $stageStatus | any {|it| $it == 'Failed' }
+    let stageStopped = $stageStatus | any {|it| $it == 'StopByUser' }
+    let stageSkipped = $stageStatus | all {|it| $it == 'NoNeedBySystem' }
+    let stageUnfinished = $stageStatus | any {|it| $it in $UNFINISH_STATUS }
+    let indicator = if $stageSuccess {
+        $'(ansi g)✓(ansi reset)  Task (ansi g)($tasks)(ansi reset) Finished Successfully! Time cost: ($duration)'
+      } else if $stageSkipped {
+        $'(ansi y)☕(ansi reset) Task (ansi y)($tasks)(ansi reset) Was skipped!' # 💥 💭 👻 💨 ☕
+      } else if $stageFailed {
+        $'(ansi y)⚠(ansi reset)  Task (ansi y)($tasks)(ansi reset) Failed! Time cost: ($duration)'
+      } else if $stageStopped {
+        $'(ansi y)👻(ansi reset) Task (ansi y)($tasks)(ansi reset) Was stopped! Time cost: ($duration)'
+      } else if $stageUnfinished {
+        $'(ansi pb)🪄(ansi reset) Task (ansi g)($tasks)(ansi reset) is Running...'
+      } else {
+        $'(ansi r)✗(ansi reset) Unknown Status: ($stageStatus | str join ",")'
+      }
+
+    print $'Stage ($stage.index + 1)/($total): ($indicator)'
+    mut keepPolling = $stageUnfinished
+    while $keepPolling {
+      print -n '*'  # * 💤 👣 ✨ 🍵 ⚡ 🎉 🔹 🔸
+      let pollingStages = polling-stage-status $id --sid $stage.item.id
+      let tasks = $pollingStages | flatten | get pipelineTasks
+      let status = $tasks | get status
+      if ($status | any {|it| $it in $UNFINISH_STATUS }) {
+        $keepPolling = true
+      } else {
+        $keepPolling = false
+        let duration = $'($tasks | get costTimeSec | math sum)sec' | into duration
+        print $'(char nl)Stage finished with status: (ansi g)($status | str join ",")(ansi reset). Time cost: ($duration)'
+        hr-line 60 -c grey66
+      }
+      sleep $PIPELINE_POLLING_INTERVAL
+    }
+  }
+  # Refresh the query result and print the final costTimeSec
+  let query = fetch-cicd-detail $id
+  let totalTime = $'($query.data.costTimeSec)sec' | into duration
+  print $'(char nl)Pipeline run finished with status: (ansi p)($query.data.status)(ansi reset)! Total time cost: ($totalTime)'
+}
+
+# 查询流水线执行结果的相应阶段的详细信息
+def polling-stage-status [id: int, --sid: int] {
+  let query = fetch-cicd-detail $id
+  # pipelineTasks status: Created,Success,Queue,Running,Failed,StopByUser
+  let stages = $query.data.pipelineStages
+    | select id pipelineTasks
+    | upsert pipelineTasks {|it| $it.pipelineTasks | select ...$PIPELINE_TASK_COLUMNS }
+  let stages = if not ($sid | is-empty) { $stages | where id == $sid } else { $stages }
+  $stages
+}
+
+# 查询流水线执行结果的详细信息
+def fetch-cicd-detail [id: int] {
   let queryUrl = $'($ERDA_HOST)/api/terminus/pipelines/($id)'
   mut query = (curl --silent -H (get-erda-auth) $queryUrl | from json)
 
@@ -312,6 +386,12 @@ def query-cicd-by-id [id: int] {
     renew-erda-session
     $query = (curl --silent -H (get-erda-auth) $queryUrl | from json)
   }
+  $query
+}
+
+# 根据流水线 ID 查询流水线执行结果
+def query-cicd-by-id [id: int, --watch] {
+  let query = fetch-cicd-detail $id
   if ($query | describe) == 'string' {
     print $'Query CICD failed with message: (ansi r)($query)(ansi reset)'
     exit $ECODE.SERVER_ERROR
@@ -339,6 +419,7 @@ def query-cicd-by-id [id: int] {
   print $'(char nl)(ansi pb)Current Running Status of CICD ($id):(ansi reset)'
   hr-line; print $output
   # print ($query | table -e)     # Just for debugging purpose
+  if $watch { watch-cicd-status $id }
 }
 
 # 创建 Erda 流水线并执行，同时可以查询流水线执行结果
@@ -346,6 +427,7 @@ export def main [
   operation: string,          # 目前支持两种操作类型，run 和 query, run 用于创建并执行 CICD, query 用于查询 CICD 执行结果
   dest?: string = 'dev',      # 当操作为 run 时必须指定，用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, query 时按需指定, 默认为 dev
   --list(-l),                 # 当操作为 run 时生效，用于列出所有可用的执行目标
+  --watch(-w),                # 持续轮询并显示正在执行的流水线的详细信息
   --grep(-g): string,         # 仅在与 `-l` 一起使用时生效，从部署配置里面搜索name,alias或description里包含特定字符串的部署目标
   --force(-f),                # 当操作为 run 时生效，即便已经有正在运行的流水线或者已经部署过也会强制重新执行
   --cid(-i): int,             # 当操作为 query 时生效，用于查询 CICD 执行结果，如果不传则查询最近 10 条流水线执行结果
@@ -386,7 +468,7 @@ export def main [
         print $'Invalid value for --cid: (ansi r)($cid)(ansi reset), should be an integer number.'
         exit $ECODE.INVALID_PARAMETER
       }
-      query-cicd-by-id $cid
+      query-cicd-by-id $cid --watch=$watch
     }
     _ => {
       print $'Unsupported operation: (ansi r)($operation)(ansi reset), should be (ansi g)run(ansi reset) or (ansi g)query(ansi reset)'
@@ -410,6 +492,7 @@ export def erda-deploy [
 # 根据流水线 ID 或目标环境查询流水线执行结果, 例如: 单应用: t dq 997636681239659; t dq test, 多应用: t dq dev -a all
 export def erda-query [
   dest?: string = 'dev',  # 用于指定流水线查询目标环境，如 dev, test, staging, prod 等, 默认为 dev
+  --watch(-w),            # 持续轮询并显示指定流水线各个 Stage 的详细执行信息
   --cid(-i): any,         # 用于通过流水线的执行 ID 查询 CICD 执行结果，如果指定该参数则忽略 dest 参数
   --apps(-a): string,     # 指定需要批量查询的应用，多个应用以","分隔，在多应用模式下必须指定(`all` 代表所有)，单应用模式忽略
 ] {
@@ -417,6 +500,6 @@ export def erda-query [
   if ($cid | is-empty) {
     # 需要同时支持 t dq 997636681239659 & t dq test
     let cidParsed = (do -i {$dest | into int})
-    if ($cidParsed | describe) == 'int' { main query --cid $cidParsed } else { main query $dest --apps $apps }
-  } else { main query --cid $cid }
+    if ($cidParsed | describe) == 'int' { main query --cid $cidParsed --watch=$watch } else { main query $dest --apps $apps }
+  } else { main query --cid $cid --watch=$watch }
 }
