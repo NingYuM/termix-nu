@@ -82,17 +82,17 @@ def get-modules [modules?: string, --latest-meta: record] {
   if $modules == 'all' { return $allModules }
 
   # Validate and sync specified modules
-  let splits = ($modules | split row ',')
-  let validAliases = ($splits | filter {|it| $it in $MODULE_ALIASES })
+  let splits = $modules | split row ','
+  let validAliases = $splits | filter {|it| $it in $MODULE_ALIASES }
   if ($validAliases | length) > 0 {
-    let unexists = ($validAliases | filter {|it| ($END_KEY_MAP | get -i $it) not-in $allModules })
+    let unexists = $validAliases | filter {|it| ($END_KEY_MAP | get -i $it) not-in $allModules }
     if ($unexists | length) > 0 {
       print $'Invalid modules (ansi r)($unexists | str join ",")(ansi reset), the module you specified does not exists in latest.json(ansi reset)'
       exit $ECODE.INVALID_PARAMETER
     }
   }
-  let filterAlias = ($splits | filter {|it| $it not-in $MODULE_ALIASES })
-  let invalid = ($filterAlias | filter {|it| $it not-in $allModules })
+  let filterAlias = $splits | filter {|it| $it not-in $MODULE_ALIASES }
+  let invalid = $filterAlias | filter {|it| $it not-in $allModules }
   if ($invalid | length) > 0 {
     print $'Invalid modules (ansi r)($invalid | str join ",")(ansi reset), available module aliases: (ansi g)($MODULE_ALIASES | str join ",")(ansi reset)'
     print $'And all available modules: (ansi g)($allModules | str join ",")(ansi reset)'
@@ -103,7 +103,7 @@ def get-modules [modules?: string, --latest-meta: record] {
 
 # Get latest.json from specified mount point
 def get-latest-meta [from: string] {
-  let isFullUrl = ($from | str ends-with $'/($JSON_ENTRY)')
+  let isFullUrl = $from | str ends-with $'/($JSON_ENTRY)'
   let fromUrl = if $isFullUrl { $from } else { $'($ENDPOINT)/fe-resources/($from)/($JSON_ENTRY)' }
   let mount = $fromUrl
     | parse $'{base_url}/fe-resources/{mount}/($JSON_ENTRY)' | get mount | get 0
@@ -135,8 +135,8 @@ def pre-check [
     echo 'Please install package-tools by `npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io` first.'
     exit $ECODE.MISSING_BINARY
   }
-  let ver = (package-tools -v)
-  let compVer = (compare-ver $ver $PKG_TOOLS_VER)
+  let ver = package-tools -v
+  let compVer = compare-ver $ver $PKG_TOOLS_VER
   if $compVer < 0 {
     echo $'Only package-tools ($PKG_TOOLS_VER) or above is supported by this tool. Please reinstall it.'
     exit $ECODE.CONDITION_NOT_SATISFIED
@@ -179,7 +179,7 @@ def download [
 ] {
 
   let tmp = $'(get-tmp-path)/terp'
-  if (not ($tmp | path exists)) { mkdir $tmp }
+  if not ($tmp | path exists) { mkdir $tmp }
   let dest = if ($to | is-empty) or (not ($to | path exists)) { $tmp } else { ($to | path expand) }
   let mount = $latestMeta.mountpoint
   let fromUrl = $latestMeta.latestUrl
