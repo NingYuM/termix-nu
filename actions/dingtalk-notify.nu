@@ -58,7 +58,7 @@ export def 'dingtalk notify' [
     let query = { access_token: $tk.item, timestamp: $sign.timestamp, sign: $sign.sign }
     let payload = get-msg-payload --type $type --title $title --text $text --msg-url $msg_url --pic-url $pic_url --at-all $at_all --at-mobiles $at_mobiles
     let ding = http post -t application/json $'($DINGTALK_API)?($query | url build-query)' $payload
-    if ($ding.errcode != 0) { echo $ding.errmsg; exit $ECODE.INVALID_PARAMETER }
+    if ($ding.errcode != 0) { print $ding.errmsg; exit $ECODE.INVALID_PARAMETER }
   }
   echo 'Bravo, DingTalk message sent successfully.'
 }
