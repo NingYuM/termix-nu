@@ -36,12 +36,9 @@
 #   t dq dev --apps app1,app2; t dq test -a all
 
 use ../utils/common.nu [ECODE, has-ref, hr-line, log]
-use ../utils/erda.nu [check-erda-envs, get-erda-auth, renew-erda-session, should-retry-req]
+use ../utils/erda.nu [ERDA_HOST, check-erda-envs, get-erda-auth, renew-erda-session, should-retry-req]
 
-const NA = 'N/A'
-const ERDA_HOST = 'https://erda.cloud'
 const PIPELINE_POLLING_INTERVAL = 2sec
-const PIPELINE_TASK_COLUMNS = [id name type status costTimeSec queueTimeSec timeBegin timeEnd extra]
 
 export-env {
   # FIXME: 去除前导空格背景色
@@ -113,7 +110,7 @@ def show-available-targets [
   } else {
     print $'Available deploy targets in ($configFile) which contains ($grep) are:(char nl)'
   }
-  let upsertAlias = {|it| if ($it | get -i alias | is-empty) { $NA } else { $it.alias } }
+  let upsertAlias = {|it| if ($it | get -i alias | is-empty) { 'N/A' } else { $it.alias } }
   let upsertDescription = {|it| if ($it | get -i description | is-empty) { '-' } else { $it.description } }
   for target in ($repoConf.erda | columns) {
     mut deployTarget = (
@@ -171,6 +168,7 @@ def query-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
 
 # 格式化流水线查询结果，以更友好的方式呈现
 def format-pipeline-data [pipelines: any] {
+  const NA = 'N/A'
   return (
     $pipelines
       | select -i id commit status normalLabels extra timeBegin timeUpdated filterLabels
@@ -255,7 +253,7 @@ def check-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
 }
 
 # 创建 CICD 流水线并返回其对应 ID
-def create-cicd [aid: int, appName: string, branch: string, pipeline: string] {
+export def create-cicd [aid: int, appName: string, branch: string, pipeline: string] {
   let cicdUrl = $'($ERDA_HOST)/api/terminus/cicds'
   let cicd = { appID: $aid, branch: $branch, pipelineYmlName: $pipeline }
   print $'Initialize CICD for (ansi pb)($appName)(ansi reset) with (ansi g)($pipeline)(ansi reset) from (ansi g)($branch)(ansi reset) branch'
@@ -278,7 +276,7 @@ def create-cicd [aid: int, appName: string, branch: string, pipeline: string] {
 }
 
 # 执行指定 ID 的流水线
-def run-cicd [id: int, appid: int, pid: int] {
+export def run-cicd [id: int, appid: int, pid: int] {
   let runUrl = $'($ERDA_HOST)/api/terminus/cicds/($id)/actions/run'
   mut run = (curl --silent -H (get-erda-auth) -X POST $runUrl | from json)
   let url = $'($ERDA_HOST)/terminus/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
@@ -368,6 +366,7 @@ export def watch-cicd-status [id: int] {
 # 查询流水线执行结果的相应阶段的详细信息
 def polling-stage-status [id: int, --sid: int] {
   let query = fetch-cicd-detail $id
+  const PIPELINE_TASK_COLUMNS = [id name type status costTimeSec queueTimeSec timeBegin timeEnd extra]
   # pipelineTasks status: Created,Success,Queue,Running,Failed,StopByUser
   let stages = $query.data.pipelineStages
     | select id pipelineTasks
@@ -377,7 +376,7 @@ def polling-stage-status [id: int, --sid: int] {
 }
 
 # 查询流水线执行结果的详细信息
-def fetch-cicd-detail [id: int] {
+export def fetch-cicd-detail [id: int] {
   let queryUrl = $'($ERDA_HOST)/api/terminus/pipelines/($id)'
   mut query = (curl --silent -H (get-erda-auth) $queryUrl | from json)
 
@@ -390,7 +389,7 @@ def fetch-cicd-detail [id: int] {
 }
 
 # 根据流水线 ID 查询流水线执行结果
-def query-cicd-by-id [id: int, --watch] {
+export def query-cicd-by-id [id: int, --watch] {
   let query = fetch-cicd-detail $id
   if ($query | describe) == 'string' {
     print $'Query CICD failed with message: (ansi r)($query)(ansi reset)'

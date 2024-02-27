@@ -4,7 +4,7 @@
 
 use ../utils/common.nu [ECODE, get-tmp-path]
 
-const NA = 'N/A'
+export const ERDA_HOST = 'https://erda.cloud'
 
 # Check if the required environment variable was set, quit if not
 export def check-erda-envs [] {
@@ -18,9 +18,13 @@ export def check-erda-envs [] {
 }
 
 # Get Erda OpenAPI session token from .termix-conf file
-export def get-erda-auth [] {
+export def get-erda-auth [--type: string = 'curl'] {
+  const NA = 'N/A'
   let TERMIX_CONF = $'(get-tmp-path)/.termix-conf'
   let erdaSession = open $TERMIX_CONF | from json | get -i erdaSession | default $NA
+  if $type == 'nu' {
+    return ['cookie' $'OPENAPISESSION=($erdaSession)']
+  }
   $'cookie: OPENAPISESSION=($erdaSession)'
 }
 

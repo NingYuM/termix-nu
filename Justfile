@@ -97,6 +97,11 @@ terp-assets *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'terp-assets.nu') }}; \
     terp assets {{OPTIONS}}
 
+# Create, download, upload and deploy from the artifacts
+art *OPTIONS: _setup
+  @overlay use {{ join(_termix, 'actions', 'artifact.nu') }}; \
+    artifacts {{OPTIONS}}
+
 # Run an Erda pipeline, the target can be queried by `dp -l`, default is `dev`, and use `--app` to specify the apps to deploy
 deploy *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'pipeline.nu') }}; \
