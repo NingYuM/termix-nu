@@ -64,7 +64,7 @@ def get-commit-summary [branch: string, file: string, keyword: string] {
   let hasPrevious = ($blame | grep $grepKeyword -B 3) =~ 'previous'
   let count = if $hasPrevious { 12 } else { 11 }
   let selections = if $hasPrevious { [0 5 7 12] } else { [0 5 7 11] }
-  let summary = ($blame | grep $grepKeyword -B $count | lines | select $selections)
+  let summary = ($blame | grep $grepKeyword -B $count | lines | select ...$selections)
   let SHA = $summary.0 | str substring 0..9
   let committer = $summary.1 | str trim | split row ' ' | get 1
   let commitAt = (($summary.2 | str trim | split row ' ' | get 1 | into int) * 1000 * 1000 * 1000 | into datetime) + 8hr
