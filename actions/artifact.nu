@@ -12,8 +12,14 @@
 # [ ] Add artifact deploy config file
 # [ ] Validate input args and flags
 # [ ] Confirm the deploy order detail before execute
-# [ ] Support composed artifact actions of `bduce`
+# [ ] Support artifact actions: deploy, produce, consume
 # [ ] Update artifact related docs
+# Usage:
+#   - t art deploy -e TEST ${version}   使用指定版本制品部署目标测试环境
+#   - t art deploy -e TEST -s           选择制品并部署目标测试环境
+#   - t art deploy -e TEST -c           构建制品并部署目标测试环境（支持同项目 & 不同项目, 不同项目需要下载制品然后上传）
+#   - t art produce                     构建制品并输出制品信息
+#   - t art consume -e TEST ${version}  下载指定版本的制品并上传到目标项目然后部署指定环境
 # Reference
 #   - https://erda.cloud/api/terminus/releases?isProjectRelease=true&isStable=true&pageNo=1&pageSize=10&projectId=1158&version=2.5.23.1214%2B20231227182207
 #   - ls -f | get name | to text | fzf --height 50% -e --inline-info --preview 'cat {}'
@@ -32,11 +38,14 @@ const ARTIFACT_VERSION = '2.5.23.1228+20240220102619'
 
 # Build, Download and Upload artifacts, create deploy order then deploy from artifacts
 export def artifacts [
-    action: string,             # Action to perform, such as bduce
-    --source(-s): string,       # Source config to build artifact
-    --dest(-d): string,         # Destination config to upload or deploy artifact
-    --version(-v): string,      # The version number of the artifact to deploy
-    --environment(-e): string,  # The environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
+  action: string,             # Action to perform, such as deploy, produce, and consume
+  --select(-s),               # Select the artifact version to deploy to the dest environment
+  --combine(-c),              # Build and upload the artifact to the dest project and deploy to the dest
+  --from(-f): string,         # Source config to build or download artifact
+  --to(-t): string,           # Destination config to upload or deploy artifact
+  --branch(-b): string,       # The branch name to build the artifact
+  --version(-v): string,      # The version number of the artifact to deploy
+  --dest-env(-e): string,     # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
 ] {
   let version = $ARTIFACT_VERSION
   # let meta = create-artifact-from-pipeline 1273 12201 fr-erp-release master .erda/pipelines/ci-artifact.yml
