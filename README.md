@@ -41,6 +41,14 @@ scoop install nu
 winget install Nushell.Nushell
 ```
 
+:::info 注意事项
+
+1. 对于初次安装 `nushell` 的用户，由于全新安装的 `nushell` 是没有经过初始化配置的，使用可能有问题，所以需要在命令行里面输入 `nu`，然后会有两个交互式提问，直接输入 `y` 即可。这样就会为 `nu` 创建默认的配置文件，之后就可以正常使用了。
+2. 对于通过 `brew` 安装 `nushell` 的用户在后续升级之后由于 `nushell` 二进制文件存储路径发生了变化(`brew` 安装的版本号会在路径里得到体现)，`nushell` 的插件配置文件会因找不到之前注册的插件而报错，此时直接把插件文件（比如: `/Users/hustcer/Library/Application Support/nushell/plugin.nu`）删掉即可，后续在使用工具的过程中会自动重新注册插件。
+
+:::
+
+
 ### Install latest version of nu
 
 如果`brew`里面的 `Nushell` 版本没有及时更新, 可以自己下载最新版本的 `nightly` 包: https://github.com/nushell/nightly/releases
