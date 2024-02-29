@@ -9,6 +9,7 @@
 # [√] Create: Create deploy order to deploy artifacts to Erda cluster
 # [√] Execute: Execute Erda Pipeline to deploy artifacts to Erda cluster
 # [√] Query and display the deploy status
+# [ ] Deploy all apps by default, stop and select the group to deploy if user has no permission
 # [ ] Add artifact deploy config file
 # [ ] Validate input args and flags
 # [ ] Confirm the deploy order detail before execute
@@ -25,49 +26,165 @@
 #   - ls -f | get name | to text | fzf --height 50% -e --inline-info --preview 'cat {}'
 # Usage:
 
-use ../utils/common.nu [ECODE, hr-line, log, get-tmp-path]
-use ../utils/erda.nu [get-erda-auth, renew-erda-session, should-retry-req]
 use pipeline.nu [create-cicd, run-cicd, query-cicd-by-id, fetch-cicd-detail]
+use ../utils/common.nu [ECODE, hr-line, log, get-tmp-path]
+use ../utils/erda.nu [VALID_ENV, get-erda-auth, renew-erda-session, should-retry-req]
 
-const SRC_PROJECT_ID = 190
-const DEST_PROJECT_ID = 1158
-const ENVIRONMENT = 'TEST'
+# TODO: Support private erda host and login with username and password
 const ERDA_HOST = 'https://erda.cloud'
 const DEPLOY_POLLING_INTERVAL = 2sec
-const ARTIFACT_VERSION = '2.5.23.1228+20240220102619'
+const SUPPORTED_ACTIONS = [deploy, produce, consume]
 
 # Build, Download and Upload artifacts, create deploy order then deploy from artifacts
 export def artifacts [
   action: string,             # Action to perform, such as deploy, produce, and consume
   --select(-s),               # Select the artifact version to deploy to the dest environment
   --combine(-c),              # Build and upload the artifact to the dest project and deploy to the dest
+  --no-deploy(-n),            # Won't deploy after creating deploy order
   --from(-f): string,         # Source config to build or download artifact
   --to(-t): string,           # Destination config to upload or deploy artifact
   --branch(-b): string,       # The branch name to build the artifact
   --version(-v): string,      # The version number of the artifact to deploy
   --dest-env(-e): string,     # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
+  --deploy-group(-g): string, # The app group to deploy for the specified artifact, `all` by default
 ] {
-  let version = $ARTIFACT_VERSION
-  # let meta = create-artifact-from-pipeline 1273 12201 fr-erp-release master .erda/pipelines/ci-artifact.yml
-  # print $'(char nl)Artifact has been created successfully:'; hr-line; print $meta
-  # let meta = $meta | transpose -r | get 0
-  # download-artifact-from-release $meta.releaseID $meta.version
-  let matches = query-release-by-version $version $SRC_PROJECT_ID --verbose
+  load-art-conf
+  match $action {
+    produce => { produce-artifact --from=$from --branch=$branch }
+    consume => { consume-artifact $version $dest_env --from=$from --to=$to --deploy-group=$deploy_group --no-deploy=$no_deploy }
+    deploy => { (deploy-artifact
+                    --select=$select --combine=$combine --from=$from
+                    --to=$to --branch=$branch --version=$version
+                    --dest-env=$dest_env --deploy-group=$deploy_group
+                    --no-deploy=$no_deploy)
+    }
+    _ => {
+      print $'Unsupported action: (ansi r)($action)(ansi reset), supported actions are: (ansi g)($SUPPORTED_ACTIONS | str join ", ")(ansi reset)'
+      exit $ECODE.INVALID_PARAMETER
+    }
+  }
+}
+
+# Load meta data settings and store them to environment variable
+def --env load-art-conf [] {
+  let artConf = open $'($env.TERMIX_DIR)/.termixrc' | from toml | get artifact
+  $env.ART_CONF = $artConf
+  return $artConf
+}
+
+def produce-artifact [
+  --from(-f): string,         # Source config to build or download artifact
+  --branch(-b): string,       # The branch name to build the artifact
+] {
+  let setting = validate-produce-setting --from $from --branch $branch
+  let branch = $setting.branch
+  let appName = $setting.appName
+  let pipeline = $setting.pipeline
+  print $'Producing artifact from (ansi g)($branch)(ansi reset) branch of (ansi g)($appName)(ansi reset) with pipeline: ($pipeline)...'
+  let meta = create-artifact-from-pipeline $setting.projectId $setting.appId $appName $branch $pipeline
+  print $'(char nl)Artifact has been created successfully:'; hr-line; print $meta
+  $meta
+}
+
+def validate-produce-setting [
+  --from(-f): string,         # Source config to build or download artifact
+  --branch(-b): string,       # The branch name to build the artifact
+] {
+  let artConf = $env.ART_CONF
+  let setting = if ($from | is-empty) {
+    $artConf.source | values | default false default | where default == true
+  } else {
+    [($artConf.source | get -i $from)]
+  }
+
+  if ($setting | compact | is-empty) {
+    print $'(ansi r)No source config found to build or download the artifact, bye...(ansi reset)'
+    exit $ECODE.INVALID_PARAMETER
+  }
+  if ($setting | compact | length) > 1 {
+    print $'(ansi r)Multiple default source configs found, make sure that you have only one default source.(ansi reset)'
+    exit $ECODE.INVALID_PARAMETER
+  }
+  mut setting = $setting.0
+  # TODO: setting fields validation
+  if ($branch | is-empty) { $setting } else { $setting | upsert branch $branch }
+}
+
+def consume-artifact [
+  version: string,            # The version number of the artifact to deploy
+  destEnv: string,            # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
+  --no-deploy(-n),            # Won't deploy after creating deploy order
+  --from(-f): string,         # Source config to build or download artifact
+  --to(-t): string,           # Destination config to upload or deploy artifact
+  --deploy-group(-g): string, # The app group to deploy for the specified artifact, `all` by default
+] {
+  let destEnv = $destEnv | str upcase
+  let srcSetting = validate-produce-setting --from $from
+  let destSetting = validate-consume-setting $version $destEnv --to $to --deploy-group $deploy_group --no-deploy=$no_deploy
+  let srcPID = $srcSetting.projectId
+  let destPID = $destSetting.projectId
+  let matches = query-release-by-version $version $srcPID --verbose
   if ($matches | is-empty) {
-    print $'No artifact found for version ($version) in project ID ($SRC_PROJECT_ID)'
+    print $'No artifact found for version ($version) in project ID ($srcPID)'
     return
   }
   let dest = download-artifact-from-release $matches.releaseId.0 $version
-  let destMatches = query-release-by-version $version $DEST_PROJECT_ID
+  let destMatches = query-release-by-version $version $destPID
   if ($destMatches | is-empty) {
-    upload-artifact $version $dest --oid 2 --pid $DEST_PROJECT_ID
+    # TODO: orgID
+    upload-artifact $version $dest --oid 2 --pid $destPID
   } else {
-    print $'Artifact of version (ansi g)($version)(ansi reset) already exists in project ID (ansi g)($DEST_PROJECT_ID)(ansi reset):'
+    print $'Artifact of version (ansi g)($version)(ansi reset) already exists in project ID (ansi g)($destPID)(ansi reset):'
     print $destMatches
   }
-  let selectedRelease = query-release-by-version $version $DEST_PROJECT_ID
-  let doid = create-deploy-order ($selectedRelease.0 | into record) $ENVIRONMENT --pid $DEST_PROJECT_ID
-  if not ($doid | is-empty) { polling-artifact-deploy $doid }
+  let selectedRelease = query-release-by-version $version $destPID
+  let doid = create-deploy-order ($selectedRelease.0 | into record) $destEnv --pid $destPID --deploy-group=$deploy_group
+  if (not ($doid | is-empty)) and (not $no_deploy) { polling-artifact-deploy $doid }
+}
+
+def validate-consume-setting [
+  version: string,            # The version number of the artifact to deploy
+  destEnv: string,            # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
+  --no-deploy(-n),            # Won't deploy after creating deploy order
+  --to(-t): string,           # Destination config to upload or deploy artifact
+  --deploy-group(-g): string, # The app group to deploy for the specified artifact, `all` by default
+] {
+  let destEnv = $destEnv | str upcase
+  if $destEnv not-in $VALID_ENV {
+    print $'Invalid dest environment: (ansi r)($destEnv)(ansi reset), supported environments are: ($VALID_ENV | str join ", ")'
+    exit $ECODE.INVALID_PARAMETER
+  }
+  let artConf = $env.ART_CONF
+  let setting = if ($to | is-empty) {
+    $artConf.destination | values | default false default | where default == true
+  } else {
+    [($artConf.destination | get -i $to)]
+  }
+
+  if ($setting | compact | is-empty) {
+    print $'(ansi r)No destination config found to deploy the artifact, bye...(ansi reset)'
+    exit $ECODE.INVALID_PARAMETER
+  }
+  if ($setting | compact | length) > 1 {
+    print $'(ansi r)Multiple default destination configs found, make sure that you have only one default destination.(ansi reset)'
+    exit $ECODE.INVALID_PARAMETER
+  }
+  # TODO: setting fields validation
+  $setting.0
+}
+
+def deploy-artifact [
+  --select(-s),               # Select the artifact version to deploy to the dest environment
+  --combine(-c),              # Build and upload the artifact to the dest project and deploy to the dest
+  --no-deploy(-n),            # Won't deploy after creating deploy order
+  --from(-f): string,         # Source config to build or download artifact
+  --to(-t): string,           # Destination config to upload or deploy artifact
+  --branch(-b): string,       # The branch name to build the artifact
+  --version(-v): string,      # The version number of the artifact to deploy
+  --dest-env(-e): string,     # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
+  --deploy-group(-g): string, # The app group to deploy for the specified artifact, `all` by default
+] {
+  print 'Deploy artifact'
 }
 
 # Create artifact from running the specified pipeline
@@ -168,10 +285,12 @@ def create-deploy-order [
   artifact: record,               # The artifact to create deploy order
   environment: string = 'DEV',    # The environment to deploy the artifact, such as DEV, TEST, STAGING, PROD, etc.
   --pid: int,                     # The Project ID to deploy the artifact
+  --deploy-group(-g): string,     # The app group to deploy for the specified artifact, `all` by default
 ] {
   let releaseDetailUrl = $'($ERDA_HOST)/api/terminus/releases/($artifact.releaseId)'
   let doCreateUrl = $'($ERDA_HOST)/api/terminus/deployment-orders'
   let release = http get -e --headers (get-erda-auth --type nu) $releaseDetailUrl
+  # TODO: Use specified deploy group
   let modes = $release.data.modes
   mut choices = []
   for m in ($modes | columns) {

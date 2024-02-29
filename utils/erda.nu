@@ -5,6 +5,7 @@
 use ../utils/common.nu [ECODE, get-tmp-path]
 
 export const ERDA_HOST = 'https://erda.cloud'
+export const VALID_ENV = [DEV TEST STAGING PROD]
 
 # Check if the required environment variable was set, quit if not
 export def check-erda-envs [] {

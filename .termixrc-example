@@ -77,6 +77,7 @@ erdaHost = 'https://erda.cloud'     # 可以被源和目标中的同名配置覆
 default = true                      # 是否默认启用的源
 projectId = 190                     # 用于构建制品的应用所在 Project ID
 appId = 1                           # 用于构建制品的 App ID
+appName = 'trantor2-release'        # 用于构建制品的 App 名称
 env = 'PROD'                        # 构建制品的环境比如：DEV, TEST, STAGING, PROD
 branch = 'master'                   # 用于构建制品的分支, 可以被 --branch 参数覆盖
 pipeline = 'pipeline.yml'           # 用于构建制品的 Pipeline 文件路径
