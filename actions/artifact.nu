@@ -11,7 +11,7 @@
 # [√] Query and display the deploy status
 # [√] Add artifact deploy config file
 # [√] Display and confirm produce action detail before execute
-# [ ] Deploy all apps by default, stop and select the group to deploy if user has no permission
+# [√] Deploy all apps by default, stop and select the group to deploy if no matched group found
 # [ ] Validate input args and flags
 # [ ] Confirm the deploy order detail before execute
 # [ ] Support artifact actions: deploy, produce, consume
@@ -49,7 +49,7 @@ export def artifacts [
   --branch(-b): string,       # The branch name to build the artifact
   --version(-v): string,      # The version number of the artifact to deploy
   --dest-env(-e): string,     # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
-  --deploy-group(-g): string, # The app group to deploy for the specified artifact, `all` by default
+  --deploy-group(-g): string, # The app group to deploy for the specified artifact, `All` by default
 ] {
   cd $env.TERMIX_DIR
   let currentBranch = git branch --show-current
@@ -145,7 +145,7 @@ def consume-artifact [
   let destSetting = validate-consume-setting $version $destEnv --to $to --deploy-group $deploy_group --no-deploy=$no_deploy
   let srcPID = $srcSetting.projectId
   let destPID = $destSetting.projectId
-  let matches = query-release-by-version $version $srcPID --verbose
+  let matches = query-release-by-version $version $srcPID --verbose --name 'Source Project'
   if ($matches | is-empty) {
     print $'No artifact found for version ($version) in project ID ($srcPID)'
     return
@@ -156,11 +156,12 @@ def consume-artifact [
     # TODO: orgID
     upload-artifact $version $dest --oid 2 --pid $destPID
   } else {
-    print $'Artifact of version (ansi g)($version)(ansi reset) already exists in project ID (ansi g)($destPID)(ansi reset):'
+    print $'Artifact of version (ansi g)($version)(ansi reset) already exists in dest project ID (ansi g)($destPID)(ansi reset):'
     print $destMatches
   }
   let selectedRelease = query-release-by-version $version $destPID
-  let doid = create-deploy-order ($selectedRelease.0 | into record) $destEnv --pid $destPID --deploy-group=$deploy_group
+  let deployGroup = $destSetting.deployGroup | default 'All'
+  let doid = create-deploy-order ($selectedRelease.0 | into record) $destEnv --pid $destPID --deploy-group=$deployGroup
   if (not ($doid | is-empty)) and (not $no_deploy) { polling-artifact-deploy $doid }
 }
 
@@ -191,8 +192,9 @@ def validate-consume-setting [
     print $'(ansi r)Multiple default destination configs found, make sure that you have only one default destination.(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
+  mut setting = $setting.0
   # TODO: setting fields validation
-  $setting.0
+  if ($deploy_group | is-empty) { $setting } else { $setting | upsert deployGroup $deploy_group }
 }
 
 def deploy-artifact [
@@ -302,18 +304,9 @@ def get-artifact-deploy-detail [
   $detail
 }
 
-# Create deploy order to deploy artifact to Erda cluster
-def create-deploy-order [
-  artifact: record,               # The artifact to create deploy order
-  environment: string = 'DEV',    # The environment to deploy the artifact, such as DEV, TEST, STAGING, PROD, etc.
-  --pid: int,                     # The Project ID to deploy the artifact
-  --deploy-group(-g): string,     # The app group to deploy for the specified artifact, `all` by default
+def select-deploy-mode [
+  modes: record,    # The deploy modes to select
 ] {
-  let releaseDetailUrl = $'($ERDA_HOST)/api/terminus/releases/($artifact.releaseId)'
-  let doCreateUrl = $'($ERDA_HOST)/api/terminus/deployment-orders'
-  let release = http get -e --headers (get-erda-auth --type nu) $releaseDetailUrl
-  # TODO: Use specified deploy group
-  let modes = $release.data.modes
   mut choices = []
   for m in ($modes | columns) {
     if $m == 'All' {
@@ -327,6 +320,27 @@ def create-deploy-order [
     | upsert option {|c| if $c.mode == 'All' { 'All' } else { $'($c.mode) (ansi w)- ($c.children)(ansi reset)' } }
     | input list -d option 'Please select the applications to deploy'
 
+  $selected
+}
+
+# Create deploy order to deploy artifact to Erda cluster
+def create-deploy-order [
+  artifact: record,               # The artifact to create deploy order
+  environment: string = 'DEV',    # The environment to deploy the artifact, such as DEV, TEST, STAGING, PROD, etc.
+  --pid: int,                     # The Project ID to deploy the artifact
+  --deploy-group(-g): string,     # The app group to deploy for the specified artifact, `all` by default
+] {
+  let releaseDetailUrl = $'($ERDA_HOST)/api/terminus/releases/($artifact.releaseId)'
+  let doCreateUrl = $'($ERDA_HOST)/api/terminus/deployment-orders'
+  let release = http get -e --headers (get-erda-auth --type nu) $releaseDetailUrl
+  let modes = $release.data.modes
+  # Use specified deploy group or select the deploy mode
+  let selected = if $deploy_group in ($modes | columns) { { mode: $deploy_group } } else {
+      print $'There is no matched deploy group: (ansi r)($deploy_group)(ansi reset), Please select the group to deploy:'
+      select-deploy-mode $modes
+    }
+
+  print $'You are going to deploy the group: (ansi g)($selected.mode)(ansi reset).'
   print $'The following applications will be deployed:(char nl)'
   $modes | get $selected.mode | get applicationReleaseList | flatten
     | select applicationName createdAt releaseName version | print
@@ -366,6 +380,7 @@ def get-artifact-meta [
 def query-release-by-version [
   version: string,    # Version number to query
   pid: int,           # Project id to query the release artifact
+  --name: string,     # Display name of the project
   --verbose(-v),      # Print more details of the matched artifact
 ] {
   let queryUrl = $'($ERDA_HOST)/api/terminus/releases'
@@ -388,7 +403,8 @@ def query-release-by-version [
   if ($matches | is-empty) {
     print $'No release found for version ($version) in project ID ($pid)'
   } else {
-    print $'Found matched artifact release:'; print $matches
+    let suffix = if ($name | is-empty) { '' } else { $' in (ansi g)($name)(ansi reset)' }
+    print $'Found matched artifact release($suffix):'; print $matches
   }
   return $matches
 }
