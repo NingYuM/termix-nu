@@ -12,6 +12,7 @@
 # [√] Add artifact deploy config file
 # [√] Display and confirm produce action detail before execute
 # [√] Deploy all apps by default, stop and select the group to deploy if no matched group found
+# [√] Display and confirm consume action detail before execute
 # [ ] Validate input args and flags
 # [ ] Confirm the deploy order detail before execute
 # [ ] Support artifact actions: deploy, produce, consume
@@ -58,8 +59,8 @@ export def artifacts [
 
   load-art-conf
   match $action {
-    produce => { produce-artifact --from=$from --branch=$branch }
-    consume => { consume-artifact $version $dest_env --from=$from --to=$to --deploy-group=$deploy_group --no-deploy=$no_deploy }
+    produce => { produce-artifact --from=$from --branch=$branch --need-confirm }
+    consume => { consume-artifact $version $dest_env -f $from -t $to -c --deploy-group=$deploy_group --no-deploy=$no_deploy }
     deploy => { (deploy-artifact
                     --select=$select --combine=$combine --from=$from
                     --to=$to --branch=$branch --version=$version
@@ -83,12 +84,13 @@ def --env load-art-conf [] {
 def produce-artifact [
   --from(-f): string,         # Source config to build or download artifact
   --branch(-b): string,       # The branch name to build the artifact
+  --need-confirm(-c),         # Need to confirm the produce action before execute
 ] {
   let setting = validate-produce-setting --from $from --branch $branch
   let branch = $setting.branch
   let appName = $setting.appName
   let pipeline = $setting.pipeline
-  confirm-produce $setting
+  if $need_confirm { confirm-produce $setting }
   let meta = create-artifact-from-pipeline $setting.projectId $setting.appId $appName $branch $pipeline
   print $'(char nl)Artifact has been created successfully:'; hr-line;
   $meta
@@ -104,6 +106,32 @@ def confirm-produce [
   if $confirm == 'q' { echo $'Artifacts creating cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $confirm != 'y' {
     echo $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)y(ansi reset), bye...'
+    exit $ECODE.INVALID_PARAMETER
+  }
+}
+
+def confirm-consume [
+  version: string,            # The version number of the artifact to deploy
+  destEnv: string,            # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
+  destSetting: record,        # Destination setting to consume the artifact
+  --no-deploy(-n),            # Won't deploy after creating deploy order
+] {
+  let msg = if $no_deploy {
+      $'You are going to fetch the artifacts and create deploy order with the following config:'
+    } else {
+      $'You are going to fetch the artifacts and (ansi r)DEPLOY(ansi reset) them with the following config:'
+    }
+  print $msg
+  let setting = {
+      version: $version, destEnv: $destEnv,
+      destSetting: ($destSetting | select -i projectId deployGroup erdaHost)
+    }
+  hr-line 60 -c grey66; print ($setting | table -e); hr-line 60 -c grey66
+  print $'Are you sure to continue? '
+  let confirm = input $'Please press (ansi p)($version)(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
+  if $confirm == 'q' { echo $'Operation cancelled, Bye...'; exit $ECODE.SUCCESS }
+  if $confirm != $version {
+    echo $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($version)(ansi reset), bye...'
     exit $ECODE.INVALID_PARAMETER
   }
 }
@@ -139,10 +167,12 @@ def consume-artifact [
   --from(-f): string,         # Source config to build or download artifact
   --to(-t): string,           # Destination config to upload or deploy artifact
   --deploy-group(-g): string, # The app group to deploy for the specified artifact, `all` by default
+  --need-confirm(-c),         # Need to confirm the consume action before execute
 ] {
   let destEnv = $destEnv | str upcase
   let srcSetting = validate-produce-setting --from $from
   let destSetting = validate-consume-setting $version $destEnv --to $to --deploy-group $deploy_group --no-deploy=$no_deploy
+  if $need_confirm { confirm-consume $version $destEnv $destSetting --no-deploy=$no_deploy }
   let srcPID = $srcSetting.projectId
   let destPID = $destSetting.projectId
   let matches = query-release-by-version $version $srcPID --verbose --name 'Source Project'
@@ -156,7 +186,7 @@ def consume-artifact [
     # TODO: orgID
     upload-artifact $version $dest --oid 2 --pid $destPID
   } else {
-    print $'Artifact of version (ansi g)($version)(ansi reset) already exists in dest project ID (ansi g)($destPID)(ansi reset):'
+    print $'Artifact of version (ansi g)($version)(ansi reset) already exists in dest project ID (ansi g)($destPID)(ansi reset):(char nl)'
     print $destMatches
   }
   let selectedRelease = query-release-by-version $version $destPID
@@ -404,7 +434,7 @@ def query-release-by-version [
     print $'No release found for version ($version) in project ID ($pid)'
   } else {
     let suffix = if ($name | is-empty) { '' } else { $' in (ansi g)($name)(ansi reset)' }
-    print $'Found matched artifact release($suffix):'; print $matches
+    print $'Found matched artifact release($suffix):(char nl)'; print $matches
   }
   return $matches
 }
