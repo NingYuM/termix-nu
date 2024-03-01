@@ -19,10 +19,11 @@ export def check-erda-envs [] {
 }
 
 # Get Erda OpenAPI session token from .termix-conf file
-export def get-erda-auth [--type: string = 'curl'] {
+export def get-erda-auth [host: string = $ERDA_HOST, --type: string = 'curl'] {
   const NA = 'N/A'
+  let sessionKey = if $host == $ERDA_HOST { 'erdaSession' } else { $host | encode base64 }
   let TERMIX_CONF = $'(get-tmp-path)/.termix-conf'
-  let erdaSession = open $TERMIX_CONF | from json | get -i erdaSession | default $NA
+  let erdaSession = open $TERMIX_CONF | from json | get -i $sessionKey | default $NA
   if $type == 'nu' {
     return ['cookie' $'OPENAPISESSION=($erdaSession)']
   }
@@ -30,17 +31,19 @@ export def get-erda-auth [--type: string = 'curl'] {
 }
 
 # Renew Erda session by username and password if expired
-export def renew-erda-session [] {
+export def renew-erda-session [host: string = $ERDA_HOST] {
   print 'Renewing Erda session...'
   let TERMIX_CONF = $'(get-tmp-path)/.termix-conf'
+  let sessionKey = if $host == $ERDA_HOST { 'erdaSession' } else { $host | encode base64 }
   let query = { username: $env.ERDA_USERNAME, password: $env.ERDA_PASSWORD } | url build-query
-  let RENEW_URL = $'https://openapi.erda.cloud/login?($query)'
+  let openApiHost = $host | str replace '://' '://openapi.'
+  let RENEW_URL = $'($openApiHost)/login?($query)'
   let renew = curl --silent -X POST $RENEW_URL | from json
   if ($renew | describe) == 'string' {
     print $'Erda session renew failed with message: (ansi r)($renew)(ansi reset)'; exit $ECODE.AUTH_FAILED
   }
   open $TERMIX_CONF | from json
-    | upsert erdaSession $renew.sessionid | to json
+    | upsert $sessionKey $renew.sessionid | to json
     | save -rf $TERMIX_CONF
 }
 

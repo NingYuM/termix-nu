@@ -138,20 +138,20 @@ def show-available-targets [
 }
 
 # 根据 AppID、Branch、Pipeline 查询最近的流水线执行记录
-def query-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipeline: string, count?: int = 20] {
+def query-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipeline: string, count?: int = 20, --host: string = $ERDA_HOST] {
   # Possible env values: DEV,TEST,STAGING,PROD
   let cicd = {
     ymlNames: $'($aid)/($erdaEnv)/($branch)/($pipeline)',
     appID: $aid, branches: $branch, sources: 'dice', pageNo: 1, pageSize: $count
   }
-  let cicdUrl = $'($ERDA_HOST)/api/terminus/cicds?($cicd | url build-query)'
+  let cicdUrl = $'($host)/api/terminus/cicds?($cicd | url build-query)'
 
   # Query the id of newly created CICD
-  mut ci = (curl --silent -H (get-erda-auth) $cicdUrl | from json)
+  mut ci = (curl --silent -H (get-erda-auth $host) $cicdUrl | from json)
   # Check session expired, and renew if needed
   if (should-retry-req $ci) {
-    renew-erda-session
-    $ci = (curl --silent -H (get-erda-auth) $cicdUrl | from json)
+    renew-erda-session $host
+    $ci = (curl --silent -H (get-erda-auth $host) $cicdUrl | from json)
   }
   # log 'Query CICD: ' ($ci.data.pipelines | select id commit status | table -e)
   if ($ci | describe) == 'string' or ($ci | is-empty) {
@@ -187,12 +187,12 @@ def format-pipeline-data [pipelines: any] {
 }
 
 # Render pipeline ID as a clickable link while querying latest CICDs
-def get-pipeline-url [--as-raw-string] {
+def get-pipeline-url [--as-raw-string, --host: string = $ERDA_HOST] {
   let $pipeline = $in
   let id = $pipeline.id
   let appid = $pipeline.filterLabels.appID
   let pid = $pipeline.filterLabels.projectID
-  let link = $'($ERDA_HOST)/terminus/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
+  let link = $'($host)/terminus/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
   if $as_raw_string { $link } else {
     $link | ansi link --text $'($id)'
   }
@@ -253,17 +253,17 @@ def check-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
 }
 
 # 创建 CICD 流水线并返回其对应 ID
-export def create-cicd [aid: int, appName: string, branch: string, pipeline: string] {
-  let cicdUrl = $'($ERDA_HOST)/api/terminus/cicds'
+export def create-cicd [aid: int, appName: string, branch: string, pipeline: string, --host: string = $ERDA_HOST] {
+  let cicdUrl = $'($host)/api/terminus/cicds'
   let cicd = { appID: $aid, branch: $branch, pipelineYmlName: $pipeline }
   print $'Initialize CICD for (ansi pb)($appName)(ansi reset) with (ansi g)($pipeline)(ansi reset) from (ansi g)($branch)(ansi reset) branch'
 
   # Query the ID of newly created CICD
-  mut ci = (curl --silent -H (get-erda-auth) --data-raw $'($cicd | to json)' $cicdUrl | from json)
+  mut ci = (curl --silent -H (get-erda-auth $host) --data-raw $'($cicd | to json)' $cicdUrl | from json)
   # Check session expired, and renew if needed
   if (should-retry-req $ci) {
-    renew-erda-session
-    $ci = (curl --silent -H (get-erda-auth) --data-raw $'($cicd | to json)' $cicdUrl | from json)
+    renew-erda-session $host
+    $ci = (curl --silent -H (get-erda-auth $host) --data-raw $'($cicd | to json)' $cicdUrl | from json)
   }
   if ($ci | describe) == 'string' {
     print $'Initialize CICD failed with message: (ansi r)($ci)(ansi reset)'
@@ -276,14 +276,14 @@ export def create-cicd [aid: int, appName: string, branch: string, pipeline: str
 }
 
 # 执行指定 ID 的流水线
-export def run-cicd [id: int, appid: int, pid: int] {
-  let runUrl = $'($ERDA_HOST)/api/terminus/cicds/($id)/actions/run'
-  mut run = (curl --silent -H (get-erda-auth) -X POST $runUrl | from json)
-  let url = $'($ERDA_HOST)/terminus/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
+export def run-cicd [id: int, appid: int, pid: int, --host: string = $ERDA_HOST] {
+  let runUrl = $'($host)/api/terminus/cicds/($id)/actions/run'
+  mut run = (curl --silent -H (get-erda-auth $host) -X POST $runUrl | from json)
+  let url = $'($host)/terminus/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
   # Check session expired, and renew if needed
   if (should-retry-req $run) {
-    renew-erda-session
-    $run = (curl --silent -H (get-erda-auth) -X POST $runUrl | from json)
+    renew-erda-session $host
+    $run = (curl --silent -H (get-erda-auth $host) -X POST $runUrl | from json)
   }
   if $run.success {
     print $'CICD started, You can query the pipeline running status with id: (ansi g)($id)(ansi reset)'
@@ -293,13 +293,13 @@ export def run-cicd [id: int, appid: int, pid: int] {
 
 # POST https://erda.cloud/api/terminus/cicds/1248053184433812/actions/cancel
 # 停止指定 ID 的流水线
-def stop-cicd [id: int] {
-  let cancelUrl = $'($ERDA_HOST)/api/terminus/cicds/($id)/actions/cancel'
-  mut run = (curl --silent -H (get-erda-auth) -X POST $cancelUrl | from json)
+def stop-cicd [id: int, --host: string = $ERDA_HOST] {
+  let cancelUrl = $'($host)/api/terminus/cicds/($id)/actions/cancel'
+  mut run = (curl --silent -H (get-erda-auth $host) -X POST $cancelUrl | from json)
   # Check session expired, and renew if needed
   if (should-retry-req $run) {
-    renew-erda-session
-    $run = (curl --silent -H (get-erda-auth) -X POST $cancelUrl | from json)
+    renew-erda-session $host
+    $run = (curl --silent -H (get-erda-auth $host) -X POST $cancelUrl | from json)
   }
   if $run.success {
     print $'CICD stopped, pipeline current status of id: (ansi g)($id)(ansi reset)'
@@ -376,21 +376,21 @@ def polling-stage-status [id: int, --sid: int] {
 }
 
 # 查询流水线执行结果的详细信息
-export def fetch-cicd-detail [id: int] {
-  let queryUrl = $'($ERDA_HOST)/api/terminus/pipelines/($id)'
-  mut query = (curl --silent -H (get-erda-auth) $queryUrl | from json)
+export def fetch-cicd-detail [id: int, --host: string = $ERDA_HOST] {
+  let queryUrl = $'($host)/api/terminus/pipelines/($id)'
+  mut query = (curl --silent -H (get-erda-auth $host) $queryUrl | from json)
 
   # Check session expired, and renew if needed
   if (should-retry-req $query) {
-    renew-erda-session
-    $query = (curl --silent -H (get-erda-auth) $queryUrl | from json)
+    renew-erda-session $host
+    $query = (curl --silent -H (get-erda-auth $host) $queryUrl | from json)
   }
   $query
 }
 
 # 根据流水线 ID 查询流水线执行结果
-export def query-cicd-by-id [id: int, --watch] {
-  let query = fetch-cicd-detail $id
+export def query-cicd-by-id [id: int, --watch, --host: string = $ERDA_HOST] {
+  let query = fetch-cicd-detail $id --host $host
   if ($query | describe) == 'string' {
     print $'Query CICD failed with message: (ansi r)($query)(ansi reset)'
     exit $ECODE.SERVER_ERROR
@@ -413,7 +413,7 @@ export def query-cicd-by-id [id: int, --watch] {
     End: $timeEnd
     Duration: ($'($query.data.costTimeSec)sec' | into duration)
     # 此处之所以没有直接用 $appid & $pid 是因为可能存在在 A 应用仓库中查询 B 应用的流水线执行结果的情况，故而以返回数据为准
-    URL: $'($ERDA_HOST)/terminus/dop/projects/($query.data.projectID)/apps/($query.data.applicationID)/pipeline/obsoleted?pipelineID=($id)'
+    URL: $'($host)/terminus/dop/projects/($query.data.projectID)/apps/($query.data.applicationID)/pipeline/obsoleted?pipelineID=($id)'
   }
   print $'(char nl)(ansi pb)Current Running Status of CICD ($id):(ansi reset)'
   hr-line; print $output

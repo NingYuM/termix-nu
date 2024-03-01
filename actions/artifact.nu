@@ -19,11 +19,11 @@
 # [ ] Support private ERDA host and login with username and password
 # [ ] Update artifact related docs
 # Usage:
-#   - t art deploy -e TEST ${version}   使用指定版本制品部署目标测试环境
-#   - t art deploy -e TEST -s           选择制品并部署目标测试环境
-#   - t art deploy -e TEST -c           构建制品并部署目标测试环境（支持同项目 & 不同项目, 不同项目需要下载制品然后上传）
-#   - t art produce                     构建制品并输出制品信息
-#   - t art consume -e TEST ${version}  下载指定版本的制品并上传到目标项目然后部署指定环境
+#   - t art deploy -e TEST -v ${version}    使用指定版本制品部署目标测试环境
+#   - t art deploy -e TEST -s               选择制品并部署目标测试环境
+#   - t art deploy -e TEST -c               构建制品并部署目标测试环境（支持同项目 & 不同项目, 不同项目需要下载制品然后上传）
+#   - t art produce                         构建制品并输出制品信息
+#   - t art consume -e TEST -v ${version}   下载指定版本的制品并上传到目标项目然后部署指定环境
 # Reference
 #   - https://erda.cloud/api/terminus/releases?isProjectRelease=true&isStable=true&pageNo=1&pageSize=10&projectId=1158&version=2.5.23.1214%2B20231227182207
 #   - ls -f | get name | to text | fzf --height 50% -e --inline-info --preview 'cat {}'
@@ -33,9 +33,8 @@ use std ellie
 
 use pipeline.nu [create-cicd, run-cicd, query-cicd-by-id, fetch-cicd-detail]
 use ../utils/common.nu [ECODE, hr-line, log, get-tmp-path]
-use ../utils/erda.nu [VALID_ENV, get-erda-auth, renew-erda-session, should-retry-req]
+use ../utils/erda.nu [VALID_ENV, ERDA_HOST, get-erda-auth, renew-erda-session, should-retry-req]
 
-const ERDA_HOST = 'https://erda.cloud'
 const DEPLOY_POLLING_INTERVAL = 2sec
 const SUPPORTED_ACTIONS = [deploy, produce, consume]
 
@@ -61,11 +60,8 @@ export def artifacts [
   match $action {
     produce => { produce-artifact --from=$from --branch=$branch --need-confirm }
     consume => { consume-artifact $version $dest_env -f $from -t $to -c --deploy-group=$deploy_group --no-deploy=$no_deploy }
-    deploy => { (deploy-artifact
-                    --select=$select --combine=$combine --from=$from
-                    --to=$to --branch=$branch --version=$version
-                    --dest-env=$dest_env --deploy-group=$deploy_group
-                    --no-deploy=$no_deploy)
+    deploy => { (deploy-artifact $dest_env --combine=$combine --from $from --branch $branch
+                                 --select=$select -v $version -t $to -g $deploy_group --no-deploy=$no_deploy)
     }
     _ => {
       print $'Unsupported action: (ansi r)($action)(ansi reset), supported actions are: (ansi g)($SUPPORTED_ACTIONS | str join ", ")(ansi reset)'
@@ -87,11 +83,8 @@ def produce-artifact [
   --need-confirm(-c),         # Need to confirm the produce action before execute
 ] {
   let setting = validate-produce-setting --from $from --branch $branch
-  let branch = $setting.branch
-  let appName = $setting.appName
-  let pipeline = $setting.pipeline
   if $need_confirm { confirm-produce $setting }
-  let meta = create-artifact-from-pipeline $setting.projectId $setting.appId $appName $branch $pipeline
+  let meta = create-artifact-from-pipeline $setting
   print $'(char nl)Artifact has been created successfully:'; hr-line;
   $meta
 }
@@ -100,7 +93,8 @@ def confirm-produce [
   setting: record,    # Source setting to produce the artifact
 ] {
   print $'You are going to produce artifacts with the following config:'
-  hr-line 60 -c grey66; print $setting; hr-line 60 -c grey66
+  let option = ($setting | reject -i username password)
+  hr-line 60 -c grey66; print $option; hr-line 60 -c grey66
   print $'Are you sure to continue? '
   let confirm = input $'Please press (ansi p)y(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
   if $confirm == 'q' { echo $'Artifacts creating cancelled, Bye...'; exit $ECODE.SUCCESS }
@@ -124,7 +118,7 @@ def confirm-consume [
   print $msg
   let setting = {
       version: $version, destEnv: $destEnv,
-      destSetting: ($destSetting | select -i projectId deployGroup erdaHost)
+      destSetting: ($destSetting | reject -i username password)
     }
   hr-line 60 -c grey66; print ($setting | table -e); hr-line 60 -c grey66
   print $'Are you sure to continue? '
@@ -155,7 +149,7 @@ def validate-produce-setting [
     print $'(ansi r)Multiple default source configs found, make sure that you have only one default source.(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
-  mut setting = $setting.0
+  mut setting = ($artConf.settings | merge $setting.0 | default $ERDA_HOST erdaHost)
   # TODO: setting fields validation
   if ($branch | is-empty) { $setting } else { $setting | upsert branch $branch }
 }
@@ -175,24 +169,23 @@ def consume-artifact [
   if $need_confirm { confirm-consume $version $destEnv $destSetting --no-deploy=$no_deploy }
   let srcPID = $srcSetting.projectId
   let destPID = $destSetting.projectId
-  let matches = query-release-by-version $version $srcPID --verbose --name 'Source Project'
+  let matches = query-release-by-version $version $srcPID --verbose --name 'Source Project' --host $srcSetting.erdaHost
   if ($matches | is-empty) {
     print $'No artifact found for version ($version) in project ID ($srcPID)'
     return
   }
-  let dest = download-artifact-from-release $matches.releaseId.0 $version
-  let destMatches = query-release-by-version $version $destPID
+  let dest = download-artifact-from-release $matches.releaseId.0 $version --host $srcSetting.erdaHost
+  let destMatches = query-release-by-version $version $destPID --host $destSetting.erdaHost
   if ($destMatches | is-empty) {
-    # TODO: orgID
-    upload-artifact $version $dest --oid 2 --pid $destPID
+    upload-artifact $version $dest --oid $destSetting.orgId --pid $destPID --host $destSetting.erdaHost
   } else {
     print $'Artifact of version (ansi g)($version)(ansi reset) already exists in dest project ID (ansi g)($destPID)(ansi reset):(char nl)'
     print $destMatches
   }
-  let selectedRelease = query-release-by-version $version $destPID
+  let selectedRelease = query-release-by-version $version $destPID --host $destSetting.erdaHost
   let deployGroup = $destSetting.deployGroup | default 'All'
-  let doid = create-deploy-order ($selectedRelease.0 | into record) $destEnv --pid $destPID --deploy-group=$deployGroup
-  if (not ($doid | is-empty)) and (not $no_deploy) { polling-artifact-deploy $doid }
+  let doid = create-deploy-order ($selectedRelease.0 | into record) $destEnv --pid $destPID --deploy-group=$deployGroup --host $destSetting.erdaHost
+  if (not ($doid | is-empty)) and (not $no_deploy) { polling-artifact-deploy $doid --host $destSetting.erdaHost }
 }
 
 def validate-consume-setting [
@@ -222,12 +215,13 @@ def validate-consume-setting [
     print $'(ansi r)Multiple default destination configs found, make sure that you have only one default destination.(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
-  mut setting = $setting.0
+  mut setting = ($artConf.settings | merge $setting.0 | default $ERDA_HOST erdaHost)
   # TODO: setting fields validation
   if ($deploy_group | is-empty) { $setting } else { $setting | upsert deployGroup $deploy_group }
 }
 
 def deploy-artifact [
+  destEnv: string,            # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
   --select(-s),               # Select the artifact version to deploy to the dest environment
   --combine(-c),              # Build and upload the artifact to the dest project and deploy to the dest
   --no-deploy(-n),            # Won't deploy after creating deploy order
@@ -235,7 +229,6 @@ def deploy-artifact [
   --to(-t): string,           # Destination config to upload or deploy artifact
   --branch(-b): string,       # The branch name to build the artifact
   --version(-v): string,      # The version number of the artifact to deploy
-  --dest-env(-e): string,     # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
   --deploy-group(-g): string, # The app group to deploy for the specified artifact, `all` by default
 ] {
   print 'Deploy artifact'
@@ -243,31 +236,30 @@ def deploy-artifact [
 
 # Create artifact from running the specified pipeline
 def create-artifact-from-pipeline [
-  pid: int,           # Project ID to create artifact
-  appId: int,         # Application ID to create artifact
-  appName: string,    # Application name
-  branch: string,     # Branch name to run the pipeline
-  pipeline: string,   # Pipeline file to run and create artifact
+  setting: record,    # The source setting to create artifacts
 ] {
-  let cicdid = create-cicd $appId $appName $branch $pipeline
-  run-cicd $cicdid $appId $pid
-  query-cicd-by-id $cicdid --watch
-  get-artifact-meta $cicdid trantor2-artifacts
+  let appId = $setting.appId
+  let host = $setting.erdaHost
+  let cicdid = create-cicd $appId $setting.appName $setting.branch $setting.pipeline --host $host
+  run-cicd $cicdid $appId $setting.pid --host $host
+  query-cicd-by-id $cicdid --watch --host $host
+  get-artifact-meta $cicdid $setting.artifactNode --host $host
 }
 
 # Polling and display artifacts deploy status
 def polling-artifact-deploy [
   doid: string,       # Deploy order ID to poll and display the deploy status
+  --host: string,     # The Erda host to poll the deploy status
 ] {
-  let deployUrl = $'($ERDA_HOST)/api/terminus/deployment-orders/($doid)/actions/deploy'
-  let deploy = http post -e --headers (get-erda-auth --type nu) --content-type application/json $deployUrl {}
+  let deployUrl = $'($host)/api/terminus/deployment-orders/($doid)/actions/deploy'
+  let deploy = http post -e --headers (get-erda-auth $host --type nu) --content-type application/json $deployUrl {}
   if not ($deploy.success) {
     print $'Deployment started failed with error: (ansi r)($deploy.err.msg)(ansi reset)'
     return
   }
   print 'Deployment has been started successfully!'
 
-  let groups = get-artifact-deploy-detail $doid | get data.applicationsInfo
+  let groups = get-artifact-deploy-detail $doid --host $host | get data.applicationsInfo
   let total = $groups | length
   const FINISH_STATUS = [OK, FAILED, CANCELED]
   const UNFINISH_STATUS = [DEPLOYING, WAITDEPLOY]
@@ -297,7 +289,7 @@ def polling-artifact-deploy [
     mut keepPolling = true
     while $keepPolling {
       print -n '*'  # * 💤 👣 ✨ 🍵 ⚡ 🎉 🔹 🔸
-      let detail = get-artifact-deploy-detail $doid
+      let detail = get-artifact-deploy-detail $doid --host $host
       let apps = $detail.data.applicationsInfo
       # DEPLOYING,OK,FAILED
       let status = $apps | get $g.index | get status
@@ -315,12 +307,12 @@ def polling-artifact-deploy [
   # Wait for the final status to be updated
   loop {
     sleep $DEPLOY_POLLING_INTERVAL
-    let detail = get-artifact-deploy-detail $doid
+    let detail = get-artifact-deploy-detail $doid --host $host
     if $detail.data.status in $FINISH_STATUS { break }
   }
 
   # Refresh the query result and print the final time cost
-  let detail = get-artifact-deploy-detail $doid
+  let detail = get-artifact-deploy-detail $doid --host $host
   let duration = ($detail.data.updatedAt | into datetime) - ($detail.data.startedAt | into datetime)
   print $'(char nl)Artifacts deploy finished with status: (ansi p)($detail.data.status)(ansi reset)! Total time cost: ($duration)'
 }
@@ -328,9 +320,10 @@ def polling-artifact-deploy [
 # Get artifact deploy detail by deploy order ID
 def get-artifact-deploy-detail [
   doid: string      # Deploy order ID to query the deploy detail
+  --host: string,   # The Erda host to query the deploy detail
 ] {
-  let queryUrl = $'($ERDA_HOST)/api/terminus/deployment-orders/($doid)'
-  let detail = http get -e --headers (get-erda-auth --type nu) $queryUrl
+  let queryUrl = $'($host)/api/terminus/deployment-orders/($doid)'
+  let detail = http get -e --headers (get-erda-auth $host --type nu) $queryUrl
   $detail
 }
 
@@ -359,10 +352,11 @@ def create-deploy-order [
   environment: string = 'DEV',    # The environment to deploy the artifact, such as DEV, TEST, STAGING, PROD, etc.
   --pid: int,                     # The Project ID to deploy the artifact
   --deploy-group(-g): string,     # The app group to deploy for the specified artifact, `all` by default
+  --host: string,                 # The Erda host to create deploy order
 ] {
-  let releaseDetailUrl = $'($ERDA_HOST)/api/terminus/releases/($artifact.releaseId)'
-  let doCreateUrl = $'($ERDA_HOST)/api/terminus/deployment-orders'
-  let release = http get -e --headers (get-erda-auth --type nu) $releaseDetailUrl
+  let releaseDetailUrl = $'($host)/api/terminus/releases/($artifact.releaseId)'
+  let doCreateUrl = $'($host)/api/terminus/deployment-orders'
+  let release = http get -e --headers (get-erda-auth $host --type nu) $releaseDetailUrl
   let modes = $release.data.modes
   # Use specified deploy group or select the deploy mode
   let selected = if $deploy_group in ($modes | columns) { { mode: $deploy_group } } else {
@@ -381,7 +375,7 @@ def create-deploy-order [
     workspace: $environment,
     releaseId: $artifact.releaseId,
   }
-  let do = http post -e --headers (get-erda-auth --type nu) --content-type application/json $doCreateUrl $doPayload
+  let do = http post -e --headers (get-erda-auth $host --type nu) --content-type application/json $doCreateUrl $doPayload
   if not $do.success {
     print $'Failed to create deploy order with error message:'
     print $'(ansi r)($do.err.msg)(ansi reset)'
@@ -395,8 +389,9 @@ def create-deploy-order [
 def get-artifact-meta [
   cicdid: int,        # CICD ID to query artifact meta info
   taskName: string,   # Task name of the pipeline task to query artifact meta info
+  --host: string,     # The Erda host to query the artifact meta info
 ] {
-  let detail = fetch-cicd-detail $cicdid
+  let detail = fetch-cicd-detail $cicdid --host $host
   $detail.data.pipelineStages
     | flatten
     | get pipelineTasks
@@ -412,8 +407,9 @@ def query-release-by-version [
   pid: int,           # Project id to query the release artifact
   --name: string,     # Display name of the project
   --verbose(-v),      # Print more details of the matched artifact
+  --host: string,     # The Erda host to query the release
 ] {
-  let queryUrl = $'($ERDA_HOST)/api/terminus/releases'
+  let queryUrl = $'($host)/api/terminus/releases'
   let payload = {
     pageNo: '1',
     pageSize: '100',
@@ -422,7 +418,14 @@ def query-release-by-version [
     projectId: $'($pid)',
     isProjectRelease: 'true'
   }
-  let filtered = curl --silent -H (get-erda-auth) $'($queryUrl)?($payload | url build-query)' | from json
+  let queryUrl = $'($queryUrl)?($payload | url build-query)'
+  mut filtered = curl --silent -H (get-erda-auth $host) $queryUrl | from json
+  # Check session expired, and renew if needed
+  if (should-retry-req $filtered) {
+    renew-erda-session $host
+    $filtered = (curl --silent -H (get-erda-auth $host) $queryUrl | from json)
+  }
+
   let matches = if $filtered.success {
     $filtered.data.list
       | select projectName projectId createdAt version releaseId
@@ -443,14 +446,15 @@ def query-release-by-version [
 def download-artifact-from-release [
   releaseId: string,    # Release ID to download artifact
   version: string,      # Version number of the artifact
+  --host: string,       # The Erda host to download the artifact
 ] {
   let tmp = $'(get-tmp-path)/terp/artifacts'
   if not ($tmp | path exists) { mkdir $tmp }
   # Download artifact
-  let downloadUrl = $'($ERDA_HOST)/api/terminus/releases/($releaseId)/actions/download'
+  let downloadUrl = $'($host)/api/terminus/releases/($releaseId)/actions/download'
   let dest = $'($tmp)/($version).zip'
   print $'Downloading artifact of version (ansi g)($version)(ansi reset) and releaseId (ansi g)($releaseId)(ansi reset) ...'
-  curl --silent -H (get-erda-auth) $downloadUrl -o $dest
+  curl --silent -H (get-erda-auth $host) $downloadUrl -o $dest
   print $'Artifact has been downloaded to ($dest)(char nl)'
   $dest
 }
@@ -462,9 +466,10 @@ def upload-artifact [
   file: string,       # File path of the artifact to upload
   --pid: int,         # Project ID to upload the artifact
   --oid: int,         # Organization ID to upload the artifact
+  --host: string,     # The Erda host to upload the artifact
 ] {
-  let releaseUploadUrl = $'($ERDA_HOST)/api/terminus/releases/actions/upload'
-  let upload = upload-file $file
+  let releaseUploadUrl = $'($host)/api/terminus/releases/actions/upload'
+  let upload = upload-file $file --host $host
   print $upload
   let payload = {
     orgId: $oid,
@@ -473,7 +478,7 @@ def upload-artifact [
     userId: $upload.creator,
     diceFileID: $'($upload.fileID)',
   }
-  let release = http post -e --headers (get-erda-auth --type nu) --content-type application/json $'($releaseUploadUrl)' $payload
+  let release = http post -e --headers (get-erda-auth $host --type nu) --content-type application/json $'($releaseUploadUrl)' $payload
   if $release.success {
     print $'Artifact has been uploaded successfully with version (ansi g)($version)(ansi reset)'
   } else {
@@ -485,9 +490,10 @@ def upload-artifact [
 # Upload file from local disk to Erda Cloud
 def upload-file [
   file: string,       # File path to upload
+  --host: string,     # The Erda host to upload the file
 ] {
-  let uploadUrl = $'($ERDA_HOST)/api/files'
-  let upload = curl --silent -H (get-erda-auth) -F $'file=@($file)' $uploadUrl | from json
+  let uploadUrl = $'($host)/api/files'
+  let upload = curl --silent -H (get-erda-auth $host) -F $'file=@($file)' $uploadUrl | from json
   if $upload.success {
     print $'File (ansi g)($file)(ansi reset) has been uploaded successfully to Erda Cloud'
     return { fileID: $upload.data.uuid, url: $upload.data.url, creator: $upload.data.creator }
