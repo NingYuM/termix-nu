@@ -1,6 +1,18 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## 1.68.1 - 2024-03-06
+
+### Bug Fixes
+
+- Fix `t ding-msg` show error detail of failed ding notification
+- Fix select of list, use spread operator instead for Nu v0.91
+
+### Miscellaneous Tasks
+
+- Update README.md add nu install and upgrade tip
+- Update Nushell config to v0.91.0
+
 ## 1.68.0 - 2024-02-22
 
 ### Bug Fixes
