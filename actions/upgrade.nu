@@ -25,7 +25,7 @@ export def upgrade-tool [
   if $all {
     upgrade-termix-nu
     upgrade-latest-tool just --no-aria2c --force=$force
-    upgrade-latest-tool nushell --no-aria2c --force=$force
+    upgrade-latest-tool nushell --no-aria2c --force=$force --post-install { rm $nu.plugin-path }
     exit $ECODE.SUCCESS
   }
 

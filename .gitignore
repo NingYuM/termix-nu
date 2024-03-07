@@ -1,5 +1,6 @@
 tmp
 .env
+.idea
 .termixrc
 .snapshot
 *-compose.nu

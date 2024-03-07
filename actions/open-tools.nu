@@ -20,7 +20,7 @@ const BIN_MAP = {
 }
 
 # Install tools from USTC mirror
-export def install-from-brew [name: string, --force(-f)] {
+export def install-from-brew [name: string, --force(-f), --post-install: closure] {
   if (sys).host.name != 'Darwin' {
     print '(ansi r)Only macOS is supported to install by brew for now...(ansi reset)'; exit $ECODE.INVALID_PARAMETER
   }
@@ -30,9 +30,12 @@ export def install-from-brew [name: string, --force(-f)] {
   if (not (should-upgrade $name $latest --force=$force)) { return }
   print $'Upgrading ($name) to ($latest.version)...'; hr-line
   if $force and (is-installed ($BIN_MAP | get $name)) {
-    fast-brew reinstall $name; return
+    fast-brew reinstall $name
+    do ($post_install | default {||})
+    return
   }
   fast-brew install $name
+  do ($post_install | default {||})
 }
 
 # Get latest version of tools from USTC mirror
@@ -51,16 +54,17 @@ export def get-version-from-brew [name: string] {
 
 # Upgrade the latest release of a tool from the OSS storage, currently supported: Nushell & Just
 export def upgrade-latest-tool [
-  name: string,         # The name of the tool, e.g. `nushell`
-  target: string = ''   # The target architecture, matches all of them by default
-  --list(-l),           # List all the available binary packages
-  --force(-f),          # Force to upgrade even if the local version is the same as or above the latest one
-  --interactive(-i),    # Ask the user to choose the target architecture
-  --no-aria2c,          # Don't use aria2c to download tools
+  name: string,             # The name of the tool, e.g. `nushell`
+  target: string = ''       # The target architecture, matches all of them by default
+  --list(-l),               # List all the available binary packages
+  --force(-f),              # Force to upgrade even if the local version is the same as or above the latest one
+  --interactive(-i),        # Ask the user to choose the target architecture
+  --no-aria2c,              # Don't use aria2c to download tools
+  --post-install: closure,  # Post-installation hook
 ]: nothing -> nothing {
 
   # $nu.os-info.arch == 'aarch64'
-  if (sys).host.name == 'Darwin' { install-from-brew $name --force=$force; return }
+  if (sys).host.name == 'Darwin' { install-from-brew $name --force=$force --post-install $post_install; return }
   mut target = $target
   let latest = http get $'($TOOL_PREFIX)/($name)/latest.json'
   # Check current version and compare with the latest one stop upgrading if lower than or equal to the latest one
