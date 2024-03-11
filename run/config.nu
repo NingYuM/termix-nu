@@ -1393,3 +1393,5 @@ $env.PATH = ($env.PATH | each {|r| $r | split row (char esep)} | flatten | uniq 
 # REF: https://github.com/atuinsh/atuin
 # atuin init nu --disable-up-arrow | save -rf ~/.local/share/atuin/init.nu
 source ~/.local/share/atuin/init.nu
+
+use '~/.config/broot/launcher/nushell/br' *
