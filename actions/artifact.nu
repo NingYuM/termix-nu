@@ -14,7 +14,8 @@
 # [√] Deploy all apps by default, stop and select the group to deploy if no matched group found
 # [√] Display and confirm consume action detail before execute
 # [√] Install fzf if not exist for artifact version selection
-# [ ] Use fzf to select the artifact version to deploy
+# [√] Use fzf to select the artifact version to deploy
+# [ ] If there is only one deploy group, deploy it directly without select
 # [ ] Show artifact deploy permission info somewhere
 # [ ] Deploy artifacts by deploy order ID
 # [ ] Validate input args and flags
@@ -61,12 +62,28 @@ export def artifacts [
   let sha = do -i { git rev-parse $currentBranch | str substring 0..7 }
   print -n (ellie); print $'        Terminus TERP Artifacts Assistant @ ($sha)'; hr-line
 
+  let checkEnv = {
+      if ($dest_env | is-empty) {
+        print $'(ansi r)Please specify the dest environment to deploy the artifact by --dest-env/-e, such as DEV,TEST,STAGING,PROD, etc.(ansi reset)'
+        exit $ECODE.INVALID_PARAMETER
+      }
+    }
+
+  let checkVersion = {
+      if ($version | is-empty) {
+        print $'(ansi r)Please specify the version of the artifact to deploy by --version/-v...(ansi reset)'
+        exit $ECODE.INVALID_PARAMETER
+      }
+    }
+
   load-art-conf
   match $action {
     produce => { produce-artifact --from=$from --branch=$branch --need-confirm }
-    consume => { consume-artifact $version $dest_env -f $from -t $to -c --deploy-group=$deploy_group --no-deploy=$no_deploy }
-    deploy => { (deploy-artifact $dest_env --combine=$combine --from $from --branch $branch --doid $doid
-                                 --select=$select -v $version -t $to -g $deploy_group --no-deploy=$no_deploy)
+    consume => { do $checkEnv; do $checkVersion; consume-artifact $version $dest_env -f $from -t $to -c --deploy-group=$deploy_group --no-deploy=$no_deploy }
+    deploy => {
+      do $checkEnv
+      (deploy-artifact $dest_env --combine=$combine --from $from --branch $branch --doid $doid
+                       --select=$select -v $version -t $to -g $deploy_group --no-deploy=$no_deploy)
     }
     _ => {
       print $'Unsupported action: (ansi r)($action)(ansi reset), supported actions are: (ansi g)($SUPPORTED_ACTIONS | str join ", ")(ansi reset)'
@@ -243,7 +260,20 @@ def deploy-artifact [
   --deploy-group(-g): string, # The app group to deploy for the specified artifact, `all` by default
   --doid(-d): string,         # The deploy order ID to deploy and query the deploy detail
 ] {
-  print 'Deploy artifact'
+  let destEnv = $destEnv | str upcase
+  print $'Deploy artifact to (ansi g)($destEnv)(ansi reset)'; hr-line
+  let srcSetting = validate-produce-setting --from $from
+  const RELEASE_PATH = 'tmp/releases.json'
+  if $select {
+    let releases = query-release-candidates $srcSetting.projectId --name $srcSetting.projectName --host $srcSetting.erdaHost
+    $releases | tee { save -f $RELEASE_PATH } | get data.list | length | ignore
+    let title = $'Select the artifact to deploy:'
+    let FZF_PREVIEW_CONF = $'--preview "nu actions/artifact-preview.nu {} ($RELEASE_PATH)" --preview-window=right:65%:~2'
+    let FZF_THEME = '--color=bg+:#3c3836,bg:#32302f,spinner:#fb4934,hl:#928374,fg:#ebdbb2,header:#928374,info:#8ec07c,pointer:#fb4934,marker:#fb4934,fg+:#ebdbb2,prompt:#fb4934,hl+:#fb4934'
+    $env.FZF_DEFAULT_OPTS = $'--height 50% --layout=reverse --exact --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
+    $releases.data.list | select version createdAt | sort-by -r createdAt | get version | str join (char nl) | fzf
+  }
+  # let destSetting = validate-consume-setting $version $destEnv --to $to --deploy-group $deploy_group --no-deploy=$no_deploy
   # if (not ($doid | is-empty)) and (not $no_deploy) { polling-artifact-deploy $doid --host $destSetting.erdaHost }
 }
 
@@ -413,6 +443,31 @@ def get-artifact-meta [
     | get result?.metadata?
     | flatten
     | select name value
+}
+
+# Query releases by project ID
+def query-release-candidates [
+  pid: int,           # Project id to query the release artifact
+  --name: string,     # Display name of the project
+  --host: string,     # The Erda host to query the release
+] {
+  let queryUrl = $'($host)/api/terminus/releases'
+  let payload = {
+    pageNo: '1',
+    pageSize: '200',
+    isStable: 'true',
+    projectId: $'($pid)',
+    isProjectRelease: 'true'
+  }
+  let queryUrl = $'($queryUrl)?($payload | url build-query)'
+  mut filtered = curl --silent -H (get-erda-auth $host) $queryUrl | from json
+  # Check session expired, and renew if needed
+  if (should-retry-req $filtered) {
+    renew-erda-session $host
+    $filtered = (curl --silent -H (get-erda-auth $host) $queryUrl | from json)
+  }
+
+  if $filtered.success { $filtered }
 }
 
 # Query release by version number and project ID
