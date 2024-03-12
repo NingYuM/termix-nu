@@ -11,7 +11,7 @@
 #   t upgrade just
 #   t upgrade nushell
 
-use ../utils/common.nu [ECODE, hr-line]
+use ../utils/common.nu [ECODE, hr-line, is-installed]
 use open-tools.nu [upgrade-latest-tool]
 
 const VALID_TOOLS = ['just', 'nu', 'nushell', 'termix-nu']
@@ -26,6 +26,9 @@ export def upgrade-tool [
     upgrade-termix-nu
     upgrade-latest-tool just --no-aria2c --force=$force
     upgrade-latest-tool nushell --no-aria2c --force=$force --post-install { rm $nu.plugin-path }
+    if (is-installed fzf) {
+      upgrade-latest-tool fzf --no-aria2c --force=$force
+    }
     exit $ECODE.SUCCESS
   }
 

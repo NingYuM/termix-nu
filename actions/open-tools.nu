@@ -15,6 +15,7 @@ const TOOL_PREFIX = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/o
 
 # Mapping from package name to executable binary name
 const BIN_MAP = {
+  fzf: 'fzf',
   just: 'just',
   nushell: 'nu',
 }
@@ -184,6 +185,7 @@ def should-upgrade [name: string, latest: record, --force] {
     # just: { echo '1.22.0' },
     # nushell: { echo '0.88.0' },
     nushell: { nu --version | str trim },
+    fzf: { fzf --version | split row ' ' | get 0 }
     just: { just --version | str replace 'just' '' | str trim },
   }
 
