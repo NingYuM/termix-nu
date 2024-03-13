@@ -15,11 +15,11 @@
 # [√] Display and confirm consume action detail before execute
 # [√] Install fzf if not exist for artifact version selection
 # [√] Use fzf to select the artifact version to deploy
+# [√] Deploy artifacts by deploy order ID
+# [ ] Confirm the deploy order detail before execute
 # [ ] If there is only one deploy group, deploy it directly without select
 # [ ] Show artifact deploy permission info somewhere
-# [ ] Deploy artifacts by deploy order ID
 # [ ] Validate input args and flags
-# [ ] Confirm the deploy order detail before execute
 # [ ] Support artifact actions: deploy, produce, consume
 # [ ] Support private ERDA host and login with username and password
 # [ ] Update artifact related docs
@@ -46,9 +46,8 @@ const SUPPORTED_ACTIONS = [deploy, produce, consume]
 # Build, Download and Upload artifacts, create deploy order then deploy from artifacts
 export def artifacts [
   action: string,             # Action to perform, such as `deploy`, `produce`, and `consume`
-  --select(-s),               # Select the artifact version to deploy to the dest environment
   --combine(-c),              # Build and upload the artifact to the dest project and deploy to the dest
-  --no-deploy(-n),            # Won't deploy after creating deploy order
+  --no-deploy(-n),            # Don't deploy after creating deploy order
   --from(-f): string,         # Source config to build or download artifact
   --to(-t): string,           # Destination config to upload or deploy artifact
   --branch(-b): string,       # The branch name to build the artifact
@@ -62,7 +61,8 @@ export def artifacts [
   let sha = do -i { git rev-parse $currentBranch | str substring 0..7 }
   print -n (ellie); print $'        Terminus TERP Artifacts Assistant @ ($sha)'; hr-line
 
-  let checkEnv = {
+  let checkEnv = {|did|
+      if ($did | is-not-empty) { return }
       if ($dest_env | is-empty) {
         print $'(ansi r)Please specify the dest environment to deploy the artifact by --dest-env/-e, such as DEV,TEST,STAGING,PROD, etc.(ansi reset)'
         exit $ECODE.INVALID_PARAMETER
@@ -81,9 +81,9 @@ export def artifacts [
     produce => { produce-artifact --from=$from --branch=$branch --need-confirm }
     consume => { do $checkEnv; do $checkVersion; consume-artifact $version $dest_env -f $from -t $to -c --deploy-group=$deploy_group --no-deploy=$no_deploy }
     deploy => {
-      do $checkEnv
-      (deploy-artifact $dest_env --combine=$combine --from $from --branch $branch --doid $doid
-                       --select=$select -v $version -t $to -g $deploy_group --no-deploy=$no_deploy)
+      do $checkEnv $doid
+      (deploy-artifact --dest-env $dest_env --combine=$combine --from $from --branch $branch --doid $doid
+                       --version $version --to $to --deploy-group $deploy_group --no-deploy=$no_deploy)
     }
     _ => {
       print $'Unsupported action: (ansi r)($action)(ansi reset), supported actions are: (ansi g)($SUPPORTED_ACTIONS | str join ", ")(ansi reset)'
@@ -150,7 +150,7 @@ def confirm-consume [
   version: string,            # The version number of the artifact to deploy
   destEnv: string,            # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
   destSetting: record,        # Destination setting to consume the artifact
-  --no-deploy(-n),            # Won't deploy after creating deploy order
+  --no-deploy(-n),            # Don't deploy after creating deploy order
 ] {
   let msg = if $no_deploy {
       $'You are going to fetch the artifacts and create deploy order with the following config:'
@@ -201,7 +201,7 @@ def validate-produce-setting [
 def consume-artifact [
   version: string,            # The version number of the artifact to deploy
   destEnv: string,            # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
-  --no-deploy(-n),            # Won't deploy after creating deploy order
+  --no-deploy(-n),            # Don't deploy after creating deploy order
   --from(-f): string,         # Source config to build or download artifact
   --to(-t): string,           # Destination config to upload or deploy artifact
   --deploy-group(-g): string, # The app group to deploy for the specified artifact, `all` by default
@@ -235,14 +235,18 @@ def consume-artifact [
 # Validate the artifact consume action settings and return the validated settings
 def validate-consume-setting [
   destEnv: string,            # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
-  --no-deploy(-n),            # Won't deploy after creating deploy order
+  --deploy,                   # Perform a deploy action rather than consume action
+  --doid(-d): string,         # The deploy order ID to deploy and query the deploy detail
+  --no-deploy(-n),            # Don't deploy after creating deploy order
   --to(-t): string,           # Destination config to upload or deploy artifact
   --deploy-group(-g): string, # The app group to deploy for the specified artifact, `all` by default
 ] {
-  let destEnv = $destEnv | str upcase
-  if $destEnv not-in $VALID_ENV {
-    print $'Invalid dest environment: (ansi r)($destEnv)(ansi reset), supported environments are: ($VALID_ENV | str join ", ")'
-    exit $ECODE.INVALID_PARAMETER
+  if not ($deploy and ($doid | is-not-empty)) {
+    let destEnv = $destEnv | str upcase
+    if $destEnv not-in $VALID_ENV {
+      print $'Invalid dest environment: (ansi r)($destEnv)(ansi reset), supported environments are: ($VALID_ENV | str join ", ")'
+      exit $ECODE.INVALID_PARAMETER
+    }
   }
   let artConf = $env.ART_CONF
   let setting = if ($to | is-empty) {
@@ -265,10 +269,9 @@ def validate-consume-setting [
 }
 
 def deploy-artifact [
-  destEnv: string,            # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
-  --select(-s),               # Select the artifact version to deploy to the dest environment
+  --dest-env: string,         # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
   --combine(-c),              # Build and upload the artifact to the dest project and deploy to the dest
-  --no-deploy(-n),            # Won't deploy after creating deploy order
+  --no-deploy(-n),            # Don't deploy after creating deploy order
   --from(-f): string,         # Source config to build or download artifact
   --to(-t): string,           # Destination config to upload or deploy artifact
   --branch(-b): string,       # The branch name to build the artifact
@@ -276,18 +279,28 @@ def deploy-artifact [
   --deploy-group(-g): string, # The app group to deploy for the specified artifact, `all` by default
   --doid(-d): string,         # The deploy order ID to deploy and query the deploy detail
 ] {
-  let destEnv = $destEnv | str upcase
-  print $'Deploy artifact to (ansi g)($destEnv)(ansi reset)'; hr-line
+  let destEnv = $dest_env | default '' | str upcase
+  if ($destEnv | is-not-empty) { print $'Deploy artifact to (ansi g)($destEnv)(ansi reset)'; hr-line }
   let srcSetting = validate-produce-setting --from $from
-  let destSetting = validate-consume-setting $destEnv --to $to --deploy-group $deploy_group --no-deploy=$no_deploy
+  let destSetting = validate-consume-setting $destEnv --to $to --deploy-group $deploy_group --no-deploy=$no_deploy --deploy --doid $doid
   if (not ($doid | is-empty)) and (not $no_deploy) {
+    print $'You are going to deploy the artifact with deploy order ID: (ansi g)($doid)(ansi reset)'
     polling-artifact-deploy $doid --host $destSetting.erdaHost
     return
   }
-  let version = if $select or ($version | is-empty) { select-artifact-by-fzf $destSetting } else { $version }
+  let version = if ($version | is-empty) { select-artifact-by-fzf $destSetting } else { $version }
+  if ($version | is-empty) {
+    print $'(ansi r)No artifact version selected, deploy cancelled, bye...(ansi reset)'
+    exit $ECODE.INVALID_PARAMETER
+  }
   print $'You are going to deploy (ansi g)($version)(ansi reset) to ($destEnv)'
+  let selectedRelease = query-release-by-version $version $destSetting.projectId --host $destSetting.erdaHost
+  let deployGroup = $destSetting.deployGroup | default 'All'
+  let doid = create-deploy-order ($selectedRelease.0 | into record) $destEnv --pid $destSetting.projectId --deploy-group=$deployGroup --host $destSetting.erdaHost
+  if (not ($doid | is-empty)) and (not $no_deploy) { polling-artifact-deploy $doid --host $destSetting.erdaHost }
 }
 
+# Select a artifact version to deploy from the release list
 def select-artifact-by-fzf [
   destSetting: record,    # The destination setting to search and deploy the artifact
 ] {

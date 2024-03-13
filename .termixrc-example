@@ -88,9 +88,10 @@ artifactNode = 'trantor2-artifacts' # 输出制品 releaseID & version 信息的
 default = true                      # 是否默认的部署目标
 projectId = 1158                    # 用于部署制品的应用或者上传制品所在 Project ID
 projectName = 'TERP'                # 用于部署制品的应用或者上传制品所在 Project 名称,建议填写方便识别
-username = 'terminus'               # 部署目标所在 Erda 平台的用户名
-password = 'terminus'               # 部署目标所在 Erda 平台的密码
-erdaHost = 'https://erda.cloud'     # 部署目标所在 Erda 平台的 Host
+deployGroup = 'All'                 # 部署应用集合，All: 部署所有应用, 或者指定其他部署应用集合名称，如果找不到则停下来让用户选择
+username = 'terminus'               # 部署目标所在 Erda 平台的用户名, 未填则使用 artifact.settings 中的默认值
+password = 'terminus'               # 部署目标所在 Erda 平台的密码, 未填则使用 artifact.settings 中的默认值
+erdaHost = 'https://erda.cloud'     # 部署目标所在 Erda 平台的 Host，未填则使用 artifact.settings 中的默认值
 # --------------------------- Artifact Related Config End ---------------------------
 
 # Meta data syncing source config
