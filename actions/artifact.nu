@@ -92,6 +92,23 @@ export def artifacts [
   }
 }
 
+# Preview the selected artifact detail info
+export def preview-artifact [
+  version: string,      # The version of the selected artifact
+  metaPath: string,     # The path of the artifact meta data file
+] {
+  const SELECT_COLUMN = [version projectName userId createdAt releaseId modes]
+  print $'Version: ($version)'; hr-line
+  $env.config.table.mode = 'psql'
+  let releases = open $metaPath
+  let selected = $releases.0.data.list | where version == $version | get 0
+  mut meta = $selected | select ...$SELECT_COLUMN
+  $meta.modes = (($meta.modes | from json | columns) | str join ', ')
+  $meta.createdBy = ($releases.userInfo | get -i $meta.userId).nick?.0?
+  $meta | select ...($SELECT_COLUMN | update 2 createdBy) | print; hr-line
+  print $selected.changelog
+}
+
 # Load meta data settings and store them to environment variable
 def --env load-art-conf [] {
   let artConf = open $'($env.TERMIX_DIR)/.termixrc' | from toml | get artifact
@@ -192,7 +209,7 @@ def consume-artifact [
 ] {
   let destEnv = $destEnv | str upcase
   let srcSetting = validate-produce-setting --from $from
-  let destSetting = validate-consume-setting $version $destEnv --to $to --deploy-group $deploy_group --no-deploy=$no_deploy
+  let destSetting = validate-consume-setting $destEnv --to $to --deploy-group $deploy_group --no-deploy=$no_deploy
   if $need_confirm { confirm-consume $version $destEnv $destSetting --no-deploy=$no_deploy }
   let srcPID = $srcSetting.projectId
   let destPID = $destSetting.projectId
@@ -217,7 +234,6 @@ def consume-artifact [
 
 # Validate the artifact consume action settings and return the validated settings
 def validate-consume-setting [
-  version: string,            # The version number of the artifact to deploy
   destEnv: string,            # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
   --no-deploy(-n),            # Won't deploy after creating deploy order
   --to(-t): string,           # Destination config to upload or deploy artifact
@@ -263,18 +279,31 @@ def deploy-artifact [
   let destEnv = $destEnv | str upcase
   print $'Deploy artifact to (ansi g)($destEnv)(ansi reset)'; hr-line
   let srcSetting = validate-produce-setting --from $from
-  const RELEASE_PATH = 'tmp/releases.json'
-  if $select {
-    let releases = query-release-candidates $srcSetting.projectId --name $srcSetting.projectName --host $srcSetting.erdaHost
-    $releases | tee { save -f $RELEASE_PATH } | get data.list | length | ignore
-    let title = $'Select the artifact to deploy:'
-    let FZF_PREVIEW_CONF = $'--preview "nu actions/artifact-preview.nu {} ($RELEASE_PATH)" --preview-window=right:65%:~2'
-    let FZF_THEME = '--color=bg+:#3c3836,bg:#32302f,spinner:#fb4934,hl:#928374,fg:#ebdbb2,header:#928374,info:#8ec07c,pointer:#fb4934,marker:#fb4934,fg+:#ebdbb2,prompt:#fb4934,hl+:#fb4934'
-    $env.FZF_DEFAULT_OPTS = $'--height 50% --layout=reverse --exact --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
-    $releases.data.list | select version createdAt | sort-by -r createdAt | get version | str join (char nl) | fzf
+  let destSetting = validate-consume-setting $destEnv --to $to --deploy-group $deploy_group --no-deploy=$no_deploy
+  if (not ($doid | is-empty)) and (not $no_deploy) {
+    polling-artifact-deploy $doid --host $destSetting.erdaHost
+    return
   }
-  # let destSetting = validate-consume-setting $version $destEnv --to $to --deploy-group $deploy_group --no-deploy=$no_deploy
-  # if (not ($doid | is-empty)) and (not $no_deploy) { polling-artifact-deploy $doid --host $destSetting.erdaHost }
+  let version = if $select or ($version | is-empty) { select-artifact-by-fzf $destSetting } else { $version }
+  print $'You are going to deploy (ansi g)($version)(ansi reset) to ($destEnv)'
+}
+
+def select-artifact-by-fzf [
+  destSetting: record,    # The destination setting to search and deploy the artifact
+] {
+  # ~/.termix-nu/terp/artifacts/releases.json
+  let tmp = $'(get-tmp-path)/terp/artifacts'
+  if not ($tmp | path exists) { mkdir $tmp }
+  let releaseMetaPath = $'($tmp)/releases.json'
+  let releases = query-release-candidates $destSetting.projectId --name $destSetting.projectName --host $destSetting.erdaHost
+  $releases | tee { save -f $releaseMetaPath } | get data.list | length | ignore
+  let title = $'Select the artifact to deploy:'
+  let PREVIEW_CMD = $"nu -c 'overlay use actions/artifact.nu; preview-artifact {} ($releaseMetaPath)'"
+  let FZF_PREVIEW_CONF = $'--preview "($PREVIEW_CMD)" --preview-window=right:65%:~2'
+  let FZF_THEME = '--color=bg+:#3c3836,bg:#32302f,spinner:#fb4934,hl:#928374,fg:#ebdbb2,header:#928374,info:#8ec07c,pointer:#fb4934,marker:#fb4934,fg+:#ebdbb2,prompt:#fb4934,hl+:#fb4934'
+  $env.FZF_DEFAULT_OPTS = $'--height 50% --layout=reverse --exact --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
+  let version = $releases.data.list | select version createdAt | sort-by -r createdAt | get version | str join (char nl) | fzf
+  $version
 }
 
 # Create artifact from running the specified pipeline
