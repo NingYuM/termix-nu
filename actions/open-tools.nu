@@ -27,10 +27,12 @@ export def install-from-brew [name: string, --force(-f), --post-install: closure
   }
 
   let latest = get-version-from-brew $name
+  let installed = is-installed ($BIN_MAP | get $name)
+  let message = if $installed { $'Upgrading ($name) to ($latest.version)...' } else { $'Installing (ansi g)($name)@($latest.version)(ansi reset)...' }
   # Check current version and compare with the latest one stop upgrading if lower than or equal to the latest one
   if (not (should-upgrade $name $latest --force=$force)) { return }
-  print $'Upgrading ($name) to ($latest.version)...'; hr-line
-  if $force and (is-installed ($BIN_MAP | get $name)) {
+  print $message; hr-line
+  if $force and $installed {
     fast-brew reinstall $name
     do ($post_install | default {||})
     return
@@ -189,7 +191,7 @@ def should-upgrade [name: string, latest: record, --force] {
     just: { just --version | str replace 'just' '' | str trim },
   }
 
-  let currentVer = do ($VERSION_CHECK | get $name)
+  let currentVer = do -i ($VERSION_CHECK | get $name) | default 0.0.0
   if (compare-ver $latest.version $currentVer) <= 0 {
     print $'($name) is already the latest version: (ansi g)($currentVer)(ansi reset), upgrade skipped...'
     return false

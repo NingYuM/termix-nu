@@ -98,7 +98,7 @@ terp-assets *OPTIONS: _setup
     terp assets {{OPTIONS}}
 
 # Create, download, upload and deploy from the artifacts
-art *OPTIONS: _setup
+art *OPTIONS: _setup _setup_fzf
   @overlay use {{ join(_termix, 'actions', 'artifact.nu') }}; \
     artifacts {{OPTIONS}}
 
@@ -294,6 +294,11 @@ git-batch-reset n +branches=(''): _setup
 dir-batch-exec *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'dir-batch-exec.nu') }}; \
     dir-batch-exec {{OPTIONS}}
+
+# Install fzf if not exists
+_setup_fzf:
+  @overlay use {{ join(_termix, 'actions', 'open-tools.nu') }}; \
+    if (which fzf | length) == 0 { print $'(ansi g)`fzf` is required but not installed, try to install `fzf`...(ansi reset)'; install-from-brew fzf }
 
 # 版本检查前置操作
 _setup: _register_plugins

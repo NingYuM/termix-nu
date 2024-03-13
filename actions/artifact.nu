@@ -13,6 +13,10 @@
 # [√] Display and confirm produce action detail before execute
 # [√] Deploy all apps by default, stop and select the group to deploy if no matched group found
 # [√] Display and confirm consume action detail before execute
+# [√] Install fzf if not exist for artifact version selection
+# [ ] Use fzf to select the artifact version to deploy
+# [ ] Show artifact deploy permission info somewhere
+# [ ] Deploy artifacts by deploy order ID
 # [ ] Validate input args and flags
 # [ ] Confirm the deploy order detail before execute
 # [ ] Support artifact actions: deploy, produce, consume
@@ -50,6 +54,7 @@ export def artifacts [
   --version(-v): string,      # The version number of the artifact to deploy
   --dest-env(-e): string,     # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
   --deploy-group(-g): string, # The app group to deploy for the specified artifact, `All` by default
+  --doid(-d): string,         # The deploy order ID to deploy and query the deploy detail
 ] {
   cd $env.TERMIX_DIR
   let currentBranch = git branch --show-current
@@ -60,7 +65,7 @@ export def artifacts [
   match $action {
     produce => { produce-artifact --from=$from --branch=$branch --need-confirm }
     consume => { consume-artifact $version $dest_env -f $from -t $to -c --deploy-group=$deploy_group --no-deploy=$no_deploy }
-    deploy => { (deploy-artifact $dest_env --combine=$combine --from $from --branch $branch
+    deploy => { (deploy-artifact $dest_env --combine=$combine --from $from --branch $branch --doid $doid
                                  --select=$select -v $version -t $to -g $deploy_group --no-deploy=$no_deploy)
     }
     _ => {
@@ -77,6 +82,7 @@ def --env load-art-conf [] {
   $artConf
 }
 
+# Produce artifacts from source project and display the artifact meta info
 def produce-artifact [
   --from(-f): string,         # Source config to build or download artifact
   --branch(-b): string,       # The branch name to build the artifact
@@ -89,6 +95,7 @@ def produce-artifact [
   $meta
 }
 
+# Confirm the artifact produce action settings before execute
 def confirm-produce [
   setting: record,    # Source setting to produce the artifact
 ] {
@@ -104,6 +111,7 @@ def confirm-produce [
   }
 }
 
+# Confirm the artifact cosume action settings before execute
 def confirm-consume [
   version: string,            # The version number of the artifact to deploy
   destEnv: string,            # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
@@ -130,6 +138,7 @@ def confirm-consume [
   }
 }
 
+# Validate the artifact produce action settings and return the validated settings
 def validate-produce-setting [
   --from(-f): string,         # Source config to build or download artifact
   --branch(-b): string,       # The branch name to build the artifact
@@ -154,6 +163,7 @@ def validate-produce-setting [
   if ($branch | is-empty) { $setting } else { $setting | upsert branch $branch }
 }
 
+# Cosume the artifacts: download, upload and deploy the artifacts to the dest environment
 def consume-artifact [
   version: string,            # The version number of the artifact to deploy
   destEnv: string,            # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
@@ -188,6 +198,7 @@ def consume-artifact [
   if (not ($doid | is-empty)) and (not $no_deploy) { polling-artifact-deploy $doid --host $destSetting.erdaHost }
 }
 
+# Validate the artifact consume action settings and return the validated settings
 def validate-consume-setting [
   version: string,            # The version number of the artifact to deploy
   destEnv: string,            # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
@@ -230,8 +241,10 @@ def deploy-artifact [
   --branch(-b): string,       # The branch name to build the artifact
   --version(-v): string,      # The version number of the artifact to deploy
   --deploy-group(-g): string, # The app group to deploy for the specified artifact, `all` by default
+  --doid(-d): string,         # The deploy order ID to deploy and query the deploy detail
 ] {
   print 'Deploy artifact'
+  # if (not ($doid | is-empty)) and (not $no_deploy) { polling-artifact-deploy $doid --host $destSetting.erdaHost }
 }
 
 # Create artifact from running the specified pipeline
@@ -327,6 +340,7 @@ def get-artifact-deploy-detail [
   $detail
 }
 
+# Select the application group to deploy from the artifact
 def select-deploy-mode [
   modes: record,    # The deploy modes to select
 ] {

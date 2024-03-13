@@ -75,7 +75,8 @@ erdaHost = 'https://erda.cloud'     # 可以被源和目标中的同名配置覆
 
 [artifact.source.trantor]
 default = true                      # 是否默认启用的源
-projectId = 190                     # 用于构建制品的应用所在 Project ID
+projectId = 190                     # 用于构建制品的应用或下载制品所在 Project ID
+projectName = 'Trantor2'            # 用于构建的应用或下载制品所在 Project 名称,建议填写方便识别
 appId = 1                           # 用于构建制品的 App ID
 appName = 'trantor2-release'        # 用于构建制品的 App 名称
 env = 'PROD'                        # 构建制品的环境比如：DEV, TEST, STAGING, PROD
@@ -85,7 +86,8 @@ artifactNode = 'trantor2-artifacts' # 输出制品 releaseID & version 信息的
 
 [artifact.destination.terp]
 default = true                      # 是否默认的部署目标
-projectId = 1158                    # 用于部署制品的应用所在 Project ID
+projectId = 1158                    # 用于部署制品的应用或者上传制品所在 Project ID
+projectName = 'TERP'                # 用于部署制品的应用或者上传制品所在 Project 名称,建议填写方便识别
 username = 'terminus'               # 部署目标所在 Erda 平台的用户名
 password = 'terminus'               # 部署目标所在 Erda 平台的密码
 erdaHost = 'https://erda.cloud'     # 部署目标所在 Erda 平台的 Host
