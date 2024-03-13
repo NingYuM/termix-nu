@@ -16,7 +16,7 @@
 # [√] Install fzf if not exist for artifact version selection
 # [√] Use fzf to select the artifact version to deploy
 # [√] Deploy artifacts by deploy order ID
-# [ ] Confirm the deploy order detail before execute
+# [√] Confirm the deploy order detail before execute
 # [ ] If there is only one deploy group, deploy it directly without select
 # [ ] Show artifact deploy permission info somewhere
 # [ ] Validate input args and flags
@@ -25,7 +25,7 @@
 # [ ] Update artifact related docs
 # Usage:
 #   - t art deploy -e TEST -v ${version}    使用指定版本制品部署目标测试环境
-#   - t art deploy -e TEST -s               选择制品并部署目标测试环境
+#   - t art deploy -e TEST                  选择制品并部署目标测试环境
 #   - t art deploy -e TEST -c               构建制品并部署目标测试环境（支持同项目 & 不同项目, 不同项目需要下载制品然后上传）
 #   - t art produce                         构建制品并输出制品信息
 #   - t art consume -e TEST -v ${version}   下载指定版本的制品并上传到目标项目然后部署指定环境
@@ -48,8 +48,8 @@ export def artifacts [
   action: string,             # Action to perform, such as `deploy`, `produce`, and `consume`
   --combine(-c),              # Build and upload the artifact to the dest project and deploy to the dest
   --no-deploy(-n),            # Don't deploy after creating deploy order
-  --from(-f): string,         # Source config to build or download artifact
-  --to(-t): string,           # Destination config to upload or deploy artifact
+  --from(-f): string,         # Alias of source config to build or download artifact
+  --to(-t): string,           # Alias of destination config to upload or deploy artifact
   --branch(-b): string,       # The branch name to build the artifact
   --version(-v): string,      # The version number of the artifact to deploy
   --dest-env(-e): string,     # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
@@ -156,6 +156,35 @@ def confirm-consume [
       $'You are going to fetch the artifacts and create deploy order with the following config:'
     } else {
       $'You are going to fetch the artifacts and (ansi r)DEPLOY(ansi reset) them with the following config:'
+    }
+  print $msg
+  let setting = {
+      version: $version, destEnv: $destEnv,
+      destSetting: ($destSetting | reject -i username password)
+    }
+  hr-line 60 -c grey66; print ($setting | table -e); hr-line 60 -c grey66
+  print $'Are you sure to continue? '
+  let confirm = input $'Please press (ansi p)($version)(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
+  if $confirm == 'q' { echo $'Operation cancelled, Bye...'; exit $ECODE.SUCCESS }
+  if $confirm != $version {
+    echo $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($version)(ansi reset), bye...'
+    exit $ECODE.INVALID_PARAMETER
+  }
+}
+
+# Confirm the artifact deploy action settings before execute
+def confirm-deploy [
+  version: string,            # The version number of the artifact to deploy
+  destEnv: string,            # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
+  destSetting: record,        # Destination setting to consume the artifact
+  --doid(-d): string,         # The deploy order ID to deploy and query the deploy detail
+  --no-deploy(-n),            # Don't deploy after creating deploy order
+] {
+  # TODO: Confirm deploy by --doid with more detail
+  let msg = if $no_deploy {
+      $'You are going to create deploy order from ($version) at ($destEnv) with the following config:'
+    } else {
+      $'You are going to (ansi r)DEPLOY ($version) to ($destEnv)(ansi reset) with the following config:'
     }
   print $msg
   let setting = {
@@ -293,7 +322,7 @@ def deploy-artifact [
     print $'(ansi r)No artifact version selected, deploy cancelled, bye...(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
-  print $'You are going to deploy (ansi g)($version)(ansi reset) to ($destEnv)'
+  confirm-deploy $version $destEnv $destSetting --doid $doid --no-deploy=$no_deploy
   let selectedRelease = query-release-by-version $version $destSetting.projectId --host $destSetting.erdaHost
   let deployGroup = $destSetting.deployGroup | default 'All'
   let doid = create-deploy-order ($selectedRelease.0 | into record) $destEnv --pid $destSetting.projectId --deploy-group=$deployGroup --host $destSetting.erdaHost
@@ -427,7 +456,7 @@ def select-deploy-mode [
   }
   let selected = $choices
     | upsert option {|c| if $c.mode == 'All' { 'All' } else { $'($c.mode) (ansi w)- ($c.children)(ansi reset)' } }
-    | input list -d option 'Please select the applications to deploy'
+    | input list -d option 'Select the application group to deploy'
 
   $selected
 }
@@ -446,10 +475,11 @@ def create-deploy-order [
   let modes = $release.data.modes
   # Use specified deploy group or select the deploy mode
   let selected = if $deploy_group in ($modes | columns) { { mode: $deploy_group } } else {
-      print $'There is no matched deploy group: (ansi r)($deploy_group)(ansi reset), Please select the group to deploy:'
+      print $'There is no matched deploy group: (ansi r)($deploy_group)(ansi reset), Please select the group manually.'
       select-deploy-mode $modes
     }
 
+  if ($selected | is-empty) { print "You didn't select anything, deploy cancelled, bye..."; exit $ECODE.INVALID_PARAMETER }
   print $'You are going to deploy the group: (ansi g)($selected.mode)(ansi reset).'
   print $'The following applications will be deployed:(char nl)'
   $modes | get $selected.mode | get applicationReleaseList | flatten
