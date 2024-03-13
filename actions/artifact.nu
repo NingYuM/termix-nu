@@ -9,11 +9,13 @@
 # [√] Create: Create deploy order to deploy artifacts to Erda cluster
 # [√] Execute: Execute Erda Pipeline to deploy artifacts to Erda cluster
 # [√] Query and display the deploy status
+# [√] Add artifact deploy config file
+# [√] Display and confirm produce action detail before execute
 # [ ] Deploy all apps by default, stop and select the group to deploy if user has no permission
-# [ ] Add artifact deploy config file
 # [ ] Validate input args and flags
 # [ ] Confirm the deploy order detail before execute
 # [ ] Support artifact actions: deploy, produce, consume
+# [ ] Support private ERDA host and login with username and password
 # [ ] Update artifact related docs
 # Usage:
 #   - t art deploy -e TEST ${version}   使用指定版本制品部署目标测试环境
@@ -26,18 +28,19 @@
 #   - ls -f | get name | to text | fzf --height 50% -e --inline-info --preview 'cat {}'
 # Usage:
 
+use std ellie
+
 use pipeline.nu [create-cicd, run-cicd, query-cicd-by-id, fetch-cicd-detail]
 use ../utils/common.nu [ECODE, hr-line, log, get-tmp-path]
 use ../utils/erda.nu [VALID_ENV, get-erda-auth, renew-erda-session, should-retry-req]
 
-# TODO: Support private erda host and login with username and password
 const ERDA_HOST = 'https://erda.cloud'
 const DEPLOY_POLLING_INTERVAL = 2sec
 const SUPPORTED_ACTIONS = [deploy, produce, consume]
 
 # Build, Download and Upload artifacts, create deploy order then deploy from artifacts
 export def artifacts [
-  action: string,             # Action to perform, such as deploy, produce, and consume
+  action: string,             # Action to perform, such as `deploy`, `produce`, and `consume`
   --select(-s),               # Select the artifact version to deploy to the dest environment
   --combine(-c),              # Build and upload the artifact to the dest project and deploy to the dest
   --no-deploy(-n),            # Won't deploy after creating deploy order
@@ -48,6 +51,11 @@ export def artifacts [
   --dest-env(-e): string,     # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
   --deploy-group(-g): string, # The app group to deploy for the specified artifact, `all` by default
 ] {
+  cd $env.TERMIX_DIR
+  let currentBranch = git branch --show-current
+  let sha = do -i { git rev-parse $currentBranch | str substring 0..7 }
+  print -n (ellie); print $'        Terminus TERP Artifacts Assistant @ ($sha)'; hr-line
+
   load-art-conf
   match $action {
     produce => { produce-artifact --from=$from --branch=$branch }
@@ -69,7 +77,7 @@ export def artifacts [
 def --env load-art-conf [] {
   let artConf = open $'($env.TERMIX_DIR)/.termixrc' | from toml | get artifact
   $env.ART_CONF = $artConf
-  return $artConf
+  $artConf
 }
 
 def produce-artifact [
@@ -80,10 +88,24 @@ def produce-artifact [
   let branch = $setting.branch
   let appName = $setting.appName
   let pipeline = $setting.pipeline
-  print $'Producing artifact from (ansi g)($branch)(ansi reset) branch of (ansi g)($appName)(ansi reset) with pipeline: ($pipeline)...'
+  confirm-produce $setting
   let meta = create-artifact-from-pipeline $setting.projectId $setting.appId $appName $branch $pipeline
-  print $'(char nl)Artifact has been created successfully:'; hr-line; print $meta
+  print $'(char nl)Artifact has been created successfully:'; hr-line;
   $meta
+}
+
+def confirm-produce [
+  setting: record,    # Source setting to produce the artifact
+] {
+  print $'You are going to produce artifacts with the following config:'
+  hr-line 60 -c grey66; print $setting; hr-line 60 -c grey66
+  print $'Are you sure to continue? '
+  let confirm = input $'Please press (ansi p)y(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
+  if $confirm == 'q' { echo $'Artifacts creating cancelled, Bye...'; exit $ECODE.SUCCESS }
+  if $confirm != 'y' {
+    echo $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)y(ansi reset), bye...'
+    exit $ECODE.INVALID_PARAMETER
+  }
 }
 
 def validate-produce-setting [
