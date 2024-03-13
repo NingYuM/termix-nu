@@ -17,11 +17,12 @@
 # [√] Use fzf to select the artifact version to deploy
 # [√] Deploy artifacts by deploy order ID
 # [√] Confirm the deploy order detail before execute
+# [√] Support artifact actions: deploy, produce, consume
+# [ ] Support private ERDA host and login with username and password
 # [ ] If there is only one deploy group, deploy it directly without select
 # [ ] Show artifact deploy permission info somewhere
+# [ ] Support `deploy --combine` which contains produce and consume
 # [ ] Validate input args and flags
-# [ ] Support artifact actions: deploy, produce, consume
-# [ ] Support private ERDA host and login with username and password
 # [ ] Update artifact related docs
 # Usage:
 #   - t art deploy -e TEST -v ${version}    使用指定版本制品部署目标测试环境
@@ -95,8 +96,8 @@ export def artifacts [
 # Preview the selected artifact detail info
 export def preview-artifact [
   version: string,      # The version of the selected artifact
-  metaPath: string,     # The path of the artifact meta data file
 ] {
+  let metaPath = $'(get-tmp-path)/terp/artifacts/releases.json'
   const SELECT_COLUMN = [version projectName userId createdAt releaseId modes]
   print $'Version: ($version)'; hr-line
   $env.config.table.mode = 'psql'
@@ -340,7 +341,7 @@ def select-artifact-by-fzf [
   let releases = query-release-candidates $destSetting.projectId --name $destSetting.projectName --host $destSetting.erdaHost
   $releases | tee { save -f $releaseMetaPath } | get data.list | length | ignore
   let title = $'Select the artifact to deploy:'
-  let PREVIEW_CMD = $"nu -c 'overlay use actions/artifact.nu; preview-artifact {} ($releaseMetaPath)'"
+  let PREVIEW_CMD = $"nu actions/artifact.nu {}"
   let FZF_PREVIEW_CONF = $'--preview "($PREVIEW_CMD)" --preview-window=right:65%:~2'
   let FZF_THEME = '--color=bg+:#3c3836,bg:#32302f,spinner:#fb4934,hl:#928374,fg:#ebdbb2,header:#928374,info:#8ec07c,pointer:#fb4934,marker:#fb4934,fg+:#ebdbb2,prompt:#fb4934,hl+:#fb4934'
   $env.FZF_DEFAULT_OPTS = $'--height 50% --layout=reverse --exact --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
@@ -400,9 +401,12 @@ def polling-artifact-deploy [
       }
 
     print $'Group ($g.index + 1)/($total): ($indicator)'
+    mut counter = 0
     mut keepPolling = true
     while $keepPolling {
       print -n '*'  # * 💤 👣 ✨ 🍵 ⚡ 🎉 🔹 🔸
+      $counter += 1
+      if ($counter == 90) { $counter = 0; print -n (char nl) }
       let detail = get-artifact-deploy-detail $doid --host $host
       let apps = $detail.data.applicationsInfo
       # DEPLOYING,OK,FAILED
@@ -515,6 +519,7 @@ def get-artifact-meta [
     | get result?.metadata?
     | flatten
     | select name value
+    | rename Name Value
 }
 
 # Query releases by project ID
@@ -645,4 +650,4 @@ def upload-file [
   print $upload.err.msg
 }
 
-alias main = artifacts
+alias main = preview-artifact

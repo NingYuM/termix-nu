@@ -331,23 +331,27 @@ export def watch-cicd-status [id: int] {
     let stageSkipped = $stageStatus | all {|it| $it == 'NoNeedBySystem' }
     let stageUnfinished = $stageStatus | any {|it| $it in $UNFINISH_STATUS }
     let indicator = if $stageSuccess {
-        $'(ansi g)✓(ansi reset)  Task (ansi g)($tasks)(ansi reset) Finished Successfully! Time cost: ($duration)'
+        $'(ansi g)✓(ansi reset)  Stage: (ansi g)($tasks)(ansi reset) Finished Successfully! Time cost: ($duration)'
       } else if $stageSkipped {
-        $'(ansi y)☕(ansi reset) Task (ansi y)($tasks)(ansi reset) Was skipped!' # 💥 💭 👻 💨 ☕
+        $'(ansi y)☕(ansi reset) Stage: (ansi y)($tasks)(ansi reset) Was skipped!' # 💥 💭 👻 💨 ☕
       } else if $stageFailed {
-        $'(ansi y)⚠(ansi reset)  Task (ansi y)($tasks)(ansi reset) Failed! Time cost: ($duration)'
+        $'(ansi y)⚠(ansi reset)  Stage: (ansi y)($tasks)(ansi reset) Failed! Time cost: ($duration)'
       } else if $stageStopped {
-        $'(ansi y)👻(ansi reset) Task (ansi y)($tasks)(ansi reset) Was stopped! Time cost: ($duration)'
+        $'(ansi y)👻(ansi reset) Stage: (ansi y)($tasks)(ansi reset) Was stopped! Time cost: ($duration)'
       } else if $stageUnfinished {
-        $'(ansi pb)🪄(ansi reset) Task (ansi g)($tasks)(ansi reset) is Running...'
+        $'(ansi pb)🪄(ansi reset) Stage: (ansi g)($tasks)(ansi reset) is Running...'
       } else {
         $'(ansi r)✗(ansi reset) Unknown Status: ($stageStatus | str join ",")'
       }
 
+    $env.config.table.mode = 'psql'
     print $'Stage ($stage.index + 1)/($total): ($indicator)'
+    mut counter = 0
     mut keepPolling = $stageUnfinished
     while $keepPolling {
       print -n '*'  # * 💤 👣 ✨ 🍵 ⚡ 🎉 🔹 🔸
+      $counter += 1
+      if ($counter == 90) { $counter = 0; print -n (char nl) }
       let pollingStages = polling-stage-status $id --sid $stage.item.id
       let tasks = $pollingStages | flatten | get pipelineTasks
       let status = $tasks | get status
@@ -356,7 +360,9 @@ export def watch-cicd-status [id: int] {
       } else {
         $keepPolling = false
         let duration = $'($tasks | get costTimeSec | math sum)sec' | into duration
-        print $'(char nl)Stage finished with status: (ansi g)($status | str join ",")(ansi reset). Time cost: ($duration)'
+        print $'(char nl)Stage finished with status:(char nl)'
+        $tasks | select name status | rename Name Status | print
+        print $'Time cost of this stage: ($duration)'
         hr-line 60 -c grey66
       }
       sleep $PIPELINE_POLLING_INTERVAL

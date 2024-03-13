@@ -43,6 +43,23 @@ alias tokeid = print (
     | into int Files Lines Code Comments Blanks
 )
 
+# Show the count of Nushell commands
+def action [action?: string, --list(-l)] {
+  const actionMap = {
+    produce: 'Create artifacts from CLI',
+    deploy: 'Deploy artifacts to the destination project of specified environment:'
+    consume: 'Consume the artifacts provided by the producer:'
+  }
+  if $list { print ($actionMap | columns | str join ', '); return }
+  mut counter = 0
+  let chars = $actionMap | get -i $action | default 'Unknown Action' | split row ''
+  let total = $chars | length
+  loop {
+    if $counter == $total { break }
+    print -n ($chars | get $counter); sleep 0.1sec; $counter += 1
+  }
+}
+
 # ----------------------- ENV VARS ------------------------
 $env.EDITOR = 'hx'
 # Disable the date & time displaying on the right of prompt
