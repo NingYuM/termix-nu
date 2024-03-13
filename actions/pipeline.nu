@@ -17,6 +17,7 @@
 #  [✓] 详情轮询模式下显示各阶段子任务名称/执行状态及耗时
 #  [✓] 详情轮询模式下显示各阶段流水线执行耗时及阶段执行状态
 #  [✓] 详情轮询模式下显示总 Stage 数，总耗时，整体执行状态
+#  [ ] 同一个 Stage 下面的各个子任务的执行状态以表格形式展示
 # Description: 创建 Erda 流水线并执行，同时可以查询流水线执行结果
 #   可以 deploy 的 target 可以为 dev、test 等，对应的流水线配置文件为 .termixrc 中的 erda.dev、erda.test, etc.
 #   执行流水线时要求在仓库的 i 分支上的 .termixrc 文件中配置了对应 dest 的 pid、appid、appName、alias、branch、pipeline 信息
@@ -149,8 +150,9 @@ def query-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
   # Query the id of newly created CICD
   mut ci = (curl --silent -H (get-erda-auth $host) $cicdUrl | from json)
   # Check session expired, and renew if needed
-  if (should-retry-req $ci) {
-    renew-erda-session $host
+  let check = should-retry-req $ci
+  if ($check.shouldRetry) {
+    if $check.noAuth { renew-erda-session $host }
     $ci = (curl --silent -H (get-erda-auth $host) $cicdUrl | from json)
   }
   # log 'Query CICD: ' ($ci.data.pipelines | select id commit status | table -e)
@@ -261,8 +263,9 @@ export def create-cicd [aid: int, appName: string, branch: string, pipeline: str
   # Query the ID of newly created CICD
   mut ci = (curl --silent -H (get-erda-auth $host) --data-raw $'($cicd | to json)' $cicdUrl | from json)
   # Check session expired, and renew if needed
-  if (should-retry-req $ci) {
-    renew-erda-session $host
+  let check = should-retry-req $ci
+  if ($check.shouldRetry) {
+    if $check.noAuth { renew-erda-session $host }
     $ci = (curl --silent -H (get-erda-auth $host) --data-raw $'($cicd | to json)' $cicdUrl | from json)
   }
   if ($ci | describe) == 'string' {
@@ -281,8 +284,9 @@ export def run-cicd [id: int, appid: int, pid: int, --host: string = $ERDA_HOST]
   mut run = (curl --silent -H (get-erda-auth $host) -X POST $runUrl | from json)
   let url = $'($host)/terminus/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
   # Check session expired, and renew if needed
-  if (should-retry-req $run) {
-    renew-erda-session $host
+  let check = should-retry-req $run
+  if ($check.shouldRetry) {
+    if $check.noAuth { renew-erda-session $host }
     $run = (curl --silent -H (get-erda-auth $host) -X POST $runUrl | from json)
   }
   if $run.success {
@@ -297,8 +301,9 @@ def stop-cicd [id: int, --host: string = $ERDA_HOST] {
   let cancelUrl = $'($host)/api/terminus/cicds/($id)/actions/cancel'
   mut run = (curl --silent -H (get-erda-auth $host) -X POST $cancelUrl | from json)
   # Check session expired, and renew if needed
-  if (should-retry-req $run) {
-    renew-erda-session $host
+  let check = should-retry-req $run
+  if ($check.shouldRetry) {
+    if $check.noAuth { renew-erda-session $host }
     $run = (curl --silent -H (get-erda-auth $host) -X POST $cancelUrl | from json)
   }
   if $run.success {
@@ -381,8 +386,10 @@ export def fetch-cicd-detail [id: int, --host: string = $ERDA_HOST] {
   mut query = (curl --silent -H (get-erda-auth $host) $queryUrl | from json)
 
   # Check session expired, and renew if needed
-  if (should-retry-req $query) {
-    renew-erda-session $host
+  loop {
+    let check = should-retry-req $query
+    if not $check.shouldRetry { break }
+    if $check.noAuth { renew-erda-session $host }
     $query = (curl --silent -H (get-erda-auth $host) $queryUrl | from json)
   }
   $query

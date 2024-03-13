@@ -61,7 +61,7 @@ export def artifacts [
   let sha = do -i { git rev-parse $currentBranch | str substring 0..7 }
   print -n (ellie); print $'        Terminus TERP Artifacts Assistant @ ($sha)'; hr-line
 
-  let checkEnv = {|did|
+  let checkEnv = {|did?|
       if ($did | is-not-empty) { return }
       if ($dest_env | is-empty) {
         print $'(ansi r)Please specify the dest environment to deploy the artifact by --dest-env/-e, such as DEV,TEST,STAGING,PROD, etc.(ansi reset)'
@@ -137,10 +137,10 @@ def confirm-produce [
   let option = ($setting | reject -i username password)
   hr-line 60 -c grey66; print $option; hr-line 60 -c grey66
   print $'Are you sure to continue? '
-  let confirm = input $'Please press (ansi p)y(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
+  let confirm = input $'Please input (ansi p)($setting.branch)(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
   if $confirm == 'q' { echo $'Artifacts creating cancelled, Bye...'; exit $ECODE.SUCCESS }
-  if $confirm != 'y' {
-    echo $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)y(ansi reset), bye...'
+  if $confirm != $setting.branch {
+    echo $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($setting.branch)(ansi reset), bye...'
     exit $ECODE.INVALID_PARAMETER
   }
 }
@@ -164,7 +164,7 @@ def confirm-consume [
     }
   hr-line 60 -c grey66; print ($setting | table -e); hr-line 60 -c grey66
   print $'Are you sure to continue? '
-  let confirm = input $'Please press (ansi p)($version)(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
+  let confirm = input $'Please input (ansi p)($version)(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
   if $confirm == 'q' { echo $'Operation cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $confirm != $version {
     echo $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($version)(ansi reset), bye...'
@@ -193,7 +193,7 @@ def confirm-deploy [
     }
   hr-line 60 -c grey66; print ($setting | table -e); hr-line 60 -c grey66
   print $'Are you sure to continue? '
-  let confirm = input $'Please press (ansi p)($version)(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
+  let confirm = input $'Please input (ansi p)($version)(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
   if $confirm == 'q' { echo $'Operation cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $confirm != $version {
     echo $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($version)(ansi reset), bye...'
@@ -355,7 +355,7 @@ def create-artifact-from-pipeline [
   let appId = $setting.appId
   let host = $setting.erdaHost
   let cicdid = create-cicd $appId $setting.appName $setting.branch $setting.pipeline --host $host
-  run-cicd $cicdid $appId $setting.pid --host $host
+  run-cicd $cicdid $appId $setting.projectId --host $host
   query-cicd-by-id $cicdid --watch --host $host
   get-artifact-meta $cicdid $setting.artifactNode --host $host
 }
@@ -534,8 +534,9 @@ def query-release-candidates [
   let queryUrl = $'($queryUrl)?($payload | url build-query)'
   mut filtered = curl --silent -H (get-erda-auth $host) $queryUrl | from json
   # Check session expired, and renew if needed
-  if (should-retry-req $filtered) {
-    renew-erda-session $host
+  let check = should-retry-req $filtered
+  if ($check.shouldRetry) {
+    if $check.noAuth { renew-erda-session $host }
     $filtered = (curl --silent -H (get-erda-auth $host) $queryUrl | from json)
   }
 
@@ -562,8 +563,9 @@ def query-release-by-version [
   let queryUrl = $'($queryUrl)?($payload | url build-query)'
   mut filtered = curl --silent -H (get-erda-auth $host) $queryUrl | from json
   # Check session expired, and renew if needed
-  if (should-retry-req $filtered) {
-    renew-erda-session $host
+  let check = should-retry-req $filtered
+  if ($check.shouldRetry) {
+    if $check.noAuth { renew-erda-session $host }
     $filtered = (curl --silent -H (get-erda-auth $host) $queryUrl | from json)
   }
 

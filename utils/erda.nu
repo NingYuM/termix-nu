@@ -39,6 +39,7 @@ export def renew-erda-session [host: string = $ERDA_HOST] {
   let openApiHost = $host | str replace '://' '://openapi.'
   let RENEW_URL = $'($openApiHost)/login?($query)'
   let renew = curl --silent -X POST $RENEW_URL | from json
+  if ($renew | is-empty) { print 'Try renew Erda session again...'; renew-erda-session $host }
   if ($renew | describe) == 'string' {
     print $'Erda session renew failed with message: (ansi r)($renew)(ansi reset)'; exit $ECODE.AUTH_FAILED
   }
@@ -51,5 +52,5 @@ export def renew-erda-session [host: string = $ERDA_HOST] {
 export def should-retry-req [resp: any] {
   let isEmpty = ($resp | is-empty)
   let noAuth = ($resp | describe) == 'string' and ($resp =~ 'auth failed')
-  $isEmpty or $noAuth
+  { isEmpty: $isEmpty, noAuth: $noAuth, shouldRetry: ($isEmpty or $noAuth) }
 }

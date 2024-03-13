@@ -79,10 +79,10 @@ projectId = 190                     # 用于构建制品的应用或下载制品
 projectName = 'Trantor2'            # 用于构建的应用或下载制品所在 Project 名称,建议填写方便识别
 appId = 10384                       # 用于构建制品的 App ID
 appName = 'Trantor2-Release'        # 用于构建制品的 App 名称
-env = 'PROD'                        # 构建制品的环境比如：DEV, TEST, STAGING, PROD
-branch = 'master'                   # 用于构建制品的分支, 可以被 --branch 参数覆盖
-pipeline = 'pipeline.yml'           # 用于构建制品的 Pipeline 文件路径
-artifactNode = 'trantor2-artifacts' # 输出制品 releaseID & version 信息的节点名称
+env = 'TEST'                        # 构建制品的环境比如：DEV, TEST, STAGING, PROD
+branch = 'release/2.5.24.0130'                      # 用于构建制品的分支, 可以被 --branch 参数覆盖
+artifactNode = 'trantor2-artifacts'                 # 输出制品 releaseID & version 信息的节点名称
+pipeline = '.erda/pipelines/combine-artifact.yml'   # 用于构建制品的 Pipeline 文件路径
 
 [artifact.destination.terp]
 default = true                      # 是否默认的部署目标
