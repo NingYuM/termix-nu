@@ -18,9 +18,9 @@
 # [√] Deploy artifacts by deploy order ID
 # [√] Confirm the deploy order detail before execute
 # [√] Support artifact actions: deploy, produce, consume
+# [√] Show artifact deploy permission info somewhere
 # [ ] Support private ERDA host and login with username and password
 # [ ] If there is only one deploy group, deploy it directly without select
-# [ ] Show artifact deploy permission info somewhere
 # [ ] Support `deploy --combine` which contains produce and consume
 # [ ] Validate input args and flags
 # [ ] Update artifact related docs
@@ -42,7 +42,10 @@ use ../utils/common.nu [ECODE, hr-line, log, get-tmp-path]
 use ../utils/erda.nu [VALID_ENV, ERDA_HOST, get-erda-auth, renew-erda-session, should-retry-req]
 
 const DEPLOY_POLLING_INTERVAL = 2sec
+const RELEASE_META_PATH = 'terp/artifacts'
 const SUPPORTED_ACTIONS = [deploy, produce, consume]
+const FZF_DEFAULT_OPTS = '--height 50% --layout=reverse --exact --preview-window=right:65%:~2'
+const FZF_THEME = '--color=bg+:#3c3836,bg:#32302f,spinner:#fb4934,hl:#928374,fg:#ebdbb2,header:#928374,info:#8ec07c,pointer:#fb4934,marker:#fb4934,fg+:#ebdbb2,prompt:#fb4934,hl+:#fb4934'
 
 # Build, Download and Upload artifacts, create deploy order then deploy from artifacts
 export def artifacts [
@@ -93,11 +96,41 @@ export def artifacts [
   }
 }
 
+# Preview the selected fzf item detail info
+export def fzf-preview [
+  selected: string,
+  type: string,
+  --options: string,
+] {
+  match $type {
+    artifact => { preview-artifact $selected }
+    group => { preview-group $selected --options $options }
+    _ => { print $'Unsupported preview type: (ansi r)($type)(ansi reset)' }
+  }
+}
+
+# Query and show deploy group details in the fzf preview window
+def preview-group [
+  mode: string,
+  --options: string,
+] {
+  print $'You are going to deploy the application group: (ansi g)($mode)(ansi reset).'; hr-line
+  let previewOptions = $options | split column '+++' | rename projectId releaseID workspace host | into record
+  let host = $previewOptions.host
+  let query = $previewOptions | reject host | merge { mode: $mode } | url build-query
+  let queryUrl = $'($host)/api/terminus/deployment-orders/actions/render-detail?($query)'
+  let detail = http get -e --headers (get-erda-auth $host --type nu) $queryUrl
+  $env.config.table.mode = 'psql'
+  $detail.data.applicationsInfo | flatten | select name preCheckResult
+    | upsert checking {|it| if $it.preCheckResult.success { '✓' } else { $'✗ ($it.preCheckResult.failReasons | str join ";")' } }
+    | select name checking | print
+}
+
 # Preview the selected artifact detail info
-export def preview-artifact [
+def preview-artifact [
   version: string,      # The version of the selected artifact
 ] {
-  let metaPath = $'(get-tmp-path)/terp/artifacts/releases.json'
+  let metaPath = $'(get-tmp-path)/($RELEASE_META_PATH)/releases.json'
   const SELECT_COLUMN = [version projectName userId createdAt releaseId modes]
   print $'Version: ($version)'; hr-line
   $env.config.table.mode = 'psql'
@@ -320,12 +353,12 @@ def deploy-artifact [
   }
   let version = if ($version | is-empty) { select-artifact-by-fzf $destSetting } else { $version }
   if ($version | is-empty) {
-    print $'(ansi r)No artifact version selected, deploy cancelled, bye...(ansi reset)'
-    exit $ECODE.INVALID_PARAMETER
+    print $'(ansi grey66)No artifact version selected, deploy cancelled, bye...(ansi reset)'
+    exit $ECODE.SUCCESS
   }
   confirm-deploy $version $destEnv $destSetting --doid $doid --no-deploy=$no_deploy
   let selectedRelease = query-release-by-version $version $destSetting.projectId --host $destSetting.erdaHost
-  let deployGroup = $destSetting.deployGroup | default 'All'
+  let deployGroup = $destSetting.deployGroup? | default 'All'
   let doid = create-deploy-order ($selectedRelease.0 | into record) $destEnv --pid $destSetting.projectId --deploy-group=$deployGroup --host $destSetting.erdaHost
   if (not ($doid | is-empty)) and (not $no_deploy) { polling-artifact-deploy $doid --host $destSetting.erdaHost }
 }
@@ -335,16 +368,15 @@ def select-artifact-by-fzf [
   destSetting: record,    # The destination setting to search and deploy the artifact
 ] {
   # ~/.termix-nu/terp/artifacts/releases.json
-  let tmp = $'(get-tmp-path)/terp/artifacts'
+  let tmp = $'(get-tmp-path)/($RELEASE_META_PATH)'
   if not ($tmp | path exists) { mkdir $tmp }
   let releaseMetaPath = $'($tmp)/releases.json'
   let releases = query-release-candidates $destSetting.projectId --name $destSetting.projectName --host $destSetting.erdaHost
   $releases | tee { save -f $releaseMetaPath } | get data.list | length | ignore
   let title = $'Select the artifact to deploy:'
-  let PREVIEW_CMD = $"nu actions/artifact.nu {}"
-  let FZF_PREVIEW_CONF = $'--preview "($PREVIEW_CMD)" --preview-window=right:65%:~2'
-  let FZF_THEME = '--color=bg+:#3c3836,bg:#32302f,spinner:#fb4934,hl:#928374,fg:#ebdbb2,header:#928374,info:#8ec07c,pointer:#fb4934,marker:#fb4934,fg+:#ebdbb2,prompt:#fb4934,hl+:#fb4934'
-  $env.FZF_DEFAULT_OPTS = $'--height 50% --layout=reverse --exact --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
+  let PREVIEW_CMD = $"nu actions/artifact.nu {} artifact"
+  let FZF_PREVIEW_CONF = $'--preview "($PREVIEW_CMD)"'
+  $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
   let version = $releases.data.list | select version createdAt | sort-by -r createdAt | get version | str join (char nl) | fzf
   $version
 }
@@ -445,23 +477,18 @@ def get-artifact-deploy-detail [
   $detail
 }
 
+# TODO: Select deploy group with fzf and preview the app details
 # Select the application group to deploy from the artifact
-def select-deploy-mode [
-  modes: record,    # The deploy modes to select
+def select-deploy-mode-by-fzf [
+  modes: record,            # The deploy modes to select
+  previewOptions: record,   # The preview options to query and render the preview detail panel
 ] {
-  mut choices = []
-  for m in ($modes | columns) {
-    if $m == 'All' {
-      $choices = ($choices | append { mode: $m, children: null })
-    } else {
-      let children = $modes | get $m | get applicationReleaseList | flatten | get applicationName | str join ','
-      $choices = ($choices | append { mode: $m, children: $children })
-    }
-  }
-  let selected = $choices
-    | upsert option {|c| if $c.mode == 'All' { 'All' } else { $'($c.mode) (ansi w)- ($c.children)(ansi reset)' } }
-    | input list -d option 'Select the application group to deploy'
-
+  let title = $'Select the application group to deploy:'
+  let options = $previewOptions | get -i projectId releaseID workspace host | str join '+++'
+  let PREVIEW_CMD = $"nu actions/artifact.nu {} group --options ($options)"
+  let FZF_PREVIEW_CONF = $'--preview "($PREVIEW_CMD)"'
+  $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
+  let selected = $modes | columns | str join (char nl) | fzf
   $selected
 }
 
@@ -477,21 +504,26 @@ def create-deploy-order [
   let doCreateUrl = $'($host)/api/terminus/deployment-orders'
   let release = http get -e --headers (get-erda-auth $host --type nu) $releaseDetailUrl
   let modes = $release.data.modes
+  let previewOptions = {
+    projectId: $pid, releaseID: $artifact.releaseId, workspace: $environment, host: $host
+  }
   # Use specified deploy group or select the deploy mode
-  let selected = if $deploy_group in ($modes | columns) { { mode: $deploy_group } } else {
-      print $'There is no matched deploy group: (ansi r)($deploy_group)(ansi reset), Please select the group manually.'
-      select-deploy-mode $modes
+  let selectedMode = if $deploy_group in ($modes | columns) { $deploy_group } else {
+      print $'There is no matched deploy group: (ansi r)($deploy_group)(ansi reset), Please select the group to deploy manually.(char nl)'
+      select-deploy-mode-by-fzf $modes $previewOptions
     }
 
-  if ($selected | is-empty) { print "You didn't select anything, deploy cancelled, bye..."; exit $ECODE.INVALID_PARAMETER }
-  print $'You are going to deploy the group: (ansi g)($selected.mode)(ansi reset).'
+  if ($selectedMode | is-empty) {
+    print $"(ansi grey66)You didn't select anything, deploy cancelled, bye...(ansi reset)"; exit $ECODE.SUCCESS
+  }
+  print $'You are going to deploy the group: (ansi g)($selectedMode)(ansi reset).'
   print $'The following applications will be deployed:(char nl)'
-  $modes | get $selected.mode | get applicationReleaseList | flatten
+  $modes | get $selectedMode | get applicationReleaseList | flatten
     | select applicationName createdAt releaseName version | print
 
   let doPayload = {
     projectId: $pid,
-    modes: [$selected.mode],
+    modes: [$selectedMode],
     workspace: $environment,
     releaseId: $artifact.releaseId,
   }
@@ -596,7 +628,7 @@ def download-artifact-from-release [
   version: string,      # Version number of the artifact
   --host: string,       # The Erda host to download the artifact
 ] {
-  let tmp = $'(get-tmp-path)/terp/artifacts'
+  let tmp = $'(get-tmp-path)/($RELEASE_META_PATH)'
   if not ($tmp | path exists) { mkdir $tmp }
   # Download artifact
   let downloadUrl = $'($host)/api/terminus/releases/($releaseId)/actions/download'
@@ -650,4 +682,4 @@ def upload-file [
   print $upload.err.msg
 }
 
-alias main = preview-artifact
+alias main = fzf-preview
