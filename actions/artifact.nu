@@ -19,6 +19,7 @@
 # [√] Confirm the deploy order detail before execute
 # [√] Support artifact actions: deploy, produce, consume
 # [√] Show artifact deploy permission info somewhere
+# [√] Support select multiple application groups to deploy
 # [ ] Support private ERDA host and login with username and password
 # [ ] If there is only one deploy group, deploy it directly without select
 # [ ] Support `deploy --combine` which contains produce and consume
@@ -495,13 +496,14 @@ def select-deploy-mode-by-fzf [
   modes: record,            # The deploy modes to select
   previewOptions: record,   # The preview options to query and render the preview detail panel
 ] {
+  print $'(ansi g)Tip: Use `Tab` and `Shift + Tab` to toggle select items, and `Enter` to confirm(ansi reset)'
   let title = $'Select the application group to deploy:'
   let options = $previewOptions | get -i projectId releaseID workspace orgAlias host | str join '+++'
   let PREVIEW_CMD = $"nu actions/artifact.nu {} group --options ($options)"
   let FZF_PREVIEW_CONF = $'--preview "($PREVIEW_CMD)"'
-  $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
+  $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --multi --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
   let selected = $modes | columns | str join (char nl) | fzf
-  $selected
+  $selected | lines
 }
 
 # Create deploy order to deploy artifact to Erda cluster
@@ -522,7 +524,7 @@ def create-deploy-order [
     projectId: $pid, releaseID: $artifact.releaseId, workspace: $environment, orgAlias: $orgAlias, host: $host
   }
   # Use specified deploy group or select the deploy mode
-  let selectedMode = if $deploy_group in ($modes | columns) { $deploy_group } else {
+  mut selectedMode = if $deploy_group in ($modes | columns) { $deploy_group } else {
       print $'There is no matched deploy group: (ansi r)($deploy_group)(ansi reset), Please select the group to deploy manually.(char nl)'
       select-deploy-mode-by-fzf $modes $previewOptions
     }
@@ -530,14 +532,23 @@ def create-deploy-order [
   if ($selectedMode | is-empty) {
     print $"(ansi grey66)You didn't select anything, deploy cancelled, bye...(ansi reset)"; exit $ECODE.SUCCESS
   }
+  if ($selectedMode | length) > 1 and ('All' in $selectedMode) {
+    print $'You have selected (ansi g)`All`(ansi reset) group with other groups, and (ansi r)`All` will be ignored!(ansi reset)'
+    $selectedMode = ($selectedMode | filter {|it| $it != 'All' })
+  }
   print $'You are going to deploy the group: (ansi g)($selectedMode)(ansi reset).'
   print $'The following applications will be deployed:(char nl)'
-  $modes | get $selectedMode | get applicationReleaseList | flatten
-    | select applicationName createdAt releaseName version | print
+  mut apps = []
+  let columns = [applicationName createdAt releaseName version]
+  for g in $selectedMode {
+    let applications = ($modes | get $g | get applicationReleaseList | flatten | select ...$columns)
+    $apps = ($apps | append $applications)
+  }
+  $apps | flatten | sort-by applicationName | print
 
   let doPayload = {
     projectId: $pid,
-    modes: [$selectedMode],
+    modes: $selectedMode,
     workspace: $environment,
     releaseId: $artifact.releaseId,
   }
