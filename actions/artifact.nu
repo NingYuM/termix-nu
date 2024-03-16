@@ -31,7 +31,6 @@
 #   - t art produce                         构建制品并输出制品信息
 #   - t art consume -e TEST -v ${version}   下载指定版本的制品并上传到目标项目然后部署指定环境
 # Reference
-#   - https://erda.cloud/api/terminus/releases?isProjectRelease=true&isStable=true&pageNo=1&pageSize=10&projectId=1158&version=2.5.23.1214%2B20231227182207
 #   - ls -f | get name | to text | fzf --height 50% -e --inline-info --preview 'cat {}'
 # Usage:
 
@@ -54,11 +53,11 @@ export def artifacts [
   --no-deploy(-n),            # Don't deploy after creating deploy order
   --from(-f): string,         # Alias of source config to build or download artifact
   --to(-t): string,           # Alias of destination config to upload or deploy artifact
+  --doid(-i): string,         # The deploy order ID to deploy and query the deploy detail
   --branch(-b): string,       # The branch name to build the artifact
   --version(-v): string,      # The version number of the artifact to deploy
   --dest-env(-e): string,     # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
   --deploy-group(-g): string, # The app group to deploy for the specified artifact, `All` by default
-  --doid(-d): string,         # The deploy order ID to deploy and query the deploy detail
 ] {
   cd $env.TERMIX_DIR
   let currentBranch = git branch --show-current
@@ -98,9 +97,9 @@ export def artifacts [
 
 # Preview the selected fzf item detail info
 export def fzf-preview [
-  selected: string,
-  type: string,
-  --options: string,
+  selected: string,     # The selected item to preview
+  type: string,         # The type of the selected item, such as `artifact`, `group`, etc.
+  --options: string,    # The extra options to preview the selected item
 ] {
   match $type {
     artifact => { preview-artifact $selected }
@@ -111,19 +110,19 @@ export def fzf-preview [
 
 # Query and show deploy group details in the fzf preview window
 def preview-group [
-  mode: string,
-  --options: string,
+  mode: string,         # The selected deploy mode or group to preview
+  --options: string,    # The extra options to preview the selected item, each option is separated by `+++`
 ] {
   print $'You are going to deploy the application group: (ansi g)($mode)(ansi reset).'; hr-line
-  let previewOptions = $options | split column '+++' | rename projectId releaseID workspace host | into record
+  let previewOptions = $options | split column '+++' | rename projectId releaseID workspace orgAlias host | into record
   let host = $previewOptions.host
   let query = $previewOptions | reject host | merge { mode: $mode } | url build-query
-  let queryUrl = $'($host)/api/terminus/deployment-orders/actions/render-detail?($query)'
+  let queryUrl = $'($host)/api/($previewOptions.orgAlias)/deployment-orders/actions/render-detail?($query)'
   let detail = http get -e --headers (get-erda-auth $host --type nu) $queryUrl
   $env.config.table.mode = 'psql'
   $detail.data.applicationsInfo | flatten | select name preCheckResult
     | upsert checking {|it| if $it.preCheckResult.success { '✓' } else { $'✗ ($it.preCheckResult.failReasons | str join ";")' } }
-    | select name checking | print
+    | select name checking | sort-by -r checking | print
 }
 
 # Preview the selected artifact detail info
@@ -211,8 +210,8 @@ def confirm-deploy [
   version: string,            # The version number of the artifact to deploy
   destEnv: string,            # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
   destSetting: record,        # Destination setting to consume the artifact
-  --doid(-d): string,         # The deploy order ID to deploy and query the deploy detail
   --no-deploy(-n),            # Don't deploy after creating deploy order
+  --doid(-i): string,         # The deploy order ID to deploy and query the deploy detail
 ] {
   # TODO: Confirm deploy by --doid with more detail
   let msg = if $no_deploy {
@@ -267,8 +266,8 @@ def consume-artifact [
   --no-deploy(-n),            # Don't deploy after creating deploy order
   --from(-f): string,         # Source config to build or download artifact
   --to(-t): string,           # Destination config to upload or deploy artifact
-  --deploy-group(-g): string, # The app group to deploy for the specified artifact, `all` by default
   --need-confirm(-c),         # Need to confirm the consume action before execute
+  --deploy-group(-g): string, # The app group to deploy for the specified artifact, `all` by default
 ] {
   let destEnv = $destEnv | str upcase
   let srcSetting = validate-produce-setting --from $from
@@ -276,32 +275,32 @@ def consume-artifact [
   if $need_confirm { confirm-consume $version $destEnv $destSetting --no-deploy=$no_deploy }
   let srcPID = $srcSetting.projectId
   let destPID = $destSetting.projectId
-  let matches = query-release-by-version $version $srcPID --verbose --name 'Source Project' --host $srcSetting.erdaHost
+  let matches = query-release-by-version $version $srcSetting --verbose
   if ($matches | is-empty) {
     print $'No artifact found for version ($version) in project ID ($srcPID)'
     return
   }
-  let dest = download-artifact-from-release $matches.releaseId.0 $version --host $srcSetting.erdaHost
-  let destMatches = query-release-by-version $version $destPID --host $destSetting.erdaHost
+  let dest = download-artifact-from-release $matches.releaseId.0 $version $srcSetting
+  let destMatches = query-release-by-version $version $destSetting
   if ($destMatches | is-empty) {
-    upload-artifact $version $dest --oid $destSetting.orgId --pid $destPID --host $destSetting.erdaHost
+    upload-artifact $version $dest $destSetting
   } else {
     print $'Artifact of version (ansi g)($version)(ansi reset) already exists in dest project ID (ansi g)($destPID)(ansi reset):(char nl)'
     print $destMatches
   }
-  let selectedRelease = query-release-by-version $version $destPID --host $destSetting.erdaHost
+  let selectedRelease = query-release-by-version $version $destSetting
   let deployGroup = $destSetting.deployGroup | default 'All'
-  let doid = create-deploy-order ($selectedRelease.0 | into record) $destEnv --pid $destPID --deploy-group=$deployGroup --host $destSetting.erdaHost
-  if (not ($doid | is-empty)) and (not $no_deploy) { polling-artifact-deploy $doid --host $destSetting.erdaHost }
+  let doid = create-deploy-order ($selectedRelease.0 | into record) $destEnv --deploy-group=$deployGroup --dest-setting $destSetting
+  if (not ($doid | is-empty)) and (not $no_deploy) { polling-artifact-deploy $doid $destSetting }
 }
 
 # Validate the artifact consume action settings and return the validated settings
 def validate-consume-setting [
   destEnv: string,            # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
   --deploy,                   # Perform a deploy action rather than consume action
-  --doid(-d): string,         # The deploy order ID to deploy and query the deploy detail
   --no-deploy(-n),            # Don't deploy after creating deploy order
   --to(-t): string,           # Destination config to upload or deploy artifact
+  --doid(-i): string,         # The deploy order ID to deploy and query the deploy detail
   --deploy-group(-g): string, # The app group to deploy for the specified artifact, `all` by default
 ] {
   if not ($deploy and ($doid | is-not-empty)) {
@@ -331,16 +330,17 @@ def validate-consume-setting [
   if ($deploy_group | is-empty) { $setting } else { $setting | upsert deployGroup $deploy_group }
 }
 
+# Deploy the specified artifact to dest env, or build, download, upload, and deploy the artifact in combine mode
 def deploy-artifact [
   --dest-env: string,         # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
   --combine(-c),              # Build and upload the artifact to the dest project and deploy to the dest
   --no-deploy(-n),            # Don't deploy after creating deploy order
   --from(-f): string,         # Source config to build or download artifact
   --to(-t): string,           # Destination config to upload or deploy artifact
+  --doid(-i): string,         # The deploy order ID to deploy and query the deploy detail
   --branch(-b): string,       # The branch name to build the artifact
   --version(-v): string,      # The version number of the artifact to deploy
   --deploy-group(-g): string, # The app group to deploy for the specified artifact, `all` by default
-  --doid(-d): string,         # The deploy order ID to deploy and query the deploy detail
 ] {
   let destEnv = $dest_env | default '' | str upcase
   if ($destEnv | is-not-empty) { print $'Deploy artifact to (ansi g)($destEnv)(ansi reset)'; hr-line }
@@ -348,7 +348,7 @@ def deploy-artifact [
   let destSetting = validate-consume-setting $destEnv --to $to --deploy-group $deploy_group --no-deploy=$no_deploy --deploy --doid $doid
   if (not ($doid | is-empty)) and (not $no_deploy) {
     print $'You are going to deploy the artifact with deploy order ID: (ansi g)($doid)(ansi reset)'
-    polling-artifact-deploy $doid --host $destSetting.erdaHost
+    polling-artifact-deploy $doid $destSetting
     return
   }
   let version = if ($version | is-empty) { select-artifact-by-fzf $destSetting } else { $version }
@@ -357,10 +357,10 @@ def deploy-artifact [
     exit $ECODE.SUCCESS
   }
   confirm-deploy $version $destEnv $destSetting --doid $doid --no-deploy=$no_deploy
-  let selectedRelease = query-release-by-version $version $destSetting.projectId --host $destSetting.erdaHost
+  let selectedRelease = query-release-by-version $version $destSetting
   let deployGroup = $destSetting.deployGroup? | default 'All'
-  let doid = create-deploy-order ($selectedRelease.0 | into record) $destEnv --pid $destSetting.projectId --deploy-group=$deployGroup --host $destSetting.erdaHost
-  if (not ($doid | is-empty)) and (not $no_deploy) { polling-artifact-deploy $doid --host $destSetting.erdaHost }
+  let doid = create-deploy-order ($selectedRelease.0 | into record) $destEnv --deploy-group=$deployGroup --dest-setting $destSetting
+  if (not ($doid | is-empty)) and (not $no_deploy) { polling-artifact-deploy $doid $destSetting }
 }
 
 # Select a artifact version to deploy from the release list
@@ -371,7 +371,7 @@ def select-artifact-by-fzf [
   let tmp = $'(get-tmp-path)/($RELEASE_META_PATH)'
   if not ($tmp | path exists) { mkdir $tmp }
   let releaseMetaPath = $'($tmp)/releases.json'
-  let releases = query-release-candidates $destSetting.projectId --name $destSetting.projectName --host $destSetting.erdaHost
+  let releases = query-release-candidates $destSetting
   $releases | tee { save -f $releaseMetaPath } | get data.list | length | ignore
   let title = $'Select the artifact to deploy:'
   let PREVIEW_CMD = $"nu actions/artifact.nu {} artifact"
@@ -395,10 +395,11 @@ def create-artifact-from-pipeline [
 
 # Polling and display artifacts deploy status
 def polling-artifact-deploy [
-  doid: string,       # Deploy order ID to poll and display the deploy status
-  --host: string,     # The Erda host to poll the deploy status
+  doid: string,           # Deploy order ID to poll and display the deploy status
+  destSetting: record,    # The destination setting to query artifact deploy detail
 ] {
-  let deployUrl = $'($host)/api/terminus/deployment-orders/($doid)/actions/deploy'
+  let host = $destSetting.erdaHost
+  let deployUrl = $'($host)/api/($destSetting.orgAlias)/deployment-orders/($doid)/actions/deploy'
   let deploy = http post -e --headers (get-erda-auth $host --type nu) --content-type application/json $deployUrl {}
   if not ($deploy.success) {
     print $'Deployment started failed with error: (ansi r)($deploy.err.msg)(ansi reset)'
@@ -406,7 +407,7 @@ def polling-artifact-deploy [
   }
   print 'Deployment has been started successfully!'
 
-  let groups = get-artifact-deploy-detail $doid --host $host | get data.applicationsInfo
+  let groups = get-artifact-deploy-detail $doid $destSetting | get data.applicationsInfo
   let total = $groups | length
   const FINISH_STATUS = [OK, FAILED, CANCELED]
   const UNFINISH_STATUS = [DEPLOYING, WAITDEPLOY]
@@ -439,7 +440,7 @@ def polling-artifact-deploy [
       print -n '*'  # * 💤 👣 ✨ 🍵 ⚡ 🎉 🔹 🔸
       $counter += 1
       if ($counter == 90) { $counter = 0; print -n (char nl) }
-      let detail = get-artifact-deploy-detail $doid --host $host
+      let detail = get-artifact-deploy-detail $doid $destSetting
       let apps = $detail.data.applicationsInfo
       # DEPLOYING,OK,FAILED
       let status = $apps | get $g.index | get status
@@ -457,34 +458,34 @@ def polling-artifact-deploy [
   # Wait for the final status to be updated
   loop {
     sleep $DEPLOY_POLLING_INTERVAL
-    let detail = get-artifact-deploy-detail $doid --host $host
+    let detail = get-artifact-deploy-detail $doid $destSetting
     if $detail.data.status in $FINISH_STATUS { break }
   }
 
   # Refresh the query result and print the final time cost
-  let detail = get-artifact-deploy-detail $doid --host $host
+  let detail = get-artifact-deploy-detail $doid $destSetting
   let duration = ($detail.data.updatedAt | into datetime) - ($detail.data.startedAt | into datetime)
   print $'(char nl)Artifacts deploy finished with status: (ansi p)($detail.data.status)(ansi reset)! Total time cost: ($duration)'
 }
 
 # Get artifact deploy detail by deploy order ID
 def get-artifact-deploy-detail [
-  doid: string      # Deploy order ID to query the deploy detail
-  --host: string,   # The Erda host to query the deploy detail
+  doid: string            # Deploy order ID to query the deploy detail
+  destSetting: record,    # The destination setting to query artifact deploy detail
 ] {
-  let queryUrl = $'($host)/api/terminus/deployment-orders/($doid)'
+  let host = $destSetting.erdaHost
+  let queryUrl = $'($host)/api/($destSetting.orgAlias)/deployment-orders/($doid)'
   let detail = http get -e --headers (get-erda-auth $host --type nu) $queryUrl
   $detail
 }
 
-# TODO: Select deploy group with fzf and preview the app details
 # Select the application group to deploy from the artifact
 def select-deploy-mode-by-fzf [
   modes: record,            # The deploy modes to select
   previewOptions: record,   # The preview options to query and render the preview detail panel
 ] {
   let title = $'Select the application group to deploy:'
-  let options = $previewOptions | get -i projectId releaseID workspace host | str join '+++'
+  let options = $previewOptions | get -i projectId releaseID workspace orgAlias host | str join '+++'
   let PREVIEW_CMD = $"nu actions/artifact.nu {} group --options ($options)"
   let FZF_PREVIEW_CONF = $'--preview "($PREVIEW_CMD)"'
   $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
@@ -496,16 +497,18 @@ def select-deploy-mode-by-fzf [
 def create-deploy-order [
   artifact: record,               # The artifact to create deploy order
   environment: string = 'DEV',    # The environment to deploy the artifact, such as DEV, TEST, STAGING, PROD, etc.
-  --pid: int,                     # The Project ID to deploy the artifact
   --deploy-group(-g): string,     # The app group to deploy for the specified artifact, `all` by default
-  --host: string,                 # The Erda host to create deploy order
+  --dest-setting: record,         # The destination setting to deploy the artifact
 ] {
-  let releaseDetailUrl = $'($host)/api/terminus/releases/($artifact.releaseId)'
-  let doCreateUrl = $'($host)/api/terminus/deployment-orders'
+  let host = $dest_setting.erdaHost
+  let pid = $dest_setting.projectId
+  let orgAlias = $dest_setting.orgAlias
+  let doCreateUrl = $'($host)/api/($orgAlias)/deployment-orders'
+  let releaseDetailUrl = $'($host)/api/($orgAlias)/releases/($artifact.releaseId)'
   let release = http get -e --headers (get-erda-auth $host --type nu) $releaseDetailUrl
   let modes = $release.data.modes
   let previewOptions = {
-    projectId: $pid, releaseID: $artifact.releaseId, workspace: $environment, host: $host
+    projectId: $pid, releaseID: $artifact.releaseId, workspace: $environment, orgAlias: $orgAlias, host: $host
   }
   # Use specified deploy group or select the deploy mode
   let selectedMode = if $deploy_group in ($modes | columns) { $deploy_group } else {
@@ -556,16 +559,15 @@ def get-artifact-meta [
 
 # Query releases by project ID
 def query-release-candidates [
-  pid: int,           # Project id to query the release artifact
-  --name: string,     # Display name of the project
-  --host: string,     # The Erda host to query the release
+  destSetting: record,    # The destination setting to query the release candidates
 ] {
-  let queryUrl = $'($host)/api/terminus/releases'
+  let host = $destSetting.erdaHost
+  let queryUrl = $'($host)/api/($destSetting.orgAlias)/releases'
   let payload = {
     pageNo: '1',
     pageSize: '200',
     isStable: 'true',
-    projectId: $'($pid)',
+    projectId: $'($destSetting.projectId)',
     isProjectRelease: 'true'
   }
   let queryUrl = $'($queryUrl)?($payload | url build-query)'
@@ -583,18 +585,17 @@ def query-release-candidates [
 # Query release by version number and project ID
 def query-release-by-version [
   version: string,    # Version number to query
-  pid: int,           # Project id to query the release artifact
-  --name: string,     # Display name of the project
+  setting: record,    # The setting to query release
   --verbose(-v),      # Print more details of the matched artifact
-  --host: string,     # The Erda host to query the release
 ] {
-  let queryUrl = $'($host)/api/terminus/releases'
+  let host = $setting.erdaHost
+  let queryUrl = $'($host)/api/($setting.orgAlias)/releases'
   let payload = {
     pageNo: '1',
     pageSize: '100',
     isStable: 'true',
     version: $version,
-    projectId: $'($pid)',
+    projectId: $'($setting.pid)',
     isProjectRelease: 'true'
   }
   let queryUrl = $'($queryUrl)?($payload | url build-query)'
@@ -614,9 +615,9 @@ def query-release-by-version [
   if not $verbose { return $matches }
 
   if ($matches | is-empty) {
-    print $'No release found for version ($version) in project ID ($pid)'
+    print $'No release found for version ($version) in project ID ($setting.pid)'
   } else {
-    let suffix = if ($name | is-empty) { '' } else { $' in (ansi g)($name)(ansi reset)' }
+    let suffix = if ($setting.name | is-empty) { '' } else { $' in (ansi g)($setting.name)(ansi reset)' }
     print $'Found matched artifact release($suffix):(char nl)'; print $matches
   }
   return $matches
@@ -626,12 +627,13 @@ def query-release-by-version [
 def download-artifact-from-release [
   releaseId: string,    # Release ID to download artifact
   version: string,      # Version number of the artifact
-  --host: string,       # The Erda host to download the artifact
+  srcSetting: record,   # The source setting to download artifact
 ] {
+  let host = $srcSetting.erdaHost
   let tmp = $'(get-tmp-path)/($RELEASE_META_PATH)'
   if not ($tmp | path exists) { mkdir $tmp }
   # Download artifact
-  let downloadUrl = $'($host)/api/terminus/releases/($releaseId)/actions/download'
+  let downloadUrl = $'($host)/api/($srcSetting.erdaHost)/releases/($releaseId)/actions/download'
   let dest = $'($tmp)/($version).zip'
   print $'Downloading artifact of version (ansi g)($version)(ansi reset) and releaseId (ansi g)($releaseId)(ansi reset) ...'
   curl --silent -H (get-erda-auth $host) $downloadUrl -o $dest
@@ -642,21 +644,20 @@ def download-artifact-from-release [
 # https://erda.cloud/api/terminus/releases/actions/check-version?isProjectRelease=true&orgID=2&projectID=1158&version=2.5.24.0130%2B20240223134546
 # 上传制品到 Erda 项目
 def upload-artifact [
-  version: string,    # Version number of the artifact
-  file: string,       # File path of the artifact to upload
-  --pid: int,         # Project ID to upload the artifact
-  --oid: int,         # Organization ID to upload the artifact
-  --host: string,     # The Erda host to upload the artifact
+  version: string,      # Version number of the artifact
+  file: string,         # File path of the artifact to upload
+  destSetting: record   # The destination setting to upload artifact
 ] {
-  let releaseUploadUrl = $'($host)/api/terminus/releases/actions/upload'
+  let host = $destSetting.erdaHost
   let upload = upload-file $file --host $host
+  let releaseUploadUrl = $'($host)/api/($destSetting.orgAlias)/releases/actions/upload'
   print $upload
   let payload = {
-    orgId: $oid,
-    projectID: $pid,
     version: $version,
     userId: $upload.creator,
+    orgId: $destSetting.orgId,
     diceFileID: $'($upload.fileID)',
+    projectID: $destSetting.projectId,
   }
   let release = http post -e --headers (get-erda-auth $host --type nu) --content-type application/json $'($releaseUploadUrl)' $payload
   if $release.success {
