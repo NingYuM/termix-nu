@@ -20,9 +20,9 @@
 # [√] Support artifact actions: deploy, produce, consume
 # [√] Show artifact deploy permission info somewhere
 # [√] Support select multiple application groups to deploy
+# [√] Support `deploy --combine` which contains produce and consume
 # [ ] Support private ERDA host and login with username and password
 # [ ] If there is only one deploy group, deploy it directly without select
-# [ ] Support `deploy --combine` which contains produce and consume
 # [ ] Validate input args and flags
 # [ ] Update artifact related docs
 # Usage:
@@ -50,15 +50,15 @@ const FZF_THEME = '--color=bg+:#3c3836,bg:#32302f,spinner:#fb4934,hl:#928374,fg:
 # Build, Download and Upload artifacts, create deploy order then deploy from artifacts
 export def artifacts [
   action: string,             # Action to perform, such as `deploy`, `produce`, and `consume`
-  --combine(-c),              # Build and upload the artifact to the dest project and deploy to the dest
-  --no-deploy(-n),            # Don't deploy after creating deploy order
-  --from(-f): string,         # Alias of source config to build or download artifact
-  --to(-t): string,           # Alias of destination config to upload or deploy artifact
-  --doid(-i): string,         # The deploy order ID to deploy and query the deploy detail
-  --branch(-b): string,       # The branch name to build the artifact
-  --version(-v): string,      # The version number of the artifact to deploy
-  --dest-env(-e): string,     # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
-  --deploy-group(-g): string, # The app group to deploy for the specified artifact, `All` by default
+  --combine(-c),              # Build and upload the artifact to the dest project and deploy to the dest (deploy)
+  --no-deploy(-n),            # Don't deploy after creating deploy order (deploy/consume)
+  --from(-f): string,         # Alias of source config to build or download artifact (produce/consume/deploy)
+  --to(-t): string,           # Alias of destination config to upload or deploy artifact (consume/deploy)
+  --doid(-i): string,         # The deploy order ID to deploy and query the deploy detail (deploy)
+  --branch(-b): string,       # The branch name to build the artifact (produce)
+  --version(-v): string,      # The version number of the artifact to deploy (consume/deploy)
+  --dest-env(-e): string,     # The dest env to deploy the artifact, such as DEV,TEST,STAGING,PROD (consume/deploy)
+  --deploy-group(-g): string, # The app group to deploy for the specified artifact, `All` by default (consume/deploy)
 ] {
   cd $env.TERMIX_DIR
   let currentBranch = git branch --show-current
@@ -346,6 +346,11 @@ def deploy-artifact [
   let destEnv = $dest_env | default '' | str upcase
   if ($destEnv | is-not-empty) { print $'Deploy artifact to (ansi g)($destEnv)(ansi reset)'; hr-line }
   let srcSetting = validate-produce-setting --from $from
+  mut version = $version
+  if $combine {
+    let meta = produce-artifact --from=$from --branch=$branch --need-confirm
+    $version = ($meta | where Name == 'version' | get Value?.0?)
+  }
   let destSetting = validate-consume-setting $destEnv --to $to --deploy-group $deploy_group --no-deploy=$no_deploy --deploy --doid $doid
   if (not ($doid | is-empty)) and (not $no_deploy) {
     print $'You are going to deploy the artifact with deploy order ID: (ansi g)($doid)(ansi reset)'
@@ -356,6 +361,10 @@ def deploy-artifact [
   if ($version | is-empty) {
     print $'(ansi grey66)No artifact version selected, deploy cancelled, bye...(ansi reset)'
     exit $ECODE.SUCCESS
+  }
+  if $combine {
+    consume-artifact $version $destEnv --from $from --to $to --deploy-group=$deploy_group --no-deploy=$no_deploy
+    return
   }
   confirm-deploy $version $destEnv $destSetting --doid $doid --no-deploy=$no_deploy
   let selectedRelease = query-release-by-version $version $destSetting
