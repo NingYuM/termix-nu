@@ -480,7 +480,13 @@ def get-artifact-deploy-detail [
 ] {
   let host = $destSetting.erdaHost
   let queryUrl = $'($host)/api/($destSetting.orgAlias)/deployment-orders/($doid)'
-  let detail = http get -e --headers (get-erda-auth $host --type nu) $queryUrl
+  mut detail = http get -e --headers (get-erda-auth $host --type nu) $queryUrl
+  # Check session expired, and renew if needed
+  let check = should-retry-req $detail
+  if ($check.shouldRetry) {
+    if $check.noAuth { renew-erda-session $host }
+    $detail = (http get -e --headers (get-erda-auth $host --type nu) $queryUrl)
+  }
   $detail
 }
 
@@ -600,7 +606,7 @@ def query-release-by-version [
     pageSize: '100',
     isStable: 'true',
     version: $version,
-    projectId: $'($setting.pid)',
+    projectId: $'($setting.projectId)',
     isProjectRelease: 'true'
   }
   let queryUrl = $'($queryUrl)?($payload | url build-query)'
@@ -620,7 +626,7 @@ def query-release-by-version [
   if not $verbose { return $matches }
 
   if ($matches | is-empty) {
-    print $'No release found for version ($version) in project ID ($setting.pid)'
+    print $'No release found for version ($version) in project ID ($setting.projectId)'
   } else {
     let suffix = if ($setting.name | is-empty) { '' } else { $' in (ansi g)($setting.name)(ansi reset)' }
     print $'Found matched artifact release($suffix):(char nl)'; print $matches

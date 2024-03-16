@@ -47,7 +47,7 @@ alias tokeid = print (
 def action [action?: string, --list(-l)] {
   const actionMap = {
     produce: 'Create artifacts from CLI',
-    deploy: 'Deploy artifacts to the destination project of specified environment:'
+    deploy: 'Deploy artifacts to the specified environment of destination project:'
     consume: 'Consume the artifacts provided by the producer:'
   }
   if $list { print ($actionMap | columns | str join ', '); return }
