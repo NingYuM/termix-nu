@@ -386,11 +386,16 @@ def create-artifact-from-pipeline [
   setting: record,    # The source setting to create artifacts
 ] {
   let appId = $setting.appId
+  let pid = $setting.projectId
   let host = $setting.erdaHost
   let cicdid = create-cicd $appId $setting.appName $setting.branch $setting.pipeline --host $host
-  run-cicd $cicdid $appId $setting.projectId --host $host
+  run-cicd $cicdid $appId $pid --host $host
   query-cicd-by-id $cicdid --watch --host $host
-  get-artifact-meta $cicdid $setting.artifactNode --host $host
+  mut meta = get-artifact-meta $cicdid $setting.artifactNode --host $host
+  let releaseId = $meta | where Name == 'releaseID' | get Value?.0?
+  let detailUrl = $'($host)/($setting.orgAlias)/dop/projects/($pid)/release/application/($releaseId)'
+  $meta = ($meta | append { Name: 'detailUrl', Value: $detailUrl })
+  $meta
 }
 
 # Polling and display artifacts deploy status
