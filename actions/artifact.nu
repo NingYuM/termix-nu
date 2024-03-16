@@ -524,7 +524,7 @@ def create-deploy-order [
     projectId: $pid, releaseID: $artifact.releaseId, workspace: $environment, orgAlias: $orgAlias, host: $host
   }
   # Use specified deploy group or select the deploy mode
-  mut selectedMode = if $deploy_group in ($modes | columns) { $deploy_group } else {
+  mut selectedMode = if $deploy_group in ($modes | columns) { [$deploy_group] } else {
       print $'There is no matched deploy group: (ansi r)($deploy_group)(ansi reset), Please select the group to deploy manually.(char nl)'
       select-deploy-mode-by-fzf $modes $previewOptions
     }
@@ -639,7 +639,7 @@ def query-release-by-version [
   if ($matches | is-empty) {
     print $'No release found for version ($version) in project ID ($setting.projectId)'
   } else {
-    let suffix = if ($setting.name | is-empty) { '' } else { $' in (ansi g)($setting.name)(ansi reset)' }
+    let suffix = if ($setting.projectName | is-empty) { '' } else { $' in (ansi g)($setting.projectName)(ansi reset)' }
     print $'Found matched artifact release($suffix):(char nl)'; print $matches
   }
   return $matches
@@ -655,7 +655,7 @@ def download-artifact-from-release [
   let tmp = $'(get-tmp-path)/($RELEASE_META_PATH)'
   if not ($tmp | path exists) { mkdir $tmp }
   # Download artifact
-  let downloadUrl = $'($host)/api/($srcSetting.erdaHost)/releases/($releaseId)/actions/download'
+  let downloadUrl = $'($host)/api/($srcSetting.orgAlias)/releases/($releaseId)/actions/download'
   let dest = $'($tmp)/($version).zip'
   print $'Downloading artifact of version (ansi g)($version)(ansi reset) and releaseId (ansi g)($releaseId)(ansi reset) ...'
   curl --silent -H (get-erda-auth $host) $downloadUrl -o $dest
