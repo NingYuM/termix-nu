@@ -22,7 +22,7 @@
 # [√] Support select multiple application groups to deploy
 # [√] Support `deploy --combine` which contains produce and consume
 # [√] Add `--list` flag to list all available source and destination settings
-# [ ] Multiple deploy group separated by comma from setting or input support, builtin manual,auto group
+# [√] Multiple deploy group separated by comma from setting or input support
 # [ ] Support private ERDA host and login with username and password
 # [ ] If there is only one deploy group, deploy it directly without select
 # [ ] Validate input args and flags
@@ -62,7 +62,7 @@ export def artifacts [
   --branch(-b): string,       # The branch name to build the artifact (produce)
   --version(-v): string,      # The version number of the artifact to deploy (consume/deploy)
   --dest-env(-e): string,     # The dest env to deploy the artifact, such as DEV,TEST,STAGING,PROD (consume/deploy)
-  --deploy-group(-g): string, # The app group to deploy for the specified artifact, `All` by default (consume/deploy)
+  --deploy-group(-g): string, # The app group to deploy, mutiple groups should be separated by comma, `All` by default (consume/deploy)
 ] {
   cd $env.TERMIX_DIR
   let currentBranch = git branch --show-current
@@ -126,7 +126,7 @@ def show-settings [
   }
   $destTable
     | upsert project {|it| $"($it.projectName) @ ($it.projectId)" }
-    | select -i alias project erdaHost default | print
+    | select -i alias project erdaHost deployGroup default | print
   exit $ECODE.SUCCESS
 }
 
@@ -566,9 +566,11 @@ def create-deploy-order [
   let previewOptions = {
     projectId: $pid, releaseID: $artifact.releaseId, workspace: $environment, orgAlias: $orgAlias, host: $host
   }
+  let deployGroup = $deploy_group | default 'All' | split row ','
+  let unexistGroup = $deployGroup | filter {|it| $it not-in ($modes | columns) }
   # Use specified deploy group or select the deploy mode
-  mut selectedMode = if $deploy_group in ($modes | columns) { [$deploy_group] } else {
-      print $'There is no matched deploy group: (ansi r)($deploy_group)(ansi reset), Please select the group to deploy manually.(char nl)'
+  mut selectedMode = if ($unexistGroup | is-empty) { $deployGroup } else {
+      print $'You are trying to deploy APP group ($deployGroup), however, (ansi r)($unexistGroup)(ansi reset) do NOT exist, Please select the group manually.(char nl)'
       select-deploy-mode-by-fzf $modes $previewOptions
     }
 
@@ -579,7 +581,7 @@ def create-deploy-order [
     print $'You have selected (ansi g)`All`(ansi reset) group with other groups, and (ansi r)`All` will be ignored!(ansi reset)'
     $selectedMode = ($selectedMode | filter {|it| $it != 'All' })
   }
-  print $'You are going to deploy the group: (ansi g)($selectedMode)(ansi reset).'
+  print $'You are going to deploy the APP group: (ansi g)($selectedMode)(ansi reset).'
   print $'The following applications will be deployed:(char nl)'
   mut apps = []
   let columns = [applicationName createdAt releaseName version]
