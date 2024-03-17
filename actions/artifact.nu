@@ -21,6 +21,8 @@
 # [√] Show artifact deploy permission info somewhere
 # [√] Support select multiple application groups to deploy
 # [√] Support `deploy --combine` which contains produce and consume
+# [√] Add `--list` flag to list all available source and destination settings
+# [ ] Multiple deploy group separated by comma from setting or input support, builtin manual,auto group
 # [ ] Support private ERDA host and login with username and password
 # [ ] If there is only one deploy group, deploy it directly without select
 # [ ] Validate input args and flags
@@ -44,12 +46,14 @@ use ../utils/erda.nu [VALID_ENV, ERDA_HOST, get-erda-auth, renew-erda-session, s
 const DEPLOY_POLLING_INTERVAL = 2sec
 const RELEASE_META_PATH = 'terp/artifacts'
 const SUPPORTED_ACTIONS = [deploy, produce, consume]
-const FZF_DEFAULT_OPTS = '--height 50% --layout=reverse --exact --preview-window=right:65%:~2'
+const FZF_KEY_BINDING = '--bind ctrl-b:preview-half-page-up,ctrl-f:preview-half-page-down,ctrl-/:toggle-preview'
+const FZF_DEFAULT_OPTS = $'--height 50% --layout=reverse --exact --preview-window=right:65%:~2 ($FZF_KEY_BINDING)'
 const FZF_THEME = '--color=bg+:#3c3836,bg:#32302f,spinner:#fb4934,hl:#928374,fg:#ebdbb2,header:#928374,info:#8ec07c,pointer:#fb4934,marker:#fb4934,fg+:#ebdbb2,prompt:#fb4934,hl+:#fb4934'
 
 # Build, Download and Upload artifacts, create deploy order then deploy from artifacts
 export def artifacts [
-  action: string,             # Action to perform, such as `deploy`, `produce`, and `consume`
+  action?: string,            # Action to perform, such as `deploy`, `produce`, and `consume`
+  --list(-l),                 # List all available source and destination settings
   --combine(-c),              # Build and upload the artifact to the dest project and deploy to the dest (deploy)
   --no-deploy(-n),            # Don't deploy after creating deploy order (deploy/consume)
   --from(-f): string,         # Alias of source config to build or download artifact (produce/consume/deploy)
@@ -80,7 +84,9 @@ export def artifacts [
       }
     }
 
-  load-art-conf
+  let conf = load-art-conf
+  if $list { show-settings $conf }
+
   match $action {
     produce => { produce-artifact --from=$from --branch=$branch --need-confirm }
     consume => { do $checkEnv; do $checkVersion; consume-artifact $version $dest_env -f $from -t $to -c --deploy-group=$deploy_group --no-deploy=$no_deploy }
@@ -94,6 +100,34 @@ export def artifacts [
       exit $ECODE.INVALID_PARAMETER
     }
   }
+}
+
+# Display the artifact settings
+def show-settings [
+  conf: record,    # The artifact settings to display
+] {
+  print $'Global artifact settings:(char nl)'
+  $conf.settings | select -i orgId orgAlias erdaHost | transpose | transpose --header-row | print
+  print $'(char nl)Available source settings:(char nl)'
+  mut sourceTable = []
+  let sources = $conf.source | columns
+  for s in $sources {
+    $sourceTable = ($sourceTable | append { alias: $s, ...($conf.source | get $s) })
+  }
+  $sourceTable
+    | upsert project {|it| $"($it.projectName) @ ($it.projectId)" }
+    | select -i alias project appName env branch default | print
+
+  print $'Available destination settings:(char nl)'
+  mut destTable = []
+  let dests = $conf.destination | columns
+  for d in $dests {
+    $destTable = ($destTable | append { alias: $d, ...($conf.destination | get $d) })
+  }
+  $destTable
+    | upsert project {|it| $"($it.projectName) @ ($it.projectId)" }
+    | select -i alias project erdaHost default | print
+  exit $ECODE.SUCCESS
 }
 
 # Preview the selected fzf item detail info
@@ -132,13 +166,13 @@ def preview-artifact [
 ] {
   let metaPath = $'(get-tmp-path)/($RELEASE_META_PATH)/releases.json'
   const SELECT_COLUMN = [version projectName userId createdAt releaseId modes]
-  print $'Version: ($version)'; hr-line
   $env.config.table.mode = 'psql'
   let releases = open $metaPath
   let selected = $releases.0.data.list | where version == $version | get 0
   mut meta = $selected | select ...$SELECT_COLUMN
   $meta.modes = (($meta.modes | from json | columns) | str join ', ')
   $meta.createdBy = ($releases.userInfo | get -i $meta.userId).nick?.0?
+  print $'Version: ($version) by ($meta.createdBy)'; hr-line
   $meta | select ...($SELECT_COLUMN | update 2 createdBy) | print; hr-line
   print $selected.changelog
 }
