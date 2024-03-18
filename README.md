@@ -1412,6 +1412,14 @@ t art produce --from trantor -b release/2.5.24.0228
 t art consume -e dev -v 2.5.24.0130+20240313165219 -t terp
 ```
 
+**演示视频**:
+
+- 制品制作演示视频:
+  [![asciicast](https://asciinema.org/a/iyxMimx9fJteh2NIEWj53diJo.svg)](https://asciinema.org/a/iyxMimx9fJteh2NIEWj53diJo)
+
+- 制品部署演示视频:
+  [![asciicast](https://asciinema.org/a/pgW4czf5Y4Wi6lLBT6qeuz1CK.svg)](https://asciinema.org/a/pgW4czf5Y4Wi6lLBT6qeuz1CK)
+
 :::tip
 
 1. 制品助手依赖二进制可执行文件 [fzf](https://github.com/junegunn/fzf)，使用前如果检测到未安装本工具会自动安装；
