@@ -24,7 +24,7 @@
 # [√] Add `--list` flag to list all available source and destination settings
 # [√] Multiple deploy group separated by comma from setting or input support
 # [ ] Support private ERDA host and login with username and password
-# [ ] If there is only one deploy group, deploy it directly without select
+# [ ] If there is only one deploy group, deploy it directly without selection
 # [ ] Validate input args and flags
 # [ ] Update artifact related docs
 # Usage:
@@ -115,7 +115,7 @@ def show-settings [
     $sourceTable = ($sourceTable | append { alias: $s, ...($conf.source | get $s) })
   }
   $sourceTable
-    | upsert project {|it| $"($it.projectName) @ ($it.projectId)" }
+    | upsert project {|it| $'($it.projectId) @ ($it.projectName)' }
     | select -i alias project appName env branch default | print
 
   print $'Available destination settings:(char nl)'
@@ -125,7 +125,7 @@ def show-settings [
     $destTable = ($destTable | append { alias: $d, ...($conf.destination | get $d) })
   }
   $destTable
-    | upsert project {|it| $"($it.projectName) @ ($it.projectId)" }
+    | upsert project {|it| $'($it.projectId) @ ($it.projectName)' }
     | select -i alias project erdaHost deployGroup default | print
   exit $ECODE.SUCCESS
 }
