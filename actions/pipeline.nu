@@ -205,21 +205,21 @@ def query-latest-cicd [dest: string, --apps: string, --show-running-detail] {
   let apps = (get-pipeline-conf $dest --apps $apps)
   check-erda-envs
   for app in $apps {
-    echo $'Querying latest CICDs for (ansi pb)($app.appName) on ($app.branch)(ansi reset) branch:'; hr-line -c pb
+    print $'Querying latest CICDs for (ansi pb)($app.appName) on ($app.branch)(ansi reset) branch:'; hr-line -c pb
     let ci = (query-cicd $app.appid $app.appName $app.branch $app.env $app.pipeline 10)
     if ($ci.data.total == 0) {
-      echo $'No CICD found for (ansi pb)($app.appName)(ansi reset) on (ansi g)($app.branch)(ansi reset) branch'
+      print $'No CICD found for (ansi pb)($app.appName)(ansi reset) on (ansi g)($app.branch)(ansi reset) branch'
       exit $ECODE.SUCCESS
     }
     let pipelines = (format-pipeline-data $ci.data.pipelines)
-    echo ($pipelines | table -e)
-    echo 'URL of the latest pipeline:'; hr-line
-    echo ($ci.data.pipelines | first | get-pipeline-url --as-raw-string)
-    echo (char nl)
+    print ($pipelines | table -e)
+    print 'URL of the latest pipeline:'; hr-line
+    print ($ci.data.pipelines | first | get-pipeline-url --as-raw-string)
+    print (char nl)
     if ($show_running_detail) {
       let running = $ci.data.pipelines | where status == 'Running'
       if ($running | length) == 0 { return }
-      echo $'Detail of the running pipelines:'; hr-line
+      print $'Detail of the running pipelines:'; hr-line
       $running | get ID | each {|it| query-cicd-by-id $it }
     }
   }
