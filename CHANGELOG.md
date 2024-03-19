@@ -1,6 +1,49 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## 1.70.0 - 2024-03-19
+
+### Bug Fixes
+
+- Fix `t art deploy` for Windows and improve TUI output
+- Query latest Erda pipeline records for Nu v0.92
+- Fix TERP asset syncing output for Nu v0.92
+
+### Documentation
+
+- Update README.md for artifact assistant
+
+### Features
+
+- Remove Nu plugin config file automatically after upgrading Nu
+- Add `t artifact` command with `deploy`,`consume`,`produce` actions supported
+- Add artifact helper related config and args
+- Confirm the deploy order detail before execution
+- Add customize Erda host support for artifact and pipeline related commands
+- Install `fzf` if doesn't exist for artifact version and deploy group selection
+- Add `fzf` upgrade support
+- Use `fzf` to select the artifact version to deploy
+- Add select deploy group by fzf and preview support for `t art deploy` command
+- Add orgAlias config for artifact assistant
+- Add detailUrl to artifact meta output
+- Add select multiple application groups to deploy support for artifact assistant
+- Support `t art deploy --combine` which contains produce and consume
+- Add `--list` flag to `t art` command
+- Multiple deploy group separated by comma from setting or input support for artifact assistant
+- Login with username and password from settings support for artifact assistant
+
+### Miscellaneous Tasks
+
+- Add casts/produce.cast for `t art produce`
+- Add casts/deploy.cast for `t art deploy`
+- Add casts/art-consume.cast for `t art consume` command
+- Add `asciinema` demos for artifact assistant
+- Make sure at most one default was set for source and destination
+
+### Refactor
+
+- Improve select artifact by `fzf` to deploy feature
+
 ## 1.68.1 - 2024-03-06
 
 ### Bug Fixes
