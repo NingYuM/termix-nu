@@ -115,7 +115,7 @@ def --env get-dest-oss [destStore: string] {
   let LOCAL_CONFIG = if ('.termixrc' | path exists) { '.termixrc' } else { $'($env.TERMIX_DIR)/.termixrc' }
   let ossConf = open $LOCAL_CONFIG | from toml | get -i $destStore
   if ($ossConf | is-empty) {
-    echo $'The storage you specified (ansi p)($destStore)(ansi reset) does not exist in (ansi p)($LOCAL_CONFIG)(ansi reset).'
+    print $'The storage you specified (ansi p)($destStore)(ansi reset) does not exist in (ansi p)($LOCAL_CONFIG)(ansi reset).'
     exit $ECODE.INVALID_PARAMETER
   }
   return $ossConf
@@ -128,25 +128,25 @@ def pre-check [
   --dest-store(-d): string,  # Destination store, should be configured in .termixrc
 ] {
   if $action not-in $VALID_ACTIONS {
-    echo $'Invalid action ($action), supported actions: ($VALID_ACTIONS | str join ", ")'
+    print $'Invalid action ($action), supported actions: ($VALID_ACTIONS | str join ", ")'
     exit $ECODE.INVALID_PARAMETER
   }
   if not (is-installed package-tools) {
-    echo 'Please install package-tools by `npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io` first.'
+    print 'Please install package-tools by `npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io` first.'
     exit $ECODE.MISSING_BINARY
   }
   let ver = package-tools -v
   let compVer = compare-ver $ver $PKG_TOOLS_VER
   if $compVer < 0 {
-    echo $'Only package-tools ($PKG_TOOLS_VER) or above is supported by this tool. Please reinstall it.'
+    print $'Only package-tools ($PKG_TOOLS_VER) or above is supported by this tool. Please reinstall it.'
     exit $ECODE.CONDITION_NOT_SATISFIED
   }
   if $action == 'transfer' and (($to | is-empty) or ($dest_store | is-empty)) {
     if ($to | is-empty) {
-      echo $'Please specify the dest to transfer by (ansi p)--to(ansi reset) option.'
+      print $'Please specify the dest to transfer by (ansi p)--to(ansi reset) option.'
     }
     if ($dest_store | is-empty) {
-      echo $'Please specify the dest store to transfer by (ansi p)--dest-store(ansi reset) option.'
+      print $'Please specify the dest store to transfer by (ansi p)--dest-store(ansi reset) option.'
     }
     exit $ECODE.INVALID_PARAMETER
   }
@@ -164,9 +164,9 @@ def confirm-action [
   get-dest-oss $dest_store
   print $'Attention: You are going to TRANSFER (ansi p)($modules | str join ",")(ansi reset) assets to (ansi p)($to)@($dest_store)(ansi reset)'; hr-line
   let dest = input $'Please confirm by typing (ansi r)($to)(ansi reset) to continue or (ansi p)q(ansi reset) to quit: '
-  if $dest == 'q' { echo $'Transfer cancelled, Bye...'; exit $ECODE.SUCCESS }
+  if $dest == 'q' { print $'Transfer cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $dest != $to {
-    echo $'You input (ansi p)($dest)(ansi reset) does not match (ansi p)($to)(ansi reset), bye...'; exit $ECODE.INVALID_PARAMETER
+    print $'You input (ansi p)($dest)(ansi reset) does not match (ansi p)($to)(ansi reset), bye...'; exit $ECODE.INVALID_PARAMETER
   }
 }
 
@@ -233,7 +233,7 @@ def transfer [
   if (not ($tmp | path exists)) { mkdir $tmp }
 
   download $modules $latestMeta $tmp --verbose=$verbose
-  echo $'Start to transfer assets from (ansi p)($latestMeta.from) to ($dest_store) ($to)(ansi reset)'
+  print $'Start to transfer assets from (ansi p)($latestMeta.from) to ($dest_store) ($to)(ansi reset)'
 
   let ossConf = get-dest-oss $dest_store
   let type = $ossConf.TYPE? | default 'aliyun'
@@ -254,9 +254,9 @@ def transfer [
     } else {
       package-tools s3 -c $ak $sk $bucket $endpoint $region -d . -m $to
     }
-    echo $'Assets for (ansi p)($e)(ansi reset) transferred successfully!'
+    print $'Assets for (ansi p)($e)(ansi reset) transferred successfully!'
   }
-  echo "All transfer finished! \n"
+  print "All transfer finished! \n"
 
   let destUrl = $fromUrl | str replace $'/($mount)/' $'/($to)/'
   print $"You can visit the latest.json from: ($destUrl)\n"
