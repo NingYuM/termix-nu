@@ -23,7 +23,8 @@
 # [√] Support `deploy --combine` which contains produce and consume
 # [√] Add `--list` flag to list all available source and destination settings
 # [√] Multiple deploy group separated by comma from setting or input support
-# [ ] Support private ERDA host and login with username and password
+# [√] Login with username and password from settings
+# [ ] Support private ERDA host
 # [ ] If there is only one deploy group, deploy it directly without selection
 # [ ] Validate input args and flags
 # [√] Update artifact related docs
@@ -128,6 +129,13 @@ def show-settings [
     | upsert project {|it| $'($it.projectId) @ ($it.projectName)' }
     | select -i alias project erdaHost deployGroup default | print
   exit $ECODE.SUCCESS
+}
+
+# Load the ERDA credentials from the settings and store them to environment variable
+def --env load-erda-credentials [setting: record] {
+  if ([username, password] | all {|it| $it in $setting }) {
+    load-env { ERDA_USERNAME: $setting.username, ERDA_PASSWORD: $setting.password }
+  }
 }
 
 # Preview the selected fzf item detail info
@@ -450,6 +458,7 @@ def polling-artifact-deploy [
 ] {
   let host = $destSetting.erdaHost
   let deployUrl = $'($host)/api/($destSetting.orgAlias)/deployment-orders/($doid)/actions/deploy'
+  load-erda-credentials $destSetting
   let deploy = http post -e --headers (get-erda-auth $host --type nu) --content-type application/json $deployUrl {}
   if not ($deploy.success) {
     print $'Deployment started failed with error: (ansi r)($deploy.err.msg)(ansi reset)'
@@ -525,6 +534,7 @@ def get-artifact-deploy-detail [
 ] {
   let host = $destSetting.erdaHost
   let queryUrl = $'($host)/api/($destSetting.orgAlias)/deployment-orders/($doid)'
+  load-erda-credentials $destSetting
   mut detail = http get -e --headers (get-erda-auth $host --type nu) $queryUrl
   # Check session expired, and renew if needed
   let check = should-retry-req $detail
@@ -562,6 +572,7 @@ def create-deploy-order [
   let orgAlias = $dest_setting.orgAlias
   let doCreateUrl = $'($host)/api/($orgAlias)/deployment-orders'
   let releaseDetailUrl = $'($host)/api/($orgAlias)/releases/($artifact.releaseId)'
+  load-erda-credentials $dest_setting
   let release = http get -e --headers (get-erda-auth $host --type nu) $releaseDetailUrl
   let modes = $release.data.modes
   let previewOptions = {
@@ -639,6 +650,7 @@ def query-release-candidates [
     isProjectRelease: 'true'
   }
   let queryUrl = $'($queryUrl)?($payload | url build-query)'
+  load-erda-credentials $destSetting
   mut filtered = curl --silent -H (get-erda-auth $host) $queryUrl | from json
   # Check session expired, and renew if needed
   let check = should-retry-req $filtered
@@ -667,6 +679,7 @@ def query-release-by-version [
     isProjectRelease: 'true'
   }
   let queryUrl = $'($queryUrl)?($payload | url build-query)'
+  load-erda-credentials $setting
   mut filtered = curl --silent -H (get-erda-auth $host) $queryUrl | from json
   # Check session expired, and renew if needed
   let check = should-retry-req $filtered
@@ -703,6 +716,7 @@ def download-artifact-from-release [
   # Download artifact
   let downloadUrl = $'($host)/api/($srcSetting.orgAlias)/releases/($releaseId)/actions/download'
   let dest = $'($tmp)/($version).zip'
+  load-erda-credentials $srcSetting
   print $'Downloading artifact of version (ansi g)($version)(ansi reset) and releaseId (ansi g)($releaseId)(ansi reset) ...'
   curl --silent -H (get-erda-auth $host) $downloadUrl -o $dest
   print $'Artifact has been downloaded to ($dest)(char nl)'
@@ -717,7 +731,7 @@ def upload-artifact [
   destSetting: record   # The destination setting to upload artifact
 ] {
   let host = $destSetting.erdaHost
-  let upload = upload-file $file --host $host
+  let upload = upload-file $file $destSetting
   let releaseUploadUrl = $'($host)/api/($destSetting.orgAlias)/releases/actions/upload'
   print $upload
   let payload = {
@@ -727,6 +741,7 @@ def upload-artifact [
     diceFileID: $'($upload.fileID)',
     projectID: $destSetting.projectId,
   }
+  load-erda-credentials $destSetting
   let release = http post -e --headers (get-erda-auth $host --type nu) --content-type application/json $'($releaseUploadUrl)' $payload
   if $release.success {
     print $'Artifact has been uploaded successfully with version (ansi g)($version)(ansi reset)'
@@ -738,10 +753,12 @@ def upload-artifact [
 
 # Upload file from local disk to Erda Cloud
 def upload-file [
-  file: string,       # File path to upload
-  --host: string,     # The Erda host to upload the file
+  file: string,         # File path to upload
+  destSetting: record,  # The destination setting to upload artifact
 ] {
+  let host = $destSetting.erdaHost
   let uploadUrl = $'($host)/api/files'
+  load-erda-credentials $destSetting
   let upload = curl --silent -H (get-erda-auth $host) -F $'file=@($file)' $uploadUrl | from json
   if $upload.success {
     print $'File (ansi g)($file)(ansi reset) has been uploaded successfully to Erda Cloud'
