@@ -1329,7 +1329,7 @@ t msync --snapshot --from dev
 
 ---
 
-### 29. ERDA 制品一站式部署助手{#erda-artifacts}
+### 29. ERDA 制品部署助手{#erda-artifacts}
 
 **功能描述**:
 

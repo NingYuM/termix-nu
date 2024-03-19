@@ -26,7 +26,7 @@
 # [ ] Support private ERDA host and login with username and password
 # [ ] If there is only one deploy group, deploy it directly without selection
 # [ ] Validate input args and flags
-# [ ] Update artifact related docs
+# [√] Update artifact related docs
 # Usage:
 #   - t art deploy -e TEST -v ${version}    使用指定版本制品部署目标测试环境
 #   - t art deploy -e TEST                  选择制品并部署目标测试环境
@@ -180,6 +180,15 @@ def preview-artifact [
 # Load meta data settings and store them to environment variable
 def --env load-art-conf [] {
   let artConf = open $'($env.TERMIX_DIR)/.termixrc' | from toml | get artifact
+  # TODO: Validate the artifact settings
+  let checkUniqDefault = {|type|
+    if ($artConf | get $type | values | default false default | where default == true | length) > 1 {
+      print $'(ansi r)Multiple default ($type) found, make sure that you have at most one default ($type) in .termixrc.(ansi reset)'
+      exit $ECODE.INVALID_PARAMETER
+    }
+  }
+  do $checkUniqDefault source
+  do $checkUniqDefault destination
   $env.ART_CONF = $artConf
   $artConf
 }
@@ -285,10 +294,6 @@ def validate-produce-setting [
     print $'(ansi r)No source config found to build or download the artifact, bye...(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
-  if ($setting | compact | length) > 1 {
-    print $'(ansi r)Multiple default source configs found, make sure that you have only one default source.(ansi reset)'
-    exit $ECODE.INVALID_PARAMETER
-  }
   mut setting = ($artConf.settings | merge $setting.0 | default $ERDA_HOST erdaHost)
   # TODO: setting fields validation
   if ($branch | is-empty) { $setting } else { $setting | upsert branch $branch }
@@ -354,10 +359,6 @@ def validate-consume-setting [
 
   if ($setting | compact | is-empty) {
     print $'(ansi r)No destination config found to deploy the artifact, bye...(ansi reset)'
-    exit $ECODE.INVALID_PARAMETER
-  }
-  if ($setting | compact | length) > 1 {
-    print $'(ansi r)Multiple default destination configs found, make sure that you have only one default destination.(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
   mut setting = ($artConf.settings | merge $setting.0 | default $ERDA_HOST erdaHost)
