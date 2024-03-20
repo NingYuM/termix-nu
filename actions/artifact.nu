@@ -70,8 +70,8 @@ export def artifacts [
   let sha = do -i { git rev-parse $currentBranch | str substring 0..7 }
   print -n (ellie); print $'        Terminus TERP Artifacts Assistant @ ($sha)'; hr-line
 
-  let checkEnv = {|did?|
-      if ($did | is-not-empty) { return }
+  let checkEnv = {|did|
+      if ($'($did)' != '0') { return }
       if ($dest_env | is-empty) {
         print $'(ansi r)Please specify the dest environment to deploy the artifact by --dest-env/-e, such as DEV,TEST,STAGING,PROD, etc.(ansi reset)'
         exit $ECODE.INVALID_PARAMETER
@@ -90,7 +90,7 @@ export def artifacts [
 
   match $action {
     produce => { produce-artifact --from=$from --branch=$branch --need-confirm }
-    consume => { do $checkEnv; do $checkVersion; consume-artifact $version $dest_env -f $from -t $to -c --deploy-group=$deploy_group --no-deploy=$no_deploy }
+    consume => { do $checkEnv 0; do $checkVersion; consume-artifact $version $dest_env -f $from -t $to -c --deploy-group=$deploy_group --no-deploy=$no_deploy }
     deploy => {
       do $checkEnv $doid
       (deploy-artifact --dest-env $dest_env --combine=$combine --from $from --branch $branch --doid $doid
