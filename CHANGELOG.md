@@ -1,6 +1,12 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## 1.70.1 - 2024-03-20
+
+### Bug Fixes
+
+- Adapt `t art consume` to Nu v0.91
+
 ## 1.70.0 - 2024-03-19
 
 ### Bug Fixes
