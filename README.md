@@ -1,3 +1,5 @@
+import AsciiPlayer from '../components/asciinema.tsx';
+
 # Termix-Nu 使用说明
 
 ## 前言
@@ -47,7 +49,6 @@ winget install Nushell.Nushell
 2. 对于通过 `brew` 安装 `nushell` 的用户在后续升级之后由于 `nushell` 二进制文件存储路径发生了变化(`brew` 安装的版本号会在路径里得到体现)，`nushell` 的插件配置文件会因找不到之前注册的插件而报错，此时直接把插件文件（比如: `/Users/hustcer/Library/Application Support/nushell/plugin.nu`）删掉即可，后续在使用工具的过程中会自动重新注册插件。
 
 :::
-
 
 ### Install latest version of nu
 
@@ -766,12 +767,12 @@ t gsync release/2.5.23.1116 -r terp-rls
 
 **参数说明**:
 
-- `-f`, `--from` <String> - 需要比较的起始 Commit SHA
-- `-t`, `--to` <String> - 需要比较的终止 Commit SHA 或 ref (默认: 'HEAD')
-- `-g`, `--grep` <String> - 在Commit的 Author,SHA,Date 和备注字段搜索指定关键字
-- `-C`, `--not-contain` <String> - 筛选提交备注里面不包含特定关键字的 Commit
-- `-H`, `--exclude-shas` <String> - 排除特定的 SHA，多个值可以用 `,` 分隔
-- `-A`, `--exclude-authors` <String> - 排除特定的 Author，多个值可以用 `,` 分隔
+- `-f`, `--from <String>` - 需要比较的起始 Commit SHA
+- `-t`, `--to <String>` - 需要比较的终止 Commit SHA 或 ref (默认: 'HEAD')
+- `-g`, `--grep <String>` - 在Commit的 Author,SHA,Date 和备注字段搜索指定关键字
+- `-C`, `--not-contain <String>` - 筛选提交备注里面不包含特定关键字的 Commit
+- `-H`, `--exclude-shas <String>` - 排除特定的 SHA，多个值可以用 `,` 分隔
+- `-A`, `--exclude-authors <String>` - 排除特定的 Author，多个值可以用 `,` 分隔
 - `-h`, `--help` - 显示本命令的帮助信息
 
 **使用举例**:
@@ -1243,8 +1244,8 @@ t ta transfer all --from http://minio.terp.terminus.com/terminus-trantor/fe-reso
 
 **参数说明**:
 
-- `-f`, `--from` <String> - 指定同步源名称，可以从配置文件的 `meta.source` Key 值中获取，不传则使用默认同步源
-- `-t`, `--to` <String> - 指定同步目标名称，可以从配置文件的 `meta.destination` Key 值中获取，不传则使用默认同步目标
+- `-f`, `--from <String>` - 指定同步源名称，可以从配置文件的 `meta.source` Key 值中获取，不传则使用默认同步源
+- `-t`, `--to <String>` - 指定同步目标名称，可以从配置文件的 `meta.destination` Key 值中获取，不传则使用默认同步目标
 - `-a`, `--all` - 加上这个开关就表示同步所有模块
 - `-s`, `--selected` - 加了这个开关就表示同步指定同步源中的 `selectedModules` 配置项所包含的模块
 - `-l`, `--list` - 列出所有的同步源和同步目标
@@ -1348,17 +1349,17 @@ t msync --snapshot --from dev
 
 **参数说明**:
 
--  `-l`, `--list` - 显示所有可用的源和目标配置信息
--  `-c`, `--combine` - `deploy` Action下有效，包含制品构建、下载、上传、创建部署单、部署等一系列操作
--  `-n`, `--no-deploy` - `deploy`/`consume` Action下有效, 只创建制品部署单，但是并不执行部署操作
--  `-f`, `--from <String>` - `deploy`/`consume`/`produce` Action均可能使用此参数，用于指定源项目以及制品构建应用对应的配置别名
--  `-t`, `--to <String>` - `deploy`/`consume` Action下有效，用于指定制品部署目标项目对应的配置别名
--  `-i`, `--doid <String>` - `deploy` Action下有效，用于通过指定的部署单 ID 部署制品
--  `-b`, `--branch <String>` - `produce` Action下有效，用于指定构建制品的分支名
--  `-v`, `--version <String>` - `deploy`/`consume` Action下有效, 用于指定需要部署或者消费的制品版本
--  `-e`, `--dest-env <String>` - `deploy`/`consume` Action下有效, 用于指定需要部署的目标环境比如：DEV,TEST,STAGING,PROD, 不区分大小写
--  `-g`, `--deploy-group <String>` - 待部署的制品应用组, 默认为 `All`
--  `-h`, `--help` - 显示命令相关帮助信息
+- `-l`, `--list` - 显示所有可用的源和目标配置信息
+- `-c`, `--combine` - `deploy` Action下有效，包含制品构建、下载、上传、创建部署单、部署等一系列操作
+- `-n`, `--no-deploy` - `deploy`/`consume` Action下有效, 只创建制品部署单，但是并不执行部署操作
+- `-f`, `--from <String>` - `deploy`/`consume`/`produce` Action均可能使用此参数，用于指定源项目以及制品构建应用对应的配置别名
+- `-t`, `--to <String>` - `deploy`/`consume` Action下有效，用于指定制品部署目标项目对应的配置别名
+- `-i`, `--doid <String>` - `deploy` Action下有效，用于通过指定的部署单 ID 部署制品
+- `-b`, `--branch <String>` - `produce` Action下有效，用于指定构建制品的分支名
+- `-v`, `--version <String>` - `deploy`/`consume` Action下有效, 用于指定需要部署或者消费的制品版本
+- `-e`, `--dest-env <String>` - `deploy`/`consume` Action下有效, 用于指定需要部署的目标环境比如：DEV,TEST,STAGING,PROD, 不区分大小写
+- `-g`, `--deploy-group <String>` - 待部署的制品应用组, 默认为 `All`
+- `-h`, `--help` - 显示命令相关帮助信息
 
 **配置说明**:
 
@@ -1415,10 +1416,12 @@ t art consume -e dev -v 2.5.24.0130+20240313165219 -t terp
 **演示视频**:
 
 - 制品制作演示视频:
-  [![asciicast](https://asciinema.org/a/iyxMimx9fJteh2NIEWj53diJo.svg)](https://asciinema.org/a/iyxMimx9fJteh2NIEWj53diJo)
+
+  <AsciiPlayer cast="/casts/art-produce.cast" poster="npt:0:39" />
 
 - 制品部署演示视频:
-  [![asciicast](https://asciinema.org/a/pgW4czf5Y4Wi6lLBT6qeuz1CK.svg)](https://asciinema.org/a/pgW4czf5Y4Wi6lLBT6qeuz1CK)
+
+  <AsciiPlayer cast="/casts/art-deploy.cast" />
 
 :::tip
 
@@ -1452,7 +1455,7 @@ t art consume -e dev -v 2.5.24.0130+20240313165219 -t terp
 - `-n`, `--notify` - 通过钉钉群机器人@工时没填满的同学提醒其填报工时
 - `-p`, `--show-prev` - 查询前一周的工时填表情况，通常周一会有这个需求
 - `-a`, `--show-all` - 显示所有团队成员工时填报情况，哪怕其已经填满了工时（但是提醒仍然只针对工时没填满的人）
-- `-m`, `--month` <Int> - 按月份查询团队工时填报情况, 可以搭配 `--show-all` 参数一起使用
+- `-m`, `--month <Int>` - 按月份查询团队工时填报情况, 可以搭配 `--show-all` 参数一起使用
 - `--keep-polling` - 持续轮询查询或提醒，直到团队所有成员都已经填满了工时
 - `-h`, `--help` - 显示帮助文档
 
