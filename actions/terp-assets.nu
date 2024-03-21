@@ -29,6 +29,8 @@ use ../utils/common.nu [ECODE, is-installed, hr-line, get-tmp-path, compare-ver,
 const JSON_ENTRY = 'latest.json'
 const VALID_ACTIONS = ['download', 'transfer']
 const MODULE_ALIASES = ['pc', 'mobile', 'mat', 'mmat', 'dors', 'mdors', 'iam', 'all']
+const VALID_MODULES = [t-runtime-mobile-erp t-runtime-erp iam-features dors-page dors-mobile t-material t-mobile t-b2b-ui emp-frontend-erp]
+const NEXT_VALID_MODULES = [terp-mobile terp service service-mobile iam dors dors-mobile material material-mobile b2b emp]
 const ENDPOINT = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com'
 
 const PKG_TOOLS_VER = '0.3.0-beta.1'
@@ -107,7 +109,15 @@ def get-latest-meta [from: string] {
   let fromUrl = if $isFullUrl { $from } else { $'($ENDPOINT)/fe-resources/($from)/($JSON_ENTRY)' }
   let mount = $fromUrl
     | parse $'{base_url}/fe-resources/{mount}/($JSON_ENTRY)' | get mount | get 0
-  { from: $from, latestUrl: $fromUrl, mountpoint: $mount, latest: (http get $fromUrl) }
+  let latest = http get $fromUrl
+  let modules = $latest | columns
+  let validModules = {|mods, validMods| $mods | all {|m| $m in $validMods } }
+  if ((do $validModules $modules $VALID_MODULES) or (do $validModules $modules $NEXT_VALID_MODULES)) {
+    return { from: $from, latestUrl: $fromUrl, mountpoint: $mount, latest: $latest }
+  }
+  print $'The latest.json from (ansi p)($fromUrl)(ansi reset) contains invalid modules, module list:'
+  print $'($modules | str join ", ")'
+  exit $ECODE.INVALID_PARAMETER
 }
 
 # Get dest OSS settings
@@ -172,7 +182,7 @@ def confirm-action [
 
 # Download static assets from OSS to specified directory
 def download [
-  modules: list,      # End point, available values: pc, mobile, all
+  modules: list,        # End point, available values: pc, mobile, all
   latestMeta: record,   # Latest meta info
   to?: string,          # Destination dir
   --verbose(-v),        # Show verbose info
