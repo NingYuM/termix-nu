@@ -905,7 +905,7 @@ t dp test -a all
 t dp test -a nusi
 ```
 
-#### 从 CLI 运行流水线演示
+#### 从 CLI 运行流水线演示{#run-pipeline-cast}
 
 <AsciiPlayer cast="/casts/erda-dp.cast" poster="npt:0:39" />
 
@@ -943,7 +943,7 @@ t dq test
 t dq dev -a all
 ```
 
-#### 从 CLI 查询流水线演示
+#### 从 CLI 查询流水线演示{#query-pipeline-cast}
 
 <AsciiPlayer cast="/casts/erda-dq.cast" poster="npt:0:39" />
 
@@ -1223,11 +1223,11 @@ t ta transfer all --from http://minio.terp.terminus.com/terminus-trantor/fe-reso
 
 **演示视频**:
 
-#### 同步指定前端模块演示
+#### 同步指定前端模块演示{#sync-assets-cast}
 
 <AsciiPlayer cast="/casts/ta-module.cast" poster="npt:0:26" />
 
-#### 同步选中前端模块演示
+#### 同步选中前端模块演示{#sync-selected-cast}
 
 <AsciiPlayer cast="/casts/ta-selected.cast" poster="npt:0:35" />
 
@@ -1326,11 +1326,11 @@ t msync --snapshot --from dev
 
 **演示视频**:
 
-#### 同步所有模块元数据演示
+#### 同步所有模块元数据演示{#sync-meta-cast}
 
 <AsciiPlayer cast="/casts/meta-sync-all.cast" poster="npt:0:39" />
 
-#### 同步选中模块元数据演示
+#### 同步选中模块元数据演示{#sync-selected-meta-cast}
 
 <AsciiPlayer cast="/casts/meta-sync-selected.cast" />
 
@@ -1427,11 +1427,11 @@ t art consume -e dev -v 2.5.24.0130+20240313165219 -t terp
 
 **演示视频**:
 
-#### 制品制作演示
+#### 制品制作演示{#produce-artifact-cast}
 
 <AsciiPlayer cast="/casts/art-produce.cast" poster="npt:0:39" />
 
-#### 制品部署演示
+#### 制品部署演示{#deploy-artifact-cast}
 
 <AsciiPlayer cast="/casts/art-deploy.cast" />
 
