@@ -1,6 +1,20 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## 1.70.2 - 2024-03-22
+
+### Features
+
+- Validate modules before static asset syncing for `t ta` command
+- Add `--summary` and `--exclude` flag to `t git-stat` command
+
+### Miscellaneous Tasks
+
+- Add video casts for TERP assets syncing
+- Add Erda pipeline operation related Asciinema casts
+- Update README.md add Asciinema video casts support
+- Add hash href for video casts
+
 ## 1.70.1 - 2024-03-20
 
 ### Bug Fixes
