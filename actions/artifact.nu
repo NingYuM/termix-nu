@@ -52,6 +52,7 @@ const FZF_DEFAULT_OPTS = $'--height 50% --layout=reverse --exact --preview-windo
 const FZF_THEME = '--color=bg+:#3c3836,bg:#32302f,spinner:#fb4934,hl:#928374,fg:#ebdbb2,header:#928374,info:#8ec07c,pointer:#fb4934,marker:#fb4934,fg+:#ebdbb2,prompt:#fb4934,hl+:#fb4934'
 
 # Build, Download and Upload artifacts, create deploy order then deploy from artifacts
+# Detailed User Manual: https://fe-docs.app.terminus.io/termix/termix-nu#erda-artifacts
 export def artifacts [
   action?: string,            # Action to perform, such as `deploy`, `produce`, and `consume`
   --list(-l),                 # List all available source and destination settings
@@ -63,7 +64,7 @@ export def artifacts [
   --branch(-b): string,       # The branch name to build the artifact (produce)
   --version(-v): string,      # The version number of the artifact to deploy (consume/deploy)
   --dest-env(-e): string,     # The dest env to deploy the artifact, such as DEV,TEST,STAGING,PROD (consume/deploy)
-  --deploy-group(-g): string, # The app group to deploy, mutiple groups should be separated by comma, `All` by default (consume/deploy)
+  --deploy-group(-g): string, # The app group to deploy, multiple groups should be separated by comma, `All` by default (consume/deploy)
 ] {
   cd $env.TERMIX_DIR
   let currentBranch = git branch --show-current

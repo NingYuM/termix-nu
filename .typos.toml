@@ -1,0 +1,9 @@
+# For more detail, see: https://github.com/crate-ci/typos
+
+[files]
+extend-exclude = ["casts"]
+
+[default.extend-words]
+# Don't correct the word "protable"
+Ba = "Ba"
+
