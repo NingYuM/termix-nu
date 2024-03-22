@@ -409,8 +409,10 @@ t git-batch-exec 'git cherry-pick abcxyzuvw; git push' develop,feature/latest
 
 **参数说明**:
 
+- `-s` 或 `--summary`: 显示统计汇总信息；
 - `-c` 或 `--count`: 需要统计的 commit 记录数，默认前 20 条;
 - `-a` 或 `--author`: 需要统计的 commit 提交者 ID，默认所有提交者；
+- `-e` 或 `--exclude <String>`: 需要在统计中排除的文件，多个文件之间用 `,` 分隔，比如 `pnpm-lock.yaml` 等，若文件不存在不会报错；
 - `-h` 或 `--help`: 查看该命令的相关帮助；
 
 **使用举例**:
@@ -420,6 +422,10 @@ t git-batch-exec 'git cherry-pick abcxyzuvw; git push' develop,feature/latest
 t git-stat
 # 统计当前仓库当前分支 git 账号为 hustcer 的用户的 前30条 commit 数据
 t git-stat -c 30 -a hustcer
+# 在上述统计结果的基础上显示统计汇总信息
+t git-stat -c 30 -a hustcer -s
+# 将 pnpm-lock.yaml 文件的变更排除在统计结果之外
+t git-stat -c 30 -a hustcer -s -e pnpm-lock.yaml
 ```
 
 **输出样例**:
