@@ -905,11 +905,9 @@ t dp test -a all
 t dp test -a nusi
 ```
 
-**输出样例**:
+#### 从 CLI 运行流水线演示
 
-CLI 部署示例：
-
-![Run Erda Pipeline from CLI](https://img.alicdn.com/imgextra/i4/O1CN01aVjqNd1MQWsGrQAcR_!!6000000001429-2-tps-1561-190.png)
+<AsciiPlayer cast="/casts/erda-dp.cast" poster="npt:0:39" />
 
 ---
 
@@ -945,9 +943,9 @@ t dq test
 t dq dev -a all
 ```
 
-**输出样例**:
+#### 从 CLI 查询流水线演示
 
-![Query Erda Pipeline Running Status from CLI](https://img.alicdn.com/imgextra/i1/O1CN01415e4m1ir1HspRbuv_!!6000000004465-2-tps-1434-409.png)
+<AsciiPlayer cast="/casts/erda-dq.cast" poster="npt:0:39" />
 
 ---
 
@@ -1223,6 +1221,16 @@ t ta transfer all --from http://minio.terp.terminus.com/terminus-trantor/fe-reso
 
 资源同步完毕后记得修改网关配置以使线上的静态资源生效。
 
+**演示视频**:
+
+#### 同步指定前端模块演示
+
+<AsciiPlayer cast="/casts/ta-module.cast" poster="npt:0:26" />
+
+#### 同步选中前端模块演示
+
+<AsciiPlayer cast="/casts/ta-selected.cast" poster="npt:0:35" />
+
 ---
 
 ### 28. TERP 元数据一站式极简同步工具{#meta-data-syncing}
@@ -1316,11 +1324,15 @@ t msync -a --from dev0 --to test0
 t msync --snapshot --from dev
 ```
 
-**输出样例**:
+**演示视频**:
 
-以下为同步所有模块结束后的终端全部输出内容：
+#### 同步所有模块元数据演示
 
-![Snapshot of Syncing All Modules](https://img.alicdn.com/imgextra/i2/O1CN01EJAX801tDb1bw9QTl_!!6000000005868-2-tps-840-1400.png)
+<AsciiPlayer cast="/casts/meta-sync-all.cast" poster="npt:0:39" />
+
+#### 同步选中模块元数据演示
+
+<AsciiPlayer cast="/casts/meta-sync-selected.cast" />
 
 :::info
 
@@ -1415,13 +1427,13 @@ t art consume -e dev -v 2.5.24.0130+20240313165219 -t terp
 
 **演示视频**:
 
-- 制品制作演示视频:
+#### 制品制作演示
 
-  <AsciiPlayer cast="/casts/art-produce.cast" poster="npt:0:39" />
+<AsciiPlayer cast="/casts/art-produce.cast" poster="npt:0:39" />
 
-- 制品部署演示视频:
+#### 制品部署演示
 
-  <AsciiPlayer cast="/casts/art-deploy.cast" />
+<AsciiPlayer cast="/casts/art-deploy.cast" />
 
 :::tip
 
