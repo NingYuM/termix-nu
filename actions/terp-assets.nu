@@ -68,7 +68,7 @@ export def 'terp assets' [
 # Get valid modules from input and exit if any invalid module is found
 def get-modules [modules?: string, --latest-meta: record] {
   # Choose modules from latest.json if modules is empty
-  let allModules = $latest_meta.latest | columns
+  let allModules = $latest_meta.latest | columns | sort
   if ($modules | is-empty) {
     print $'No module specified, please select the modules manually...'; hr-line
     let tips = $"Select the modules to sync or download (ansi grey66)\(space to select, esc or q to quit, enter to confirm\)(ansi reset)"
