@@ -1,4 +1,4 @@
-import AsciiPlayer from '../components/asciinema.tsx';
+import AsciiPlayer from '../../src/components/asciinema.tsx';
 
 # Termix-Nu 使用说明
 
