@@ -35,19 +35,21 @@ export def 'git stat' [
                         | default 0 deletions
                         | default 0 insertions
                         | default [] file
+
       if ($diff | is-empty) {
         { fileChanged: 0, insertions: 0, deletions: 0, file: [] }
       } else {
         $diff
           | upsert fileChanged {|it| $it.file | length }
-          | upsert deletions {|it| $it.deletions | into int }
-          | upsert insertions {|it| $it.insertions | into int }
+          # Replace '-' with 0, because some none text file diff output may have '-' in insertions/deletions
+          | upsert deletions {|it| $it.deletions | str replace -a '-' 0 | into int }
+          | upsert insertions {|it| $it.insertions | str replace -a '-' 0 | into int }
           | reduce --fold { fileChanged: 0, insertions: 0, deletions: 0, file: [] } { |acc x|
               {
                 file: ($acc.file | append $x.file),
-                fileChanged: ($acc.fileChanged + $x.fileChanged),
                 deletions: ($acc.deletions + $x.deletions),
                 insertions: ($acc.insertions + $x.insertions),
+                fileChanged: ($acc.fileChanged + $x.fileChanged),
               }
             }
       }
@@ -59,13 +61,14 @@ export def 'git stat' [
   mut total = $stat
     | reduce --fold { fileChanged: 0, insertions: 0, deletions: 0 } { |acc x|
         {
-          fileChanged: ($acc.fileChanged + $x.fileChanged),
           deletions: ($acc.deletions + $x.deletions),
           insertions: ($acc.insertions + $x.insertions),
+          fileChanged: ($acc.fileChanged + $x.fileChanged),
         }
       }
-  $total.uniqFileChanged = ($stat.file | flatten | uniq | length)
+
   $total.commits = ($stat.commit | uniq | length)
+  $total.uniqFileChanged = ($stat.file | flatten | uniq | length)
   print $'Total Summary: '; hr-line 69
   $total
     | select commits deletions insertions fileChanged uniqFileChanged
