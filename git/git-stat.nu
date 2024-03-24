@@ -28,35 +28,46 @@ export def 'git stat' [
     | lines
     | split column ' ' commit name
     | upsert changes { |c|
-
-      let args = [$'($c.commit)^!' --shortstat ...$excludes]
-
-      git diff ...$args
-        | str trim
-        | split row ','
-        | str trim
-        | split column ' '
-        | get column1
-        | rotate --ccw changes insertions deletions
-        | default 0 deletions
-        | default 0 insertions
-        | upsert changes {|it| $it.changes | into int }
-        | upsert deletions {|it| $it.deletions | into int }
-        | upsert insertions {|it| $it.insertions | into int }
-
+      let args = [$'($c.commit)^!' --numstat ...$excludes]
+      let diff = git diff ...$args
+                        | detect columns -n
+                        | rename insertions deletions file
+                        | default 0 deletions
+                        | default 0 insertions
+                        | default [] file
+      if ($diff | is-empty) {
+        { fileChanged: 0, insertions: 0, deletions: 0, file: [] }
+      } else {
+        $diff
+          | upsert fileChanged {|it| $it.file | length }
+          | upsert deletions {|it| $it.deletions | into int }
+          | upsert insertions {|it| $it.insertions | into int }
+          | reduce --fold { fileChanged: 0, insertions: 0, deletions: 0, file: [] } { |acc x|
+              {
+                file: ($acc.file | append $x.file),
+                fileChanged: ($acc.fileChanged + $x.fileChanged),
+                deletions: ($acc.deletions + $x.deletions),
+                insertions: ($acc.insertions + $x.insertions),
+              }
+            }
+      }
     } | flatten -a
-  $stat | print
+
+  $stat | reject file | print
 
   if not $summary { return }
   mut total = $stat
-    | reduce --fold { changes: 0, insertions: 0, deletions: 0 } { |acc x|
-      {
-        changes: ($acc.changes + $x.changes),
-        deletions: ($acc.deletions + $x.deletions),
-        insertions: ($acc.insertions + $x.insertions),
+    | reduce --fold { fileChanged: 0, insertions: 0, deletions: 0 } { |acc x|
+        {
+          fileChanged: ($acc.fileChanged + $x.fileChanged),
+          deletions: ($acc.deletions + $x.deletions),
+          insertions: ($acc.insertions + $x.insertions),
+        }
       }
-    }
-  $total.commits = ($stat | length)
+  $total.uniqFileChanged = ($stat.file | flatten | uniq | length)
+  $total.commits = ($stat.commit | uniq | length)
   print $'Total Summary: '; hr-line 69
-  print $total
+  $total
+    | select commits deletions insertions fileChanged uniqFileChanged
+    | print
 }
