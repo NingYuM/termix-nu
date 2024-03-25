@@ -93,6 +93,16 @@ def ver [] { (version | transpose key value | to md --pretty) }
 
 def kq [] { do -i { ps | where name == xbar | get 0 | kill -f $in.pid } }
 
+def --env yy [...args] {
+  let tmp = (mktemp -t "yazi-cwd.XXXXX")
+  yazi ...$args --cwd-file $tmp
+  let cwd = (open $tmp)
+  if $cwd != "" and $cwd != $env.PWD {
+    cd $cwd
+  }
+  rm -fp $tmp
+}
+
 # Get help on commands using fzf
 def 'get help' [] {
   do {
@@ -123,7 +133,7 @@ export def hr-line [
 
 # Reload Nushell Config by setting `RELOAD_NU` environment variable
 export def --env rc [] {
-	$env.RELOAD_NU = true
+  $env.RELOAD_NU = true
 }
 
 # Display my IP info
@@ -184,36 +194,36 @@ def install-all-nu [
   print '-------------------------------------------------------------------'
 
   def install-nushell [] {
-      print $'(char nl)Installing Nushell'
-      print '----------------------------'
+    print $'(char nl)Installing Nushell'
+    print '----------------------------'
 
-      cd $nu_root
-      cargo install --force --locked --path . --features=dataframe,extra
+    cd $nu_root
+    cargo install --force --locked --path . --features=dataframe,extra
   }
 
   if not $plugin_only { install-nushell }
 
   def install-plugin [] {
-      let plugin = $in
+    let plugin = $in
 
-      print $'(char nl)Installing ($plugin)'
-      print '----------------------------'
+    print $'(char nl)Installing ($plugin)'
+    print '----------------------------'
 
-      cd $'($nu_root)/crates/($plugin)'
-      cargo install --force --path .
+    cd $'($nu_root)/crates/($plugin)'
+    cargo install --force --path .
   }
 
   let plugins = [
-      nu_plugin_inc,
-      nu_plugin_gstat,
-      nu_plugin_query,
-      nu_plugin_example,
-      nu_plugin_custom_values,
-      nu_plugin_formats,
+    nu_plugin_inc,
+    nu_plugin_gstat,
+    nu_plugin_query,
+    nu_plugin_example,
+    nu_plugin_custom_values,
+    nu_plugin_formats,
   ]
 
   for plugin in $plugins {
-      $plugin | install-plugin
+    $plugin | install-plugin
   }
 }
 
@@ -351,7 +361,6 @@ export def unpack [
     } else {
       echo $"Unknown extension: ($p)"
     }
-
   }
 }
 
@@ -434,13 +443,13 @@ def nu-sloc [] {
 
 # Check how many downloads Nushell has had
 def nudown [] {
-    http get https://api.github.com/repos/nushell/nushell/releases
-      | get assets
-      | flatten
-      | select name download_count created_at
-      | update created_at {|it| $it.created_at | into datetime }
-      | where created_at > 2022-07-05T17:00:56Z
-      # | update created_at {|it| $it | format date '%m/%d/%Y %H:%M:%S' }
+  http get https://api.github.com/repos/nushell/nushell/releases
+    | get assets
+    | flatten
+    | select name download_count created_at
+    | update created_at {|it| $it.created_at | into datetime }
+    | where created_at > 2022-07-05T17:00:56Z
+    # | update created_at {|it| $it | format date '%m/%d/%Y %H:%M:%S' }
 }
 
 # -------------------------- Autocompletion ------------------------
@@ -451,133 +460,133 @@ def nudown [] {
 # And here is the theme collection
 # https://github.com/nushell/nu_scripts/tree/main/themes
 let dark_theme = {
-    # color for nushell primitives
-    separator: white
-    leading_trailing_space_bg: { attr: n } # no fg, no bg, attr none effectively turns this off
-    header: green_bold
-    empty: blue
-    # Closures can be used to choose colors for specific values.
-    # The value (in this case, a bool) is piped into the closure.
-    # eg) {|| if $in { 'light_cyan' } else { 'light_gray' } }
-    bool: light_cyan
-    int: white
-    filesize: cyan
-    duration: white
-    date: purple
-    range: white
-    float: white
-    string: white
-    nothing: white
-    binary: white
-    cell-path: white
-    row_index: green_bold
-    record: white
-    list: white
-    block: white
-    hints: dark_gray
-    search_result: { bg: red fg: white }
-    shape_and: purple_bold
-    shape_binary: purple_bold
-    shape_block: blue_bold
-    shape_bool: light_cyan
-    shape_closure: green_bold
-    shape_custom: green
-    shape_datetime: cyan_bold
-    shape_directory: cyan
-    shape_external: cyan
-    shape_externalarg: green_bold
-    shape_external_resolved: light_yellow_bold
-    shape_filepath: cyan
-    shape_flag: blue_bold
-    shape_float: purple_bold
-    # shapes are used to change the cli syntax highlighting
-    shape_garbage: { fg: white bg: red attr: b}
-    shape_globpattern: cyan_bold
-    shape_int: purple_bold
-    shape_internalcall: cyan_bold
-    shape_keyword: cyan_bold
-    shape_list: cyan_bold
-    shape_literal: blue
-    shape_match_pattern: green
-    shape_matching_brackets: { attr: u }
-    shape_nothing: light_cyan
-    shape_operator: yellow
-    shape_or: purple_bold
-    shape_pipe: purple_bold
-    shape_range: yellow_bold
-    shape_record: cyan_bold
-    shape_redirection: purple_bold
-    shape_signature: green_bold
-    shape_string: green
-    shape_string_interpolation: cyan_bold
-    shape_table: blue_bold
-    shape_variable: purple
-    shape_vardecl: purple
+  # color for nushell primitives
+  separator: white
+  leading_trailing_space_bg: { attr: n } # no fg, no bg, attr none effectively turns this off
+  header: green_bold
+  empty: blue
+  # Closures can be used to choose colors for specific values.
+  # The value (in this case, a bool) is piped into the closure.
+  # eg) {|| if $in { 'light_cyan' } else { 'light_gray' } }
+  bool: light_cyan
+  int: white
+  filesize: cyan
+  duration: white
+  date: purple
+  range: white
+  float: white
+  string: white
+  nothing: white
+  binary: white
+  cell-path: white
+  row_index: green_bold
+  record: white
+  list: white
+  block: white
+  hints: dark_gray
+  search_result: { bg: red fg: white }
+  shape_and: purple_bold
+  shape_binary: purple_bold
+  shape_block: blue_bold
+  shape_bool: light_cyan
+  shape_closure: green_bold
+  shape_custom: green
+  shape_datetime: cyan_bold
+  shape_directory: cyan
+  shape_external: cyan
+  shape_externalarg: green_bold
+  shape_external_resolved: light_yellow_bold
+  shape_filepath: cyan
+  shape_flag: blue_bold
+  shape_float: purple_bold
+  # shapes are used to change the cli syntax highlighting
+  shape_garbage: { fg: white bg: red attr: b}
+  shape_globpattern: cyan_bold
+  shape_int: purple_bold
+  shape_internalcall: cyan_bold
+  shape_keyword: cyan_bold
+  shape_list: cyan_bold
+  shape_literal: blue
+  shape_match_pattern: green
+  shape_matching_brackets: { attr: u }
+  shape_nothing: light_cyan
+  shape_operator: yellow
+  shape_or: purple_bold
+  shape_pipe: purple_bold
+  shape_range: yellow_bold
+  shape_record: cyan_bold
+  shape_redirection: purple_bold
+  shape_signature: green_bold
+  shape_string: green
+  shape_string_interpolation: cyan_bold
+  shape_table: blue_bold
+  shape_variable: purple
+  shape_vardecl: purple
 }
 
 let light_theme = {
-    # color for nushell primitives
-    separator: dark_gray
-    leading_trailing_space_bg: { attr: n } # no fg, no bg, attr none effectively turns this off
-    header: green_bold
-    empty: blue
-    # Closures can be used to choose colors for specific values.
-    # The value (in this case, a bool) is piped into the closure.
-    # eg) {|| if $in { 'dark_cyan' } else { 'dark_gray' } }
-    bool: dark_cyan
-    int: dark_gray
-    filesize: cyan_bold
-    duration: dark_gray
-    date: purple
-    range: dark_gray
-    float: dark_gray
-    string: dark_gray
-    nothing: dark_gray
-    binary: dark_gray
-    cell-path: dark_gray
-    row_index: green_bold
-    record: dark_gray
-    list: dark_gray
-    block: dark_gray
-    hints: dark_gray
-    search_result: { fg: white bg: red }
-    shape_and: purple_bold
-    shape_binary: purple_bold
-    shape_block: blue_bold
-    shape_bool: light_cyan
-    shape_closure: green_bold
-    shape_custom: green
-    shape_datetime: cyan_bold
-    shape_directory: cyan
-    shape_external: cyan
-    shape_externalarg: green_bold
-    shape_external_resolved: light_purple_bold
-    shape_filepath: cyan
-    shape_flag: blue_bold
-    shape_float: purple_bold
-    # shapes are used to change the cli syntax highlighting
-    shape_garbage: { fg: white bg: red attr: b}
-    shape_globpattern: cyan_bold
-    shape_int: purple_bold
-    shape_internalcall: cyan_bold
-    shape_keyword: cyan_bold
-    shape_list: cyan_bold
-    shape_literal: blue
-    shape_match_pattern: green
-    shape_matching_brackets: { attr: u }
-    shape_nothing: light_cyan
-    shape_operator: yellow
-    shape_or: purple_bold
-    shape_pipe: purple_bold
-    shape_range: yellow_bold
-    shape_record: cyan_bold
-    shape_redirection: purple_bold
-    shape_signature: green_bold
-    shape_string: green
-    shape_string_interpolation: cyan_bold
-    shape_table: blue_bold
-    shape_variable: purple
-    shape_vardecl: purple
+  # color for nushell primitives
+  separator: dark_gray
+  leading_trailing_space_bg: { attr: n } # no fg, no bg, attr none effectively turns this off
+  header: green_bold
+  empty: blue
+  # Closures can be used to choose colors for specific values.
+  # The value (in this case, a bool) is piped into the closure.
+  # eg) {|| if $in { 'dark_cyan' } else { 'dark_gray' } }
+  bool: dark_cyan
+  int: dark_gray
+  filesize: cyan_bold
+  duration: dark_gray
+  date: purple
+  range: dark_gray
+  float: dark_gray
+  string: dark_gray
+  nothing: dark_gray
+  binary: dark_gray
+  cell-path: dark_gray
+  row_index: green_bold
+  record: dark_gray
+  list: dark_gray
+  block: dark_gray
+  hints: dark_gray
+  search_result: { fg: white bg: red }
+  shape_and: purple_bold
+  shape_binary: purple_bold
+  shape_block: blue_bold
+  shape_bool: light_cyan
+  shape_closure: green_bold
+  shape_custom: green
+  shape_datetime: cyan_bold
+  shape_directory: cyan
+  shape_external: cyan
+  shape_externalarg: green_bold
+  shape_external_resolved: light_purple_bold
+  shape_filepath: cyan
+  shape_flag: blue_bold
+  shape_float: purple_bold
+  # shapes are used to change the cli syntax highlighting
+  shape_garbage: { fg: white bg: red attr: b}
+  shape_globpattern: cyan_bold
+  shape_int: purple_bold
+  shape_internalcall: cyan_bold
+  shape_keyword: cyan_bold
+  shape_list: cyan_bold
+  shape_literal: blue
+  shape_match_pattern: green
+  shape_matching_brackets: { attr: u }
+  shape_nothing: light_cyan
+  shape_operator: yellow
+  shape_or: purple_bold
+  shape_pipe: purple_bold
+  shape_range: yellow_bold
+  shape_record: cyan_bold
+  shape_redirection: purple_bold
+  shape_signature: green_bold
+  shape_string: green
+  shape_string_interpolation: cyan_bold
+  shape_table: blue_bold
+  shape_variable: purple
+  shape_vardecl: purple
 }
 
 let carapace_completer = {|spans|
