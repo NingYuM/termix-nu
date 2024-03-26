@@ -30,11 +30,12 @@ const JSON_ENTRY = 'latest.json'
 const VALID_ACTIONS = ['download', 'transfer']
 const MODULE_ALIASES = ['pc', 'mobile', 'mat', 'mmat', 'dors', 'mdors', 'iam', 'all']
 const VALID_MODULES = [t-runtime-mobile-erp t-runtime-erp iam-features dors-page dors-mobile t-material t-mobile t-b2b-ui emp-frontend-erp]
-const NEXT_VALID_MODULES = [terp-mobile terp service service-mobile iam dors dors-mobile material material-mobile b2b emp]
+const NEXT_VALID_MODULES = [terp-mobile terp service service-mobile iam dors dors-mobile base base-mobile b2b emp]
 const ENDPOINT = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com'
 
 const PKG_TOOLS_VER = '0.3.0-beta.1'
 
+# Module alias to real module name (Before module renamed)
 const END_KEY_MAP = {
   mmat: 't-mobile',
   mat: 't-material',
@@ -112,7 +113,9 @@ def get-latest-meta [from: string] {
   let latest = http get $fromUrl
   let modules = $latest | columns
   let validModules = {|mods, validMods| $mods | all {|m| $m in $validMods } }
-  if ((do $validModules $modules $VALID_MODULES) or (do $validModules $modules $NEXT_VALID_MODULES)) {
+  let validateModules = if ($env.VALIDATE_MODULES? == '0') { false } else { true }
+  let validationPassed = (do $validModules $modules $VALID_MODULES) or (do $validModules $modules $NEXT_VALID_MODULES)
+  if (not $validateModules) or ($validateModules and $validationPassed) {
     return { from: $from, latestUrl: $fromUrl, mountpoint: $mount, latest: $latest }
   }
   print $'The latest.json from (ansi p)($fromUrl)(ansi reset) contains invalid modules, module list:'
@@ -200,7 +203,8 @@ def download [
 
   # Download assets for each end point
   $modules | each { |e|
-    let endKey = $END_KEY_MAP | get -i $e | default $e
+    # Real module name has higher priority than alias
+    let endKey = if ($e in $latestMeta.latest) { $e } else { $END_KEY_MAP | get -i $e | default $e }
     let assetsDir = $'($dest)/assets-($mount)-($e)'
     # 每次下载前先清空目录
     rm -rf $assetsDir; mkdir $'($assetsDir)/assets'
