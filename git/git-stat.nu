@@ -30,7 +30,7 @@ export def 'git stat' [
     | upsert changes { |c|
       let args = [$'($c.commit)^!' --numstat ...$excludes]
       let diff = git diff ...$args
-                        | detect columns -n
+                        | detect columns --legacy -n
                         | rename insertions deletions file
                         | default 0 deletions
                         | default 0 insertions

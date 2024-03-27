@@ -77,7 +77,7 @@ def get-commit-summary [branch: string, file: string, keyword: string] {
 def get-commit-meta [branch: string, file: string, keyword: string] {
   let blame = git blame $branch -- $file | lines | find $'"($keyword)"'
                       | split column ')' | rename meta content | get 0
-  let meta = $blame.meta | detect columns -n
+  let meta = $blame.meta | detect columns --legacy -n
   let meta = if ($meta | columns | length) == 2 { $meta | rename SHA commit } else { $meta | rename SHA file commit }
   let commit = $meta.commit.0 | split row ' ' | compact --empty
   let commitAt = $commit | last 4 | first 2 | str join ' '

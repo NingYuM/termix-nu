@@ -101,7 +101,7 @@ def update-branch [
 
   let diff = (
     git rev-list --left-right $'($branch)...origin/($branch)' --count
-      | detect columns -n
+      | detect columns --legacy -n
       | rename local remote
       | upsert local { |it| $it.local | into int }
       | upsert remote { |it| $it.remote | into int }

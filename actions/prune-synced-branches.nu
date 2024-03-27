@@ -45,7 +45,7 @@ export def main [
   $repos | transpose | rename alias | get alias | each { |alias|
     let remoteBranches = (do -i { git ls-remote --heads --refs $alias } | complete)
     let cleanable = if $remoteBranches.exit_code == 0 { (
-      git ls-remote --heads --refs $alias | detect columns -n | rename cid br | each { |branch|
+      git ls-remote --heads --refs $alias | detect columns --legacy -n | rename cid br | each { |branch|
         # Ignore the repos that don't have access permission
         if $branch != null {
           let brnm = ($branch.br | str replace 'refs/heads/' '')
@@ -93,7 +93,7 @@ def prepare-repo [
 
   cd $destRepoPath;
   $repos | transpose name repo | flatten | each { |dest|
-    let aliasExists = (git remote -v | detect columns -n | rename alias git | where alias == $dest.name | length) > 0
+    let aliasExists = (git remote -v | detect columns --legacy -n | rename alias git | where alias == $dest.name | length) > 0
     let gitDest = if ($user != '' and $ak != '-') { ($dest.git | str replace '//' $'//($user):($ak)@' ) } else { $dest.git }
 
     if ($aliasExists) {
