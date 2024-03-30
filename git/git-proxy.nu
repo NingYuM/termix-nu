@@ -30,11 +30,11 @@ def --env git-proxy [
 
     let proxy = (if $proxies == '' { [] } else {
       if $isWindows {
-        let xrayPID = ($proxies | detect columns --legacy -n | get column1 | get 0)
+        let xrayPID = ($proxies | detect columns -n | get column1 | get 0)
         let proxyAddr = (netstat -ano | findstr $xrayPID | findstr LISTENING | detect columns -n | sort-by column1 -r | get column1)
         $proxyAddr
       } else {
-        ($proxies | detect columns --legacy -n).column8
+        ($proxies | detect columns -n).column8
       }
     })
     if ($proxy | length) == 0 {

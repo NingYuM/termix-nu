@@ -190,7 +190,7 @@ ls-node *OPTIONS: _setup
 ls-tags by=('time'): _setup
   @let sort = if ('{{by}}' != 'time') { '--sort=-v:refname' } else { '--sort=-creatordate' }; print (char nl); \
     git tag --format='%(refname:strip=2)%09%(creatordate:iso)' $sort \
-      | detect columns --legacy -n \
+      | detect columns -n \
       | rename tag date time \
       | upsert time {|e| $'($e.date) ($e.time)' } \
       | select tag time

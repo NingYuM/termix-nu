@@ -38,7 +38,7 @@ alias tokeid = print (
     | lines
     | skip 1
     | str join "\n"
-    | detect columns --legacy
+    | detect columns
     | where {|it| $it.Language !~ "=" and $it.Language !~ "-" and (not ($it.Files | is-empty)) }
     | into int Files Lines Code Comments Blanks
 )

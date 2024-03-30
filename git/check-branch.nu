@@ -25,7 +25,7 @@ export def main [] {
   let querySource = if $localIExists { 'i' } else { 'origin/i' }
   let descriptions = (git show $'($querySource):($descFile)' | from toml | to json)
   # Alternatively since nushell v0.40.0 you can use the following line, which is longer but more readable
-  # git ls-remote --heads --refs origin | detect columns --legacy -n | rename cid name |
+  # git ls-remote --heads --refs origin | detect columns -n | rename cid name |
   #     update name { get name | str replace 'refs/heads/' '' } | get name
   let remoteBranches = (git ls-remote --heads --refs origin | lines | par-each -k { str substring 52.. })
   let allDescribed = ($remoteBranches | where (no-desc $descriptions $it) | str join | str trim | is-empty)
