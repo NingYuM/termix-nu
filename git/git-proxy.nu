@@ -20,24 +20,22 @@ def --env git-proxy [
   let isWindows = (sys).host.name == 'Windows'
   # On macOS, we typically use ClashX or AliMgrSoc to proxy the traffic
   # On windows the proxy could be Clash for Windows or v2ray
-  let proxies = if $isWindows {
-    (tasklist | findstr 'xray clash')
-  } else {
-    (lsof -i -n -P | grep -E 'ClashX|AliMgrSoc' | grep LISTEN)
+  let proxies = if $isWindows { tasklist | findstr 'xray clash' } else {
+     lsof -i -n -P | grep -E 'ClashX|AliMgrSoc' | grep LISTEN
   }
 
   if ($status == 'on') {
 
     let proxy = (if $proxies == '' { [] } else {
       if $isWindows {
-        let xrayPID = ($proxies | detect columns -n | get column1 | get 0)
-        let proxyAddr = (netstat -ano | findstr $xrayPID | findstr LISTENING | detect columns -n | sort-by column1 -r | get column1)
-        $proxyAddr
+        let xrayPID = $proxies | detect columns -n | get column1.0
+        netstat -ano | findstr $xrayPID | findstr LISTENING
+          | detect columns -n | sort-by column1 -r | get column1
       } else {
-        ($proxies | detect columns -n).column8
+        $proxies | detect columns -n | get column8
       }
     })
-    if ($proxy | length) == 0 {
+    if ($proxy | is-empty) {
       print $'(ansi r)(char nl)Can not find Ali, ClashX or v2ray proxy, please start it and try again, bype...(ansi reset)(char nl)(char nl)'
       exit $ECODE.MISSING_DEPENDENCY
     }
@@ -45,7 +43,8 @@ def --env git-proxy [
     # export http_proxy=http://127.0.0.1:7890 https_proxy=http://127.0.0.1:7890 ALL_RROXY=http://127.0.0.1:7890
     # load-env {http_proxy: 'http://127.0.0.1:7890', https_proxy: 'http://127.0.0.1:7890', ALL_RROXY: 'http://127.0.0.1:7890'}
     # The first proxy in grep result should be http proxy
-    let proxy = if (($proxy).0 | str contains '*') { ($proxy).0 | str replace '*' '127.0.0.1' } else { ($proxy).0 }
+    mut proxy = if ($proxy.0 | str contains '*') { $proxy.0 | str replace '*' '127.0.0.1' } else { $proxy.0 }
+    $proxy = ($proxy | str downcase | str replace ' (listen)' '')
     let isClashX = ($proxies | lines | first) =~ 'ClashX'
     if $isWindows or $isClashX {
       git config --global http.proxy $'http://($proxy)'
@@ -67,23 +66,23 @@ def --env git-proxy [
     print $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
     print $'If you want to set proxy for the terminal, please run: (char nl)'
     print $'export http_proxy=socks5://($proxy) https_proxy=socks5://($proxy) ALL_RROXY=socks://($proxy)(char nl)(char nl)'
-  } else {
-    # git config --global --unset http.proxy; git config --global --unset https.proxy; git config --global --unset socks.proxy
-    unset-git-conf http.proxy
-    unset-git-conf https.proxy
-    unset-git-conf socks.proxy
-    print $'(ansi p)Proxy turned off(ansi reset)(char nl)'
-    print $'(ansi p)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
-    print $'If you want to unset proxy for the terminal, please run: (char nl)'
-    const HIDE_CMD = '[http_proxy https_proxy ALL_RROXY] | each { do -i { hide-env $in } }'
+    return
+  }
+  # git config --global --unset http.proxy; git config --global --unset https.proxy; git config --global --unset socks.proxy
+  unset-git-conf http.proxy
+  unset-git-conf https.proxy
+  unset-git-conf socks.proxy
+  print $'(ansi p)Proxy turned off(ansi reset)(char nl)'
+  print $'(ansi p)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+  print $'If you want to unset proxy for the terminal, please run: (char nl)'
+  const HIDE_CMD = '[http_proxy https_proxy ALL_RROXY] | each { do -i { hide-env $in } }'
 
-    if $isWindows {
-      print $'($HIDE_CMD)(char nl)(char nl)'
-      echo $'($HIDE_CMD)' | clip
-    } else {
-      print $'For NuShell: (ansi g)($HIDE_CMD)(ansi reset)(char nl)'
-      print $'For bash, zsh, sh, etc.: (ansi g)unset http_proxy https_proxy ALL_RROXY(ansi reset)(char nl)'
-    }
+  if $isWindows {
+    print $'($HIDE_CMD)(char nl)(char nl)'
+    echo $'($HIDE_CMD)' | clip
+  } else {
+    print $'For NuShell: (ansi g)($HIDE_CMD)(ansi reset)(char nl)'
+    print $'For bash, zsh, sh, etc.: (ansi g)unset http_proxy https_proxy ALL_RROXY(ansi reset)(char nl)'
   }
 }
 
