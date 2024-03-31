@@ -313,7 +313,8 @@ def handle-working-hours [
   # 当前是一年中的第几周
   let weekNo = if $show_prev == true { (date now) - 7day | format date %V } else { date now | format date %V }
   # 此刻是一周中的第几天，周一为第 1 天
-  let weekDay = date now | format date %u | into int
+  mut weekDay = date now | format date %u | into int
+  $weekDay = if $weekDay > 5 { 5 } else { $weekDay }
   let totalDays = $env.WORKDAYS_TILL_MONTH_END? | default '0' | into int
   let totalDays = if $totalDays == 0 { $weekDay } else { $totalDays }
   let isMonthEnd = is-month-end ((date now) + $CHECK_DURATION)
