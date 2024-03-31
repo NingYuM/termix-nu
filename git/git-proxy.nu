@@ -13,10 +13,6 @@ use ../utils/common.nu [ECODE]
 def --env git-proxy [
   status: string  # Set proxy status: on/off
 ] {
-  # Get xray pid for Windows:
-  # let xrayPID = (tasklist | findstr xray | detect columns -n | get column1 | get 0)
-  # Get something like: `127.0.0.1:10809`
-  # let proxyAddr = (netstat -ano | findstr $xrayPID | findstr LISTENING | detect columns -n | sort-by column1 -r | get 0 | get column1)
   let isWindows = (sys).host.name == 'Windows'
   # On macOS, we typically use ClashX or AliMgrSoc to proxy the traffic
   # On windows the proxy could be Clash for Windows or v2ray
@@ -25,7 +21,7 @@ def --env git-proxy [
   }
 
   if ($status == 'on') {
-
+    # Get something like: `127.0.0.1:10809`
     let proxy = (if $proxies == '' { [] } else {
       if $isWindows {
         let xrayPID = $proxies | detect columns -n | get column1.0
@@ -40,12 +36,15 @@ def --env git-proxy [
       exit $ECODE.MISSING_DEPENDENCY
     }
 
-    # export http_proxy=http://127.0.0.1:7890 https_proxy=http://127.0.0.1:7890 ALL_RROXY=http://127.0.0.1:7890
-    # load-env {http_proxy: 'http://127.0.0.1:7890', https_proxy: 'http://127.0.0.1:7890', ALL_RROXY: 'http://127.0.0.1:7890'}
     # The first proxy in grep result should be http proxy
-    mut proxy = if ($proxy.0 | str contains '*') { $proxy.0 | str replace '*' '127.0.0.1' } else { $proxy.0 }
-    $proxy = ($proxy | str downcase | str replace ' (listen)' '')
+    let proxy = if ($proxy.0 | str contains '*') { $proxy.0 | str replace '*' '127.0.0.1' } else { $proxy.0 }
     let isClashX = ($proxies | lines | first) =~ 'ClashX'
+    let LAN_IP = if $isWindows {
+      ipconfig | find IPv4 | get 0 | ansi strip | detect columns -n | transpose k v| last | get v
+     } else {
+      ifconfig | grep broadcast | detect columns -n | get column1.0
+    }
+
     if $isWindows or $isClashX {
       git config --global http.proxy $'http://($proxy)'
       git config --global https.proxy $'http://($proxy)'
@@ -56,6 +55,10 @@ def --env git-proxy [
       if not $isWindows {
         print $'If you want to set proxy for the terminal, please run the following line in bash, zsh, sh, etc.:'
         print $"(ansi g)export http_proxy=http://($proxy) https_proxy=http://($proxy) ALL_RROXY=http://($proxy)(ansi reset)(char nl)"
+
+        print $'To share the proxy to other device, run the following command in terminal:'
+        let shareProxy = $proxy | str replace '127.0.0.1' $LAN_IP
+        print $"(ansi g)export http_proxy=http://($shareProxy) https_proxy=http://($shareProxy) ALL_RROXY=http://($shareProxy)(ansi reset)(char nl)"
       }
       exit $ECODE.SUCCESS
     }
@@ -68,7 +71,7 @@ def --env git-proxy [
     print $'export http_proxy=socks5://($proxy) https_proxy=socks5://($proxy) ALL_RROXY=socks://($proxy)(char nl)(char nl)'
     return
   }
-  # git config --global --unset http.proxy; git config --global --unset https.proxy; git config --global --unset socks.proxy
+
   unset-git-conf http.proxy
   unset-git-conf https.proxy
   unset-git-conf socks.proxy
