@@ -1,0 +1,22 @@
+# yazi.toml
+# REF: https://yazi-rs.github.io/docs/quick-start
+[manager]
+ratio = [1, 2, 5]
+show_hidden = true
+sort_by = "natural"
+
+[preview]
+tab_size = 2
+
+[opener]
+text = [
+    { exec = 'hx "$@"', block = true },
+]
+
+[plugin]
+prepend_previewers = [
+    # HEIC previewer
+    # { mime = "image/heic", exec = "heic" },
+    # Nu source code previewer
+    # { name = "*.nu", exec = "nushell" },
+]
