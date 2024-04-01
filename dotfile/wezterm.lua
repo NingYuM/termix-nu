@@ -125,6 +125,13 @@ return {
     font = wezterm.font('Fira Code'),
   },
 
+  window_padding = {
+    top = 8,
+    left = 8,
+    right = 8,
+    bottom = 8,
+  },
+
   max_fps = 60,
   animation_fps = 60,
   front_end = 'WebGpu',

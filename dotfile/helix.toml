@@ -1,0 +1,29 @@
+# REF:
+#   https://docs.helix-editor.com/configuration.html
+
+# Favorite Themes: snazzy, boo_berry, monokai_pro_spectrum
+theme = "monokai_pro_ristretto"
+
+[editor]
+# line-number = "relative"
+mouse = true
+shell = ["nu", "-c"]
+
+[editor.cursor-shape]
+# insert = "bar"
+normal = "block"
+# select = "underline"
+
+[editor.file-picker]
+hidden = false
+
+[keys.insert]
+# move line up
+"A-up" = ["extend_line","yank","move_line_up","open_above","replace_with_yanked","move_line_down", "move_line_down", "extend_line", "delete_selection", "move_line_up", "move_line_up"]
+# move line down
+"A-down" = ["extend_line","delete_selection", "paste_after", "move_line_down"]
+# duplicate line up
+"C-A-up" = ["extend_line","yank","open_above","normal_mode","replace_with_yanked", "insert_mode"]
+# duplicate line down
+"C-A-down" = ["extend_line","yank","move_line_down","open_above","normal_mode","replace_with_yanked", "insert_mode"]
+
