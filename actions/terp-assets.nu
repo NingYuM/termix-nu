@@ -9,6 +9,8 @@
 # [√] Handle assets for t-material-ui and t-mobile-ui
 # [√] Transfer 命令执行前需要确认，减少误操作的可能性
 # [√] Sync modules by full name
+# [√] Validate module names from latest.json support
+# [√] Ignore new modules while transferring `all` assets support
 # [√] Get available modules from latest.json if sync all is selected
 # Ref:
 #   - https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/fe-resources/dev/latest.json
@@ -253,6 +255,7 @@ def transfer [
   let tmp = $'(get-tmp-path)/terp'
   if (not ($tmp | path exists)) { mkdir $tmp }
 
+  let startTime = date now
   download $modules $latestMeta $tmp --verbose=$verbose
   print $'Start to transfer assets from (ansi p)($latestMeta.from) to ($dest_store) ($to)(ansi reset)'
 
@@ -277,7 +280,10 @@ def transfer [
     }
     print $'Assets for (ansi p)($e)(ansi reset) transferred successfully!'
   }
+
+  let endTime = date now
   print "All transfer finished! \n"
+  print $"(ansi g)Total Time Cost: ($endTime - $startTime)(ansi reset)\n"
 
   let destUrl = $fromUrl | str replace $'/($mount)/' $'/($to)/'
   print $"You can visit the latest.json from: ($destUrl)\n"
