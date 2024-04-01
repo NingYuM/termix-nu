@@ -35,6 +35,8 @@ const ENDPOINT = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com'
 
 # Don't validate module names by default
 const VALIDATE_MODULES = '0'
+# Ignore new modules while transferring `all` assets
+const IGNORE_NEW_MODULES = '1'
 const PKG_TOOLS_VER = '0.3.0-beta.1'
 
 # Module alias to real module name (Before module renamed)
@@ -83,6 +85,9 @@ def get-modules [modules?: string, --latest-meta: record] {
     return $selected
   }
 
+  let ignoreNewModules = if (($env.IGNORE_NEW_MODULES? | default $IGNORE_NEW_MODULES) == '1') { true } else { false }
+  # Sync all modules and exclude new modules if 'all' is specified
+  if $modules == 'all' and $ignoreNewModules { return ($allModules | filter {|it| $it in $VALID_MODULES}) }
   # Sync all modules if 'all' is specified
   if $modules == 'all' { return $allModules }
 
