@@ -33,6 +33,8 @@ const VALID_MODULES = [t-runtime-mobile-erp t-runtime-erp iam-features dors-page
 const NEXT_VALID_MODULES = [terp-mobile terp service service-mobile iam dors dors-mobile base base-mobile b2b emp]
 const ENDPOINT = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com'
 
+# Don't validate module names by default
+const VALIDATE_MODULES = '0'
 const PKG_TOOLS_VER = '0.3.0-beta.1'
 
 # Module alias to real module name (Before module renamed)
@@ -113,7 +115,7 @@ def get-latest-meta [from: string] {
   let latest = http get $fromUrl
   let modules = $latest | columns
   let validModules = {|mods, validMods| $mods | all {|m| $m in $validMods } }
-  let validateModules = if ($env.VALIDATE_MODULES? == '0') { false } else { true }
+  let validateModules = if (($env.VALIDATE_MODULES? | default $VALIDATE_MODULES) == '0') { false } else { true }
   let validationPassed = (do $validModules $modules $VALID_MODULES) or (do $validModules $modules $NEXT_VALID_MODULES)
   if (not $validateModules) or ($validateModules and $validationPassed) {
     return { from: $from, latestUrl: $fromUrl, mountpoint: $mount, latest: $latest }
