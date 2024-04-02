@@ -87,7 +87,7 @@ winget install Nushell.Nushell
    ··· dp *OPTIONS                # alias for `deploy`
    ··· deploy-query *OPTIONS      # Query the Erda pipeline running status by CICD id or `--app`
    ··· dq *OPTIONS                # alias for `deploy-query`
-   ··· desc *OPTIONS              # Show branch description from branch description file `d` of `i` branch
+   ··· git-desc *OPTIONS          # Show branch description from branch description file `d` of `i` branch
    ··· ding-msg *OPTIONS          # Send a message to DingTalk Group by a custom robot
    ··· dir-batch-exec *OPTIONS    # 在指定目录(支持'*'通配符)或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
    ··· emp *OPTIONS               # 查询团队本周工时填报情况
@@ -266,7 +266,7 @@ docs = 'https://erda.cloud/terminus/dop/projects/213/apps/7542/repo'
 
 然后通过`t go docs`就可以在默认浏览器里面打开`docs`对应的链接了，而且`docs`不用全部输入，如果`do`只能匹配一个简称用`t go do`也可以达到同样效果, 如果找不到任何匹配项将列出所有可用链接。考虑到不同人的常用链接可能差别很大，所以允许使用者自由定制：脚本会自动将执行`t go`命令时所在目录里面的`.termixrc`文件里面的`quickNavs`配置项与`termix.toml`里面的同名配置进行合并，如果**链接简称**重复则`.termixrc`文件里面的优先级更高。
 
-另：当`termix.toml`里面的`useConfFromBranch`配置项值为`_current_`时`.termixrc`配置会从当前分支对应的远程分支读取，当该配置的值为`i`时会从`origin/i`分支上读取，关于`i`分支的更多说明请看[后文](#desc)。
+另：当`termix.toml`里面的`useConfFromBranch`配置项值为`_current_`时`.termixrc`配置会从当前分支对应的远程分支读取，当该配置的值为`i`时会从`origin/i`分支上读取，关于`i`分支的更多说明请看[后文](#git-desc)。
 
 ---
 
@@ -544,7 +544,7 @@ t git-proxy off
 
 ---
 
-### 17. 查看 Git 分支描述信息{#desc}
+### 17. 查看 Git 分支描述信息{#git-desc}
 
 **功能描述**: 查看 Git 分支描述信息
 
@@ -575,7 +575,7 @@ develop = "国内版移动端最新开发分支，support/seldon2可以合并到
 support/master 可以合并到该分支'''
 ```
 
-**命令格式**: `t desc {flags} (branch)`
+**命令格式**: `t git-desc {flags} (branch)`
 
 **参数说明**:
 
@@ -588,11 +588,11 @@ support/master 可以合并到该分支'''
 
 ```bash
 # 查看当前分支描述信息
-t desc
+t git-desc
 # 查看当前仓库所有分支描述信息
-t desc -a
+t git-desc -a
 # 查看 develop 分支描述信息以及分支描述说明文档
-t desc develop --show-notes
+t git-desc develop --show-notes
 ```
 
 ---
@@ -707,7 +707,7 @@ t check-branch
 1. 如果想禁用某次 push 同步则 push 的时候加上`--no-verify`参数即可；
 2. 如果在同步的时候想采用强制推送策略需要：`FORCE=1 git push --force ...`；
 3. 代码能够同步成功的前提是你有对应目标仓库的 push 权限，如果没有可以申请权限或者在本地环境变量里面设置忽略推送，需要修改`.env`环境变量里面的`SYNC_IGNORE_ALIAS`配置项，将需要忽略推送的仓库别名加进去，多个别名之间用`,`隔开即可；
-4. `.termixrc`配置文件可以从当前分支对应的远程分支读取也可以从远程`origin/i`分支读取，`termix.toml` 里面有个配置项 `useConfFromBranch` 该配置项可以指定`.termixrc`配置文件从哪个分支读取，当该配置项的值为 `_current_` 的时候表示从当前分支对应的**远程分支**读取，否则从`origin/i`分支读取，默认也是从`origin/i`分支读取（**事实证明该默认行为也是最佳实践，避免了后续配置文件各分支不同步的不便，强烈建议大家采用该方式**）, 此时`origin/i`分支相当于是一个可以存储全局数据的地方，所有开发成员从任何分支都可以读取该分支的数据，也避免了各成员、各分支配置文件不同步的情况，关于`i`分支[前面](#desc)已经有所说明；
+4. `.termixrc`配置文件可以从当前分支对应的远程分支读取也可以从远程`origin/i`分支读取，`termix.toml` 里面有个配置项 `useConfFromBranch` 该配置项可以指定`.termixrc`配置文件从哪个分支读取，当该配置项的值为 `_current_` 的时候表示从当前分支对应的**远程分支**读取，否则从`origin/i`分支读取，默认也是从`origin/i`分支读取（**事实证明该默认行为也是最佳实践，避免了后续配置文件各分支不同步的不便，强烈建议大家采用该方式**）, 此时`origin/i`分支相当于是一个可以存储全局数据的地方，所有开发成员从任何分支都可以读取该分支的数据，也避免了各成员、各分支配置文件不同步的情况，关于`i`分支[前面](#git-desc)已经有所说明；
 
 :::caution
 同步配置变更后下次 push 生效！！！
@@ -830,7 +830,7 @@ t git-diff-commit -f HEAD~9 -A author1,author2
 
 2. 配置应用流水线信息(**单应用模式**)
 
-   该步骤只需要团队里面的某一位同学配置下即可，需要修改 `i` 分支(关于 `i` 分支[前面](#desc)已经有所说明)上的 `.termixrc` 配置, 在该 **toml** 文件的**前面**添加类似如下配置：
+   该步骤只需要团队里面的某一位同学配置下即可，需要修改 `i` 分支(关于 `i` 分支[前面](#git-desc)已经有所说明)上的 `.termixrc` 配置, 在该 **toml** 文件的**前面**添加类似如下配置：
 
    ```toml
    # pid 为项目 ID，appid 为应用 ID

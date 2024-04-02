@@ -152,7 +152,7 @@ git-diff-commit *OPTIONS: _setup
     git diff-commit {{OPTIONS}}
 
 # Show branch description from branch description file `d` of `i` branch
-desc *OPTIONS: _setup
+git-desc *OPTIONS: _setup
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
     overlay use {{ join(_termix, 'git', 'branch-desc.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; \
