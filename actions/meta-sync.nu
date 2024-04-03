@@ -425,7 +425,7 @@ def import-metadata [
   }
   if not ($modules | is-empty) {
     $importPayload.resetModuleKeys = $modules
-    print $'Goint to import modules: ($modules | str join ",")'
+    print $'Going to import modules: ($modules | str join ",")'
   }
   let resp = http post --content-type application/json $'($dest.host)($destImportApi)?($query)' $importPayload
   if not $resp.success {
