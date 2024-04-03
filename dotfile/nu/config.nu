@@ -1,6 +1,6 @@
 # Nushell Config File
-# Update config from: 3016d7a6
-# version = 0.91.0
+# Update config from: b6c537d78
+# version = 0.92.0
 
 # source ~/.config/nushell/config.nu
 # Ref:
@@ -690,8 +690,23 @@ $env.config = {
   render_right_prompt_on_last_line: false   # true or false to enable or disable right prompt to be rendered on last line of the prompt.
   use_kitty_protocol: false           # enables keyboard enhancement protocol implemented by kitty console, only if your terminal support this.
   highlight_resolved_externals: false # true enables highlighting of external commands in the repl resolved by which.
+  recursion_limit: 50                 # the maximum number of times nushell allows recursion before stopping it
 
-  plugins: {}             # Per-plugin configuration. See https://www.nushell.sh/contributor-book/plugins.html#configuration.
+  plugins: {}                   # Per-plugin configuration. See https://www.nushell.sh/contributor-book/plugins.html#configuration.
+  plugin_gc: {
+    # Configuration for plugin garbage collection
+    default: {
+      enabled: true             # true to enable stopping of inactive plugins
+      stop_after: 10sec         # how long to wait after a plugin is inactive to stop it
+    }
+    plugins: {
+      # alternate configuration for specific plugins, by name, for example:
+      #
+      # gstat: {
+      #     enabled: false
+      # }
+    }
+  }
   hooks: {
     pre_prompt: [{ null }]              # run before the prompt is shown
     pre_execution: [{ null }]           # run before the repl input is run
@@ -1383,19 +1398,22 @@ $env.config = {
       mode: emacs
       event: { edit: capitalizechar }
     }
+    # The *_system keybindings require terminal support to pass these
+    # keybindings through to nushell and nushell compiled with the
+    # `system-clipboard` feature
     {
-      name: copy_selection
+      name: copy_selection_system
       modifier: control_shift
       keycode: char_c
       mode: emacs
-      event: { edit: copyselection }
+      event: { edit: copyselectionsystem }
     }
     {
-      name: cut_selection
+      name: cut_selection_system
       modifier: control_shift
       keycode: char_x
       mode: emacs
-      event: { edit: cutselection }
+      event: { edit: cutselectionsystem }
     }
     {
       name: select_all
@@ -1405,11 +1423,11 @@ $env.config = {
       event: { edit: selectall }
     }
     {
-      name: paste
+      name: paste_system
       modifier: control_shift
       keycode: char_v
       mode: emacs
-      event: { edit: pastecutbufferbefore }
+      event: { edit: pastesystem }
     }
   ]
 }
