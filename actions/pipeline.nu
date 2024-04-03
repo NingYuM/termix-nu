@@ -307,8 +307,8 @@ export def create-cicd [aid: int, appName: string, branch: string, pipeline: str
   exit $ECODE.SERVER_ERROR
 }
 
-# 执行指定 ID 的流水线
-export def run-cicd [id: int, appid: int, pid: int, --host: string = $ERDA_HOST] {
+# 执行指定 ID 的流水线，如有必要则持续轮询并显示执行结果
+export def run-cicd [id: int, appid: int, pid: int, --watch, --host: string = $ERDA_HOST] {
   let runUrl = $'($host)/api/terminus/cicds/($id)/actions/run'
   mut run = (curl --silent -H (get-erda-auth $host) -X POST $runUrl | from json)
   let url = $'($host)/terminus/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
@@ -322,6 +322,7 @@ export def run-cicd [id: int, appid: int, pid: int, --host: string = $ERDA_HOST]
     print $'CICD started, You can query the pipeline running status with id: (ansi g)($id)(ansi reset)'
     print $'Or visit ($url) for more details'
   }
+  if $watch { watch-cicd-status $id }
 }
 
 # POST https://erda.cloud/api/terminus/cicds/1248053184433812/actions/cancel
@@ -499,7 +500,7 @@ export def main [
           if not (check-cicd $appid $appName $branch $app.env $pipeline) { continue }
         }
         let cicdid = (create-cicd $appid $appName $branch $pipeline)
-        run-cicd ($cicdid | into int) $appid $pid
+        run-cicd ($cicdid | into int) $appid $pid --watch=$watch
       }
     }
     query | q => {
@@ -522,12 +523,13 @@ export def main [
 export def erda-deploy [
   dest?: string = 'dev',    # 用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, 默认为 dev
   --list(-l),               # 列出所有可能的部署目标及应用信息
+  --watch(-w),              # 执行流水线时持续轮询并显示该流水线各个 Stage 的详细执行信息
   --grep(-g): string,       # 仅在与 `-l` 一起使用时生效，从部署配置里面搜索name,alias或description里包含特定字符串的部署目标
   --force(-f),              # 即便已经有正在运行的流水线，或者即便该 Commit 对应的分支已经部署过也会强制重新部署
   --apps(-a): string,       # 指定需要批量部署的应用，多个应用以","分隔，在多应用模式下必须指定(`all` 代表所有)，单应用模式忽略
   --stop-by-id(-s): int,    # 根据流水线ID 停止对应的正在运行的流水线
 ] {
-  main run $dest --apps $apps --force=$force --list=$list --grep $grep --stop-by-id $stop_by_id
+  main run $dest --apps $apps --force=$force --list=$list --watch=$watch --grep $grep --stop-by-id $stop_by_id
 }
 
 # 根据流水线 ID 或目标环境查询流水线执行结果, 例如: 单应用: t dq 997636681239659; t dq test, 多应用: t dq dev -a all

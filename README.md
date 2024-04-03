@@ -889,6 +889,7 @@ t git-diff-commit -f HEAD~9 -A author1,author2
 - `dest`: 选填，待执行的目标流水线，默认值为 `dev`，对于上述**步骤 2**的 **toml** 配置 `erda` 下面有两个 Key：`dev` & `test`, 所以 `dest` 的取值也只能是这两个(可以通过 `t dp -l` 查询所有可能的部署目标);
 - `--force` 或者 `-f` 参数跳过检查步骤，强制部署应用
 - `--list` 或者 `-l` 列出所有可能的部署目标及应用信息
+- `--watch` 或者 `-w` - 执行流水线时持续轮询并显示该流水线各个 Stage 的详细执行信息
 - `--grep <String>` 或 `-g` 仅在与 `-l` 一起使用时生效，从部署配置里面搜索 name, alias 或 description 字段里包含特定字符串的部署目标
 - `--stop-by-id` 或 `-s` 根据流水线 ID 终止对应的正在运行的流水线
 - `--apps` 或者 `-a` 指定需要批量部署的应用，多个应用以","分隔，在多应用模式下必须指定(`-a all`或者`--apps all`代表选择指定目标下的所有应用)，单应用模式忽略
@@ -905,6 +906,8 @@ t dp -l
 t deploy test
 # 通过 dp 别名执行部署，并且强制部署测试环境
 t dp test -f
+# 部署测试环境时持续轮询并显示流水线执行结果
+t dp test -w
 # 部署测试环境所有应用
 t dp test -a all
 # 查找测试环境里面 appName 或者 alias 为 nusi 的应用并部署

@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
+- Add `--watch` flag to `t dp` command to watch pipeline status after been started
 - Add `VALIDATE_MODULES` env switch for `t ta` command to turn off module validation
 - Don't validate module names by default for `t ta` command
 - Ignore new modules while transferring `all` assets for `t ta` command
