@@ -111,31 +111,60 @@ def show-available-targets [
   } else {
     print $'Available deploy targets in ($configFile) which contains ($grep) are:(char nl)'
   }
-  let upsertAlias = {|it| if ($it | get -i alias | is-empty) { 'N/A' } else { $it.alias } }
-  let upsertDescription = {|it| if ($it | get -i description | is-empty) { '-' } else { $it.description } }
+
   for target in ($repoConf.erda | columns) {
     mut deployTarget = (
       $repoConf.erda
         | get $target
-        | upsert alias $upsertAlias
-        | upsert description $upsertDescription
-        | select appName alias branch env pipeline description
+        | upsert alias {|it| $it.alias? | default 'N/A' }
+        | upsert description {|it| $it.description? | default '-' }
+        | upsert srcBranch {|it| get-source-branch $it $repoConf }
+        | select appName alias srcBranch branch env pipeline description
         | rename -c { appName: name }
       )
     let isTable = ($deployTarget | describe) =~ 'table'
     let isRecord = ($deployTarget | describe) =~ 'record'
+
+    if $isTable { $deployTarget = ($deployTarget | reject srcBranch) }
     if not ($grep | is-empty) {
       if ($isRecord and $'($deployTarget.name)($deployTarget.alias)($deployTarget.description)' !~ $grep) { continue }
       if $isTable {
-        $deployTarget = ($deployTarget | where {|it| $'($it.name)($it.alias)($it.description)' =~ $grep })
+        $deployTarget = ($deployTarget | reject srcBranch | where {|it| $'($it.name)($it.alias)($it.description)' =~ $grep })
         if ($deployTarget | is-empty) { continue }
       }
     }
     print $'Target (ansi p)($target)(ansi reset):'; hr-line 60 -c navy
-    print $deployTarget
+
+    $deployTarget = if $isRecord and ($deployTarget.branch == $deployTarget.srcBranch) { $deployTarget | reject srcBranch } else { $deployTarget }
+    $deployTarget | print
     if $isRecord { print -n (char nl) }
   }
   exit $ECODE.SUCCESS
+}
+
+# It's a bit hack here
+# Get the source branch for the target to deploy in source repository
+def get-source-branch [
+  target: record,       # Deploy target config
+  repoConf: record,     # 配置文件内容
+] {
+  if ($repoConf.branches? | is-empty) { return $target.branch }
+  mut repoAlias = null
+  mut srcBranch = null
+  for r in ($repoConf.repos | columns) {
+    let repoUrl = $repoConf.repos | get $r | get url
+    if ($repoUrl =~ $'/($target.pid)/') and ($repoUrl =~ $'/($target.appid)/') {
+      $repoAlias = $r
+      break
+    }
+  }
+  for r in ($repoConf.branches | columns) {
+    if ($repoConf.branches | get $r | where dest == $target.branch and repo == $repoAlias | length) > 0 {
+      $srcBranch = $r
+      break
+    }
+  }
+  if ($srcBranch | is-empty) { $target.branch } else { $srcBranch }
 }
 
 # 根据 AppID、Branch、Pipeline 查询最近的流水线执行记录
