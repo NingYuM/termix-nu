@@ -29,8 +29,9 @@ export def git-remote-branch [
     | par-each -k { str substring 52.. }
     | wrap name
     | upsert local { |it|  if (has-ref $it.name) { '   √' }}
-    | upsert author { |it| git show $"remotes/($remote)/($it.name)" -s --format='%an' | str trim }
-    | upsert last-commit { |it| git show $"remotes/($remote)/($it.name)" --no-patch --format=%ci | into datetime }
+    | upsert author { |it| git show $'remotes/($remote)/($it.name)' -s --format='%an' | str trim }
+    | upsert SHA {|it| do -i { git rev-parse $'($remote)/($it.name)' | str substring 0..9 } }
+    | upsert last-commit { |it| git show $'remotes/($remote)/($it.name)' --no-patch --format=%ci | into datetime }
   )
   print (append-desc $basic)
 
