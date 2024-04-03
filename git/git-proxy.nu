@@ -82,7 +82,7 @@ def --env git-proxy [
 
   if $isWindows {
     print $'($HIDE_CMD)(char nl)(char nl)'
-    echo $'($HIDE_CMD)' | clip
+    print $'($HIDE_CMD)' | clip
   } else {
     print $'For NuShell: (ansi g)($HIDE_CMD)(ansi reset)(char nl)'
     print $'For bash, zsh, sh, etc.: (ansi g)unset http_proxy https_proxy ALL_RROXY(ansi reset)(char nl)'

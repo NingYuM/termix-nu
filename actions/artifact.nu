@@ -224,9 +224,9 @@ def confirm-produce [
   hr-line 60 -c grey66; print $option; hr-line 60 -c grey66
   print $'Are you sure to continue? '
   let confirm = input $'Please input (ansi p)($setting.branch)(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
-  if $confirm == 'q' { echo $'Artifacts creating cancelled, Bye...'; exit $ECODE.SUCCESS }
+  if $confirm == 'q' { print $'Artifacts creating cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $confirm != $setting.branch {
-    echo $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($setting.branch)(ansi reset), bye...'
+    print $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($setting.branch)(ansi reset), bye...'
     exit $ECODE.INVALID_PARAMETER
   }
 }
@@ -251,9 +251,9 @@ def confirm-consume [
   hr-line 60 -c grey66; print ($setting | table -e); hr-line 60 -c grey66
   print $'Are you sure to continue? '
   let confirm = input $'Please input (ansi p)($version)(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
-  if $confirm == 'q' { echo $'Operation cancelled, Bye...'; exit $ECODE.SUCCESS }
+  if $confirm == 'q' { print $'Operation cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $confirm != $version {
-    echo $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($version)(ansi reset), bye...'
+    print $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($version)(ansi reset), bye...'
     exit $ECODE.INVALID_PARAMETER
   }
 }
@@ -280,9 +280,9 @@ def confirm-deploy [
   hr-line 60 -c grey66; print ($setting | table -e); hr-line 60 -c grey66
   print $'Are you sure to continue? '
   let confirm = input $'Please input (ansi p)($version)(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
-  if $confirm == 'q' { echo $'Operation cancelled, Bye...'; exit $ECODE.SUCCESS }
+  if $confirm == 'q' { print $'Operation cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $confirm != $version {
-    echo $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($version)(ansi reset), bye...'
+    print $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($version)(ansi reset), bye...'
     exit $ECODE.INVALID_PARAMETER
   }
 }

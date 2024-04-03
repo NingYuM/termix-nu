@@ -14,7 +14,7 @@ export def compose-command [
   let selectedShellOfEnv = (get-env SHELL_TO_RUN_CMD 'sh')
   let shellOption = ($actionConf | query json $'shellToRunCmd.($selectedShellOfEnv)')
   # '------------------ Before ------------------'; char nl
-  # 'Selected shell from .env: '; echo $selectedShellOfEnv; char nl
+  # 'Selected shell from .env: '; print $selectedShellOfEnv; char nl
   # $'Shell options: ($shellOption)'; char nl
   if ($selectedShellOfEnv != '' and $shellOption != '') {
     # $'Run command with ($selectedShellOfEnv) from .env conf:(char nl)'
@@ -23,7 +23,7 @@ export def compose-command [
   } else {
     # 如果环境变量里面没有找到则从 termix.toml 里面查找 shell 及其参数
     let selectedShell = ($actionConf | query json 'shellToRunCmd.currentSelected')
-    # echo $'Run command with ($selectedShell) from termix.toml conf:(char nl)'
+    # print $'Run command with ($selectedShell) from termix.toml conf:(char nl)'
     let shellOption = ($actionConf | query json $'shellToRunCmd.($selectedShell)')
     $"($selectedShell) ($shellOption) "($cmd)""
   }

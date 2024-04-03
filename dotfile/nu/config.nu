@@ -341,7 +341,7 @@ export def unpack [
       mkdir $dir
       ^7z x $p $'-o($dir)'
     } else {
-      echo $"Unknown extension: ($p)"
+      print $"Unknown extension: ($p)"
     }
 
   } else {
@@ -359,7 +359,7 @@ export def unpack [
     } else if ($p | str ends-with '.7z') {
       ^7z x $p
     } else {
-      echo $"Unknown extension: ($p)"
+      print $"Unknown extension: ($p)"
     }
   }
 }

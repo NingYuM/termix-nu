@@ -19,11 +19,11 @@ export def 'git diff-commit' [
   --exclude-authors(-A): string,  # Exclude commits by authors
 ] {
   if not (has-ref $from) {
-    echo $'Commit hash or ref (ansi p)($from)(ansi reset) not found'
+    print $'Commit hash or ref (ansi p)($from)(ansi reset) not found'
     exit $ECODE.INVALID_PARAMETER
   }
   if not (has-ref $to) {
-    echo $'Commit hash or ref (ansi p)($to)(ansi reset) not found'
+    print $'Commit hash or ref (ansi p)($to)(ansi reset) not found'
     exit $ECODE.INVALID_PARAMETER
   }
 
@@ -36,7 +36,7 @@ export def 'git diff-commit' [
       | upsert Date { |it| $it.Date | format date $_TIME_FMT }
     )
   if ($diff | is-empty) {
-    echo $'No modification between (ansi p)($from)(ansi reset) and (ansi p)($to)(ansi reset)'
+    print $'No modification between (ansi p)($from)(ansi reset) and (ansi p)($to)(ansi reset)'
     exit $ECODE.SUCCESS
   }
 
@@ -52,10 +52,10 @@ export def 'git diff-commit' [
     $diff = ($diff | filter {|it| $it.Author not-in $authors })
   }
   if ($grep | is-empty) {
-    echo $'(char nl)Modification between (ansi p)($from)(ansi reset) and (ansi p)($to)(ansi reset): (char nl)'
+    print $'(char nl)Modification between (ansi p)($from)(ansi reset) and (ansi p)($to)(ansi reset): (char nl)'
     $diff
   } else {
-    echo $'(char nl)Modification between (ansi p)($from)(ansi reset) and (ansi p)($to)(ansi reset) contains ($grep): (char nl)'
+    print $'(char nl)Modification between (ansi p)($from)(ansi reset) and (ansi p)($to)(ansi reset) contains ($grep): (char nl)'
     $diff | find $grep
   }
 }

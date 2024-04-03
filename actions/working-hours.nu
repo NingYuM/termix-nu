@@ -303,7 +303,7 @@ def handle-working-hours [
   --debug,
 ] {
   let title = $'($team.name)本周工时填报'
-  # echo ($data | reject id isDeleted week year createdAt updatedAt updatedBy createdBy)
+  # print ($data | reject id isDeleted week year createdAt updatedAt updatedBy createdBy)
   if not $silent {
     print $'(char nl)  (ansi p)'
     print $'-------------------------> ($title) <-------------------------'

@@ -39,9 +39,9 @@ export def 'dingtalk notify' [
 ] {
   let enableNotify = (get-env DINGTALK_NOTIFY 'off' | str trim | str downcase) == 'on'
   let notifyTip = $'DingTalk notification is (ansi r)disabled(ansi reset), to enable it (ansi g)set `DINGTALK_NOTIFY` to `on`(ansi reset) in pipeline environment. Bye~'
-  if not $enableNotify { echo $notifyTip; exit $ECODE.SUCCESS }
+  if not $enableNotify { print $notifyTip; exit $ECODE.SUCCESS }
   if $type not-in ['text', 'link', 'markdown'] {
-    echo $'(ansi r)Invalid message type. Bye~(ansi reset)'
+    print $'(ansi r)Invalid message type. Bye~(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
 
@@ -49,7 +49,7 @@ export def 'dingtalk notify' [
   let tokens = $env.DINGTALK_ROBOT_AK | str trim | split row ','
   let secrets = $env.DINGTALK_ROBOT_SECRET | str trim | split row ','
   if ($tokens | length) != ($secrets | length) {
-    echo 'Invalid DINGTALK_ROBOT_AK or DINGTALK_ROBOT_SECRET config, length mismatch!'
+    print 'Invalid DINGTALK_ROBOT_AK or DINGTALK_ROBOT_SECRET config, length mismatch!'
     exit $ECODE.INVALID_PARAMETER
   }
 
@@ -60,7 +60,7 @@ export def 'dingtalk notify' [
     let ding = http post -t application/json $'($DINGTALK_API)?($query | url build-query)' $payload
     if ($ding.errcode != 0) { print $ding.errmsg; exit $ECODE.INVALID_PARAMETER }
   }
-  echo 'Bravo, DingTalk message sent successfully.'
+  print 'Bravo, DingTalk message sent successfully.'
 }
 
 # Get message payload for DingTalk Robot
@@ -97,7 +97,7 @@ def get-msg-payload [
 
 # Get signature and timestamp for DingTalk query params by secret
 def get-sign [secret: string] {
-  if not (is-installed openssl) { echo 'Please install `openssl` first.'; exit $ECODE.MISSING_BINARY }
+  if not (is-installed openssl) { print 'Please install `openssl` first.'; exit $ECODE.MISSING_BINARY }
   let timestamp = date now | format date '%s000'
   let sign = $'($timestamp)(char nl)($secret)' | openssl dgst -sha256 -hmac $secret -binary | encode base64
   { timestamp: $timestamp, sign: $sign }

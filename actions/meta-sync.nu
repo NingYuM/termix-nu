@@ -149,9 +149,9 @@ def confirm-snapshot [
   print ($setting | table -e --theme psql -i false)
   print $'Are you sure to continue? '
   let confirm = input $'Please press (ansi p)y(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
-  if $confirm == 'q' { echo $'Snapshot creating cancelled, Bye...'; exit $ECODE.SUCCESS }
+  if $confirm == 'q' { print $'Snapshot creating cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $confirm != 'y' {
-    echo $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)y(ansi reset), bye...'
+    print $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)y(ansi reset), bye...'
     exit $ECODE.INVALID_PARAMETER
   }
   print -n (char nl)
@@ -239,9 +239,9 @@ def confirm-check [
   print $'Are you sure to continue?'
   let check = $'($from.teamId)-to-($to.teamId)'
   let confirm = input $'Please confirm by typing (ansi r)($check)(ansi reset) to continue or (ansi p)q(ansi reset) to quit: '
-  if $confirm == 'q' { echo $'Syncing cancelled, Bye...'; exit $ECODE.SUCCESS }
+  if $confirm == 'q' { print $'Syncing cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $confirm != $check {
-    echo $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($check)(ansi reset), bye...'
+    print $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($check)(ansi reset), bye...'
     exit $ECODE.INVALID_PARAMETER
   }
   print -n (char nl)
