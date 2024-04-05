@@ -452,6 +452,8 @@ def nudown [] {
     # | update created_at {|it| $it | format date '%m/%d/%Y %H:%M:%S' }
 }
 
+const FZF_THEME = '--color=bg+:#3c3836,bg:#32302f,spinner:#fb4934,hl:#928374,fg:#ebdbb2,header:#928374,info:#8ec07c,pointer:#fb4934,marker:#fb4934,fg+:#ebdbb2,prompt:#fb4934,hl+:#fb4934'
+
 # -------------------------- Autocompletion ------------------------
 # Nushell Config File
 
@@ -924,16 +926,20 @@ $env.config = {
       event: [
         {
           send: ExecuteHostCommand
-          cmd: "commandline (
-            history
-              | each { |it| $it.command }
-              | uniq
-              | reverse
-              | str join (char -i 0)
-              | fzf --read0 --layout=reverse --height=40% -q (commandline)
-              | decode utf-8
-              | str trim
-          )"
+          cmd: "do {
+            $env.SHELL = /usr/local/bin/bash
+            $env.FZF_DEFAULT_OPTS = $'($FZF_THEME)'
+            commandline edit -r (
+              history
+                | get command
+                | reverse
+                | uniq
+                | str join (char -i 0)
+                | fzf --scheme=history --read0 --layout=reverse --height=40% --bind 'tab:change-preview-window(right,70%|right)' -q (commandline) --preview='echo -n {} | nu --stdin -c \'nu-highlight\''
+                | decode utf-8
+                | str trim
+            )
+          }"
         }
       ]
     }
