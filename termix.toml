@@ -10,7 +10,7 @@
 version = 'v1.72.0'
 
 # Min nushell version required to run termix-nu commands
-minNuVer = '0.92.0'
+minNuVer = '0.92.1'
 
 # Min just version required to run termix-nu commands
 minJustVer = '1.25.2'
