@@ -22,6 +22,7 @@ local launch_menu = {}
 local default_prog = {}
 -- Maybe you need to add `/Users/hustcer/.cargo/bin/nu` to `/etc/shells`
 local set_environment_variables = {
+  XDG_CONFIG_HOME = wezterm.home_dir .. '/.config',
   PATH = wezterm.home_dir .. '/.cargo/bin:' .. '/usr/local/bin:' .. os.getenv('PATH')
 }
 
