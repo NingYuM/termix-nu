@@ -28,8 +28,7 @@
 #   t msync --selected
 #   t msync --all --from a --to b
 
-use std ellie
-use ../utils/common.nu [ECODE, hr-line]
+use ../utils/common.nu [ECODE, hr-line, ellie]
 
 const POLL_TICK_CHAR = '*'
 const QUERY_INTERVAL = 1sec

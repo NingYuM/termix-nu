@@ -38,10 +38,8 @@
 #   - ls -f | get name | to text | fzf --height 50% -e --inline-info --preview 'cat {}'
 # Usage:
 
-use std ellie
-
 use pipeline.nu [create-cicd, run-cicd, query-cicd-by-id, fetch-cicd-detail]
-use ../utils/common.nu [ECODE, hr-line, log, get-tmp-path]
+use ../utils/common.nu [ECODE, hr-line, ellie, log, get-tmp-path]
 use ../utils/erda.nu [VALID_ENV, ERDA_HOST, get-erda-auth, renew-erda-session, should-retry-req]
 
 const DEPLOY_POLLING_INTERVAL = 2sec

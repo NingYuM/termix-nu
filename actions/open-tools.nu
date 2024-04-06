@@ -193,7 +193,7 @@ def should-upgrade [name: string, latest: record, --force] {
 
   let currentVer = do -i ($VERSION_CHECK | get $name) | default 0.0.0
   if (compare-ver $latest.version $currentVer) <= 0 {
-    print $'($name) is already the latest version: (ansi g)($currentVer)(ansi reset), upgrade skipped...'
+    print $'($name) is already the latest version: (ansi g)($currentVer)(ansi reset), upgrading skipped...'
     return false
   }
   return true

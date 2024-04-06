@@ -8,7 +8,7 @@
 #   5. https://github.com/denysdovhan/bash-handbook
 # Author: M.J.
 
-set shell := ['nu', '-m', 'light', '-c']
+set shell := ['nu', '--no-std-lib', '-m', 'light', '-c']
 
 # The export setting causes all just variables
 # to be exported as environment variables.

@@ -40,6 +40,18 @@ export-env {
   $env.config.color_config.leading_trailing_space_bg = { attr: n }
 }
 
+# the cute and friendly mascot of Nushell :)
+export def ellie [] {
+  let ellie = [
+    "     __  ,",
+    " .--()°'.'",
+    "'|, . ,'",
+    " !_-(_\\",
+  ]
+
+  $ellie | str join "\n" | $"(ansi green)($in)(ansi reset)"
+}
+
 # Termix.toml config file path
 export def get-termix-conf [] { ([$env.TERMIX_DIR 'termix.toml'] | path join) }
 
