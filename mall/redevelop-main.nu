@@ -50,9 +50,9 @@ def main [
     git config --global user.email 'erda@terminus.io'
   }
   # 如果部署分支为 develop 需要还原回原来对应的源码分支
-  let $checkref = if $checkout == 'develop' { $test_branch } else { $checkout }
+  let $checkRef = if $checkout == 'develop' { $test_branch } else { $checkout }
   # 通过 Termix 生成标品二开仓库
-  let action = (termix redevelop redev-app --template $template --checkout $checkref --user='git' --access-token $token | complete)
+  let action = (termix redevelop redev-app --template $template --checkout $checkRef --user='git' --access-token $token | complete)
   print $action.stdout; if 'stderr' in $action { print $action.stderr }
   if ('redev-app/origin' | path exists) == false or $action.exit_code != 0  {
     print $'(ansi r)Redevelop repo generating failed! Bye...(ansi reset)'

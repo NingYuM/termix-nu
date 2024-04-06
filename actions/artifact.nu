@@ -231,7 +231,7 @@ def confirm-produce [
   }
 }
 
-# Confirm the artifact cosume action settings before execute
+# Confirm the artifact consume action settings before execute
 def confirm-consume [
   version: string,            # The version number of the artifact to deploy
   destEnv: string,            # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
@@ -308,7 +308,7 @@ def validate-produce-setting [
   if ($branch | is-empty) { $setting } else { $setting | upsert branch $branch }
 }
 
-# Cosume the artifacts: download, upload and deploy the artifacts to the dest environment
+# Consume the artifacts: download, upload and deploy the artifacts to the dest environment
 def consume-artifact [
   version: string,            # The version number of the artifact to deploy
   destEnv: string,            # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
@@ -470,7 +470,7 @@ def polling-artifact-deploy [
   let groups = get-artifact-deploy-detail $doid $destSetting | get data.applicationsInfo
   let total = $groups | length
   const FINISH_STATUS = [OK, FAILED, CANCELED]
-  const UNFINISH_STATUS = [DEPLOYING, WAITDEPLOY]
+  const UNFINISHED_STATUS = [DEPLOYING, WAITDEPLOY]
   print $'(char nl)Artifact deploy Detail:'; hr-line
 
   # pipelineTasks status: Created,Analyzed,Success,Queue,Running,Failed,StopByUser,NoNeedBySystem
@@ -480,14 +480,14 @@ def polling-artifact-deploy [
     let groupSuccess = $groupStatus | all {|it| $it == 'OK' }
     let groupFailed = $groupStatus | any {|it| $it == 'FAILED' }
     let groupCancelled = $groupStatus | any {|it| $it == 'CANCELED' }
-    let groupUnfinish = $groupStatus | any {|it| $it in $UNFINISH_STATUS }
+    let groupUnfinished = $groupStatus | any {|it| $it in $UNFINISHED_STATUS }
     let indicator = if $groupSuccess {
         $'(ansi g)✓(ansi reset)  Deploy (ansi g)($apps)(ansi reset) Finished Successfully!'
       } else if $groupFailed {
         $'(ansi y)⚠(ansi reset)  Deploy (ansi y)($apps)(ansi reset) Failed!'
       } else if $groupCancelled {
         $'(ansi y)👻(ansi reset) Deploy (ansi y)($apps)(ansi reset) Was cancelled!'
-      } else if $groupUnfinish {
+      } else if $groupUnfinished {
         $'(ansi pb)🪄(ansi reset) Artifact group (ansi g)[($apps)](ansi reset) is being deployed ...'
       } else {
         $'(ansi r)✗(ansi reset) Unknown Status: ($groupStatus | str join ",")'
@@ -504,7 +504,7 @@ def polling-artifact-deploy [
       let apps = $detail.data.applicationsInfo
       # DEPLOYING,OK,FAILED
       let status = $apps | get $g.index | get status
-      if ($status | any {|it| $it in $UNFINISH_STATUS }) {
+      if ($status | any {|it| $it in $UNFINISHED_STATUS }) {
         $keepPolling = true
       } else {
         $keepPolling = false
@@ -580,10 +580,10 @@ def create-deploy-order [
     projectId: $pid, releaseID: $artifact.releaseId, workspace: $environment, orgAlias: $orgAlias, host: $host
   }
   let deployGroup = $deploy_group | default 'All' | split row ','
-  let unexistGroup = $deployGroup | filter {|it| $it not-in ($modes | columns) }
+  let inexistGroup = $deployGroup | filter {|it| $it not-in ($modes | columns) }
   # Use specified deploy group or select the deploy mode
-  mut selectedMode = if ($unexistGroup | is-empty) { $deployGroup } else {
-      print $'You are trying to deploy APP group ($deployGroup), however, (ansi r)($unexistGroup)(ansi reset) do NOT exist, Please select the group manually.(char nl)'
+  mut selectedMode = if ($inexistGroup | is-empty) { $deployGroup } else {
+      print $'You are trying to deploy APP group ($deployGroup), however, (ansi r)($inexistGroup)(ansi reset) do NOT exist, Please select the group manually.(char nl)'
       select-deploy-mode-by-fzf $modes $previewOptions
     }
 

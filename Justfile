@@ -82,6 +82,11 @@ release  *OPTIONS: _setup
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; \
     release {{OPTIONS}}
 
+# Use cSpell to check spell errors
+[private]
+typos:
+  @cspell lint . --no-progress
+
 # Quickly open the matched nav url in default browser, for mac or windows with powershell
 go nav=('list'): _setup
   @overlay use {{ join(_termix, 'actions', 'quick-nav.nu') }}; \

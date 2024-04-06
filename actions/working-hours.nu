@@ -66,7 +66,7 @@ export def working-hours-daily-checking [--debug(-d)] {
     return
   }
   if $weekday == 'monday' {
-    print $'Query working hours of previeous week...'
+    print $'Query working hours of previous week...'
     query-hours-by-team-codes --show-prev --notify --silent --keep-polling --debug=$debug
     return
   }
@@ -425,7 +425,7 @@ def valid-user-mobiles [users: any] {
   for user in $users {
     let valid = $user.mobile | str replace -r '1\d{10}' '' | is-empty
     if not $valid {
-      print $'WARNNING: (ansi r)($user.name)(ansi reset) has invalid mobile number (ansi r)($user.mobile)(ansi reset), please check it again...'
+      print $'WARNING: (ansi r)($user.name)(ansi reset) has invalid mobile number (ansi r)($user.mobile)(ansi reset), please check it again...'
     }
   }
 }

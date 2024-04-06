@@ -346,7 +346,7 @@ def stop-cicd [id: int, --host: string = $ERDA_HOST] {
 export def watch-cicd-status [id: int] {
   let stages = polling-stage-status $id
   let total = $stages | length
-  const UNFINISH_STATUS = [Created, Analyzed, Queue, Running]
+  const UNFINISHED_STATUS = [Created, Analyzed, Queue, Running]
   const FINISH_STATUS = [Success, Failed, StopByUser, NoNeedBySystem]
   print $'(char nl)Pipeline Running Detail:'; hr-line
 
@@ -359,7 +359,7 @@ export def watch-cicd-status [id: int] {
     let stageFailed = $stageStatus | any {|it| $it == 'Failed' }
     let stageStopped = $stageStatus | any {|it| $it == 'StopByUser' }
     let stageSkipped = $stageStatus | all {|it| $it == 'NoNeedBySystem' }
-    let stageUnfinished = $stageStatus | any {|it| $it in $UNFINISH_STATUS }
+    let stageUnfinished = $stageStatus | any {|it| $it in $UNFINISHED_STATUS }
     let indicator = if $stageSuccess {
         $'(ansi g)✓(ansi reset)  Stage: (ansi g)($tasks)(ansi reset) Finished Successfully! Time cost: ($duration)'
       } else if $stageSkipped {
@@ -385,7 +385,7 @@ export def watch-cicd-status [id: int] {
       let pollingStages = polling-stage-status $id --sid $stage.item.id
       let tasks = $pollingStages | flatten | get pipelineTasks
       let status = $tasks | get status
-      if ($status | any {|it| $it in $UNFINISH_STATUS }) {
+      if ($status | any {|it| $it in $UNFINISHED_STATUS }) {
         $keepPolling = true
       } else {
         $keepPolling = false

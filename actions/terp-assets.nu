@@ -97,9 +97,9 @@ def get-modules [modules?: string, --latest-meta: record] {
   let splits = $modules | split row ','
   let validAliases = $splits | filter {|it| $it in $MODULE_ALIASES }
   if ($validAliases | length) > 0 {
-    let unexists = $validAliases | filter {|it| ($END_KEY_MAP | get -i $it) not-in $allModules }
-    if ($unexists | length) > 0 {
-      print $'Invalid modules (ansi r)($unexists | str join ",")(ansi reset), the module you specified does not exists in latest.json(ansi reset)'
+    let inexists = $validAliases | filter {|it| ($END_KEY_MAP | get -i $it) not-in $allModules }
+    if ($inexists | length) > 0 {
+      print $'Invalid modules (ansi r)($inexists | str join ",")(ansi reset), the module you specified does not exists in latest.json(ansi reset)'
       exit $ECODE.INVALID_PARAMETER
     }
   }

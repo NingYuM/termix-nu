@@ -38,7 +38,7 @@ export def main [
   print $'(ansi p)All available syncing configs:(ansi reset)(char nl)'
   print ($syncs | flatten | select repo dest | sort-by repo dest)
 
-  # Must change to the scopped directory before doing the following work
+  # Must change to the scoped directory before doing the following work
   let repoPath = (get-tmp-path)
   cd $repoPath; cd $repoName
 
@@ -48,9 +48,9 @@ export def main [
       git ls-remote --heads --refs $alias | detect columns -n | rename cid br | each { |branch|
         # Ignore the repos that don't have access permission
         if $branch != null {
-          let brnm = ($branch.br | str replace 'refs/heads/' '')
-          let noUse = ($syncs | where repo == $alias and dest == $brnm | length) == 0
-          if $noUse { $brnm }
+          let branchName = ($branch.br | str replace 'refs/heads/' '')
+          let noUse = ($syncs | where repo == $alias and dest == $branchName | length) == 0
+          if $noUse { $branchName }
         }
       } | str join $'(char nl)'
     ) } else { '' }

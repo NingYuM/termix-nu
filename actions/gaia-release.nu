@@ -13,7 +13,7 @@ use ../utils/common.nu [_DATE_FMT get-termix-conf get-tmp-path hr-line has-ref]
 
 export def main [
   version: string,        # Gaia FE release version
-  repos: string,          # The repos to creat a release tag, multi repo could be separated by ','
+  repos: string,          # The repos to create a release tag, multi repo could be separated by ','
   --delete-tag(-d),       # Set to 'true' if you want to delete the specified tag
 ] {
 

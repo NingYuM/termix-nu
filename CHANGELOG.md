@@ -25,7 +25,7 @@ All notable changes to this project will be documented in this file.
 ### Miscellaneous Tasks
 
 - Fix Nu config file indention and add `yy` command
-- Add dotfile folder
+- Add dotfiles folder
 
 ### Refactor
 
@@ -843,7 +843,7 @@ All notable changes to this project will be documented in this file.
 
 ### Miscellaneous Tasks
 
-- Change default history format to sqlit
+- Change default history format to sqlite
 - Remove protocol for plugin register with nu 0.68.1
 - Change `str collect` to `str join` for nu 0.68.2+
 - Update bump version custom command

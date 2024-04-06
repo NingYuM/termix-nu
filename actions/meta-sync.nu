@@ -6,7 +6,7 @@
 # [√] Upload meta data to OSS
 # [√] Update meta data import status for each task
 # [√] Import meta data from OSS to the destination host
-# [√] Confirm source and destination: teameId, teamCode, host
+# [√] Confirm source and destination: teamId, teamCode, host
 # [√] Select the modules to sync or sync all the modules
 # [x] Confirm the selected modules and reselect if needed
 # [x] Allow to get selected modules from --modules flag

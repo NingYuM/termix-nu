@@ -57,7 +57,7 @@ export def --wrapped fast-brew [
   load-env $MIRROR
   # Tapping homebrew/cask is no longer typically necessary.
   # brew tap --custom-remote --force-auto-update homebrew/cask https://mirrors.ustc.edu.cn/homebrew-cask.git
-  # Disable the following taps for prebuild binary install
+  # Disable the following taps for prebuilt binary install
   # brew tap --custom-remote --force-auto-update homebrew/services https://mirrors.ustc.edu.cn/homebrew-services.git
   # brew tap --custom-remote --force-auto-update homebrew/cask-versions https://mirrors.ustc.edu.cn/homebrew-cask-versions.git
 
