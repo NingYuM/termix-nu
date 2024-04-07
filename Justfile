@@ -71,7 +71,7 @@ sync-doc: _setup
     cp FAQ.md $'($doc)/termix-FAQ.md'; cp CHANGELOG.md $'($doc)/termix-CHANGELOG.md';
 
 # Upgrade termix-nu repo, just or nushell to the latest version
-upgrade *OPTIONS:
+upgrade *OPTIONS: _register_plugins
   @overlay use {{ join(_termix, 'actions', 'upgrade.nu') }}; upgrade-tool {{OPTIONS}}
 
 # Release a new version for termix-nu
