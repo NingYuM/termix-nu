@@ -1,6 +1,17 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## 1.72.1 - 2024-04-07
+
+### Miscellaneous Tasks
+
+- Use `cd` instead of `enter` to change pwd
+- Register plugins for upgrade
+
+### Performance
+
+- Add `ellie` custom command and start Nu without loading std lib for a better performance
+
 ## 1.72.0 - 2024-04-03
 
 ### Breaking Changes
