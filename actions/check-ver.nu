@@ -66,7 +66,7 @@ def query-ver [
   conf: string,
 ] {
   # Update latest commits from remote to local, tags included
-  enter $env.TERMIX_DIR; git fetch origin -p; git fetch origin --tags
+  cd $env.TERMIX_DIR; git fetch origin -p; git fetch origin --tags
   let checkDate = (date now | format date $_DATE_FMT)
   # Get latest release tag name
   let latestVer = (git tag -l --sort=-v:refname | lines | select 0).0

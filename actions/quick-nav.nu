@@ -40,7 +40,7 @@ export def show-navs [] {
 # Merge all nav items from termix.toml and .termixrc
 export def merge-navs [] {
   let quickNavs = get-conf quickNavs
-  enter $env.JUST_INVOKE_DIR
+  cd $env.JUST_INVOKE_DIR
   # Decide which branch to get `.termixrc` conf from ?
   let useConfBr = get-conf useConfFromBranch
   let confBr = if $useConfBr == '_current_' { (git branch --show-current | str trim) } else { 'i' }
