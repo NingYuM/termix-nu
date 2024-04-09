@@ -14,7 +14,7 @@ cursor = '|'
 #
 # Default is false
 #
-blinking_cursor = true
+blinking_cursor = false
 
 # Theme
 #
@@ -118,7 +118,7 @@ disable-ctlseqs-alt = false
 # Another Note: "cascadiamono" font is built-in.
 #
 [fonts]
-size = 26
+size = 20
 extras = [
   { family = "Lilex" },
   { family = "Sarasa Term SC" },

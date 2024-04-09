@@ -209,10 +209,10 @@ def format-pipeline-data [pipelines: any] {
       | upsert Comment {|it| $it.normalLabels.commitDetail | from json | get -i comment | str trim }
       | upsert Author {|it| $it.normalLabels.commitDetail | from json | get -i author }
       | update status {|it| $'(ansi pb)($it.status)(ansi reset)' }
-      | upsert Runner {|it| $it.extra | get -i runUser | default {name: $NA} | get name }
+      | upsert Runner {|it| $it.extra | get -i runUser | default {name: $NA} | get name? }
       | upsert Begin {|it| if $it.timeBegin == $NA { $it.timeBegin } else { $it.timeBegin | into datetime | date humanize } }
       | upsert Updated {|it| $it.timeUpdated | into datetime | date humanize }
-      | reject extra timeBegin timeUpdated normalLabels filterLabels
+      | reject -i extra timeBegin timeUpdated normalLabels filterLabels
       | rename ID Commit Status
   )
 }
