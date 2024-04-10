@@ -35,7 +35,7 @@ export def 'git pull-all' [
       # Just pull if local repo is behind remote
       if ($stat.behind > 0 and $stat.ahead == 0) {
         print $'(ansi p)Start pulling ($br) branch...(ansi reset)'
-        print (git pull); hr-line
+        git pull; hr-line
       }
       # If local is behind remote and have commits at the same time, do a reset, may be DANGEROUS
       if ($stat.behind > 0 and $stat.ahead > 0) {
