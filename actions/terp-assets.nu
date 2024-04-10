@@ -38,7 +38,7 @@ const ENDPOINT = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com'
 # Don't validate module names by default
 const VALIDATE_MODULES = '0'
 # Ignore new modules while transferring `all` assets
-const IGNORE_NEW_MODULES = '1'
+const IGNORE_NEW_MODULES = '0'
 const PKG_TOOLS_VER = '0.3.0-beta.1'
 
 # Module alias to real module name (Before module renamed)
