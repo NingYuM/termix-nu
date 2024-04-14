@@ -9,6 +9,7 @@ use ../utils/common.nu [hr-line]
 
 # Show insertions/deletions and number of files changed for each commit
 export def 'git stat' [
+  --json(-j),                   # Output in JSON format
   --summary(-s),                # Show summary
   --summary-only,               # Show summary only, no details
   --from(-f): string,           # Start time to stat in 2024/03/12 format
@@ -17,7 +18,9 @@ export def 'git stat' [
   --author(-a): string = '*',   # Author to stat
   --exclude(-e): string,        # File name to exclude, separated by comma
 ] {
-  print $'(ansi p)(char nl)Modification stat info for each commit: (ansi reset)(char nl)'
+  if not $summary_only {
+    print $'(ansi p)(char nl)Modification stat info for each commit: (ansi reset)(char nl)'
+  }
   cd $env.JUST_INVOKE_DIR
   mut args = ['--pretty=%h %aN' '--no-merges']
   if $author == '*' {} else if ($author | is-not-empty) {
@@ -83,8 +86,8 @@ export def 'git stat' [
 
   $total.commits = ($stat.commit | uniq | length)
   $total.uniqFileChanged = ($stat.file | flatten | uniq | length)
+  $total = ($total | select commits deletions insertions fileChanged uniqFileChanged)
+  if $json { return ($total | to json) }
   print $'Total Summary: '; hr-line 69
-  $total
-    | select commits deletions insertions fileChanged uniqFileChanged
-    | print
+  $total | print
 }
