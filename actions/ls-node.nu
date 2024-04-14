@@ -12,35 +12,32 @@
 
 use ../utils/common.nu [ECODE]
 
+const RELEASE_SOURCE = 'https://nodejs.org/dist/index.json'
+
 export def ls-node-remote [
   minVer?: string,    # The min node version you want to query
   --lts,              # Filter the node versions that are LTS
 ] {
 
-  # brew install fnm to install it, see: https://github.com/Schniz/fnm
-  let notInstalled = (which fnm | length) == 0
   let minVersion = if ($minVer | is-empty) { 16 } else { ($minVer | str replace 'v' '' | into int) }
-  if $notInstalled {
-    print $'You should install `fnm` and try again..., bye!'
-    exit $ECODE.MISSING_BINARY
-  }
-
-  let vers = (fnm ls-remote | lines | str trim | wrap Version)
+  let vers = (http get $RELEASE_SOURCE | select version lts date npm? v8)
   let vRow = (
-    $vers | upsert NO { |node| (
-      $node.Version
-        | split row ' '
-        | first
-        | split row '.'
-        | first
-        | str substring 1..
-        | into int
-    )} | upsert isLTS { |node| ($node.Version | str contains '(') }
+    $vers
+      | upsert lts { if $in == false { '-' } else { $in }}
+      | upsert NO { |node| (
+        $node.version
+          | split row ' '
+          | first
+          | split row '.'
+          | first
+          | str substring 1..
+          | into int
+        )}
   )
+
   if $lts {
-    # ($vRow | where {|node| $node.NO >= $minVersion and $node.isLTS } | select Version)
-    print ($vRow | where NO >= $minVersion | where isLTS == true | select Version)
+    $vRow | where NO >= $minVersion | reject NO | where lts != '-' | print
   } else {
-    print ($vRow | where NO >= $minVersion | select Version)
+    $vRow | where NO >= $minVersion | reject NO | print
   }
 }

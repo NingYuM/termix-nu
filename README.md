@@ -297,27 +297,27 @@ t dir-batch-exec 'pwd;ncu'
 
 ### 7. 查询已发布 Node 版本{#ls-node}
 
-**功能描述**: 通过[`fnm`](https://github.com/Schniz/fnm)查询已发布 `Node` 版本，支持指定最低版本号, 虽然目前依赖`fnm`, 但是若想去除该依赖是很容易的，以后有需求再说吧。
+**功能描述**: 查询已发布 `Node` 版本以及内置的 `npm` 版本和发布时间，支持指定最低 `Node` 主版本号，默认 `16`
 
 **命令格式**: `t ls-node {flags} (minVer)`
 
 **参数说明**:
 
-- `minVer`: 可选，指定查询`Node.js`的最小起始版本号，可以为空，默认值为 12, 版本号前面可以加`v`也可以不加;
+- `minVer`: 可选，指定查询`Node.js`的最小起始版本号，可以为空，默认值为 `16`, 版本号前面可以加`v`也可以不加;
 - `--lts`: 是否只查询`LTS`版本;
 - `-h` 或 `--help`: 查看帮助文档;
 
 **使用举例**:
 
 ```bash
-# 查询`12`及以后的已经发布的Node版本号
-t ls-node
 # 查询`16`及以后的已经发布的Node版本号
-t ls-node 16
+t ls-node
+# 查询`18`及以后的已经发布的Node版本号
+t ls-node 18
 # OR
-t ls-node v16
-# 查询`12`及以后已经发布的Node LTS 版本号
-t ls-node 12 --lts
+t ls-node v18
+# 查询`16`及以后已经发布的Node LTS 版本号
+t ls-node 16 --lts
 ```
 
 ---
@@ -1728,8 +1728,3 @@ t pull-redev develop true
 # 执行该命令的时候先确保已经切换到源码仓库gaia-mall, gaia-mobile, etc.
 t prune-synced-branches
 ```
-
-## TODO{#todo}
-
-- [] `ls-node` 去除对 `fnm` 的依赖;
-- [] 常用应用安装脚本? 帮助新 mac 快速配置开发环境;
