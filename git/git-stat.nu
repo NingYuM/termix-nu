@@ -10,19 +10,33 @@ use ../utils/common.nu [hr-line]
 # Show insertions/deletions and number of files changed for each commit
 export def 'git stat' [
   --summary(-s),                # Show summary
-  --count(-c): int = 20,        # Number of commits to stat
+  --summary-only,               # Show summary only, no details
+  --from(-f): string,           # Start time to stat in 2024/03/12 format
+  --to(-t): string,             # End time to stat, current time if not specified
+  --max-count(-c): int = 20,    # Number of commits to stat at most
   --author(-a): string = '*',   # Author to stat
   --exclude(-e): string,        # File name to exclude, separated by comma
 ] {
   print $'(ansi p)(char nl)Modification stat info for each commit: (ansi reset)(char nl)'
   cd $env.JUST_INVOKE_DIR
-  let log = if $author == '*' {
-    (git log '--pretty=%h %aN' --no-merges -n $count)
-  } else {
-    (git log '--pretty=%h %aN' --no-merges -n $count --author $author)
+  mut args = ['--pretty=%h %aN' '--no-merges']
+  if $author == '*' {} else if ($author | is-not-empty) {
+    $args = ($args | append $'--author=($author)')
   }
+  if ($max_count | is-not-empty) {
+    $args = ($args | append $'--max-count=($max_count)')
+  }
+  if ($from | is-not-empty) {
+    $args = ($args | append $'--since=($from)T00:00:00Z')
+  }
+  if ($to | is-not-empty) {
+    $args = ($args | append $'--until=($to)T23:59:59Z')
+  }
+  let log = git log ...$args
   # Use `git diff -- . ':(exclude)src/irrelevant.ts' ':(exclude)src/irrelevant2.ts'` to exclude files
-  let excludes = if ($exclude | is-not-empty) { $exclude | split row ',' | wrap name | format pattern ":(exclude){name}" } else { [] }
+  let excludes = if ($exclude | is-not-empty) {
+      $exclude | split row ',' | wrap name | format pattern ":(exclude){name}"
+    } else { [] }
 
   let stat = $log
     | lines
@@ -55,9 +69,9 @@ export def 'git stat' [
       }
     } | flatten -a
 
-  $stat | reject file | print
+  if not $summary_only { $stat | reject file | print }
 
-  if not $summary { return }
+  if not ($summary or $summary_only) { return }
   mut total = $stat
     | reduce --fold { fileChanged: 0, insertions: 0, deletions: 0 } { |acc x|
         {
