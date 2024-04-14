@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 **Bug Fixes**
 
+- Fix `t ls-tags` while no tag exists locally
 - Fix possible Erda pipeline query error
 - Fix `t upgrade` with the same tag name exists locally
 
