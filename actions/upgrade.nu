@@ -50,6 +50,6 @@ def upgrade-termix-nu [] {
   print $'Upgrading termix-nu...'; hr-line
   cd $env.TERMIX_DIR
   git checkout master
-  git pull --tags
+  git pull --tags --force
   git pull origin (git tag -l --sort=-v:refname | lines | select 0).0 --ff-only
 }
