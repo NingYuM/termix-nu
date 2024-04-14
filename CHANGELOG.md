@@ -1,6 +1,25 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.73.0 - 2024-04-15
+
+**Bug Fixes**
+
+- Fix possible Erda pipeline query error
+- Fix `t upgrade` with the same tag name exists locally
+
+**Features**
+
+- Update `t pull-all` command, add colorful output for code changes
+- Do not ignore new modules while syncing assets for `t ta` command
+- Add `--from`, `--to` and `--summary-only` option to `t git-stat` command
+- Add `--json` option to `t git-stat` command
+- Update `t ls-node` command and remove `fnm` dependency
+
+**Miscellaneous Tasks**
+
+- Update layout of CHANGELOG.md
+
 ## v1.72.1 - 2024-04-07
 
 **Miscellaneous Tasks**

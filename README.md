@@ -409,8 +409,12 @@ t git-batch-exec 'git cherry-pick abcxyzuvw; git push' develop,feature/latest
 
 **参数说明**:
 
+- `-j` 或 `--json`: 输出 JSON 格式的统计数据；
 - `-s` 或 `--summary`: 显示统计汇总信息；
-- `-c` 或 `--count`: 需要统计的 commit 记录数，默认前 20 条;
+- `--summary-only`: 只输出统计汇总信息；
+- `-f` 或 `--from`: 需要统计的 commit 记录起始时间，格式为 `YYYY/MM/DD`；
+- `-t` 或 `--to`: 需要统计的 commit 记录结束时间，格式为 `YYYY/MM/DD`，默认值为当前日期；
+- `-c` 或 `--max-count`: 需要统计的 commit 记录最大条数，默认前 20 条;
 - `-a` 或 `--author`: 需要统计的 commit 提交者 ID，默认所有提交者；
 - `-e` 或 `--exclude <String>`: 需要在统计中排除的文件，多个文件之间用 `,` 分隔，比如 `pnpm-lock.yaml` 等，若文件不存在不会报错；
 - `-h` 或 `--help`: 查看该命令的相关帮助；
