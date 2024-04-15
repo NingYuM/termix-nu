@@ -272,7 +272,7 @@ def transfer [
   for e in $modules {
     cd $'($tmp)/assets-($mount)-($e)'
     # Update namespace.json add transfer info
-    update-transfer-meta $latestMeta.from
+    update-transfer-meta $latestMeta
     if ($type | str trim | str downcase) == 'minio' {
       package-tools s3 -c $ak $sk $bucket $endpoint $region -d . -m $to -s path
     } else {
@@ -290,13 +290,14 @@ def transfer [
 }
 
 # Add transfer metadata to namespace.json and latest.json
-def update-transfer-meta [from: string] {
+def update-transfer-meta [latestMeta: record] {
   let syncBy = $env.DICE_OPERATOR_NAME? | default (git config --get user.name) | encode base64
   let syncAt = (date now | format date $_TIME_FMT)
-  let syncMeta = { syncBy: $syncBy, syncFrom: $from, syncAt: $syncAt }
-  open namespace.json
-    | upsert metadata {|it| $it.metadata? | default {} | merge $syncMeta }
-    | save -f namespace.json
+  let syncMeta = { syncBy: $syncBy, syncFrom: $latestMeta.from, syncAt: $syncAt }
+  mut ns = open namespace.json | upsert metadata {|it| $it.metadata? | default {} | merge $syncMeta }
+  # Keep module deprecated status
+  if ((($latestMeta.latest | get $ns.namespace).deprecated? | into string) == 'true') { $ns.deprecated = true }
+  $ns | save -f namespace.json
 }
 
 alias main = terp assets
