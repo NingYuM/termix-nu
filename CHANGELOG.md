@@ -1,6 +1,13 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.73.1 - 2024-04-15
+
+**Features**
+
+- Keep static assets module deprecation status for `t ta transfer` command
+
+
 ## v1.73.0 - 2024-04-15
 
 **Bug Fixes**
