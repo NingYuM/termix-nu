@@ -30,7 +30,6 @@ use ../utils/common.nu [ECODE, is-installed, hr-line, get-tmp-path, compare-ver,
 
 const JSON_ENTRY = 'latest.json'
 const VALID_ACTIONS = ['download', 'transfer']
-const MODULE_ALIASES = ['pc', 'mobile', 'mat', 'mmat', 'dors', 'mdors', 'iam', 'all']
 const VALID_MODULES = [t-runtime-mobile-erp t-runtime-erp iam-features dors-page dors-mobile t-material t-mobile t-b2b-ui emp-frontend-erp]
 const NEXT_VALID_MODULES = [terp-mobile terp service service-mobile iam dors dors-mobile base base-mobile b2b emp]
 const ENDPOINT = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com'
@@ -40,17 +39,6 @@ const VALIDATE_MODULES = '0'
 # Ignore new modules while transferring `all` assets
 const IGNORE_NEW_MODULES = '0'
 const PKG_TOOLS_VER = '0.3.0-beta.1'
-
-# Module alias to real module name (Before module renamed)
-const END_KEY_MAP = {
-  mmat: 't-mobile',
-  mat: 't-material',
-  dors: 'dors-page',
-  mdors: 'dors-mobile',
-  iam: 'iam-features',
-  pc: 't-runtime-erp',
-  mobile: 't-runtime-mobile-erp',
-}
 
 # Download TERP static assets or transfer assets to other path of the specified cloud storage
 export def 'terp assets' [
@@ -95,22 +83,14 @@ def get-modules [modules?: string, --latest-meta: record] {
 
   # Validate and sync specified modules
   let splits = $modules | split row ','
-  let validAliases = $splits | filter {|it| $it in $MODULE_ALIASES }
-  if ($validAliases | length) > 0 {
-    let inexists = $validAliases | filter {|it| ($END_KEY_MAP | get -i $it) not-in $allModules }
+  if ($splits | length) > 0 {
+    let inexists = $splits | filter {|it| $it not-in $allModules }
     if ($inexists | length) > 0 {
       print $'Invalid modules (ansi r)($inexists | str join ",")(ansi reset), the module you specified does not exists in latest.json(ansi reset)'
       exit $ECODE.INVALID_PARAMETER
     }
   }
-  let filterAlias = $splits | filter {|it| $it not-in $MODULE_ALIASES }
-  let invalid = $filterAlias | filter {|it| $it not-in $allModules }
-  if ($invalid | length) > 0 {
-    print $'Invalid modules (ansi r)($invalid | str join ",")(ansi reset), available module aliases: (ansi g)($MODULE_ALIASES | str join ",")(ansi reset)'
-    print $'And all available modules: (ansi g)($allModules | str join ",")(ansi reset)'
-    exit $ECODE.INVALID_PARAMETER
-  }
-  $splits | filter {|it| $it in [...$MODULE_ALIASES, ...$allModules] }
+  $splits
 }
 
 # Get latest.json from specified mount point
@@ -212,13 +192,11 @@ def download [
 
   # Download assets for each end point
   $modules | each { |e|
-    # Real module name has higher priority than alias
-    let endKey = if ($e in $latestMeta.latest) { $e } else { $END_KEY_MAP | get -i $e | default $e }
     let assetsDir = $'($dest)/assets-($mount)-($e)'
     # 每次下载前先清空目录
     rm -rf $assetsDir; mkdir $'($assetsDir)/assets'
-    let prefix = $entryConf | get $endKey | get prefix
-    let dirname = $entryConf | get $endKey | get dirname
+    let prefix = $entryConf | get $e | get prefix
+    let dirname = $entryConf | get $e | get dirname
     print $'Download assets from (ansi p)($mount)/($JSON_ENTRY)(ansi reset) to (ansi p)($dest)(ansi reset) for (ansi pb)($e)(ansi reset)...'
 
     # 保存 manifest.json 以便后续通过 package-tools 上传

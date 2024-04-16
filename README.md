@@ -1188,17 +1188,17 @@ alias main = dingtalk notify
 其中 `action` 目前只支持两种 `download` & `transfer`:
 
 - 资源下载：`terp-assets download <modules> --from <from> --to <to>`
-- 资源同步：`terp-assets transfer <modules> --from <from> --to <to> --dest-store <store>`，资源同步时会先下载然后再上传，实际同步操作的时候不需要单独执行下载操作。资源上传需要在本机安装 `@terminus/t-package-tools`, 执行 `npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io` 即可(Node.js 建议 v18 或者以上版本)，版本不低于 `0.3.0-beta.1`(目前只有佛燃项目依赖 `0.0.10-beta.1` 版本);
+- 资源同步：`terp-assets transfer <modules> --from <from> --to <to> --dest-store <store>`，资源同步时会先下载然后再上传，实际同步操作的时候不需要单独执行下载操作。资源上传需要在本机安装 `@terminus/t-package-tools`, 执行 `npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io` 即可(Node.js 建议 v18 或者以上版本)，版本不低于 `0.3.0-beta.1`;
 
 **命令别名**: `terp-assets` 的别名为 `ta`
 
 **参数说明**:
 
 - `<modules>` - 待下载或者同步的前端模块
-  1. 目前的可能值为：`pc`, `mobile`, `mat`, `mmat`, `dors`, `iam`, `all`, 分别代表PC端自定义组件、移动端自定义组件、Material-UI PC端、Material-UI 移动端，Dors, IAM 以及所有模块静态资源。也可以同时指定多个前端模块用 `,` 分隔。
-  2. 对于没有别名的静态资源可以使用 `latest.json` 里面的完整模块名，比如 `t-b2b-ui`。
+  1. 目前的可能值为：`terp`, `terp-mobile`, `service`, `service-mobile`, `base`, `base-mobile`, `dors`, `iam`, `all`, 分别代表TERP自定义组件的PC和移动端、通用自定义组件的PC和移动端、Material-UI的PC和移动端，Dors, IAM 以及所有模块静态资源。也可以同时指定多个前端模块并用 `,` 分隔。
+  2. 对于不在上述列表里面的模块，可以使用 `latest.json` 里面的完整模块名，比如 `t-b2b-ui`等。
   3. 当传入模块为 `all` 时会自动下载或者同步 `latest.json` 里面的所有模块，最终目标和源的静态资源应该是完全一致的。
-  4. 从 `v1.68.0` 开始该参数改为可选，如果没有传则会自动出现前端静态资源模块选择界面，可以手工选择模块并进行同步或者下载。在这个交互中可以使用的快捷键: `Space` 选择某一项，`a` 选择所有或取消全部选择，`q` 或 `ESC` 取消并退出，上下箭头切换模块, `Enter` 确认选择；
+  4. 如果你不记得模块名也可以不传，此时会自动出现前端静态资源模块选择界面，可以手工选择模块并进行同步或者下载。在这个交互中可以使用的快捷键: `Space` 选择某一项，`a` 选择所有或取消全部选择，`q` 或 `ESC` 取消并退出，上下箭头切换模块, `Enter` 确认选择；
 - `-f, --from <String>` - 资源的源挂载目录或者源 `latest.json` 完整 URL 地址，`from` 的 host 为 `https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com` 时可以只指定资源挂载的目录，否则需要 `latest.json` 的完整 URL 地址
 - `-t, --to <String>` - 对于 `download` 代表资源下载保存的本机路径，对于 `transfer` 代表资源上传到云存储后的目标挂载目录
 - `-v, --verbose` - 显示命令更多执行信息

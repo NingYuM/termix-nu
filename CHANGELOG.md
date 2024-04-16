@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 **Features**
 
 - Keep static assets module deprecation status for `t ta transfer` command
-
+- Remove module alias of `t ta` command for static assets transfer
 
 ## v1.73.0 - 2024-04-15
 
