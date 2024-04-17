@@ -269,8 +269,11 @@ def transfer [
   print "All transfer finished! \n"
   print $"(ansi g)Total Time Cost: ($endTime - $startTime)(ansi reset)\n"
 
-  let destUrl = $fromUrl | str replace $'/($mount)/' $'/($to)/'
-  print $"You can visit the latest.json from: ($destUrl)\n"
+  let destUrl = match $type {
+    'minio' => $'($endpoint)/($bucket)/fe-resources/($to)/latest.json',
+    'aliyun' => $'https://($bucket).($region).aliyuncs.com/fe-resources/($to)/latest.json',
+  }
+  print $"You can visit the latest.json from: (ansi g)($destUrl)(ansi reset)\n"
 }
 
 # Add transfer metadata to namespace.json and latest.json
