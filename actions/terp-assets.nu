@@ -12,6 +12,8 @@
 # [√] Validate module names from latest.json support
 # [√] Ignore new modules while transferring `all` assets support
 # [√] Get available modules from latest.json if sync all is selected
+# [√] Display front end module meta data
+# [√] Display module status statistics info in meta data view
 # Ref:
 #   - https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/fe-resources/dev/latest.json
 #   - http://minio-tenant.terp.fsgas.com/terminus-trantor/fe-resources/fs-test/latest.json
@@ -19,6 +21,8 @@
 #   - https://docs.erda.cloud/2.2/manual/dop/guides/reference/pipeline.html
 #   - https://www.alibabacloud.com/help/zh/oss/developer-reference/install-ossutil#dda54a7096xfh
 # Usage:
+#   t ta detect -f dev
+#   t ta detect -f https://public-go1688-trantor-noprod.oss-cn-hangzhou.aliyuncs.com/fe-resources/csp-test/latest.json
 #   t ta download all -f dev
 #   t ta download pc --from <mode> --to <dir>
 #   t ta transfer pc --from <oss-mode> --to <minio-mode>
@@ -29,7 +33,7 @@
 use ../utils/common.nu [ECODE, is-installed, hr-line, get-tmp-path, compare-ver, _TIME_FMT]
 
 const JSON_ENTRY = 'latest.json'
-const VALID_ACTIONS = ['download', 'transfer']
+const VALID_ACTIONS = ['download', 'transfer', 'detect']
 const VALID_MODULES = [t-runtime-mobile-erp t-runtime-erp iam-features dors-page dors-mobile t-material t-mobile t-b2b-ui emp-frontend-erp]
 const NEXT_VALID_MODULES = [terp-mobile terp service service-mobile iam dors dors-mobile base base-mobile b2b emp]
 const ENDPOINT = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com'
@@ -51,19 +55,21 @@ export def 'terp assets' [
 ] {
   pre-check $action --to $to --dest-store $dest_store
   let latestMeta = get-latest-meta $from
-  let modules = get-modules $modules --latest-meta $latestMeta
+  let modules = get-modules $modules --latest-meta $latestMeta --action $action
   confirm-action $action $modules --to $to --dest-store $dest_store
 
   match $action {
+    'detect' => { detect $latestMeta },
     'download' => { download $modules $latestMeta $to --verbose=$verbose },
     'transfer' => { transfer $modules $latestMeta $to --dest-store $dest_store --verbose=$verbose },
   }
 }
 
 # Get valid modules from input and exit if any invalid module is found
-def get-modules [modules?: string, --latest-meta: record] {
+def get-modules [modules?: string, --latest-meta: record, --action: string] {
   # Choose modules from latest.json if modules is empty
   let allModules = $latest_meta.latest | columns | sort
+  if $action == 'detect' { return $allModules }
   if ($modules | is-empty) {
     print $'No module specified, please select the modules manually...'; hr-line
     let tips = $"Select the modules to sync or download (ansi grey66)\(space to select, esc or q to quit, enter to confirm\)(ansi reset)"
@@ -276,6 +282,26 @@ def update-transfer-meta [latestMeta: record] {
   # Keep module deprecated status
   if ((($latestMeta.latest | get $ns.namespace).deprecated? | into string) == 'true') { $ns.deprecated = true }
   $ns | save -f namespace.json
+}
+
+# Display front end module meta data
+def detect [latestMeta: record] {
+  const TIME_FMT = '%m/%d %H:%M:%S'
+  print $'Latest meta info of (ansi g)($latestMeta.latestUrl)(ansi reset)'; hr-line 130
+  let modules = $latestMeta.latest
+    | values
+    | select namespace deprecated? metadata?
+    | upsert branch {|it| $it.metadata?.branch? | default '-' }
+    | upsert SHA {|it| $it.metadata?.commitSha? | default '-' }
+    | upsert buildTime {|it| if ($it.metadata?.buildTime? | is-empty) { '-' } else { $it.metadata.buildTime | format date $TIME_FMT } }
+    | upsert syncBy {|it| $it.metadata?.syncBy? | default 'LQ==' | decode base64 }
+    | upsert syncFrom {|it| $it.metadata?.syncFrom? | default '-' }
+    | upsert syncAt {|it| if ($it.metadata?.syncAt? | is-empty) { '-' } else { $it.metadata.syncAt | format date $TIME_FMT } }
+    | reject -i metadata
+    | sort-by namespace
+
+  $modules | print; hr-line 130
+  print $'Total modules: (ansi g)($modules | length)(ansi reset), Enabled: (ansi g)($modules | where deprecated? != true | length)(ansi reset), Deprecated modules: (ansi r)($modules | where deprecated? | length)(ansi reset)'
 }
 
 alias main = terp assets
