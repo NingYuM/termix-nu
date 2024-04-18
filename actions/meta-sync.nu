@@ -22,13 +22,14 @@
 # [√] Update user manual for meta data syncing script
 # [√] Add --snapshot(-S) flag to only create snapshot
 # [√] Add ansi links to task ID
-# [?] User authentication support
+# [√] User authentication support
 # Usage:
 #   t msync --all
+#   t msync --all -S
 #   t msync --selected
 #   t msync --all --from a --to b
 
-use ../utils/common.nu [ECODE, hr-line, ellie]
+use ../utils/common.nu [ECODE, hr-line, ellie, is-installed, is-lower-ver]
 
 const POLL_TICK_CHAR = '*'
 const QUERY_INTERVAL = 1sec
@@ -65,13 +66,15 @@ export def 'meta sync' [
   confirm-check --from $source --to $dest
 
   let start = date now
-  let snapshotOid = handle-create-snapshot $source
+  let sourceAuth = get-user-auth $source
+  let snapshotOid = handle-create-snapshot $source $sourceAuth
   hr-line
   print $'Snapshot created successfully with RootOID: (ansi p)($snapshotOid)(ansi reset)'
-  let downloadUrl = handle-upload-snapshot $source $snapshotOid
+  let downloadUrl = handle-upload-snapshot $source $snapshotOid $sourceAuth
   print $'Snapshot uploaded successfully with download Url:'
   print $'(ansi p)($downloadUrl)(ansi reset)'
-  handle-import-metadata $dest $snapshotOid $downloadUrl --modules $modules
+  let destAuth = get-user-auth $dest
+  handle-import-metadata $dest $snapshotOid $downloadUrl $destAuth --modules $modules
   let end = date now
   print $'Total time consumed: (ansi p)($end - $start)(ansi reset)'
 }
@@ -122,12 +125,17 @@ def create-and-upload-snapshot [--from: string] {
   let defaultSource = $metaConf.source | values | default false default | where default == true
   provider-check 'source' $defaultSource --from $from
   let source = if ($from | is-empty) { $defaultSource | get 0 } else { $metaConf.source | get $from }
+  let $source = ($source
+    | upsert username {|it| $it.username? | default $metaConf.settings?.username? }
+    | upsert password {|it| $it.password? | default $metaConf.settings?.password? })
+  check-user-auth $source
   confirm-snapshot --from $source
   let start = date now
-  let snapshotOid = handle-create-snapshot $source --snapshot-only
+  let authentication = get-user-auth $source
+  let snapshotOid = handle-create-snapshot $source $authentication --snapshot-only
   hr-line
   print $'Snapshot created successfully with RootOID: (ansi p)($snapshotOid)(ansi reset)'
-  let downloadUrl = handle-upload-snapshot $source $snapshotOid --snapshot-only
+  let downloadUrl = handle-upload-snapshot $source $snapshotOid $authentication --snapshot-only
   print $'Snapshot uploaded successfully with download Url:'
   print $'(ansi p)($downloadUrl)(ansi reset)'
   let end = date now
@@ -188,6 +196,14 @@ def get-meta-setting [
     }}
     return { source: $source, dest: $destination, selectedModules: $source.selectedModules }
   }
+  let $source = ($source
+    | upsert username {|it| $it.username? | default $metaConf.settings?.username? }
+    | upsert password {|it| $it.password? | default $metaConf.settings?.password? })
+  let $destination = ($destination
+    | upsert username {|it| $it.username? | default $metaConf.settings?.username? }
+    | upsert password {|it| $it.password? | default $metaConf.settings?.password? })
+  check-user-auth $source
+  check-user-auth $destination
   { source: $source, dest: $destination }
 }
 
@@ -196,27 +212,37 @@ def check-required [name: string] {
   let metaConf = $env.META_CONF
   for provider in ($metaConf | get $name | columns) {
     let keys = $metaConf | get $name | get $provider | columns
-    [teamId teamCode host] | each {|it| if $it not-in $keys {
+    [teamId teamCode host iamHost] | each {|it| if $it not-in $keys {
       print $'The ($name) (ansi p)($provider)(ansi reset) must have (ansi p)($it)(ansi reset) config.'
       exit $ECODE.INVALID_PARAMETER
     }}
   }
 }
 
-# Check provider name and value along with the command flags
-def provider-check [name, value, --from: string, --to: string] {
+# Make sure user has configured username and password
+def check-user-auth [settings: record] {
+  let authEmpty = [username password] | any {|it| $settings | get -i $it | is-empty }
+  if $authEmpty {
+    print $'(ansi r)Please config your username and password for:(ansi reset)'
+    $settings | print
+    exit $ECODE.INVALID_PARAMETER
+  }
+}
+
+# Check provider type and value along with the command flags
+def provider-check [type, value, --from: string, --to: string] {
   let metaConf = $env.META_CONF
   if ($value | length) > 1 {
-    print $'Invalid meta data ($name) setting, at most one default ($name) was allowed.'
+    print $'Invalid meta data ($type) setting, at most one default ($type) was allowed.'
     exit $ECODE.INVALID_PARAMETER
   }
-  let check = if $name == 'source' { $from } else { $to }
+  let check = if $type == 'source' { $from } else { $to }
   if ($check | is-empty) and ($value | length) == 0 {
-    print $'You must specify the ($name) name or set a default ($name) in the meta.($name) config.'
+    print $'You must specify the ($type) name or set a default ($type) in the meta.($type) config.'
     exit $ECODE.INVALID_PARAMETER
   }
-  if (not ($check | is-empty)) and ($check not-in ($metaConf | get $name)) {
-    print $'The ($name) name (ansi p)($check)(ansi reset) does`t exists in the meta.($name) config, please check it again.'
+  if (not ($check | is-empty)) and ($check not-in ($metaConf | get $type)) {
+    print $'The ($type) name (ansi p)($check)(ansi reset) does`t exists in the meta.($type) config, please check it again.'
     exit $ECODE.INVALID_PARAMETER
   }
 }
@@ -270,18 +296,19 @@ def get-selected-modules [
 # Create meta data snapshot and wait for the task to finish, return the snapshot SHA if success
 def handle-create-snapshot [
   source: record,       # Specify the meta source config of the snapshot to create
+  auth: record,         # A authentication record contains user and cookie info
   --snapshot-only,      # Specify whether to only create and upload snapshot without importing
 ] {
   let start = date now
   let total = if $snapshot_only { 2 } else { 3 }
-  let taskId = create-snapshot $source
+  let taskId = create-snapshot $source $auth
   print $'(ansi pr) STEP 1/($total): (ansi reset) Snapshot creating task started, id: (ansi p)(get-detail-link $source.host $taskId)(ansi reset)'
-  mut detail = fetch-task-detail $taskId $source.host
+  mut detail = fetch-task-detail $taskId $source.host $auth
   print 'Task running detail:'; hr-line
   mut stats = $detail.progress
   print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi reset) is ($detail.status): [Total: ($stats.total), Success: ($stats.success), Failed: ($stats.failed)]'
   while $stats.success + $stats.failed < $stats.total {
-    $detail = (fetch-task-detail $taskId $source.host)
+    $detail = (fetch-task-detail $taskId $source.host $auth)
     $stats = $detail.progress
     sleep $QUERY_INTERVAL
     print -n '█'
@@ -303,19 +330,20 @@ def handle-create-snapshot [
 def handle-upload-snapshot [
   source: record,       # Specify the meta source config of the snapshot to upload
   rootOid: string,      # Specify the root oid of the snapshot to upload
+  auth: record,         # A authentication record contains user and cookie info
   --snapshot-only,      # Specify whether to only create and upload snapshot without importing
 ] {
   let start = date now
   let total = if $snapshot_only { 2 } else { 3 }
-  let taskId = upload-snapshot $source $rootOid
+  let taskId = upload-snapshot $source $rootOid $auth
   print -n (char nl)
   print $'(ansi pr) STEP 2/($total): (ansi reset) Snapshot uploading task started, id: (ansi p)(get-detail-link $source.host $taskId)(ansi reset)'
-  mut detail = fetch-task-detail $taskId $source.host
+  mut detail = fetch-task-detail $taskId $source.host $auth
   print 'Task running detail:'; hr-line
   mut stats = $detail.progress
   print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi reset) is ($detail.status): [Total: ($stats.total), Success: ($stats.success), Failed: ($stats.failed)]'
   while $stats.success + $stats.failed < $stats.total {
-    $detail = (fetch-task-detail $taskId $source.host)
+    $detail = (fetch-task-detail $taskId $source.host $auth)
     $stats = $detail.progress
     sleep $QUERY_INTERVAL
     print -n '█'
@@ -338,13 +366,14 @@ def handle-import-metadata [
   dest: record,         # Specify the meta dest config for the snapshot to import
   rootOid: string,      # Specify the root oid of the snapshot to import
   metaUrl: string,      # Specify the meta data download url for importing
+  auth: record,         # A authentication record contains user and cookie info
   --modules(-m): list,  # Specify the modules to sync
 ] {
   let start = date now
-  let taskId = import-metadata $dest $rootOid $metaUrl --modules $modules
+  let taskId = import-metadata $dest $rootOid $metaUrl $auth --modules $modules
   print -n (char nl)
   print $'(ansi pr) STEP 3/3: (ansi reset) Meta data importing task started, id: (ansi p)(get-detail-link $dest.host $taskId)(ansi reset)'
-  mut detail = fetch-task-detail $taskId $dest.host
+  mut detail = fetch-task-detail $taskId $dest.host $auth
   print 'Task running detail:'; hr-line
   mut stats = $detail.progress
   print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi reset) is ($detail.status):'
@@ -356,7 +385,7 @@ def handle-import-metadata [
 
   mut successCount = $stats.success
   while $stats.success + $stats.failed < $stats.total {
-    $detail = (fetch-task-detail $taskId $dest.host)
+    $detail = (fetch-task-detail $taskId $dest.host $auth)
     $stats = $detail.progress
     sleep $QUERY_INTERVAL
     print -n $POLL_TICK_CHAR
@@ -384,10 +413,12 @@ def handle-import-metadata [
 # Create meta data snapshot
 def create-snapshot [
   source: record,       # Specify the meta source of the snapshot to create
+  auth: record,         # A authentication record contains user and cookie info
 ] {
   const snapShotApi = '/api/trantor/task/exec/RebuildObjectTask'
-  let query = { teamId: $source.teamId, teamCode: $source.teamCode, userId: '1', verbose: 'false' } | url build-query
-  let resp = http post --content-type application/json $'($source.host)($snapShotApi)?($query)' {}
+  let query = { teamId: $source.teamId, teamCode: $source.teamCode, userId: $auth.user.id, verbose: 'false' } | url build-query
+  let headers = [Cookie $auth.cookie Referer $auth.iamHost]
+  let resp = http post --content-type application/json --headers $headers $'($source.host)($snapShotApi)?($query)' {}
   if not $resp.success {
     print $'Failed to create snapshot, error: ($resp.err)'
   }
@@ -398,10 +429,12 @@ def create-snapshot [
 def upload-snapshot [
   source: record,       # Specify the meta source config of the snapshot to upload
   rootOid: string,      # Specify the root OID of the snapshot to upload
+  auth: record,         # A authentication record contains user and cookie info
 ] {
   const snapShotUploadApi = '/api/trantor/task/exec/UploadObjectToOSSTask'
-  let query = { teamId: $source.teamId, teamCode: $source.teamCode, userId: '1', verbose: 'false' } | url build-query
-  let resp = http post --content-type application/json $'($source.host)($snapShotUploadApi)?($query)' { rootOid: $rootOid }
+  let headers = [Cookie $auth.cookie Referer $auth.iamHost]
+  let query = { teamId: $source.teamId, teamCode: $source.teamCode, userId: $auth.user.id, verbose: 'false' } | url build-query
+  let resp = http post --content-type application/json --headers $headers $'($source.host)($snapShotUploadApi)?($query)' { rootOid: $rootOid }
   if not $resp.success {
     print $'Upload snapshot to OSS failed with error: ($resp.err)'
   }
@@ -413,10 +446,11 @@ def import-metadata [
   dest: record,         # Specify the meta dest config for the snapshot to import
   rootOid: string,      # Specify the root OID of the meta data to import
   metaUrl: string,      # Specify the meta data download url for importing
+  auth: record,         # A authentication record contains user and cookie info
   --modules(-m): list,  # Specify the modules to sync
 ] {
   const destImportApi = '/api/trantor/task/exec/SyncAllInOneTask'
-  let query = { teamId: $dest.teamId, teamCode: $dest.teamCode, userId: '1', verbose: 'false' } | url build-query
+  let query = { teamId: $dest.teamId, teamCode: $dest.teamCode, userId: $auth.user.id, verbose: 'false' } | url build-query
   mut importPayload = {
     rootOid: $rootOid,
     downloadUrl: $metaUrl,
@@ -426,7 +460,8 @@ def import-metadata [
     $importPayload.resetModuleKeys = $modules
     print $'Going to import modules: ($modules | str join ",")'
   }
-  let resp = http post --content-type application/json $'($dest.host)($destImportApi)?($query)' $importPayload
+  let headers = [Cookie $auth.cookie Referer $auth.iamHost]
+  let resp = http post --content-type application/json --headers $headers $'($dest.host)($destImportApi)?($query)' $importPayload
   if not $resp.success {
     print $'Import meta data failed with error: ($resp.err)'
   }
@@ -443,19 +478,60 @@ def get-detail-link [host: string, taskId: int] {
 def fetch-task-detail [
   taskId: int,          # Specify the task id of the detail to fetch
   queryHost: string,    # Specify the query url prefix of the detail to fetch
+  auth: record,         # A authentication record contains user and cookie info
 ] {
   const queryApi = '/api/trantor/task/run-detail'
   let DETAIL_URL = $'($queryHost)($queryApi)/($taskId)'
-  let resp = try { http get $DETAIL_URL } catch { http get -e $DETAIL_URL }
+  let headers = [Cookie $auth.cookie Referer $auth.iamHost]
+  let resp = try { http get --headers $headers $DETAIL_URL } catch { http get -e --headers $headers $DETAIL_URL }
   if not $resp.success {
     # 对于“服务器异常”，需要重试
     if $resp.err.code == 'O0003' {
       print $'(char nl)Fetch task detail failed with error: ($resp.err.msg), retrying...'
-      return (fetch-task-detail $taskId $queryHost)
+      return (fetch-task-detail $taskId $queryHost $auth)
     }
     print $'Fetch task detail failed with error: ($resp.err)'
   }
   $resp.data
+}
+
+# Get user authentication info by settings
+def get-user-auth [
+  settings: record,
+] {
+  # OpenSSL Check
+  if not (is-installed openssl) {
+    print $'(ansi r)Please install openssl@3 first by `brew install openssl@3` and try again...(ansi reset)'
+    exit $ECODE.MISSING_BINARY
+  }
+  let opensslVer = openssl version | detect columns -n | rename bin ver | get ver.0
+  if (is-lower-ver $opensslVer '3.0.0') {
+    print $'(ansi r)Openssl v3 or above is required, please install it by `brew install openssl@3` and try again...(ansi reset)'
+    exit $ECODE.MISSING_BINARY
+  }
+
+  cd $env.TERMIX_DIR
+  let IAM_HOST = $settings.iamHost
+  const PUB_KEY_FILE = 'tmp/pub.key'
+  let IAM_HEADER = [Referer $IAM_HOST]
+  let pubKey = http get --headers $IAM_HEADER $'($IAM_HOST)/iam/api/v1/user/common/front-end-config'
+      | get data.transmissionCryptoProps?.publicKey?
+
+  if not ('tmp/' | path exists) { mkdir tmp }
+  echo ['-----BEGIN PUBLIC KEY-----' $pubKey '-----END PUBLIC KEY-----'] | str join (char nl) | save -rf $PUB_KEY_FILE
+  let password = $settings.password | openssl pkeyutl -encrypt -pubin -inkey $PUB_KEY_FILE | openssl base64
+
+  let payload = { account: $settings.username, password: $password }
+
+  let resp = http post --headers $IAM_HEADER --full --content-type application/json -e $'($IAM_HOST)/iam/api/v1/user/login/account' $payload
+  if not $resp.body.success {
+    print $'Login failed with error: (ansi r)($resp.body.message)(ansi reset)'
+    print $'Please check your auth info at (ansi g)($IAM_HOST)/login(ansi reset)'
+    exit $ECODE.AUTH_FAILED
+  }
+  let user = $resp.body.data.user
+  let cookie = $resp.headers.response | where name == 'set-cookie' | get value.0 | split row ';' | get 0
+  { user: $user, iamHost: $IAM_HOST, cookie: $cookie }
 }
 
 alias main = meta sync

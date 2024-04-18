@@ -59,6 +59,7 @@ words:
 - iconfont
 - inexist
 - inexists
+- inkey
 - Justfile
 - keybind
 - Lastday
@@ -86,12 +87,15 @@ words:
 - oneline
 - OPENAPISESSION
 - ossutil
+- pkeyutl
 - pkgs
 - POSIX
 - psql
+- pubin
 - pwsh
 - Rebecca
 - redev
+- Referer
 - Rippedcasts
 - ristretto
 - Sarasa
