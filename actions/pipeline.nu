@@ -346,7 +346,7 @@ def stop-cicd [id: int, --host: string = $ERDA_HOST] {
 export def watch-cicd-status [id: int] {
   let stages = polling-stage-status $id
   let total = $stages | length
-  const UNFINISHED_STATUS = [Created, Analyzed, Queue, Running]
+  const UNFINISHED_STATUS = [Born, Created, Analyzed, Queue, Running]
   const FINISH_STATUS = [Success, Failed, StopByUser, NoNeedBySystem]
   print $'(char nl)Pipeline Running Detail:'; hr-line
 
