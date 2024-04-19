@@ -389,6 +389,7 @@ def handle-import-metadata [
 
   mut successCount = $stats.success
   while $stats.success + $stats.failed < $stats.total {
+    if $detail.status == 'Failed' { break }
     $detail = (fetch-task-detail $taskId $dest.host $auth)
     $stats = $detail.progress
     sleep $QUERY_INTERVAL
@@ -496,6 +497,10 @@ def fetch-task-detail [
       return (fetch-task-detail $taskId $queryHost $auth)
     }
     print $'Fetch task detail failed with error: ($resp.err)'
+  }
+  if $resp.data.status == 'Failed' {
+    print $'(char nl)Task running failed with error: '
+    print $resp.data.outputs
   }
   $resp.data
 }
