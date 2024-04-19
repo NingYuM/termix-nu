@@ -370,7 +370,7 @@ def handle-import-metadata [
   rootOid: string,      # Specify the root oid of the snapshot to import
   metaUrl: string,      # Specify the meta data download url for importing
   auth: record,         # A authentication record contains user and cookie info
-  --code: string,       # Specify the securitycode to import the meta data
+  --code: string,       # Specify the security code to import the meta data
   --modules(-m): list,  # Specify the modules to sync
 ] {
   let start = date now
@@ -421,7 +421,7 @@ def create-snapshot [
 ] {
   const snapShotApi = '/api/trantor/task/exec/RebuildObjectTask'
   let query = { teamId: $source.teamId, teamCode: $source.teamCode, userId: $auth.user.id, verbose: 'false' } | url build-query
-  let headers = [Cookie $auth.cookie Referer $auth.iamHost]
+  let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team-Code $source.teamCode]
   let resp = http post --content-type application/json --headers $headers $'($source.host)($snapShotApi)?($query)' {}
   if not $resp.success {
     print $'Failed to create snapshot, error: ($resp.err)'
@@ -436,7 +436,7 @@ def upload-snapshot [
   auth: record,         # A authentication record contains user and cookie info
 ] {
   const snapShotUploadApi = '/api/trantor/task/exec/UploadObjectToOSSTask'
-  let headers = [Cookie $auth.cookie Referer $auth.iamHost]
+  let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team-Code $source.teamCode]
   let query = { teamId: $source.teamId, teamCode: $source.teamCode, userId: $auth.user.id, verbose: 'false' } | url build-query
   let resp = http post --content-type application/json --headers $headers $'($source.host)($snapShotUploadApi)?($query)' { rootOid: $rootOid }
   if not $resp.success {
@@ -451,7 +451,7 @@ def import-metadata [
   rootOid: string,      # Specify the root OID of the meta data to import
   metaUrl: string,      # Specify the meta data download url for importing
   auth: record,         # A authentication record contains user and cookie info
-  --code: string,       # Specify the securitycode to import the meta data
+  --code: string,       # Specify the security code to import the meta data
   --modules(-m): list,  # Specify the modules to sync
 ] {
   const destImportApi = '/api/trantor/task/exec/SyncAllInOneTask'
@@ -465,7 +465,7 @@ def import-metadata [
     $importPayload.resetModuleKeys = $modules
     print $'Going to import modules: ($modules | str join ",")'
   }
-  let headers = [Cookie $auth.cookie Referer $auth.iamHost]
+  let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team-Code $dest.teamCode]
   let resp = http post --content-type application/json --headers $headers $'($dest.host)($destImportApi)?($query)' $importPayload
   if not $resp.success {
     print $'Import meta data failed with error: ($resp.err)'
