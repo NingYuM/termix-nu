@@ -23,6 +23,7 @@
 # [√] Add --snapshot(-S) flag to only create snapshot
 # [√] Add ansi links to task ID
 # [√] User authentication support
+# [√] Add security code parameter for meta data import
 # Usage:
 #   t msync --all
 #   t msync --all -S
@@ -57,8 +58,10 @@ export def 'meta sync' [
   let dest = $usedSetting.dest
   let source = $usedSetting.source
   let modules = if $all { [] } else { get-selected-modules --from $source --selected=$selected }
+  mut securityCode = ''
   if ($modules | is-empty) {
     print $'You have selected to sync (ansi p)ALL(ansi reset) the modules...'
+    $securityCode = (input $'(ansi g)Please input the security code to continue: (ansi reset)')
   } else {
     print $'You have selected the following modules to import: (ansi p)($modules | str join ",")(ansi reset)'
   }
@@ -74,7 +77,7 @@ export def 'meta sync' [
   print $'Snapshot uploaded successfully with download Url:'
   print $'(ansi p)($downloadUrl)(ansi reset)'
   let destAuth = get-user-auth $dest
-  handle-import-metadata $dest $snapshotOid $downloadUrl $destAuth --modules $modules
+  handle-import-metadata $dest $snapshotOid $downloadUrl $destAuth --modules $modules --code $securityCode
   let end = date now
   print $'Total time consumed: (ansi p)($end - $start)(ansi reset)'
 }
@@ -367,10 +370,11 @@ def handle-import-metadata [
   rootOid: string,      # Specify the root oid of the snapshot to import
   metaUrl: string,      # Specify the meta data download url for importing
   auth: record,         # A authentication record contains user and cookie info
+  --code: string,       # Specify the securitycode to import the meta data
   --modules(-m): list,  # Specify the modules to sync
 ] {
   let start = date now
-  let taskId = import-metadata $dest $rootOid $metaUrl $auth --modules $modules
+  let taskId = import-metadata $dest $rootOid $metaUrl $auth --modules $modules --code $code
   print -n (char nl)
   print $'(ansi pr) STEP 3/3: (ansi reset) Meta data importing task started, id: (ansi p)(get-detail-link $dest.host $taskId)(ansi reset)'
   mut detail = fetch-task-detail $taskId $dest.host $auth
@@ -447,10 +451,11 @@ def import-metadata [
   rootOid: string,      # Specify the root OID of the meta data to import
   metaUrl: string,      # Specify the meta data download url for importing
   auth: record,         # A authentication record contains user and cookie info
+  --code: string,       # Specify the securitycode to import the meta data
   --modules(-m): list,  # Specify the modules to sync
 ] {
   const destImportApi = '/api/trantor/task/exec/SyncAllInOneTask'
-  let query = { teamId: $dest.teamId, teamCode: $dest.teamCode, userId: $auth.user.id, verbose: 'false' } | url build-query
+  let query = { teamId: $dest.teamId, teamCode: $dest.teamCode, userId: $auth.user.id, verbose: 'false', securityCode: $code } | url build-query
   mut importPayload = {
     rootOid: $rootOid,
     downloadUrl: $metaUrl,
