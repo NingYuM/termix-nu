@@ -111,8 +111,6 @@ teamCode = 'TERP'
 # 用户名和密码此处如果配置了则会覆盖 meta.settings 中的配置，如果未配置则使用 meta.settings 中的配置
 username = 'your-username'
 password = 'your-password'
-# 同步源 IAM 地址，后面不要加 `/`, 用于获取用户登录信息
-iamHost = 'https://console-iam-dev.app.terminus.io'
 # 同步源 Console 地址，后面不要加 `/`
 host = 'https://abc-console-dev.app.terminus.io'
 # 预定义的待导入模块, 如果通过 --selected 参数调用命令则同步这些模块
@@ -139,8 +137,6 @@ ddlAutoUpdate = false
 # 用户名和密码此处如果配置了则会覆盖 meta.settings 中的配置，如果未配置则使用 meta.settings 中的配置
 username = 'your-username'
 password = 'your-password'
-# 同步目标 IAM 地址，后面不要加 `/`, 用于获取用户登录信息
-iamHost = 'https://console-iam-test.app.terminus.io'
 # 同步目标 Console 地址，后面不要加 `/`
 host = 'https://abc-console-test.app.terminus.io'
 # 此描述信息会在使用 --list Flag 时展示

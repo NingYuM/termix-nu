@@ -215,7 +215,7 @@ def check-required [name: string] {
   let metaConf = $env.META_CONF
   for provider in ($metaConf | get $name | columns) {
     let keys = $metaConf | get $name | get $provider | columns
-    [teamId teamCode host iamHost] | each {|it| if $it not-in $keys {
+    [teamId teamCode host] | each {|it| if $it not-in $keys {
       print $'The ($name) (ansi p)($provider)(ansi reset) must have (ansi p)($it)(ansi reset) config.'
       exit $ECODE.INVALID_PARAMETER
     }}
@@ -422,7 +422,7 @@ def create-snapshot [
 ] {
   const snapShotApi = '/api/trantor/task/exec/RebuildObjectTask'
   let query = { teamId: $source.teamId, teamCode: $source.teamCode, userId: $auth.user.id, verbose: 'false' } | url build-query
-  let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team-Code $source.teamCode]
+  let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team $source.teamCode]
   let resp = http post --content-type application/json --headers $headers $'($source.host)($snapShotApi)?($query)' {}
   if not $resp.success {
     print $'Failed to create snapshot, error: ($resp.err)'
@@ -437,7 +437,7 @@ def upload-snapshot [
   auth: record,         # A authentication record contains user and cookie info
 ] {
   const snapShotUploadApi = '/api/trantor/task/exec/UploadObjectToOSSTask'
-  let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team-Code $source.teamCode]
+  let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team $source.teamCode]
   let query = { teamId: $source.teamId, teamCode: $source.teamCode, userId: $auth.user.id, verbose: 'false' } | url build-query
   let resp = http post --content-type application/json --headers $headers $'($source.host)($snapShotUploadApi)?($query)' { rootOid: $rootOid }
   if not $resp.success {
@@ -466,7 +466,7 @@ def import-metadata [
     $importPayload.resetModuleKeys = $modules
     print $'Going to import modules: ($modules | str join ",")'
   }
-  let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team-Code $dest.teamCode]
+  let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team $dest.teamCode]
   let resp = http post --content-type application/json --headers $headers $'($dest.host)($destImportApi)?($query)' $importPayload
   if not $resp.success {
     print $'Import meta data failed with error: ($resp.err)'
@@ -509,6 +509,11 @@ def fetch-task-detail [
 def get-user-auth [
   settings: record,
 ] {
+  let platformApi = $'($settings.host)/api/trantor/platform'
+  let platform = try { http get -e $platformApi } catch { http get -e $platformApi }
+  if $platform.status? in [401 404] {
+    return { user: { id: 1 }, iamHost: '', cookie: '' }
+  }
   # OpenSSL Check
   if not (is-installed openssl) {
     print $'(ansi r)Please install openssl@3 first by `brew install openssl@3` and try again...(ansi reset)'
@@ -521,7 +526,7 @@ def get-user-auth [
   }
 
   cd $env.TERMIX_DIR
-  let IAM_HOST = $settings.iamHost
+  let IAM_HOST = $platform.iamDomain?
   const PUB_KEY_FILE = 'tmp/pub.key'
   let IAM_HEADER = [Referer $IAM_HOST]
   let pubKey = http get --headers $IAM_HEADER $'($IAM_HOST)/iam/api/v1/user/common/front-end-config'
