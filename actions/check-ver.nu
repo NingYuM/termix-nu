@@ -34,28 +34,26 @@ export def just-ver [] {
 export def termix-ver [] {
   let tmpPath = get-tmp-path
   let currentVer = get-conf version
-  let confName = ([$tmpPath '.termix-conf'] | path join)
-  let checkDate = (date now | format date $_DATE_FMT)
+  let confName = [$tmpPath '.termix-conf'] | path join
+  let checkDate = date now | format date $_DATE_FMT
   if ($confName | path exists) {
-    let conf = (open -r $confName)
-    let latestVer = ($conf | query json 'latestVer')
-    if ($conf | query json 'checkDate') == $checkDate {
+    let conf = open -r $confName | from json
+    let latestVer = $conf.latestVer?
+    if $conf.checkDate? == $checkDate {
       upgrade-tip termix-nu $latestVer $currentVer
     } else {
       upgrade-tip termix-nu (query-ver $confName) $currentVer
     }
 
     # Parse conf as JSON and check forceUpgrade column
-    let hasForceUpgrade = ($conf | query json forceUpgrade) != null
-    let forceUpgrade = (if $hasForceUpgrade { ($conf | query json 'forceUpgrade') and (is-lower-ver $currentVer $latestVer)} else { false })
+    let hasForceUpgrade = $conf.forceUpgrade? != null
+    let forceUpgrade = (if $hasForceUpgrade { $conf.forceUpgrade? and (is-lower-ver $currentVer $latestVer) } else { false })
     # Quit command right now if it's a force upgrade
-    if ($forceUpgrade) {
-      print $'(ansi r)很抱歉，为了更好地为您提供服务请先更新 termix-nu 并重试...(ansi reset)(char nl)(char nl)'
+    if $forceUpgrade {
+      print $'(ansi r)很抱歉，为了更好地为您提供服务请先执行 `just upgrade -a` 更新 termix-nu 并重试...(ansi reset)(char nl)(char nl)'
       (query-ver $confName | ignore); exit $ECODE.OUTDATED    # Query and update latest version again.
     }
-    if (not $hasForceUpgrade) {
-      query-ver $confName | ignore
-    }
+    if not $hasForceUpgrade { query-ver $confName | ignore }
   } else {
     upgrade-tip termix-nu (query-ver $confName) $currentVer
   }
@@ -63,17 +61,17 @@ export def termix-ver [] {
 
 # Query and save termix-nu version to conf file everyday
 def query-ver [
-  conf: string,
+  conf: string,   # Termix-nu conf file path
 ] {
   # Update latest commits from remote to local, tags included
-  cd $env.TERMIX_DIR; git fetch origin -p; git fetch origin --tags
-  let checkDate = (date now | format date $_DATE_FMT)
-  # Get latest release tag name
-  let latestVer = (git tag -l --sort=-v:refname | lines | select 0).0
-  # Check whether the latest release tag is a force upgrade
-  let msg = (git show --oneline --no-patch $latestVer)
-  let forceUpgrade = ($msg | str contains $_UPGRADE_TAG)
-  let config = { 'latestVer': $latestVer, 'checkDate': $checkDate, 'forceUpgrade': $forceUpgrade }
+  cd $env.TERMIX_DIR; git fetch origin -p; git fetch origin --tags --force
+  let checkDate = date now | format date $_DATE_FMT
+  let currentVer = get-conf version
+  let versions = git tag -l --sort=-v:refname | lines
+  let latestVer = $versions.0
+  let newVersions = $versions | filter {|it| is-lower-ver $currentVer $it }
+  let forceUpgrade = $newVersions | any {|it| git show --oneline --no-patch $it | str contains $_UPGRADE_TAG }
+  let config = { latestVer: $latestVer, checkDate: $checkDate, forceUpgrade: $forceUpgrade }
   if ($conf | path exists) {
     open $conf | from json | merge $config | to json | save -f $conf
   } else {
@@ -84,12 +82,12 @@ def query-ver [
 
 # Compare min version with current version and show upgrading tips if required
 def upgrade-tip [
-  cmd: string,
-  min: string,
-  current: string,
+  cmd: string,       # Command or binary name
+  min: string,       # Minimum required version read from termix.toml
+  current: string,   # Current version of the command or binary
 ] {
   if (is-lower-ver $current $min) {
-    if ($cmd == 'termix-nu') {
+    if $cmd == 'termix-nu' {
       print $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
       print $'        -----> Your ($cmd) is (ansi r)OUTDATED(ansi reset), latest ver: (ansi p)($min)(ansi reset) <----- (char nl)'
       print $'         Please run (ansi g)`just upgrade`(ansi reset) to upgrade to the latest version.(char nl)'
