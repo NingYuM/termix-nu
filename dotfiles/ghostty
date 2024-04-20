@@ -15,7 +15,7 @@ title = Ghostty!
 # Rippedcasts, Snazzy, Synthwave-Everything, Tinacious Design (Dark), TokyoNight, Wez
 # Tomorrow Night Blue, Tomorrow Night Eighties, UltraDark, Wombat, Whimsy, WildCherry
 theme = Desert
-background-opacity = 1
+background-opacity = 0.9
 background-blur-radius = 30
 unfocused-split-opacity = 0.95
 
@@ -35,6 +35,7 @@ font-family = Source Code Pro
 font-family = Cascadia Code
 font-family = JetBrains Mono
 font-thicken = false
+window-title-font-family = Fira Code
 grapheme-width-method = unicode
 
 # window-decoration = false
