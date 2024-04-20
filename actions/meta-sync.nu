@@ -226,8 +226,8 @@ def check-required [name: string] {
 def check-user-auth [settings: record] {
   let authEmpty = [username password] | any {|it| $settings | get -i $it | is-empty }
   if $authEmpty {
-    print $'(ansi r)Please config your username and password for:(ansi reset)'
-    $settings | print
+    print $'(ansi r)Please config your username and password for the following setting:(ansi reset)'
+    $settings | table -e | print
     exit $ECODE.INVALID_PARAMETER
   }
 }
@@ -423,9 +423,15 @@ def create-snapshot [
   const snapShotApi = '/api/trantor/task/exec/RebuildObjectTask'
   let query = { teamId: $source.teamId, teamCode: $source.teamCode, userId: $auth.user.id, verbose: 'false' } | url build-query
   let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team $source.teamCode]
-  let resp = http post --content-type application/json --headers $headers $'($source.host)($snapShotApi)?($query)' {}
-  if not $resp.success {
+  let resp = http post --content-type application/json --headers $headers -e $'($source.host)($snapShotApi)?($query)' {}
+  if $resp.status? == 401 {
+    print $'Create snapshot failed with error: (ansi r)($resp.error)(ansi reset)'
+    print $'Make sure you have set the username and password correctly and try again...'
+    exit $ECODE.AUTH_FAILED
+  }
+  if ($resp.success? | is-empty) or (not $resp.success?) {
     print $'Failed to create snapshot, error: ($resp.err)'
+    exit $ECODE.SERVER_ERROR
   }
   $resp.data.taskId
 }
