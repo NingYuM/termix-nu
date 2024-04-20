@@ -85,7 +85,10 @@ return {
   initial_rows = 25,
   initial_cols = 100,
   font_size = is_mac and 20 or 15,
-  window_background_opacity = 1,
+  macos_window_background_blur = 80,
+  window_background_opacity = 0.90,
+  -- Mica, Tabbed, or Acrylic
+  win32_system_backdrop = 'Acrylic',
   native_macos_fullscreen_mode = false,
   window_decorations = is_mac and "RESIZE" or "INTEGRATED_BUTTONS|RESIZE",
 
