@@ -1185,8 +1185,9 @@ alias main = dingtalk notify
 
 **命令格式**: `terp-assets {flags} <action> <modules>`
 
-其中 `action` 目前只支持两种 `download` & `transfer`:
+其中 `action` 目前只支持三种 `detect`, `download` & `transfer`:
 
+- 资源摘要查看：`terp-assets detect --from <from>`
 - 资源下载：`terp-assets download <modules> --from <from> --to <to>`
 - 资源同步：`terp-assets transfer <modules> --from <from> --to <to> --dest-store <store>`，资源同步时会先下载然后再上传，实际同步操作的时候不需要单独执行下载操作。资源上传需要在本机安装 `@terminus/t-package-tools`, 执行 `npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io` 即可(Node.js 建议 v18 或者以上版本)，版本不低于 `0.3.0-beta.1`;
 
@@ -1225,6 +1226,8 @@ minio.OSS_ENDPOINT = 'https://oss-cn-hangzhou.aliyuncs.com'
 # 从 OSS 上 dev 目录（即 https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/fe-resources/dev/latest.json）
 # 下载所有 TERP 依赖的静态资源到本地，注：实际资源同步的过程中是不需要单独执行该命令的，只需要执行后面的两条命令之一即可
 t ta download all -f dev
+# 查看 terp-dev 这个资源挂载点上的静态资源摘要信息
+t ta detect -f terp-dev
 # 当你从测试环境打制品部署预发环境时可以通过以下命令将测试环境的所有
 # TERP 需要的静态资源下载下来然后上传到 `minio` 的 staging 目录
 t ta transfer all --from test --to staging --dest-store minio -v
