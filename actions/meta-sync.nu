@@ -462,9 +462,10 @@ def import-metadata [
   --modules(-m): list,  # Specify the modules to sync
 ] {
   const destImportApi = '/api/trantor/task/exec/SyncAllInOneTask'
-  let query = { teamId: $dest.teamId, teamCode: $dest.teamCode, userId: $auth.user.id, verbose: 'false', securityCode: $code } | url build-query
+  let query = { teamId: $dest.teamId, teamCode: $dest.teamCode, userId: $auth.user.id, verbose: 'false' } | url build-query
   mut importPayload = {
     rootOid: $rootOid,
+    securityCode: $code,
     downloadUrl: $metaUrl,
     ddlAutoUpdate: ($dest | get -i ddlAutoUpdate | default true),
   }
