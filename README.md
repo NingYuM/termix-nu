@@ -1255,8 +1255,10 @@ t ta transfer all --from http://minio.terp.terminus.com/terminus-trantor/fe-reso
 
 - 一站式同步：所有操作都可以在 CLI 里完成，不用切换到其他工具;
 - 配置检查：在开始同步前会对配置文件和入参进行检查，确保没问题后才会执行(可能还有些分支场景未考虑周全，有问题及时反馈)；
+- 支持自动登录(从 0330 版本开始要求登录后才能使用)，需要在配置文件里面配置好 Console 应用的用户名和密码 (此功能需要本机安装 `openSSL` 3.0.0 以上版本, 一般系统内置)；
 - 操作简单：在配置得当的情况下只需一条命令即可，比如 `t msync -a`;
 - 支持同步所有模块或者选择指定模块同步(指定模块同步功能以后可能会被废弃，详询元数据团队);
+- 同步所有模块时根据需要支持输入**安全码**(0330 版本后新特性), 同步指定模块时无需输入安全码；
 - 所有需要确认或者选择的操作前置，如此以来就可以提前把各种准备工作做好，剩下的只需要喝喝茶等待工具执行完成就可以了；
 - 同步任务本身仍然是 `Trantor` 的 **API** 完成的，本工具只是对这些接口进行 `TUI` 封装，结果跟原始的手工操作是一致的；
 - 对于所有的异步任务工具会定时轮询(目前每秒一次)并更新状态和进度（然而并不是真实的百分比进度，本质上是一个以进度条形式显示的计时器，告诉你程序还没挂掉）;
@@ -1284,6 +1286,11 @@ t ta transfer all --from http://minio.terp.terminus.com/terminus-trantor/fe-reso
 为了简化命令执行，在使用本工具之前需要先修改配置文件，配置文件路径: `termix-nu/.termixrc`, 该文件为 `toml` 格式，有一个 `.termixrc-example` 文件可以作为参考，接下来详细解释具体配置：
 
 ```toml
+# 通用配置，可以被源和目标中的同名配置覆盖
+[meta.settings]
+username = 'your-username'
+password = 'your-password'
+
 # Meta data syncing source config
 # 此处将定义一个名为 dev 的同步源，可以作为后续 --from 参数的入参，你可以定义多个同步源，名字自定
 [meta.source.dev]
@@ -1293,6 +1300,9 @@ default = true
 teamId = 666
 # 同步源 Team Code
 teamCode = 'TERP'
+# 用户名和密码此处如果配置了则会覆盖 meta.settings 中的配置，如果未配置则使用 meta.settings 中的配置
+username = 'your-username'
+password = 'your-password'
 # 同步源 Console 地址，后面不要加 `/`
 host = 'https://abc-console-dev.app.terminus.io'
 # 预定义的待导入模块, 如果通过 --selected 参数调用命令则同步这些模块
@@ -1316,6 +1326,9 @@ teamId = 666
 teamCode = 'TERP'
 # 导入元数据时的 ddlAutoUpdate 配置值, 默认为 true
 ddlAutoUpdate = false
+# 用户名和密码此处如果配置了则会覆盖 meta.settings 中的配置，如果未配置则使用 meta.settings 中的配置
+username = 'your-username'
+password = 'your-password'
 # 同步目标 Console 地址，后面不要加 `/`
 host = 'https://abc-console-test.app.terminus.io'
 # 此描述信息会在使用 --list Flag 时展示
