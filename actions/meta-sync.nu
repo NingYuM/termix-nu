@@ -496,6 +496,10 @@ def fetch-task-detail [
   let DETAIL_URL = $'($queryHost)($queryApi)/($taskId)'
   let headers = [Cookie $auth.cookie Referer $auth.iamHost]
   let resp = try { http get --headers $headers $DETAIL_URL } catch { http get -e --headers $headers $DETAIL_URL }
+  if ($resp | describe) == 'string' {
+    print $'Task query failed with message: (ansi r)($resp)(ansi reset)'
+    exit $ECODE.SERVER_ERROR
+  }
   if not $resp.success {
     # 对于“服务器异常”，需要重试
     if $resp.err.code == 'O0003' {
@@ -517,6 +521,10 @@ def get-user-auth [
 ] {
   let platformApi = $'($settings.host)/api/trantor/platform'
   let platform = try { http get -e $platformApi } catch { http get -e $platformApi }
+  if ($platform | describe) == 'string' {
+    print $'Get user auth failed with message: (ansi r)($platform)(ansi reset)'
+    exit $ECODE.SERVER_ERROR
+  }
   if $platform.status? in [401 404] {
     return { user: { id: 1 }, iamHost: '', cookie: '' }
   }
