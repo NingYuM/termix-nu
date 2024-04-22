@@ -1,6 +1,30 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.75.0 - 2024-04-22
+
+**Bug Fixes**
+
+- Fix dest url output of `latest.json` for `t ta transfer` command
+- Fix Erda pipeline query, add `Born` status check
+- Add task execution status check for `t msync` command
+- Add authentication failed tip for `t msync` command
+- Fix upgrading check, set force upgrade if any of the newer version has the force upgrade tag
+- Fix backend server error check for `t msync` command
+
+**Documentation**
+
+- Update doc for `t ta detect` command
+- Update doc for `t msync` command
+
+**Features**
+
+- Add `t ta detect` command to display the overview of the front-end modules
+- Add user authenticate support for `t msync` command
+- Add security code parameter for meta data importing
+- Add `Trantor2-Team` header for `t msync` command
+- Query and set iam host automatically for `t msync` command
+
 ## v1.73.1 - 2024-04-15
 
 **Features**
