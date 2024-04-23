@@ -280,7 +280,9 @@ def transfer [
 def update-transfer-meta [latestMeta: record] {
   let syncBy = $env.DICE_OPERATOR_NAME? | default (git config --get user.name) | encode base64
   let syncAt = (date now | format date $_TIME_FMT)
-  let syncMeta = { syncBy: $syncBy, syncFrom: $latestMeta.from, syncAt: $syncAt }
+  let syncFrom = if ($latestMeta.from =~ 'latest.json') {
+    $latestMeta.from | split row '/' | last 2 | first } else { $latestMeta.from }
+  let syncMeta = { syncBy: $syncBy, syncFrom: $syncFrom, syncAt: $syncAt }
   mut ns = open namespace.json | upsert metadata {|it| $it.metadata? | default {} | merge $syncMeta }
   # Keep module deprecated status
   if ((($latestMeta.latest | get $ns.namespace).deprecated? | into string) == 'true') { $ns.deprecated = true }
