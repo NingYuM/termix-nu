@@ -541,10 +541,11 @@ def get-user-auth [
   }
 
   cd $env.TERMIX_DIR
-  let IAM_HOST = $platform.iamDomain?
+  mut iamHost = $platform.iamDomain?
+  if not ($iamHost | str starts-with http) { $iamHost = $'https://($iamHost)' }
   const PUB_KEY_FILE = 'tmp/pub.key'
-  let IAM_HEADER = [Referer $IAM_HOST]
-  let pubKey = http get --headers $IAM_HEADER $'($IAM_HOST)/iam/api/v1/user/common/front-end-config'
+  let IAM_HEADER = [Referer $iamHost]
+  let pubKey = http get --headers $IAM_HEADER $'($iamHost)/iam/api/v1/user/common/front-end-config'
       | get data.transmissionCryptoProps?.publicKey?
 
   if not ('tmp/' | path exists) { mkdir tmp }
@@ -553,15 +554,15 @@ def get-user-auth [
 
   let payload = { account: $settings.username, password: $password }
 
-  let resp = http post --headers $IAM_HEADER --full --content-type application/json -e $'($IAM_HOST)/iam/api/v1/user/login/account' $payload
+  let resp = http post --headers $IAM_HEADER --full --content-type application/json -e $'($iamHost)/iam/api/v1/user/login/account' $payload
   if not $resp.body.success {
     print $'Login failed with error: (ansi r)($resp.body.message)(ansi reset)'
-    print $'Please check your auth info at (ansi g)($IAM_HOST)/login(ansi reset)'
+    print $'Please check your auth info at (ansi g)($iamHost)/login(ansi reset)'
     exit $ECODE.AUTH_FAILED
   }
   let user = $resp.body.data.user
   let cookie = $resp.headers.response | where name == 'set-cookie' | get value.0 | split row ';' | get 0
-  { user: $user, iamHost: $IAM_HOST, cookie: $cookie }
+  { user: $user, iamHost: $iamHost, cookie: $cookie }
 }
 
 alias main = meta sync
