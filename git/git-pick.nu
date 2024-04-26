@@ -1,6 +1,12 @@
 #!/usr/bin/env nu
 # Author: hustcer
 # Created: 2024/04/26 11:58:58
+# TODO:
+#   [√] Pick the commits with no conflicts automatically
+#   [√] List the matched commits only without actually picking them
+#   [√] List the commits that failed to be picked
+#   [√] Pick commits and keep the order
+#   [√] Pick commits and keep the timestamp unchanged
 # Usage:
 #   t git-pick COMMIT-SHA
 #   t git-pick 0330 -f release/2.5.24.0330
@@ -67,9 +73,9 @@ def get-valid-options [
   mut matches = if ($match | str stats | get chars) >= $MIN_SHA_WIDTH { $match | split row ',' | filter { has-ref $in } } else { [] }
   # If no matches found, try to match the keyword in commit messages.
   if ($matches | is-empty) {
-    let sourceMatches = git log $from --oneline --grep $match --format='%H---%s' | lines | split column '---' | rename sha msg
+    let sourceMatches = git log $from --oneline --grep $match --format='%H---%s---%ci' | lines | split column '---' | rename sha msg date
     let targetMatches = git log $to --oneline --grep $match --format='%H---%s' | lines | split column '---' | rename sha msg
-    $matches = ($sourceMatches | filter {|it| $it.msg not-in $targetMatches.msg } | get sha)
+    $matches = ($sourceMatches | filter {|it| $it.msg not-in $targetMatches.msg } | sort-by date | get sha)
   }
   { from: $from, to: $to, matches: $matches }
 }
