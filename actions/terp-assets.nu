@@ -257,23 +257,29 @@ def transfer [
     cd $'($tmp)/assets-($mount)-($e)'
     # Update namespace.json add transfer info
     update-transfer-meta $latestMeta
-    if ($type | str trim | str downcase) == 'minio' {
-      package-tools s3 -c $ak $sk $bucket $endpoint $region -d . -m $to -s path
-    } else {
-      package-tools s3 -c $ak $sk $bucket $endpoint $region -d . -m $to
+    for t in ($to | split row ',') {
+      print $'Uploading (ansi p)($e)@($mount) to (ansi p)($t)(ansi reset)...'
+      if ($type | str trim | str downcase) == 'minio' {
+        package-tools s3 -c $ak $sk $bucket $endpoint $region -d . -m $t -s path
+      } else {
+        package-tools s3 -c $ak $sk $bucket $endpoint $region -d . -m $t
+      }
     }
-    print $'Assets for (ansi p)($e)(ansi reset) transferred successfully!'
+    print $'Assets (ansi p)($e)(ansi reset) have been transferred successfully!'
   }
 
   let endTime = date now
   print "All transfer finished! \n"
   print $"(ansi g)Total Time Cost: ($endTime - $startTime)(ansi reset)\n"
 
-  let destUrl = match $type {
-    'minio' => $'($endpoint)/($bucket)/fe-resources/($to)/latest.json',
-    'aliyun' => $'https://($bucket).($region).aliyuncs.com/fe-resources/($to)/latest.json',
+  print $"You can visit the latest.json from: \n"
+  for t in ($to | split row ',') {
+    let destUrl = match $type {
+      'minio' => $'($endpoint)/($bucket)/fe-resources/($t)/latest.json',
+      'aliyun' => $'https://($bucket).($region).aliyuncs.com/fe-resources/($t)/latest.json',
+    }
+    print $"(ansi g)($destUrl)(ansi reset)"
   }
-  print $"You can visit the latest.json from: (ansi g)($destUrl)(ansi reset)\n"
 }
 
 # Add transfer metadata to namespace.json and latest.json
