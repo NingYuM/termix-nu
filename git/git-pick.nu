@@ -4,7 +4,7 @@
 # TODO:
 #   [√] Pick the commits with no conflicts automatically
 #   [√] List the matched commits only without actually picking them
-#   [√] List the commits that failed to be picked
+#   [√] List the commits that failed to be picked along with the failed reason
 #   [√] Pick commits and keep the order
 #   [√] Pick commits and keep the timestamp unchanged
 # Usage:
@@ -22,18 +22,23 @@ export def 'git pick' [
   --to(-t): string,     # The target branch to pick to
 ] {
   let options = get-valid-options $match --from $from --to $to
-  if $list_only { get-commits $options.matches | print; exit $ECODE.SUCCESS }
+  if $list_only { get-commits $options.matches | reject error | print; exit $ECODE.SUCCESS }
 
   git checkout $options.to
   mut failedPick = []
   for c in $options.matches {
     # Get raw date with timezone from commit
-    let rawDate = git show -s --format='%ct' $c
+    let rawDate = git show -s --format='%ct' $c.sha
     load-env { GIT_AUTHOR_DATE: $rawDate, GIT_COMMITTER_DATE: $rawDate }
-    let cherryPick = do -i { git cherry-pick --allow-empty $c | complete }
+    let cherryPick = do -i { git cherry-pick $c.sha | complete }
     if ($cherryPick.exit_code | into int) != 0 {
       git cherry-pick --abort
-      $failedPick = ($failedPick | append $c)
+      let error = if ($cherryPick.stderr =~ '--allow-empty') {
+          'EMPTY_COMMIT'
+        } else if ($cherryPick.stderr =~ 'conflict') {
+          'HAS_CONFLICT'
+        } else { 'UNKNOWN_ERROR' }
+      $failedPick = ($failedPick | append { sha: $c.sha, error: $error })
     }
   }
 
@@ -45,9 +50,8 @@ export def 'git pick' [
 # Get the commits information from a list of commit SHAs.
 def get-commits [commits: list] {
   $commits
-    | wrap sha
     | upsert commit {|it| git show $it.sha -s --format='%h---%s---%an---%ci' | split column '---' | rename sha msg author commitAt | first }
-    | select commit
+    | select -i commit error
     | flatten
 }
 
@@ -75,7 +79,7 @@ def get-valid-options [
   if ($matches | is-empty) {
     let sourceMatches = git log $from --oneline --grep $match --format='%H---%s---%ci' | lines | split column '---' | rename sha msg date
     let targetMatches = git log $to --oneline --grep $match --format='%H---%s' | lines | split column '---' | rename sha msg
-    $matches = ($sourceMatches | filter {|it| $it.msg not-in $targetMatches.msg } | sort-by date | get sha)
+    $matches = ($sourceMatches | filter {|it| $it.msg not-in $targetMatches.msg } | sort-by date | select sha)
   }
   { from: $from, to: $to, matches: $matches }
 }
