@@ -163,6 +163,13 @@ git-desc *OPTIONS: _setup
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; \
     branch-desc {{OPTIONS}}
 
+# Pick matched commits from one branch to another branch.
+git-pick *OPTIONS: _setup
+  @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
+    overlay use {{ join(_termix, 'git', 'git-pick.nu') }}; \
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; \
+    git pick {{OPTIONS}}
+
 # Check whether all remote branches have descriptions or whether synced branches exist in the remote repo
 check-branch: _setup
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
