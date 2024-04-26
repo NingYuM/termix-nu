@@ -323,5 +323,5 @@ _register_plugins:
   #!/usr/bin/env nu
   let gstatExists = not (scope commands | where name == 'gstat' | is-empty)
   let queryExists = not (scope commands | where name == 'query json' | is-empty)
-  if not $queryExists { register {{ join(NU_DIR, _query_plugin) }} }
-  if not $gstatExists { register {{ join(NU_DIR, _gstat_plugin) }} }
+  if not $queryExists { plugin add {{ join(NU_DIR, _query_plugin) }} }
+  if not $gstatExists { plugin add {{ join(NU_DIR, _gstat_plugin) }} }

@@ -172,11 +172,6 @@ def nun [] {
     | select name tag_name id created_at
 }
 
-# Pipe stdout + stderr
-# You can do `run cargo run --quiet` and everything will pass through correctly.
-# For that you're giving up the ability to control the flags to run-external
-def --wrapped run [cmd ...args] { run-external --redirect-combine $cmd $args }
-
 # 在本地构建并安装所有 Nushell 二进制文件
 def install-all-nu [
   --plugin-only,  # Install plugins only
