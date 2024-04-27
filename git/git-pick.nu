@@ -74,7 +74,7 @@ def get-valid-options [
     exit $ECODE.INVALID_PARAMETER
   }
   # 只有输入的字符串长度大于 7 的时候才会尝试判断是不是 commit SHA
-  mut matches = if ($match | str stats | get chars) >= $MIN_SHA_WIDTH { $match | split row ',' | filter { has-ref $in } } else { [] }
+  mut matches = if ($match | str stats | get chars) >= $MIN_SHA_WIDTH { $match | split row ',' | filter { has-ref $in } | wrap sha } else { [] }
   # If no matches found, try to match the keyword in commit messages.
   if ($matches | is-empty) {
     let sourceMatches = git log $from --oneline --grep $match --format='%H---%s---%ci' | lines | split column '---' | rename sha msg date
