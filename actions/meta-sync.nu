@@ -68,17 +68,17 @@ export def 'meta sync' [
     print $'You have selected the following modules to import: (ansi p)($modules | str join ",")(ansi reset)'
   }
   print -n (char nl)
-  confirm-check --from $source --to $dest
+  let destAuth = get-user-auth $dest
+  let sourceAuth = get-user-auth $source
+  confirm-check --from $source --to $dest --src-auth $sourceAuth --dest-auth $destAuth
 
   let start = date now
-  let sourceAuth = get-user-auth $source
   let snapshotOid = handle-create-snapshot $source $sourceAuth
   hr-line
   print $'Snapshot created successfully with RootOID: (ansi p)($snapshotOid)(ansi reset)'
   let downloadUrl = handle-upload-snapshot $source $snapshotOid $sourceAuth
   print $'Snapshot uploaded successfully with download Url:'
   print $'(ansi p)($downloadUrl)(ansi reset)'
-  let destAuth = get-user-auth $dest
   handle-import-metadata $dest $snapshotOid $downloadUrl $destAuth --modules $modules --code $securityCode
   let end = date now
   print $'Total time consumed: (ansi p)($end - $start)(ansi reset)'
@@ -256,16 +256,18 @@ def provider-check [type, value, --from: string, --to: string] {
 def confirm-check [
   --from(-f): record,   # Specify the meta data source config
   --to(-t): record,     # Specify the meta data destination config
+  --src-auth: record,   # A authentication record for the source
+  --dest-auth: record,  # A authentication record for the destination
 ] {
   print $'Attention:'; hr-line
   print $'You are going to sync meta data with the following config: (char nl)'
   let ddlAutoUpdate = $to.ddlAutoUpdate? | default true
   let resetModuleForInstall = $to.resetModuleForInstall? | default false
   let setting = [
-    [Type Host TeamID TeamCode ddlAutoUpdate resetModuleForInstall];
-    [FROM ($from.host | trim-host) $'($from.teamId)' $from.teamCode '-' '-']
-    ['' '↓' '↓' '↓' '' '']
-    [TO ($to.host | trim-host) $'($to.teamId)' $to.teamCode $ddlAutoUpdate $resetModuleForInstall]]
+    [Type Host TeamID TeamCode ddlAutoUpdate resetModuleForInstall version];
+    [FROM ($from.host | trim-host) $'($from.teamId)' $from.teamCode '-' '-' ($src_auth.version? | default '-')]
+    ['' '↓' '↓' '↓' '' '' '↓']
+    [TO ($to.host | trim-host) $'($to.teamId)' $to.teamCode $ddlAutoUpdate $resetModuleForInstall ($dest_auth.version? | default '-')]]
   # Theme: ascii_rounded,basic_compact,dots,psql,reinforced
   print ($setting | table -e --theme psql -i false)
   print $'Are you sure to continue?'
@@ -567,7 +569,7 @@ def get-user-auth [
   }
   let user = $resp.body.data.user
   let cookie = $resp.headers.response | where name == 'set-cookie' | get value.0 | split row ';' | get 0
-  { user: $user, iamHost: $iamHost, cookie: $cookie }
+  { user: $user, iamHost: $iamHost, version: $platform.version?.number?, cookie: $cookie }
 }
 
 alias main = meta sync
