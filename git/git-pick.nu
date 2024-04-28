@@ -7,6 +7,7 @@
 #   [√] List the commits that failed to be picked along with the failed reason
 #   [√] Pick commits and keep the order
 #   [√] Pick commits and keep the timestamp unchanged
+#   [ ] Handle the same commit message in the same branch cases
 # Usage:
 #   t git-pick COMMIT-SHA
 #   t git-pick 0330 -f release/2.5.24.0330
@@ -22,9 +23,14 @@ export def 'git pick' [
   --to(-t): string,     # The target branch to pick to
 ] {
   let options = get-valid-options $match --from $from --to $to
-  if $list_only { get-commits $options.matches | reject error | print; exit $ECODE.SUCCESS }
+  if $list_only and ($options.matches | length) > 0 {
+    print $'(char nl)The following commits from (ansi g)($options.from)(ansi reset) need to be picked to (ansi g)($options.to)(ansi reset):'
+    hr-line
+    get-commits $options.matches | reject error | print; exit $ECODE.SUCCESS
+  }
 
-  git checkout $options.to
+  git checkout $options.to --quiet
+  mut pickedCount = 0
   mut failedPick = []
   for c in $options.matches {
     # Get raw date with timezone from commit
@@ -39,9 +45,14 @@ export def 'git pick' [
           'HAS_CONFLICT'
         } else { 'UNKNOWN_ERROR' }
       $failedPick = ($failedPick | append { sha: $c.sha, error: $error })
+      continue
     }
+    $pickedCount += 1
   }
 
+  if $pickedCount > 0 {
+    print $'(char nl)Succssfully picked (ansi g)($pickedCount)(ansi reset) commits from (ansi g)($options.from)(ansi reset) to (ansi g)($options.to)(ansi reset).'
+  }
   if ($failedPick | is-empty) { return }
   print $'(char nl)Failed to pick the following commits from (ansi g)($options.from)(ansi reset) to (ansi g)($options.to)(ansi reset):'; hr-line
   get-commits $failedPick | print
