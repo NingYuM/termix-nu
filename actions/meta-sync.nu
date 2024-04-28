@@ -24,6 +24,8 @@
 # [√] Add ansi links to task ID
 # [√] User authentication support
 # [√] Add security code parameter for meta data import
+# REF:
+#   https://aliyuque.antfin.com/trantor/eewi6i/zia318wmury96hqo#TRlGB
 # Usage:
 #   t msync --all
 #   t msync --all -S
@@ -257,11 +259,13 @@ def confirm-check [
 ] {
   print $'Attention:'; hr-line
   print $'You are going to sync meta data with the following config: (char nl)'
+  let ddlAutoUpdate = $to.ddlAutoUpdate? | default true
+  let resetModuleForInstall = $to.resetModuleForInstall? | default false
   let setting = [
-    [Type Host TeamID TeamCode ddlAutoUpdate];
-    [FROM ($from.host | trim-host) $'($from.teamId)' $from.teamCode '-']
-    ['' '↓' '↓' '↓' '']
-    [TO ($to.host | trim-host) $'($to.teamId)' $to.teamCode ($to | get -i ddlAutoUpdate | default true)]]
+    [Type Host TeamID TeamCode ddlAutoUpdate resetModuleForInstall];
+    [FROM ($from.host | trim-host) $'($from.teamId)' $from.teamCode '-' '-']
+    ['' '↓' '↓' '↓' '' '']
+    [TO ($to.host | trim-host) $'($to.teamId)' $to.teamCode $ddlAutoUpdate $resetModuleForInstall]]
   # Theme: ascii_rounded,basic_compact,dots,psql,reinforced
   print ($setting | table -e --theme psql -i false)
   print $'Are you sure to continue?'
@@ -468,6 +472,7 @@ def import-metadata [
     securityCode: $code,
     downloadUrl: $metaUrl,
     ddlAutoUpdate: ($dest | get -i ddlAutoUpdate | default true),
+    resetModuleForInstall: ($dest | get -i resetModuleForInstall | default false),
   }
   if not ($modules | is-empty) {
     $importPayload.resetModuleKeys = $modules

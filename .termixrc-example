@@ -135,6 +135,8 @@ teamId = 666
 teamCode = 'TERP'
 # 导入元数据时的 ddlAutoUpdate 配置值, 默认为 true
 ddlAutoUpdate = false
+# 是否导入为非原生模块, 默认为 false，安装为原生模块，可以修改，true 为安装为非原生模块, 不能修改
+resetModuleForInstall = false
 # 用户名和密码此处如果配置了则会覆盖 meta.settings 中的配置，如果未配置则使用 meta.settings 中的配置
 username = 'your-username'
 password = 'your-password'
