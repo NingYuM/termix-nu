@@ -38,7 +38,7 @@ export def 'git pick' [
     load-env { GIT_AUTHOR_DATE: $rawDate, GIT_COMMITTER_DATE: $rawDate }
     let cherryPick = do -i { git cherry-pick $c.sha | complete }
     if ($cherryPick.exit_code | into int) != 0 {
-      git cherry-pick --abort
+      do -i { git cherry-pick --abort | complete }
       let error = if ($cherryPick.stderr =~ '--allow-empty') {
           'EMPTY_COMMIT'
         } else if ($cherryPick.stderr =~ 'conflict') {
