@@ -1,6 +1,29 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.76.0 - 2024-04-28
+
+**Features**
+
+- Add `t git-pick` command to do `cherry-pick` automatically
+- Support transfer static assets to multiple mount point for `t ta transfer` command
+- Show failed reason for `t git-pick` command
+- Add run/auto-pick.nu script and add successfully picked counter for `t git-pick` command
+- Add `resetModuleForInstall` config for `t msync` command
+- Display `Trantor` version for `t msync` command
+
+**Bug Fixes**
+
+- Fix meta data of static assets syncing for `t ta transfer` command
+- Pick commits and keep the order for `t git-pick` command
+- Fix cherry-pick by SHA for `t git-pick` command
+
+## v1.75.1 - 2024-04-23
+
+**Bug Fixes**
+
+- Fix iam host returned without `https://` error for `t msync` command
+
 ## v1.75.0 - 2024-04-22
 
 **Bug Fixes**
