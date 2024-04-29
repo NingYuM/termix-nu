@@ -21,9 +21,10 @@ export def 'git pick' [
   --list-only(-l),            # List the matched commits only without actually picking them.
   --from(-f): string,         # The source branch to pick from
   --to(-t): string,           # The target branch to pick to
+  --since(-s): string,        # Filter commits since the specified date, e.g. 2024/03/12 or 2024-03-12
   --ignore-file(-i): string,  # The file that contains the commit SHAs or messages to ignore
 ] {
-  let options = get-valid-options $match --from $from --to $to --ignore-file $ignore_file
+  let options = get-valid-options $match --from $from --to $to --since $since --ignore-file $ignore_file
   let diffCount = git rev-list --left-right --count $'($options.to)...origin/($options.to)' | detect columns -n | rename ahead behind | get -i 0
   let countTip = if ($diffCount.ahead? | into int) > 0 { $'[AHEAD: ($diffCount.ahead)]' } else { '' }
   if $list_only and ($options.matches | length) > 0 {
@@ -77,6 +78,7 @@ def get-valid-options [
   match: string,              # The commit SHA or the commits that contain the keyword to pick
   --from(-f): string,         # The source branch to pick from
   --to(-t): string,           # The target branch to pick to
+  --since(-s): string,        # Filter commits since the specified date, e.g. 2024/03/12
   --ignore-file(-i): string,  # The file that contains the commit SHAs or messages to ignore
 ] {
   const MIN_SHA_WIDTH = 7
@@ -99,8 +101,11 @@ def get-valid-options [
   let ignore = ($ignore | append $ignoreFromFile)
   # If no matches found, try to match the keyword in commit messages.
   if ($matches | is-empty) {
-    let sourceMatches = git log $from --oneline --grep $match --format='%H---%s---%ci' | lines | split column '---' | rename sha msg date
-    let targetMatches = git log $to --oneline --grep $match --format='%H---%s' | lines | split column '---' | rename sha msg
+    let sinceOption = if ($since | is-not-empty) { $'--since=($since)T00:00:00Z' }
+    let sourceArgs = [$from --oneline $'--grep=($match)' --format=%H---%s---%ci $sinceOption] | compact
+    let targetArgs = [$to --oneline $'--grep=($match)' --format=%H---%s $sinceOption] | compact
+    let sourceMatches = git log ...$sourceArgs | lines | split column '---' | rename sha msg date
+    let targetMatches = git log ...$targetArgs | lines | split column '---' | rename sha msg
     $matches = ($sourceMatches
       | filter {|it| ($it.msg not-in $targetMatches.msg) and (($it.sha | str substring ..8) not-in $ignore) and ($it.msg not-in $ignore) }
       | sort-by date
