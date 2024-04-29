@@ -17,12 +17,13 @@ use ../utils/common.nu [hr-line, has-ref, ECODE]
 
 # Pick matched commits from one branch to another branch.
 export def 'git pick' [
-  match: string,        # The commit SHA or the commits that contain the keyword to pick
-  --list-only(-l),      # List the matched commits only without actually picking them.
-  --from(-f): string,   # The source branch to pick from
-  --to(-t): string,     # The target branch to pick to
+  match: string,              # The commit SHA or the commits that contain the keyword to pick
+  --list-only(-l),            # List the matched commits only without actually picking them.
+  --from(-f): string,         # The source branch to pick from
+  --to(-t): string,           # The target branch to pick to
+  --ignore-file(-i): string,  # The file that contains the commit SHAs or messages to ignore
 ] {
-  let options = get-valid-options $match --from $from --to $to
+  let options = get-valid-options $match --from $from --to $to --ignore-file $ignore_file
   let diffCount = git rev-list --left-right --count $'($options.to)...origin/($options.to)' | detect columns -n | rename ahead behind | get -i 0
   let countTip = if ($diffCount.ahead? | into int) > 0 { $'[AHEAD: ($diffCount.ahead)]' } else { '' }
   if $list_only and ($options.matches | length) > 0 {
@@ -73,9 +74,10 @@ def get-commits [commits: list] {
 
 # Get the valid options for the git-pick command, exit if any option is invalid.
 def get-valid-options [
-  match: string,        # The commit SHA or the commits that contain the keyword to pick
-  --from(-f): string,   # The source branch to pick from
-  --to(-t): string,     # The target branch to pick to
+  match: string,              # The commit SHA or the commits that contain the keyword to pick
+  --from(-f): string,         # The source branch to pick from
+  --to(-t): string,           # The target branch to pick to
+  --ignore-file(-i): string,  # The file that contains the commit SHAs or messages to ignore
 ] {
   const MIN_SHA_WIDTH = 7
   let branches = git branch --list --format='%(refname:short)' | lines
@@ -92,12 +94,15 @@ def get-valid-options [
   # 只有输入的字符串长度大于 7 的时候才会尝试判断是不是 commit SHA
   mut matches = if ($match | str stats | get chars) >= $MIN_SHA_WIDTH { $match | split row ',' | filter { has-ref $in } | wrap sha } else { [] }
   let ignore = $env.GIT_PICK_IGNORE? | default []
+  let hasIgnoreFile = ($ignore_file | is-not-empty) and ($ignore_file | path exists)
+  let ignoreFromFile = if $hasIgnoreFile { open -r $ignore_file | from toml | get GIT_PICK_IGNORE? | default [] } else { [] }
+  let ignore = ($ignore | append $ignoreFromFile)
   # If no matches found, try to match the keyword in commit messages.
   if ($matches | is-empty) {
     let sourceMatches = git log $from --oneline --grep $match --format='%H---%s---%ci' | lines | split column '---' | rename sha msg date
     let targetMatches = git log $to --oneline --grep $match --format='%H---%s' | lines | split column '---' | rename sha msg
     $matches = ($sourceMatches
-      | filter {|it| ($it.msg not-in $targetMatches.msg) and ($it.sha not-in $ignore) and ($it.msg not-in $ignore) }
+      | filter {|it| ($it.msg not-in $targetMatches.msg) and (($it.sha | str substring ..8) not-in $ignore) and ($it.msg not-in $ignore) }
       | sort-by date
       | select sha
     )
