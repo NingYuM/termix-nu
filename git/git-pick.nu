@@ -30,6 +30,9 @@ export def 'git pick' [
     hr-line
     get-commits $options.matches | reject error | print; exit $ECODE.SUCCESS
   }
+  if ($options.matches | is-empty) {
+    print $'No matched commits found from (ansi g)($options.from)(ansi reset) need to be picked to (ansi g)($options.to) ($countTip)(ansi reset).'
+  }
 
   git checkout $options.to --quiet
   mut pickedCount = 0
