@@ -28,12 +28,12 @@ export def 'git pick' [
   let diffCount = git rev-list --left-right --count $'($options.to)...origin/($options.to)' | detect columns -n | rename ahead behind | get -i 0
   let countTip = if ($diffCount.ahead? | into int) > 0 { $'[AHEAD: ($diffCount.ahead)]' } else { '' }
   if $list_only and ($options.matches | length) > 0 {
-    print $'(char nl)The following commits from (ansi g)($options.from)(ansi reset) need to be picked to (ansi g)($options.to) ($countTip)(ansi reset):'
+    print $'(char nl)The following commits from (ansi g)($options.from)(ansi reset) need to be picked to (ansi g)($options.to) ($countTip)(ansi reset)'
     hr-line
     get-commits $options.matches | reject error | print; exit $ECODE.SUCCESS
   }
   if ($options.matches | is-empty) {
-    print $'No matched commits found from (ansi g)($options.from)(ansi reset) need to be picked to (ansi g)($options.to) ($countTip)(ansi reset).'
+    print $'No matched commits found from (ansi g)($options.from)(ansi reset) need to be picked to (ansi g)($options.to) ($countTip)(ansi reset)'
   }
 
   git checkout $options.to --quiet
@@ -58,10 +58,10 @@ export def 'git pick' [
   }
 
   if $pickedCount > 0 {
-    print $'(char nl)Succssfully picked (ansi g)($pickedCount)(ansi reset) commits from (ansi g)($options.from)(ansi reset) to (ansi g)($options.to)(ansi reset).'
+    print $'(char nl)Succssfully picked (ansi g)($pickedCount)(ansi reset) commits from (ansi g)($options.from)(ansi reset) to (ansi g)($options.to)(ansi reset)'
   }
   if ($failedPick | is-empty) { return }
-  print $'(char nl)Failed to pick the following commits from (ansi g)($options.from)(ansi reset) to (ansi g)($options.to) ($countTip)(ansi reset):'; hr-line
+  print $'(char nl)Failed to pick the following commits from (ansi g)($options.from)(ansi reset) to (ansi g)($options.to) ($countTip)(ansi reset)'; hr-line
   get-commits $failedPick | print
 }
 
