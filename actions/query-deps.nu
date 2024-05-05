@@ -30,7 +30,7 @@ export def 'query deps' [
       let ver = $content | query json $query
       if ($ver | is-empty) { continue }
       let commit = get-commit-meta $br $pkg $dep
-      $result = ($result | append [{ branch: $br, file: $pkg, dependency: $dep, version: $ver, ...$commit }])
+      $result ++= { branch: $br, file: $pkg, dependency: $dep, version: $ver, ...$commit }
     }
   }
   let end = date now

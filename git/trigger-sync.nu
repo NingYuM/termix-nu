@@ -78,7 +78,7 @@ def show-available-syncs [
       $sync.Local = if (has-ref $branch) { $mark } else { $cross }
       $sync.Remote = if (has-ref origin/($branch)) { $mark } else { $cross }
       $sync.Update = if (has-ref origin/($branch)) { git show $'origin/($branch)' --no-patch --format=%ci | into datetime }
-      $results = ($results | append $sync)
+      $results ++= $sync
     }
   }
   $results | sort-by Source | print

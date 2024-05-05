@@ -51,7 +51,7 @@ export def 'git pick' [
         } else if ($cherryPick.stderr =~ 'conflict') {
           'HAS_CONFLICT'
         } else { 'UNKNOWN_ERROR' }
-      $failedPick = ($failedPick | append { sha: $c.sha, error: $error })
+      $failedPick ++= { sha: $c.sha, error: $error }
       continue
     }
     $pickedCount += 1

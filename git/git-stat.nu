@@ -24,16 +24,16 @@ export def 'git stat' [
   cd $env.JUST_INVOKE_DIR
   mut args = ['--pretty=%h %aN' '--no-merges']
   if $author == '*' {} else if ($author | is-not-empty) {
-    $args = ($args | append $'--author=($author)')
+    $args ++= $'--author=($author)'
   }
   if ($max_count | is-not-empty) {
-    $args = ($args | append $'--max-count=($max_count)')
+    $args ++= $'--max-count=($max_count)'
   }
   if ($from | is-not-empty) {
-    $args = ($args | append $'--since=($from)T00:00:00Z')
+    $args ++= $'--since=($from)T00:00:00Z'
   }
   if ($to | is-not-empty) {
-    $args = ($args | append $'--until=($to)T23:59:59Z')
+    $args ++= $'--until=($to)T23:59:59Z'
   }
   let log = git log ...$args
   # Use `git diff -- . ':(exclude)src/irrelevant.ts' ':(exclude)src/irrelevant2.ts'` to exclude files
@@ -63,7 +63,7 @@ export def 'git stat' [
           | upsert insertions {|it| $it.insertions | str replace -a '-' 0 | into int }
           | reduce --fold { fileChanged: 0, insertions: 0, deletions: 0, file: [] } { |acc x|
               {
-                file: ($acc.file | append $x.file),
+                file: ($acc.file ++ $x.file),
                 deletions: ($acc.deletions + $x.deletions),
                 insertions: ($acc.insertions + $x.insertions),
                 fileChanged: ($acc.fileChanged + $x.fileChanged),
