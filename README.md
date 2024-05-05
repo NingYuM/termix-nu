@@ -816,6 +816,7 @@ t git-diff-commit -f HEAD~9 -A author1,author2
 - 批量 `cherry-pick` 时会按时间先后顺序进行，早提交的会先被 `cherry-pick` 到目标分支，保持先后顺序；
 - 批量 `cherry-pick` 时会保证每个 Commit 的提交时间保持不变(使用 `git cherry-pick` 会修改提交时间为当前时间)；
 - 如果 `cherry-pick` 时没有冲突或其他错误则自动提交，否则会跳过该 Commit，并最终给出 `cherry-pick` 失败的清单及原因；
+- 支持通过 `GIT_PICK_IGNORE` 环境变量或者 `--ignore-file` 参数指定忽略某些 Commit 进行批量 `cherry-pick` 操作；
 - 支持通过提交信息关键字搜索或者 **SHA** 值精确匹配 Commit 进行批量 `cherry-pick` 操作；
 - 可以只列出匹配到的 Commit 列表以供查看，而不执行 `cherry-pick` 操作；
 
@@ -826,6 +827,16 @@ t git-diff-commit -f HEAD~9 -A author1,author2
 - `-l`, `--list-only` - 只显示匹配到的 Commit 列表，不执行 `cherry-pick` 操作
 - `-f`, `--from <String>` - 待**Pick**的源分支，默认为当前分支
 - `-t`, `--to <String>` - 待**Pick**到的目标分支，默认为当前分支
+- `-s`, `--since <String>` - 待筛选的 Commits 的起始时间, 比如：2024/03/12 or 2024-03-12
+- `-i`, `--ignore-file <String>` - 通过该文件指定忽略某些 Commit 进行批量 `cherry-pick` 操作，文件为 TOML 格式，内容示例如下：
+  ```toml
+  GIT_PICK_IGNORE = [
+    # 待忽略的 Commit SHA 值
+    "ff987867",
+    # 或者待忽略的 Commit Message，精确匹配
+    "feat-0330: Rename t-service to service as the new module name"
+  ]
+  ```
 - `-h`, `--help` - 显示帮助信息
 - `match <string>`: 可以为精确的**Commit SHA**值，多个值用`,`分隔，也可以为待搜索的关键字，该关键字会从 Commit Message 里面搜索匹配
 
@@ -1418,9 +1429,9 @@ t msync --snapshot --from dev
 
 **功能描述**:
 
-目前 Erda 对制品的构建、部署等一系列操作已经相当友好了，操作起来也比较简单，尤其是基本的选择制品创建部署单并部署，鼠标点几下就可以了。但是制品生命周期中还涉及到其他一些操作，这些操作的执行人可能只限于小范围的几个人，而且有些操作是异步、离散的，考虑到在标品 & 项目中制品操作的重要性有必要将这些操作串起来并固化。
+目前 Erda 对制品的构建、部署等一系列操作已经相当友好了，操作起来也比较简单，尤其是基本的选择制品创建部署单并部署，鼠标点几下就可以了。但是制品生命周期中还涉及到其他一些操作，这些操作的执行人可能只限于小范围的几个人，而且有些操作是异步、离散的，考虑到在标品 & 项目中制品操作的重要性有必要将这些操作串起来并标准化。
 
-该工具可以通过 **CLI** 完成制品(**Artifact**)生命周期中的各项基本操作：运行某个应用的制品构建流水线构建制品、构建完毕输出制品相关信息、从源项目里面下载构建的制品到本地、将下载的制品上传到 Erda 目标项目、通过目标项目里面指定版本的制品或者选择某个版本的制品创建部署单、执行部署单部署制品、输出制品部署结果。工具内置三种操作四种模式, 如下图所示：
+该工具可以通过 **CLI** 完成制品(**Artifact**)生命周期中的各项基本操作：运行某个应用的制品构建流水线构建制品、构建完毕输出制品相关信息、从源项目里面下载构建的制品到本地、将下载的制品上传到 Erda 目标项目、将应用制品包装成项目制品(目前只支持高频的单应用制品转项目制品)、通过目标项目里面指定版本的制品或者选择某个版本的制品创建部署单、执行部署单部署制品、输出制品部署结果。工具内置四种操作五种模式, 如下图所示：
 
 ![Artifact Assistant](https://img.alicdn.com/imgextra/i4/O1CN01uQNDoY1Vgra6Zan75_!!6000000002683-0-tps-979-365.jpg)
 
@@ -1428,19 +1439,20 @@ t msync --snapshot --from dev
 - 消费者模式(`art consume`): 比如 `TERP` 团队可以根据上游 `Trantor` 团队给出的制品信息(主要是制品版本号)将 `Trantor` 构建完成的制品下载到本地，然后再上传到 `TERP` 项目里面，并通过该制品创建指定环境(开发/测试/预发/生产)的部署单，然后执行部署并输出部署结果（也可以只创建部署单但是并不部署）, 所有这些操作一条命令即可完成；
 - 普通部署模式(`art deploy`)：这种模式应该是最常用的模式，允许你通过指定版本号的制品部署目标项目的指定环境，当然如果你不记得准确的版本号也可以搜索 & 选择一个版本然后部署, 在制品选择模式下随着选择版本的变化也会在预览窗口给出当前选中版本的基本信息：制品所在项目、创建人、创建时间、所包含的部署应用组，甚至 **CHANGELOG**。选择制品后你可以以预先指定的应用组部署，也可以选择部署应用组，同样道理在选择应用组过程中也会显示该应用组所包含的各个应用的部署前置检查信息：比如是否有权限等；
 - 联合部署模式(`art deploy --combine`)：这种模式就是上述 `生产者模式` + `消费者模式` 的联合, 在此用一条命令把上述两种模式所包含的一系列操作串起来了，佛燃项目的发布过程基本按照这种模式执行的：佛燃发布时会通过一条流水线构建 TERP 各应用的制品，然后把这个制品下载并上传到另一个私有化部署的 Erda 项目里面，然后通过该制品创建部署单并部署对应的环境；
+- 单应用制品转项目制品(`art pack`): 目前只支持比较高频的场景 —— 将单个应用制品转换为项目制品，要求应用制品和目标项目制品在同一个 Erda 项目，项目制品的版本从应用制品版本计算而来并确保不超过 30 个字符(Erda的限制)。对于其他场景可在 Erda 上按原流程操作。
 
-**命令格式**: `t art <action> {flags}` (其中 `action` 为 `deploy`, `produce`, 或 `consume` 中的一个)
+**命令格式**: `t art <action> {flags}` (其中 `action` 为 `deploy`, `produce`, `consume` 或 `pack` 中的一个)
 
 **参数说明**:
 
 - `-l`, `--list` - 显示所有可用的源和目标配置信息
 - `-c`, `--combine` - `deploy` Action下有效，包含制品构建、下载、上传、创建部署单、部署等一系列操作
 - `-n`, `--no-deploy` - `deploy`/`consume` Action下有效, 只创建制品部署单，但是并不执行部署操作
-- `-f`, `--from <String>` - `deploy`/`consume`/`produce` Action均可能使用此参数，用于指定源项目以及制品构建应用对应的配置别名
+- `-f`, `--from <String>` - `deploy`/`consume`/`produce`/`pack` Action均可能使用此参数，用于指定源项目以及制品构建应用对应的配置别名
 - `-t`, `--to <String>` - `deploy`/`consume` Action下有效，用于指定制品部署目标项目对应的配置别名
 - `-i`, `--doid <String>` - `deploy` Action下有效，用于通过指定的部署单 ID 部署制品
 - `-b`, `--branch <String>` - `produce` Action下有效，用于指定构建制品的分支名
-- `-v`, `--version <String>` - `deploy`/`consume` Action下有效, 用于指定需要部署或者消费的制品版本
+- `-v`, `--version <String>` - `deploy`/`consume`/`pack` Action下有效, 用于指定需要部署或者消费的项目制品完整版本号，对于 `pack` 操作，该值为应用制品的完整版本号
 - `-e`, `--dest-env <String>` - `deploy`/`consume` Action下有效, 用于指定需要部署的目标环境比如：DEV,TEST,STAGING,PROD, 不区分大小写
 - `-g`, `--deploy-group <String>` - 待部署的制品应用组, 默认为 `All`
 - `-h`, `--help` - 显示命令相关帮助信息
@@ -1495,6 +1507,10 @@ t art deploy -i 1b39da9d-9a7b-4122-9369-7e51a35eab8f
 t art produce --from trantor -b release/2.5.24.0228
 # 从默认源所在项目里下载版本号为 2.5.24.0130+20240313165219 的制品，并将该制品上传到 terp 项目里面，然后通过该制品部署 terp 的开发环境
 t art consume -e dev -v 2.5.24.0130+20240313165219 -t terp
+# 将默认源所在项目里面指定版本的应用制品包装为项目制品，并输出转换后的项目制品信息，如版本、releaseID等
+t art pack -v Console-fe-2.5.24.0228-f785ce9+240504.214042
+# 将 trantor 项目里面指定版本的应用制品包装为项目制品，并输出转换后的项目制品信息
+t art pack -f trantor -v Portal-2.5.24.0330-9da3f82+240430.114744
 ```
 
 **演示视频**:
