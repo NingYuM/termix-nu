@@ -1,6 +1,25 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.77.0 - 2024-05-05
+
+**Bug Fixes**
+
+- Fix `t git-pick` abort error
+
+**Features**
+
+- Add `t art pack` command to pack an APP artifact to a project artifact
+- Add `GIT_PICK_IGNORE` env config for `t git-pick` command
+- Add commits ahead counter for `t git-pick` command
+- Add no matched commits tip for `t git-pick` command
+- Add `--ignore-file` flag for `t git-pick` command
+- Add `--since` option for `t git-pick` command
+
+**Miscellaneous Tasks**
+
+- Adapt to `Nushell` v0.93.0
+
 ## v1.76.0 - 2024-04-28
 
 **Features**
