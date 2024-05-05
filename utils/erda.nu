@@ -31,8 +31,8 @@ export def get-erda-auth [host: string = $ERDA_HOST, --type: string = 'curl'] {
 }
 
 # Renew Erda session by username and password if expired
-export def renew-erda-session [host: string = $ERDA_HOST] {
-  print 'Renewing Erda session...'
+export def renew-erda-session [host: string = $ERDA_HOST, --get-uid] {
+  if not $get_uid { print 'Renewing Erda session...' }
   let TERMIX_CONF = $'(get-tmp-path)/.termix-conf'
   let sessionKey = if $host == $ERDA_HOST { 'erdaSession' } else { $host | encode base64 }
   let query = { username: $env.ERDA_USERNAME, password: $env.ERDA_PASSWORD } | url build-query
@@ -46,6 +46,7 @@ export def renew-erda-session [host: string = $ERDA_HOST] {
   open $TERMIX_CONF | from json
     | upsert $sessionKey $renew.sessionid | to json
     | save -rf $TERMIX_CONF
+  if $get_uid { return $renew.id }
 }
 
 # 判断是否需要重试，如果返回 true 则重试，否则不重试

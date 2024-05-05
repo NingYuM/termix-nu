@@ -24,6 +24,7 @@
 # [√] Add `--list` flag to list all available source and destination settings
 # [√] Multiple deploy group separated by comma from setting or input support
 # [√] Login with username and password from settings
+# [√] Pack an app artifact to a project artifact
 # [ ] Support private ERDA host
 # [ ] If there is only one deploy group, deploy it directly without selection
 # [ ] Validate input args and flags
@@ -44,7 +45,7 @@ use ../utils/erda.nu [VALID_ENV, ERDA_HOST, get-erda-auth, renew-erda-session, s
 
 const DEPLOY_POLLING_INTERVAL = 2sec
 const RELEASE_META_PATH = 'terp/artifacts'
-const SUPPORTED_ACTIONS = [deploy, produce, consume]
+const SUPPORTED_ACTIONS = [deploy, produce, consume, pack]
 const FZF_KEY_BINDING = '--bind ctrl-b:preview-half-page-up,ctrl-f:preview-half-page-down,ctrl-/:toggle-preview'
 const FZF_DEFAULT_OPTS = $'--height 50% --layout=reverse --exact --preview-window=right:65%:~2 ($FZF_KEY_BINDING)'
 const FZF_THEME = '--color=bg+:#3c3836,bg:#32302f,spinner:#fb4934,hl:#928374,fg:#ebdbb2,header:#928374,info:#8ec07c,pointer:#fb4934,marker:#fb4934,fg+:#ebdbb2,prompt:#fb4934,hl+:#fb4934'
@@ -56,11 +57,11 @@ export def artifacts [
   --list(-l),                 # List all available source and destination settings
   --combine(-c),              # Build and upload the artifact to the dest project and deploy to the dest (deploy)
   --no-deploy(-n),            # Don't deploy after creating deploy order (deploy/consume)
-  --from(-f): string,         # Alias of source config to build or download artifact (produce/consume/deploy)
+  --from(-f): string,         # Alias of source config to build or download artifact (produce/consume/deploy/pack)
   --to(-t): string,           # Alias of destination config to upload or deploy artifact (consume/deploy)
   --doid(-i): string,         # The deploy order ID to deploy and query the deploy detail (deploy)
   --branch(-b): string,       # The branch name to build the artifact (produce)
-  --version(-v): string,      # The version number of the artifact to deploy (consume/deploy)
+  --version(-v): string,      # The version number of the artifact to deploy (consume/deploy) or pack
   --dest-env(-e): string,     # The dest env to deploy the artifact, such as DEV,TEST,STAGING,PROD (consume/deploy)
   --deploy-group(-g): string, # The app group to deploy, multiple groups should be separated by comma, `All` by default (consume/deploy)
 ] {
@@ -79,7 +80,7 @@ export def artifacts [
 
   let checkVersion = {
       if ($version | is-empty) {
-        print $'(ansi r)Please specify the version of the artifact to deploy by --version/-v...(ansi reset)'
+        print $'(ansi r)Please specify the version of the artifact to process by --version/-v...(ansi reset)'
         exit $ECODE.INVALID_PARAMETER
       }
     }
@@ -88,6 +89,7 @@ export def artifacts [
   if $list { show-settings $conf }
 
   match $action {
+    pack => { do $checkVersion; pack-artifact $version --from $from --need-confirm }
     produce => { produce-artifact --from=$from --branch=$branch --need-confirm }
     consume => { do $checkEnv 0; do $checkVersion; consume-artifact $version $dest_env -f $from -t $to -c --deploy-group=$deploy_group --no-deploy=$no_deploy }
     deploy => {
@@ -198,6 +200,85 @@ def --env load-art-conf [] {
   do $checkUniqDefault destination
   $env.ART_CONF = $artConf
   $artConf
+}
+
+# Pack an app artifact to project artifact
+def pack-artifact [
+  version: string,        # The version of the app artifact
+  --from(-f): string,     # Source config to pack the app artifact into a project artifact
+  --need-confirm(-c),     # Need to confirm the pack action before execute
+] {
+  let setting = validate-pack-setting $version --from $from
+  if $need_confirm { confirm-pack $version $setting }
+  let matches = query-release-by-version $version $setting --is-app
+  if ($matches | is-empty) {
+    print $'No artifact found with version (ansi g)($version)(ansi reset) in project ID ($setting.projectId), please check it and try again...'
+    return
+  }
+  print $'Found the following (ansi g)APP(ansi reset) artifact to pack:'; hr-line
+  $matches | print
+
+  let projectArtifactVer = get-project-artifact-version $version
+  let destMatches = query-release-by-version $projectArtifactVer $setting
+  if ($destMatches | is-empty) {
+    create-project-artifact $projectArtifactVer $matches.0 $setting; return
+  } else {
+    print $'Artifact of version (ansi g)($projectArtifactVer)(ansi reset) already exists in dest project ID (ansi g)($setting.projectId)(ansi reset):(char nl)'
+    print $destMatches
+  }
+}
+
+# Calc the project artifact version from app artifact version
+def get-project-artifact-version [version: string] {
+  if ($version | str length) <= 30 { return $version }
+  $version
+    | str replace develop dev       # Dors
+    | str replace release rls       # Dors
+    | str replace master ma         # Dors
+    | str replace Portal Ptl        # Portal FE
+    | str replace SNAPSHOT SNAP     # Trantor
+    | str replace Console-fe CFE    # Console
+    | str replace -r '2.5.\d\d.' v  # Trantor Version
+    | str substring 0..30
+}
+
+# Validate the artifact pack action settings and return the validated settings
+def validate-pack-setting [
+  version: string,        # The version of the app artifact
+  --from(-f): string,     # Source config to pack the app artifact into a project artifact
+] {
+  let artConf = $env.ART_CONF
+  let setting = if ($from | is-empty) {
+    $artConf.source | values | default false default | where default == true
+  } else {
+    [($artConf.source | get -i $from)]
+  }
+
+  if ($setting | compact | is-empty) {
+    print $'(ansi r)No source config found to pack the app artifact, bye...(ansi reset)'
+    exit $ECODE.INVALID_PARAMETER
+  }
+  mut setting = ($artConf.settings | merge $setting.0 | default $ERDA_HOST erdaHost)
+  # TODO: setting fields validation
+  ($setting | upsert appArtifactVersion $version)
+}
+
+# Confirm the artifact pack action settings before execute
+def confirm-pack [
+  version: string,    # The version of the app artifact
+  setting: record,    # Source setting to produce the artifact
+] {
+  print $'You are going to pack the APP artifact into a PROJECT artifact with the following config:'
+  const SELECT_FIELDS = [projectId projectName default orgId orgAlias erdaHost]
+  let option = ($setting | select -i ...$SELECT_FIELDS)
+  hr-line 60 -c grey66; print $option; hr-line 60 -c grey66
+  print $'Are you sure to continue? '
+  let confirm = input $'Please input (ansi p)($version)(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
+  if $confirm == 'q' { print $'Artifact packing cancelled, Bye...'; exit $ECODE.SUCCESS }
+  if $confirm != $version {
+    print $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($version)(ansi reset), bye...'
+    exit $ECODE.INVALID_PARAMETER
+  }
 }
 
 # Produce artifacts from source project and display the artifact meta info
@@ -665,17 +746,19 @@ def query-release-candidates [
 def query-release-by-version [
   version: string,    # Version number to query
   setting: record,    # The setting to query release
+  --is-app,           # Query the release of the application, not the project
   --verbose(-v),      # Print more details of the matched artifact
 ] {
   let host = $setting.erdaHost
   let queryUrl = $'($host)/api/($setting.orgAlias)/releases'
+  let isProjectRelease = if $is_app { 'false' } else { 'true' }
   let payload = {
     pageNo: '1',
     pageSize: '100',
     isStable: 'true',
     version: $version,
     projectId: $'($setting.projectId)',
-    isProjectRelease: 'true'
+    isProjectRelease: $isProjectRelease
   }
   let queryUrl = $'($queryUrl)?($payload | url build-query)'
   load-erda-credentials $setting
@@ -691,11 +774,12 @@ def query-release-by-version [
     $filtered.data.list
       | select projectName projectId createdAt version releaseId
       | upsert releaseId {|it| $it.releaseId }
+      | where version == $version
   }
   if not $verbose { return $matches }
 
   if ($matches | is-empty) {
-    print $'No release found for version ($version) in project ID ($setting.projectId)'
+    print $'No release found for version (ansi g)($version)(ansi reset) in project ID ($setting.projectId)'
   } else {
     let suffix = if ($setting.projectName | is-empty) { '' } else { $' in (ansi g)($setting.projectName)(ansi reset)' }
     print $'Found matched artifact release($suffix):(char nl)'; print $matches
@@ -748,6 +832,38 @@ def upload-artifact [
     print $'Failed to upload artifact of version ($version) with error message:'
     print $'(ansi r)($release.err.msg)(ansi reset)'
   }
+}
+
+# Create project artifact from app artifact
+def create-project-artifact [
+  version: string,      # Version number of the artifact
+  release: record,      # The app release to create project artifact
+  destSetting: record   # The destination setting to upload artifact
+] {
+  let host = $destSetting.erdaHost
+  let artifactCreatUrl = $'($host)/api/($destSetting.orgAlias)/releases'
+  let userId = renew-erda-session $host --get-uid
+  let payload = {
+    isStable: true,
+    isFormal: false,
+    userId: $userId,
+    version: $version,
+    isProjectRelease: true,
+    orgId: $destSetting.orgId,
+    projectID: $destSetting.projectId,
+    changelog: $destSetting.appArtifactVersion?,
+    modes: { default: { expose: true, applicationReleaseList: [[$release.releaseId]] } }
+  }
+
+  let resp = http post -e --headers (get-erda-auth $host --type nu) --content-type application/json $'($artifactCreatUrl)' $payload
+  if $resp.success {
+    print $'Project artifact has been created successfully with version (ansi g)($version)(ansi reset)'; hr-line
+    query-release-by-version $version $destSetting | print
+    return $resp.data.releaseId
+  }
+  print $'Failed to create project artifact of version ($version) with error message:'
+  print $'(ansi r)($resp.err.msg)(ansi reset)'
+  exit $ECODE.SERVER_ERROR
 }
 
 # Upload file from local disk to Erda Cloud
