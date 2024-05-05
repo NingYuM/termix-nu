@@ -53,7 +53,7 @@ const FZF_THEME = '--color=bg+:#3c3836,bg:#32302f,spinner:#fb4934,hl:#928374,fg:
 # Build, Download and Upload artifacts, create deploy order then deploy from artifacts
 # Detailed User Manual: https://fe-docs.app.terminus.io/termix/termix-nu#erda-artifacts
 export def artifacts [
-  action?: string,            # Action to perform, such as `deploy`, `produce`, and `consume`
+  action?: string,            # Action to perform, such as `deploy`, `produce`, `consume` and `pack`
   --list(-l),                 # List all available source and destination settings
   --combine(-c),              # Build and upload the artifact to the dest project and deploy to the dest (deploy)
   --no-deploy(-n),            # Don't deploy after creating deploy order (deploy/consume)
