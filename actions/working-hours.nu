@@ -203,7 +203,7 @@ def query-staffs-by-team [
       | str replace '_first_day_' $to
       | str replace '_project_code_' $code
 
-  # Week No of now: [(date now)] | dfr into-df | dfr get-week
+  # Week No of now: [(date now)] | polars into-df | polars get-week
   let staffs = curl $emp.staffUrl -H $emp.type -s --data-raw $staffPayload | str join
 
   handle-exception $staffs
@@ -326,7 +326,7 @@ def handle-working-hours [
       | upsert day { |work|
           if ($work.fillDate? | is-empty) { 'N/A' } else {
             let day = $work.fillDate * 1000_000 | into datetime
-            let idx = ([$day] | dfr into-df | dfr get-weekday).0 mod 7
+            let idx = ([$day] | polars into-df | polars get-weekday).0 mod 7
             ($week | select $idx).0
           }
         }
