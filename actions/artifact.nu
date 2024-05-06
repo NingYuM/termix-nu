@@ -230,8 +230,9 @@ def pack-artifact [
 
 # Calc the project artifact version from app artifact version
 def get-project-artifact-version [version: string] {
-  if ($version | str length) <= 30 { return $version }
-  $version
+  # App artifact version and project artifact version should be different
+  if ($version | str length) <= 28 { return $'($version).p' }
+  let pVer = $version
     | str replace develop dev       # Dors
     | str replace release rls       # Dors
     | str replace master ma         # Dors
@@ -240,6 +241,8 @@ def get-project-artifact-version [version: string] {
     | str replace Console-fe CFE    # Console
     | str replace -r '2.5.\d\d.' v  # Trantor Version
     | str substring 0..30
+  if $pVer != $version { return $pVer }
+  $pVer | str substring 0..28 | append '.p' | str join
 }
 
 # Validate the artifact pack action settings and return the validated settings
