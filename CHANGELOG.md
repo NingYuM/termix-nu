@@ -1,6 +1,12 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.77.1 - 2024-05-06
+
+**Bug Fixes**
+
+- Make sure that APP artifact version and Project artifact version are different to each other for `t art pack` command
+
 ## v1.77.0 - 2024-05-05
 
 **Bug Fixes**
