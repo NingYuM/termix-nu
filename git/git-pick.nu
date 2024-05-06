@@ -58,7 +58,7 @@ export def 'git pick' [
   }
 
   if $pickedCount > 0 {
-    print $'(char nl)Succssfully picked (ansi g)($pickedCount)(ansi reset) commits from (ansi g)($options.from)(ansi reset) to (ansi g)($options.to)(ansi reset)'
+    print $'(char nl)Successfully picked (ansi g)($pickedCount)(ansi reset) commits from (ansi g)($options.from)(ansi reset) to (ansi g)($options.to)(ansi reset)'
   }
   if ($failedPick | is-empty) { return }
   print $'(char nl)Failed to pick the following commits from (ansi g)($options.from)(ansi reset) to (ansi g)($options.to) ($countTip)(ansi reset)'; hr-line

@@ -844,7 +844,7 @@ def create-project-artifact [
   destSetting: record   # The destination setting to upload artifact
 ] {
   let host = $destSetting.erdaHost
-  let artifactCreatUrl = $'($host)/api/($destSetting.orgAlias)/releases'
+  let artifactCreateUrl = $'($host)/api/($destSetting.orgAlias)/releases'
   let userId = renew-erda-session $host --get-uid
   let payload = {
     isStable: true,
@@ -858,7 +858,7 @@ def create-project-artifact [
     modes: { default: { expose: true, applicationReleaseList: [[$release.releaseId]] } }
   }
 
-  let resp = http post -e --headers (get-erda-auth $host --type nu) --content-type application/json $'($artifactCreatUrl)' $payload
+  let resp = http post -e --headers (get-erda-auth $host --type nu) --content-type application/json $'($artifactCreateUrl)' $payload
   if $resp.success {
     print $'Project artifact has been created successfully with version (ansi g)($version)(ansi reset)'; hr-line
     query-release-by-version $version $destSetting | print
