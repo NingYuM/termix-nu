@@ -36,6 +36,7 @@ _default_just_file := join(env_var(_home_env), '.justfile')
 _null_device := if os_family() == 'windows' { '\\.\NUL' } else { '/dev/null' }
 _query_plugin := if os_family() == 'windows' { 'nu_plugin_query.exe' } else { 'nu_plugin_query' }
 _gstat_plugin := if os_family() == 'windows' { 'nu_plugin_gstat.exe' } else { 'nu_plugin_gstat' }
+_polars_plugin := if os_family() == 'windows' { 'nu_plugin_polars.exe' } else { 'nu_plugin_polars' }
 
 # Just commands aliases
 # alias pa := pull-all
@@ -328,6 +329,8 @@ _setup: _termix_check _register_plugins
 _register_plugins:
   #!/usr/bin/env nu
   let gstatExists = not (scope commands | where name == 'gstat' | is-empty)
+  let polarsExists = not (scope commands | where name == 'polars' | is-empty)
   let queryExists = not (scope commands | where name == 'query json' | is-empty)
   if not $queryExists { plugin add {{ join(NU_DIR, _query_plugin) }} }
   if not $gstatExists { plugin add {{ join(NU_DIR, _gstat_plugin) }} }
+  if not $polarsExists { plugin add {{ join(NU_DIR, _polars_plugin) }} }
