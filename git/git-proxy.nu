@@ -68,7 +68,9 @@ def --env git-proxy [
     print $'(ansi g)Proxy turned on at: ($proxy)(ansi reset)(char nl)'
     print $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
     print $'If you want to set proxy for the terminal, please run: (char nl)'
-    print $'export http_proxy=socks5://($proxy) https_proxy=socks5://($proxy) ALL_PROXY=socks://($proxy)(char nl)(char nl)'
+    print $'export http_proxy=socks5://($proxy) https_proxy=socks5://($proxy) ALL_PROXY=socks://($proxy)(char nl)'
+    print $'Set proxy for Nu:'
+    print $"(ansi g)load-env {http_proxy: 'http://($proxy)', https_proxy: 'http://($proxy)', ALL_PROXY: 'http://($proxy)'}(ansi reset)(char nl)"
     return
   }
 

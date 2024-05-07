@@ -395,7 +395,7 @@ export def watch-cicd-status [id: int] {
         let duration = $'($tasks | get costTimeSec | math sum)sec' | into duration
         print $'(char nl)Stage finished with status:(char nl)'
         $tasks | select name status | rename Name Status | print
-        print $'Time cost of this stage: ($duration)'
+        print $'(char nl)Time cost of this stage: ($duration)'
         hr-line 60 -c grey66
       }
       sleep $PIPELINE_POLLING_INTERVAL
