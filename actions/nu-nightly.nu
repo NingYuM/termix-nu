@@ -26,7 +26,7 @@ export def get-latest-nightly-build [
   }
 
   if ($target | is-empty) and (not $interactive) {
-    $target = $'($nu.os-info.arch)-((sys).host.name | str downcase)'
+    $target = $'($nu.os-info.arch)-(sys host | get name | str downcase)'
   }
   let matches = $latest.assets
       | get name

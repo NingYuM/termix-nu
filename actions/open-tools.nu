@@ -22,7 +22,7 @@ const BIN_MAP = {
 
 # Install tools from USTC mirror
 export def install-from-brew [name: string, --force(-f), --post-install: closure] {
-  if (sys).host.name != 'Darwin' {
+  if (sys host | get name) != 'Darwin' {
     print '(ansi r)Only macOS is supported to install by brew for now...(ansi reset)'; exit $ECODE.INVALID_PARAMETER
   }
 
@@ -67,7 +67,7 @@ export def upgrade-latest-tool [
 ]: nothing -> nothing {
 
   # $nu.os-info.arch == 'aarch64'
-  if (sys).host.name == 'Darwin' { install-from-brew $name --force=$force --post-install $post_install; return }
+  if (sys host | get name) == 'Darwin' { install-from-brew $name --force=$force --post-install $post_install; return }
   mut target = $target
   let latest = http get $'($TOOL_PREFIX)/($name)/latest.json'
   # Check current version and compare with the latest one stop upgrading if lower than or equal to the latest one
@@ -81,7 +81,7 @@ export def upgrade-latest-tool [
   }
 
   if ($target | is-empty) and (not $interactive) {
-    $target = $'($nu.os-info.arch)-((sys).host.name | str downcase)'
+    $target = $'($nu.os-info.arch)-(sys host | get name | str downcase)'
   }
   let matches = $latest.assets | get name | where $it =~ $target
 
@@ -145,7 +145,7 @@ export def upgrade-latest-tool [
       tar xf $'($bin)-*.tar.gz' --directory $destDir
       rm $'($bin)-*.tar*gz'; cd ..
       # Allow apps downloaded from anywhere in Mac
-      if ((sys).host.name == 'Darwin') { sudo spctl --master-disable }
+      if (sys host | get name) == 'Darwin' { sudo spctl --master-disable }
       # `sudo` is required to move the files to `/usr/local/bin` on macOS
       glob $'($destDir)/**/($bin)*' | each {|it| if ($it | path type) == 'file' { sudo cp $it . } }
       rm -rf $destDir

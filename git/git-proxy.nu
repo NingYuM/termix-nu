@@ -13,7 +13,7 @@ use ../utils/common.nu [ECODE]
 def --env git-proxy [
   status: string  # Set proxy status: on/off
 ] {
-  let isWindows = (sys).host.name == 'Windows'
+  let isWindows = (sys host | get name) == 'Windows'
   # On macOS, we typically use ClashX or AliMgrSoc to proxy the traffic
   # On windows the proxy could be Clash for Windows or v2ray
   let proxies = if $isWindows { tasklist | findstr 'xray clash' } else {

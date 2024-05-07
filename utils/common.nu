@@ -58,7 +58,7 @@ export def get-termix-conf [] { ([$env.TERMIX_DIR 'termix.toml'] | path join) }
 # If current host is Windows
 export def windows? [] {
   # Windows / Darwin
-  (sys).host.name == 'Windows'
+  (sys host | get name) == 'Windows'
 }
 
 # Check if some command available in current shell
