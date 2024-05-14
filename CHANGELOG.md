@@ -1,6 +1,17 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.77.2 - 2024-05-14
+
+**Features**
+
+- Add Pre check of `TERMIX_DIR` env variable, make sure it is set correctly
+
+**Miscellaneous Tasks**
+
+- Register `polars` plugin for `Nu` v0.93
+- Change `buildTime` to `buildAt` for `t ta detect` command
+
 ## v1.77.1 - 2024-05-06
 
 **Bug Fixes**
