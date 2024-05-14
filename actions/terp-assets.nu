@@ -304,7 +304,7 @@ def detect [latestMeta: record] {
     | select namespace deprecated? metadata?
     | upsert branch {|it| $it.metadata?.branch? | default '-' }
     | upsert SHA {|it| $it.metadata?.commitSha? | default '-' }
-    | upsert buildTime {|it| if ($it.metadata?.buildTime? | is-empty) { '-' } else { $it.metadata.buildTime | format date $TIME_FMT } }
+    | upsert buildAt {|it| if ($it.metadata?.buildAt? | is-empty) { '-' } else { $it.metadata.buildAt | format date $TIME_FMT } }
     | upsert syncBy {|it| $it.metadata?.syncBy? | default 'LQ==' | decode base64 }
     | upsert syncFrom {|it| $it.metadata?.syncFrom? | default '-' }
     | upsert syncAt {|it| if ($it.metadata?.syncAt? | is-empty) { '-' } else { $it.metadata.syncAt | format date $TIME_FMT } }
