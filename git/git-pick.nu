@@ -45,11 +45,13 @@ export def 'git pick' [
     load-env { GIT_AUTHOR_DATE: $rawDate, GIT_COMMITTER_DATE: $rawDate }
     let cherryPick = do -i { git cherry-pick $c.sha | complete }
     if ($cherryPick.exit_code | into int) != 0 {
-      do -i { git cherry-pick --abort | complete }
+      do -i { LANG=en_US git cherry-pick --abort | complete }
       let error = if ($cherryPick.stderr =~ '--allow-empty') {
           'EMPTY_COMMIT'
         } else if ($cherryPick.stderr =~ 'conflict') {
-          'HAS_CONFLICT'
+          'CONFLICT_FOUND'
+        } else if ($cherryPick.stderr =~ 'no -m option was given') {
+          'MERGE_IGNORED'
         } else { 'UNKNOWN_ERROR' }
       $failedPick ++= { sha: $c.sha, error: $error }
       continue
@@ -67,10 +69,16 @@ export def 'git pick' [
 
 # Get the commits information from a list of commit SHAs.
 def get-commits [commits: list] {
-  $commits
-    | upsert commit {|it| git show $it.sha -s --format='%h---%s---%an---%ci' | split column '---' | rename sha msg author commitAt | first }
-    | select -i commit error
-    | flatten
+  $commits | upsert commit {|it| get-commit-meta $it.sha } | select -i commit error | flatten
+}
+
+# Get the commit meta information from a commit SHA.
+def get-commit-meta [sha: string] {
+  git show $sha -s --format='%h---%s---%an---%ci'
+    | split column '---'
+    | rename sha msg author commitAt
+    | first
+    | update commitAt {|it| $it.commitAt | into datetime | format date '%m/%d %H:%M:%S' }
 }
 
 # Get the valid options for the git-pick command, exit if any option is invalid.
