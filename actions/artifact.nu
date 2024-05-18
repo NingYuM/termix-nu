@@ -180,7 +180,7 @@ def preview-artifact [
   let selected = $releases.0.data.list | where version == $version | get 0
   mut meta = $selected | select ...$SELECT_COLUMN
   $meta.modes = (($meta.modes | from json | columns) | str join ', ')
-  $meta.createdBy = ($releases.userInfo | get -i $meta.userId).nick?.0?
+  $meta.createdBy = ($releases.userInfo? | get -i $meta.userId).nick?.0?
   print $'Version: ($version) by ($meta.createdBy)'; hr-line
   $meta | select ...($SELECT_COLUMN | update 2 createdBy) | print; hr-line
   print $selected.changelog
