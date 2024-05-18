@@ -727,7 +727,7 @@ def query-release-candidates [
   let queryUrl = $'($host)/api/($destSetting.orgAlias)/releases'
   let payload = {
     pageNo: '1',
-    pageSize: '200',
+    pageSize: '150',
     isStable: 'true',
     projectId: $'($destSetting.projectId)',
     isProjectRelease: 'true'
