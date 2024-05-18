@@ -47,8 +47,8 @@ const DEPLOY_POLLING_INTERVAL = 2sec
 const RELEASE_META_PATH = 'terp/artifacts'
 const SUPPORTED_ACTIONS = [deploy, produce, consume, pack]
 const FZF_KEY_BINDING = '--bind ctrl-b:preview-half-page-up,ctrl-f:preview-half-page-down,ctrl-/:toggle-preview'
-const FZF_DEFAULT_OPTS = $'--height 50% --layout=reverse --exact --preview-window=right:65%:~2 ($FZF_KEY_BINDING)'
-const FZF_THEME = '--color=bg+:#3c3836,bg:#32302f,spinner:#fb4934,hl:#928374,fg:#ebdbb2,header:#928374,info:#8ec07c,pointer:#fb4934,marker:#fb4934,fg+:#ebdbb2,prompt:#fb4934,hl+:#fb4934'
+const FZF_DEFAULT_OPTS = $'--height 50% --layout=reverse --highlight-line --marker ▏ --pointer ▌ --prompt "▌ " --exact --preview-window=right:65%:~2 ($FZF_KEY_BINDING)'
+const FZF_THEME = '--color=gutter:-1,selected-bg:238,selected-fg:146,current-fg:189,bg+:#3c3836,bg:#32302f,spinner:#fb4934,hl:#928374,fg:#ebdbb2,header:#928374,info:#8ec07c,pointer:#cf87f2,marker:#cf87f2,fg+:#ebdbb2,prompt:#86b3e7,hl+:#fb4934'
 
 # Build, Download and Upload artifacts, create deploy order then deploy from artifacts
 # Detailed User Manual: https://fe-docs.app.terminus.io/termix/termix-nu#erda-artifacts
@@ -665,7 +665,7 @@ def create-deploy-order [
   let inexistGroup = $deployGroup | filter {|it| $it not-in ($modes | columns) }
   # Use specified deploy group or select the deploy mode
   mut selectedMode = if ($inexistGroup | is-empty) { $deployGroup } else {
-      print $'You are trying to deploy APP group ($deployGroup), however, (ansi r)($inexistGroup)(ansi reset) do NOT exist, Please select the group manually.(char nl)'
+      print $'You are trying to deploy APP group ($deployGroup), however, (ansi r)($inexistGroup)(ansi reset) does NOT exist, Please select the group manually.(char nl)'
       select-deploy-mode-by-fzf $modes $previewOptions
     }
 
