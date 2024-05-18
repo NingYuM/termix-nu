@@ -1,6 +1,21 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.77.3 - 2024-05-18
+
+**Bug Fixes**
+
+- Fix potential artifact preview error
+- Fix artifact query and show createdBy tip for `t art` command
+
+**Features**
+
+- Update `fzf` theme for a better artifact choosing and previewing
+
+**Miscellaneous Tasks**
+
+- Update `t git-pick` command, simplify commitAt field and add more error detection
+
 ## v1.77.2 - 2024-05-14
 
 **Features**
