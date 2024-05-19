@@ -1,0 +1,14 @@
+gui:
+  language: 'en'
+  timeFormat: '2006/01/02 15:04:05'
+  shortTimeFormat: '15:04:05'
+  theme:
+    activeBorderColor:
+      - '#C3885D'
+      - bold
+    inactiveBorderColor:
+      - '#CCCCCC'
+git:
+  autoRefresh: false
+os:
+  copyToClipboardCmd: 'cb cp {{text}}' # See 'Custom Command for Copying to Clipboard' section
