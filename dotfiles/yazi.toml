@@ -10,13 +10,13 @@ tab_size = 2
 
 [opener]
 text = [
-    { exec = 'hx "$@"', block = true },
+    { run = 'hx "$@"', block = true },
 ]
 
 [plugin]
 prepend_previewers = [
     # HEIC previewer
-    # { mime = "image/heic", exec = "heic" },
+    # { mime = "image/heic", run = "heic" },
     # Nu source code previewer
-    # { name = "*.nu", exec = "nushell" },
+    # { name = "*.nu", run = "nushell" },
 ]
