@@ -18,6 +18,7 @@ use ../utils/common.nu [hr-line, has-ref, ECODE]
 # Pick matched commits from one branch to another branch.
 export def 'git pick' [
   match: string,              # The commit SHA or the commits that contain the keyword to pick
+  --all(-a),                  # Show error picks of `MERGE_IGNORED` and `EMPTY_COMMIT`
   --list-only(-l),            # List the matched commits only without actually picking them.
   --from(-f): string,         # The source branch to pick from
   --to(-t): string,           # The target branch to pick to
@@ -53,7 +54,12 @@ export def 'git pick' [
         } else if ($cherryPick.stderr =~ 'no -m option was given') {
           'MERGE_IGNORED'
         } else { 'UNKNOWN_ERROR' }
-      $failedPick ++= { sha: $c.sha, error: $error }
+
+      if $error not-in [EMPTY_COMMIT MERGE_IGNORED] {
+        $failedPick ++= { sha: $c.sha, error: $error }
+      } else if $all {
+        $failedPick ++= { sha: $c.sha, error: $error }
+      }
       continue
     }
     $pickedCount += 1
