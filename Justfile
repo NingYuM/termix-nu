@@ -312,6 +312,11 @@ gsync *OPTIONS: _setup
   @overlay use {{ join(_termix, 'git', 'trigger-sync.nu') }}; \
     git trigger-sync {{OPTIONS}}
 
+# 扫描源码并列出所有自定义组件清单, 目前支持 terp-ui/service-ui/b2b-ui/material-ui etc.
+cmp *OPTIONS: _setup
+  @overlay use {{ join(_termix, 'actions', 'components.nu') }}; \
+    get components {{OPTIONS}}
+
 # Clean possibly unused branches of synced dest repos
 [private]
 prune-synced-branches dryRun=('true') user=('git') ak=('-'): _setup
