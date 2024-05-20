@@ -115,6 +115,11 @@ art *OPTIONS: _setup _setup_fzf
   @overlay use {{ join(_termix, 'actions', 'artifact.nu') }}; \
     artifacts {{OPTIONS}}
 
+# Deprecated or enable frontend modules by mount point and module names
+mod *OPTIONS: _setup
+  @overlay use {{ join(_termix, 'actions', 'deprecated-mod.nu') }}; \
+    deprecated-modules {{OPTIONS}}
+
 # 执行Erda流水线,可通过`dp -l`列出所有部署目标,在批量部署模式下通过`--app`指定待部署应用
 [group('-- Common  --')]
 deploy *OPTIONS: _setup
