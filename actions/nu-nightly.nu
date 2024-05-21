@@ -26,7 +26,13 @@ export def get-latest-nightly-build [
   }
 
   if ($target | is-empty) and (not $interactive) {
-    $target = $'($nu.os-info.arch)-(sys host | get name | str downcase)'
+    let platform = (sys host | get name | str downcase)
+    const PATFORM_MAP = {
+      windows: 'pc-windows',
+      darwin: 'apple-darwin',
+      linux: 'unknown-linux',
+    }
+    $target = $'($nu.os-info.arch)-($PATFORM_MAP | get $platform)'
   }
   let matches = $latest.assets
       | get name
