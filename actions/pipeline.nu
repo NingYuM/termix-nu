@@ -59,7 +59,13 @@ def check-pipeline-conf [pipeline: any] {
 }
 
 # Try to load pipeline config variables from .termixrc file on i branch or current dir, or list available deploy targets
-def get-pipeline-conf [dest: string = 'dev', --apps: string, --list, --grep: string] {
+def get-pipeline-conf [
+  dest: string = 'dev',     # 单应用部署时，指定要部署的目标
+  --apps: string,           # 指定需要批量部署的应用，多个应用以英文逗号分隔
+  --list,                   # 列出所有可能的部署目标及应用信息
+  --grep: string,           # 仅在与 `-l` 一起使用时生效，从部署配置里面搜索name,alias或description里包含特定字符串的部署目标
+  --override(-o): record,   # 覆盖部署配置里面的同名配置项, 仅支持部署时使用
+] {
   # 本地配置文件名，优先从 i 分支上的 .termixrc 文件中读取配置
   # 如果 i 分支不存在则从当前目录下的 .termixrc 文件中读取配置
   # 如果都不存在则从 termix-nu 仓库的 .termixrc 文件中读取配置
@@ -92,11 +98,13 @@ def get-pipeline-conf [dest: string = 'dev', --apps: string, --list, --grep: str
   }
   let batchMode = ($pipeline | describe) =~ 'table'
   let conf = if $batchMode { $pipeline } else { [$pipeline] }
-  check-pipeline-conf $conf
-  if not $batchMode { return $conf }
+  mut merged = []
+  for c in $conf { $merged = ($merged ++ ($c | merge ($override | default {}))) }
+  check-pipeline-conf $merged
+  if not $batchMode { return $merged }
   # The condition to filter the matched apps
   let cond = {|x| $apps | split row ',' | any {|it| $it in [$x.appName ($x | get -i alias)] }}
-  let matched = if $apps == 'all' { $conf } else if not ($apps | is-empty) { $conf | filter $cond }
+  let matched = if $apps == 'all' { $merged } else if not ($apps | is-empty) { $merged | filter $cond }
   return $matched
 }
 
@@ -478,6 +486,7 @@ export def main [
   --cid(-i): int,             # 当操作为 query 时生效，用于查询 CICD 执行结果，如果不传则查询最近 10 条流水线执行结果
   --apps(-a): string,         # 指定需要批量部署的应用，多个应用以英文逗号分隔
   --stop-by-id(-s): int,      # 当操作为 run 时生效，用于根据流水线ID停止对应的正在运行的流水线
+  --override(-o): record,     # 覆盖部署配置里面的同名配置项, 仅支持部署时使用
 ] {
   check-erda-envs
 
@@ -489,7 +498,7 @@ export def main [
       let apps = (if $list {
           get-pipeline-conf $dest --apps $apps --list --grep $grep
         } else if (not $isIdQuery) {
-          get-pipeline-conf $dest --apps $apps
+          get-pipeline-conf $dest --apps $apps --override=$override
         })
       for app in $apps {
         # 以下为应用级别配置，应用的所有开发者保持一致，可以放在代码仓库里面
@@ -531,8 +540,9 @@ export def erda-deploy [
   --force(-f),              # 即便已经有正在运行的流水线，或者即便该 Commit 对应的分支已经部署过也会强制重新部署
   --apps(-a): string,       # 指定需要批量部署的应用，多个应用以","分隔，在多应用模式下必须指定(`all` 代表所有)，单应用模式忽略
   --stop-by-id(-s): int,    # 根据流水线ID 停止对应的正在运行的流水线
+  --override(-o): record,   # 覆盖部署配置里面的同名配置项, 仅支持部署时使用
 ] {
-  main run $dest --apps $apps --force=$force --list=$list --watch=$watch --grep $grep --stop-by-id $stop_by_id
+  main run $dest --apps $apps --force=$force --list=$list --watch=$watch --grep $grep --stop-by-id $stop_by_id --override=$override
 }
 
 # 根据流水线 ID 或目标环境查询流水线执行结果, 例如: 单应用: t dq 997636681239659; t dq test, 多应用: t dq dev -a all
