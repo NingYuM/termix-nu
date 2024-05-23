@@ -64,7 +64,7 @@ def get-pipeline-conf [
   --apps: string,           # 指定需要批量部署的应用，多个应用以英文逗号分隔
   --list,                   # 列出所有可能的部署目标及应用信息
   --grep: string,           # 仅在与 `-l` 一起使用时生效，从部署配置里面搜索name,alias或description里包含特定字符串的部署目标
-  --override(-o): record,   # 覆盖部署配置里面的同名配置项, 仅支持部署时使用
+  --override(-o): record,   # 覆盖部署配置里面的同名配置项
 ] {
   # 本地配置文件名，优先从 i 分支上的 .termixrc 文件中读取配置
   # 如果 i 分支不存在则从当前目录下的 .termixrc 文件中读取配置
@@ -238,8 +238,8 @@ def get-pipeline-url [orgName:string, --as-raw-string, --host: string = $ERDA_HO
 }
 
 # 查询指定目标上最新的N条流水线执行结果
-def query-latest-cicd [dest: string, --apps: string, --show-running-detail] {
-  let apps = (get-pipeline-conf $dest --apps $apps)
+def query-latest-cicd [dest: string, --apps: string, --override: record, --show-running-detail] {
+  let apps = get-pipeline-conf $dest --apps $apps --override=$override
   check-erda-envs
   for app in $apps {
     print $'Querying latest CICDs for (ansi pb)($app.appName) on ($app.branch)(ansi reset) branch:'; hr-line -c pb
@@ -486,7 +486,7 @@ export def main [
   --cid(-i): int,             # 当操作为 query 时生效，用于查询 CICD 执行结果，如果不传则查询最近 10 条流水线执行结果
   --apps(-a): string,         # 指定需要批量部署的应用，多个应用以英文逗号分隔
   --stop-by-id(-s): int,      # 当操作为 run 时生效，用于根据流水线ID停止对应的正在运行的流水线
-  --override(-o): record,     # 覆盖部署配置里面的同名配置项, 仅支持部署时使用
+  --override(-o): record,     # 覆盖部署配置里面的同名配置项
 ] {
   check-erda-envs
 
@@ -517,7 +517,7 @@ export def main [
     }
     query | q => {
       # 未指定 cid 则查询最近 10 条流水线执行结果
-      if ($cid | is-empty) { query-latest-cicd --apps $apps $dest; exit $ECODE.SUCCESS }
+      if ($cid | is-empty) { query-latest-cicd $dest --apps $apps --override=$override; exit $ECODE.SUCCESS }
       if ($cid | describe) != 'int' {
         print $'Invalid value for --cid: (ansi r)($cid)(ansi reset), should be an integer number.'
         exit $ECODE.INVALID_PARAMETER
@@ -540,7 +540,7 @@ export def erda-deploy [
   --force(-f),              # 即便已经有正在运行的流水线，或者即便该 Commit 对应的分支已经部署过也会强制重新部署
   --apps(-a): string,       # 指定需要批量部署的应用，多个应用以","分隔，在多应用模式下必须指定(`all` 代表所有)，单应用模式忽略
   --stop-by-id(-s): int,    # 根据流水线ID 停止对应的正在运行的流水线
-  --override(-o): record,   # 覆盖部署配置里面的同名配置项, 仅支持部署时使用
+  --override(-o): record,   # 覆盖部署配置里面的同名配置项
 ] {
   main run $dest --apps $apps --force=$force --list=$list --watch=$watch --grep $grep --stop-by-id $stop_by_id --override=$override
 }
@@ -551,11 +551,16 @@ export def erda-query [
   --watch(-w),            # 持续轮询并显示指定流水线各个 Stage 的详细执行信息
   --cid(-i): any,         # 用于通过流水线的执行 ID 查询 CICD 执行结果，如果指定该参数则忽略 dest 参数
   --apps(-a): string,     # 指定需要批量查询的应用，多个应用以","分隔，在多应用模式下必须指定(`all` 代表所有)，单应用模式忽略
+  --override(-o): record, # 覆盖部署配置里面的同名配置项
 ] {
   # 允许非指定流水线ID的查询
   if ($cid | is-empty) {
     # 需要同时支持 t dq 997636681239659 & t dq test
     let cidParsed = (do -i {$dest | into int})
-    if ($cidParsed | describe) == 'int' { main query --cid $cidParsed --watch=$watch } else { main query $dest --apps $apps }
+    if ($cidParsed | describe) == 'int' {
+      main query --cid $cidParsed --watch=$watch
+    } else {
+      main query $dest --apps $apps --override=$override
+    }
   } else { main query --cid $cid --watch=$watch }
 }
