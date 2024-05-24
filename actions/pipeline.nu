@@ -198,12 +198,12 @@ def query-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
 }
 
 # 格式化流水线查询结果，以更友好的方式呈现
-def format-pipeline-data [pipelines: any] {
+def format-pipeline-data [pipelines: any, orgName: string] {
   const NA = 'N/A'
   return (
     $pipelines
       | select -i id commit status normalLabels extra timeBegin timeUpdated filterLabels
-      | upsert id {|it| $it | get-pipeline-url }
+      | upsert id {|it| $it | get-pipeline-url $orgName }
       | upsert timeBegin {|it| if ($it | get -i timeBegin | is-empty) { $NA } else { $it.timeBegin } }
       | update commit {|it| $it.commit | str substring 0..9 }
       | upsert Comment {|it| $it.normalLabels.commitDetail | from json | get -i comment | str trim }
@@ -218,12 +218,12 @@ def format-pipeline-data [pipelines: any] {
 }
 
 # Render pipeline ID as a clickable link while querying latest CICDs
-def get-pipeline-url [--as-raw-string, --host: string = $ERDA_HOST] {
+def get-pipeline-url [orgName:string, --as-raw-string, --host: string = $ERDA_HOST] {
   let $pipeline = $in
   let id = $pipeline.id
   let appid = $pipeline.filterLabels.appID
   let pid = $pipeline.filterLabels.projectID
-  let link = $'($host)/terminus/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
+  let link = $'($host)/($orgName)/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
   if $as_raw_string { $link } else {
     $link | ansi link --text $'($id)'
   }
@@ -240,10 +240,11 @@ def query-latest-cicd [dest: string, --apps: string, --show-running-detail] {
       print $'No CICD found for (ansi pb)($app.appName)(ansi reset) on (ansi g)($app.branch)(ansi reset) branch'
       exit $ECODE.SUCCESS
     }
-    let pipelines = (format-pipeline-data $ci.data.pipelines)
+    let orgName = (fetch-cicd-detail $ci.data.pipelines.0.id).data.orgName
+    let pipelines = (format-pipeline-data $ci.data.pipelines $orgName)
     print ($pipelines | table -e)
     print 'URL of the latest pipeline:'; hr-line
-    print ($ci.data.pipelines | first | get-pipeline-url --as-raw-string)
+    print ($ci.data.pipelines | first | get-pipeline-url $orgName --as-raw-string)
     print (char nl)
     if ($show_running_detail) {
       let running = $ci.data.pipelines | where status == 'Running'
@@ -278,8 +279,9 @@ def check-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
     print $'The commit (ansi p)($commitID | str substring 0..9)@($branch)(ansi reset) has been deployed, re-run with `-f` flag to deploy it again.'
   }
   let result = if $nRunning > 0 { $running } else { $deployed }
+  let orgName = (fetch-cicd-detail $result.0.id).data.orgName
   hr-line 96 -abc pb
-  print (format-pipeline-data $result)
+  print (format-pipeline-data $result $orgName)
   return false
 }
 
@@ -311,7 +313,6 @@ export def create-cicd [aid: int, appName: string, branch: string, pipeline: str
 export def run-cicd [id: int, appid: int, pid: int, --watch, --host: string = $ERDA_HOST] {
   let runUrl = $'($host)/api/terminus/cicds/($id)/actions/run'
   mut run = (curl --silent -H (get-erda-auth $host) -X POST $runUrl | from json)
-  let url = $'($host)/terminus/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
   # Check session expired, and renew if needed
   let check = should-retry-req $run
   if ($check.shouldRetry) {
@@ -320,6 +321,8 @@ export def run-cicd [id: int, appid: int, pid: int, --watch, --host: string = $E
   }
   if $run.success {
     print $'CICD started, You can query the pipeline running status with id: (ansi g)($id)(ansi reset)'
+    let orgName = (fetch-cicd-detail $id).data.orgName
+    let url = $'($host)/($orgName)/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
     print $'Or visit ($url) for more details'
   }
   if $watch { watch-cicd-status $id }
@@ -456,7 +459,7 @@ export def query-cicd-by-id [id: int, --watch, --host: string = $ERDA_HOST] {
     End: $timeEnd
     Duration: ($'($query.data.costTimeSec)sec' | into duration)
     # 此处之所以没有直接用 $appid & $pid 是因为可能存在在 A 应用仓库中查询 B 应用的流水线执行结果的情况，故而以返回数据为准
-    URL: $'($host)/terminus/dop/projects/($query.data.projectID)/apps/($query.data.applicationID)/pipeline/obsoleted?pipelineID=($id)'
+    URL: $'($host)/($query.data.orgName)/dop/projects/($query.data.projectID)/apps/($query.data.applicationID)/pipeline/obsoleted?pipelineID=($id)'
   }
   print $'(char nl)(ansi pb)Current Running Status of CICD ($id):(ansi reset)'
   hr-line; print $output
