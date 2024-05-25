@@ -54,12 +54,14 @@ alias dq := deploy-query
 # default: (sh-cmd "main")
 
 # List available commands by default
+[group('== Common  ==')]
 default: _setup
   @let defaultJustFile = '{{_default_just_file}}'; \
     let justfile = if ($defaultJustFile | path expand | path exists) { $defaultJustFile } else { "Justfile" }; \
-    just --justfile $justfile --list --list-prefix "··· "
+    just --justfile $justfile --list
 
 # Display termix current version number
+[group('== Common  ==')]
 ver: _setup
   @cd $env.TERMIX_DIR; let ver = (open termix.toml | get version); { \
   version: $ver, commit: (git rev-parse $ver e> {{_null_device}} | str substring 0..<7), \
@@ -72,6 +74,7 @@ sync-doc: _setup
     cp FAQ.md $'($doc)/termix-FAQ.md'; cp CHANGELOG.md $'($doc)/termix-CHANGELOG.md';
 
 # Upgrade termix-nu repo, just or nushell to the latest version
+[group('== Common  ==')]
 upgrade *OPTIONS: _register_plugins
   @overlay use {{ join(_termix, 'actions', 'upgrade.nu') }}; upgrade-tool {{OPTIONS}}
 
@@ -89,41 +92,49 @@ typos:
   @cspell lint . --no-progress
 
 # Quickly open the matched nav url in default browser, for mac or windows with powershell
+[group('== Common  ==')]
 go nav=('list'): _setup
   @overlay use {{ join(_termix, 'actions', 'quick-nav.nu') }}; \
     go {{nav}}
 
 # TERP Meta data synchronization tool
+[group('== Backend ==')]
 msync *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'meta-sync.nu') }}; \
     meta sync {{OPTIONS}}
 
 # Download, transfer or sync TERP assets
+[group('== Frontend ==')]
 terp-assets *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'terp-assets.nu') }}; \
     terp assets {{OPTIONS}}
 
 # Create, download, upload and deploy from the artifacts
+[group('== Common  ==')]
 art *OPTIONS: _setup _setup_fzf
   @overlay use {{ join(_termix, 'actions', 'artifact.nu') }}; \
     artifacts {{OPTIONS}}
 
-# Run an Erda pipeline, the target can be queried by `dp -l`, default is `dev`, and use `--app` to specify the apps to deploy
+# 执行Erda流水线, 可通过`dp -l`列出所有部署目标, 在批量部署模式下通过`--app`指定待部署应用
+[group('== Common  ==')]
 deploy *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'pipeline.nu') }}; \
     erda-deploy {{OPTIONS}}
 
 # Query the Erda pipeline running status by CICD id or `--app`
+[group('== Common  ==')]
 deploy-query *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'pipeline.nu') }}; \
     erda-query {{OPTIONS}}
 
 # Send a message to DingTalk Group by a custom robot
+[group('== Common  ==')]
 ding-msg *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'dingtalk-notify.nu') }}; \
     dingtalk notify {{OPTIONS}}
 
 # Query node dependencies in all package.json files on specified branches
+[group('== Frontend ==')]
 query-deps *OPTIONS: _setup
   @# The following two statement must be written in one line
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
@@ -131,6 +142,7 @@ query-deps *OPTIONS: _setup
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; query deps {{OPTIONS}}
 
 # Listing the branches of a git repo and the time of the last commit
+[group('== Git ==')]
 git-branch *OPTIONS: _setup
   @# The following two statement must be written in one line
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
@@ -138,12 +150,14 @@ git-branch *OPTIONS: _setup
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git-branch {{OPTIONS}}
 
 # Show insertions/deletions and number of files changed for each commit
+[group('== Git ==')]
 git-stat *OPTIONS: _setup
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
     overlay use {{ join(_termix, 'git', 'git-stat.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git stat {{OPTIONS}}
 
 # Listing the remote branches of a git repo with the extra info
+[group('== Git ==')]
 git-remote-branch *OPTIONS: _setup
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
     overlay use {{ join(_termix, 'git', 'remote-branch.nu') }}; \
@@ -151,6 +165,7 @@ git-remote-branch *OPTIONS: _setup
     git-remote-branch {{OPTIONS}}
 
 # Show commit info diff between two commits, e.g. t git-diff-commit 051da464 0ab1df2d
+[group('== Git ==')]
 git-diff-commit *OPTIONS: _setup
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
     overlay use {{ join(_termix, 'git', 'diff-commit.nu') }}; \
@@ -158,6 +173,7 @@ git-diff-commit *OPTIONS: _setup
     git diff-commit {{OPTIONS}}
 
 # Show branch description from branch description file `d` of `i` branch
+[group('== Git ==')]
 git-desc *OPTIONS: _setup
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
     overlay use {{ join(_termix, 'git', 'branch-desc.nu') }}; \
@@ -165,41 +181,48 @@ git-desc *OPTIONS: _setup
     branch-desc {{OPTIONS}}
 
 # Pick matched commits from one branch to another branch.
+[group('== Git ==')]
 git-pick *OPTIONS: _setup
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
     overlay use {{ join(_termix, 'git', 'git-pick.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; \
     git pick {{OPTIONS}}
 
-# Check whether all remote branches have descriptions or whether synced branches exist in the remote repo
+# 分支检查: 检查是否所有分支都有描述信息以及是否有可同步分支在远程仓库被删除
+[group('== Git ==')]
 check-branch: _setup
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
     overlay use {{ join(_termix, 'git', 'check-branch.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; check-branch
 
 # Pull all local branches from remote repo
+[group('== Git ==')]
 pull-all: _setup
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
     overlay use {{ join(_termix, 'git', 'pull-all.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git pull-all {{JUST_INVOKE_DIR}} 'origin'
 
 # Rename remote branch, and delete old branch after rename
+[group('== Git ==')]
 rename-branch *OPTIONS: _setup
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
     overlay use {{ join(_termix, 'git', 'rename-branch.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git branch-rename {{OPTIONS}}
 
 # 显示本机安装应用版本及环境变量相关信息
+[group('== Common  ==')]
 show-env: _setup
   @overlay use {{ join(_termix, 'actions', 'show-env.nu') }}; \
     show-env
 
 # 查询已发布Node版本，支持指定最低版本号
+[group('== Frontend ==')]
 ls-node *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'ls-node.nu') }}; \
     ls-node-remote {{OPTIONS}}
 
 # 按时间顺序列出所有的 git tags, 默认按 `time` 排序，可选按 `tag` 排序：ls-tags tag
+[group('== Git ==')]
 ls-tags by=('time'): _setup
   @let sort = if ('{{by}}' != 'time') { '--sort=-v:refname' } else { '--sort=-creatordate' }; \
     if (git tag -l | is-empty) { exit 0 }; print (char nl); \
@@ -210,16 +233,19 @@ ls-tags by=('time'): _setup
       | select tag time
 
 # 通过 Brew 国内镜像加速执行 brew 相关命令
+[group('== Common  ==')]
 brew *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'brew-speed-up.nu') }}; \
     fast-brew {{OPTIONS}}
 
 # 开启或者关闭 git 代理, 目前仅支持在阿里郎加速模式下开启 git 代理
+[group('== Git ==')]
 git-proxy status=('on'): _setup
   @load-env { GIT_PROXY_STATUS: '{{status}}' }; \
     nu {{ join(_termix, 'git', 'git-proxy.nu') }}
 
 # 查询团队本周工时填报情况
+[group('== Common  ==')]
 emp *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'working-hours.nu') }}; \
     query-hours-by-team-codes {{OPTIONS}}
@@ -242,6 +268,7 @@ gaia-release version=('') repos=('mall,mobile,picker') delete=('false'): _setup
     gaia-release {{version}} {{repos}} --delete-tag={{delete}}
 
 # Transfer a git repo from source to the dest
+[group('== Git ==')]
 repo-transfer *OPTIONS: _setup
   @overlay use {{ join(_termix, 'git', 'repo-transfer.nu') }}; \
     git repo-transfer {{OPTIONS}}
@@ -280,6 +307,7 @@ git-sync-branch localRef localOid remoteRef: _setup
     git sync-branch {{localRef}} {{localOid}} {{remoteRef}}
 
 # 手工触发批量同步本地分支到远程指定分支
+[group('== Git ==')]
 gsync *OPTIONS: _setup
   @overlay use {{ join(_termix, 'git', 'trigger-sync.nu') }}; \
     git trigger-sync {{OPTIONS}}
@@ -292,6 +320,7 @@ prune-synced-branches dryRun=('true') user=('git') ak=('-'): _setup
 
 # 复用 utils 里面定义的公用方法: nu 不支持动态 source 只能拼接下了
 # 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用`,`分隔
+[group('== Git ==')]
 git-batch-exec *OPTIONS: _setup
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
     overlay use {{ join(_termix, 'git', 'git-batch-exec.nu') }}; \
@@ -305,6 +334,7 @@ git-batch-reset n +branches=(''): _setup
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git batch-reset {{n}} '{{branches}}'
 
 # 在指定目录(支持'*'通配符)或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
+[group('== Common  ==')]
 dir-batch-exec *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'dir-batch-exec.nu') }}; \
     dir-batch-exec {{OPTIONS}}
