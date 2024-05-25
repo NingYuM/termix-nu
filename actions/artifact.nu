@@ -67,7 +67,7 @@ export def artifacts [
 ] {
   cd $env.TERMIX_DIR
   let currentBranch = git branch --show-current
-  let sha = do -i { git rev-parse $currentBranch | str substring 0..7 }
+  let sha = do -i { git rev-parse $currentBranch | str substring 0..<7 }
   print -n (ellie); print $'        Terminus TERP Artifacts Assistant @ ($sha)'; hr-line
 
   let checkEnv = {|did|
@@ -240,9 +240,9 @@ def get-project-artifact-version [version: string] {
     | str replace SNAPSHOT SNAP     # Trantor
     | str replace Console-fe CFE    # Console
     | str replace -r '2.5.\d\d.' v  # Trantor Version
-    | str substring 0..30
+    | str substring 0..<30
   if $pVer != $version { return $pVer }
-  $pVer | str substring 0..28 | append '.p' | str join
+  $pVer | str substring 0..<28 | append '.p' | str join
 }
 
 # Validate the artifact pack action settings and return the validated settings

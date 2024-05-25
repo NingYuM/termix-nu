@@ -62,7 +62,7 @@ default: _setup
 # Display termix current version number
 ver: _setup
   @cd $env.TERMIX_DIR; let ver = (open termix.toml | get version); { \
-  version: $ver, commit: (git rev-parse $ver e> {{_null_device}} | str substring 0..7), \
+  version: $ver, commit: (git rev-parse $ver e> {{_null_device}} | str substring 0..<7), \
   manual: 'https://fe-docs.app.terminus.io/termix/termix-nu' } | print
 
 # Synchronize doc from termix-nu to fe-docs repo

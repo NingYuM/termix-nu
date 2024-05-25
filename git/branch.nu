@@ -31,7 +31,7 @@ export def git-branch [
       | wrap name
       | upsert remote {|it| if (has-ref origin/($it.name)) { '   √' } else { '' } }
       | upsert author {|it| git show $it.name -s --format='%an' | str trim }
-      | upsert SHA {|it| do -i { git rev-parse $it.name | str substring 0..9 } }
+      | upsert SHA {|it| do -i { git rev-parse $it.name | str substring 0..<9 } }
       | upsert last-commit {|it| git show $it.name --no-patch --format=%ci | into datetime }
   )
   print (append-desc $basic)

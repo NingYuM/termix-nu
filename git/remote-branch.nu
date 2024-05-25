@@ -30,7 +30,7 @@ export def git-remote-branch [
     | wrap name
     | upsert local { |it|  if (has-ref $it.name) { '   √' }}
     | upsert author { |it| git show $'remotes/($remote)/($it.name)' -s --format='%an' | str trim }
-    | upsert SHA {|it| do -i { git rev-parse $'($remote)/($it.name)' | str substring 0..9 } }
+    | upsert SHA {|it| do -i { git rev-parse $'($remote)/($it.name)' | str substring 0..<9 } }
     | upsert last-commit { |it| git show $'remotes/($remote)/($it.name)' --no-patch --format=%ci | into datetime }
   )
   print (append-desc $basic)
@@ -46,7 +46,7 @@ export def git-remote-branch [
     | detect columns -n
     | rename SHA tag
     | move tag --before SHA
-    | upsert SHA { |it| str substring 0..9 }
+    | upsert SHA { |it| str substring 0..<9 }
 }
 
 # $env | transpose

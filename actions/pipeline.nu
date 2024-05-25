@@ -213,7 +213,7 @@ def format-pipeline-data [pipelines: any, orgName: string] {
       | select -i id commit status normalLabels extra timeBegin timeUpdated filterLabels
       | upsert id {|it| $it | get-pipeline-url $orgName }
       | upsert timeBegin {|it| if ($it | get -i timeBegin | is-empty) { $NA } else { $it.timeBegin } }
-      | update commit {|it| $it.commit | str substring 0..9 }
+      | update commit {|it| $it.commit | str substring 0..<9 }
       | upsert Comment {|it| $it.normalLabels.commitDetail | from json | get -i comment | str trim }
       | upsert Author {|it| $it.normalLabels.commitDetail | from json | get -i author }
       | update status {|it| $'(ansi pb)($it.status)(ansi reset)' }
@@ -284,7 +284,7 @@ def check-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
   if $nRunning > 0 {
     print $'There are running pipelines, please wait with patience or re-run with `-f` flag.'
   } else if $nDeployed > 0 {
-    print $'The commit (ansi p)($commitID | str substring 0..9)@($branch)(ansi reset) has been deployed, re-run with `-f` flag to deploy it again.'
+    print $'The commit (ansi p)($commitID | str substring 0..<9)@($branch)(ansi reset) has been deployed, re-run with `-f` flag to deploy it again.'
   }
   let result = if $nRunning > 0 { $running } else { $deployed }
   let orgName = (fetch-cicd-detail $result.0.id).data.orgName
@@ -461,7 +461,7 @@ export def query-cicd-by-id [id: int, --watch, --host: string = $ERDA_HOST] {
     Status: $'(ansi pb)($query.data.status)(ansi reset)'
     Runner: $query.data.extra.runUser.name
     Committer: $query.data.commitDetail.author
-    Commit: ($query.data.commit | str substring 0..9)
+    Commit: ($query.data.commit | str substring 0..<9)
     Comment: ($query.data.commitDetail.comment | str trim)
     Begin: $query.data.timeBegin
     End: $timeEnd

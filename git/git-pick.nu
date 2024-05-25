@@ -121,7 +121,7 @@ def get-valid-options [
     let sourceMatches = git log ...$sourceArgs | lines | split column '---' | rename sha msg date
     let targetMatches = git log ...$targetArgs | lines | split column '---' | rename sha msg
     $matches = ($sourceMatches
-      | filter {|it| ($it.msg not-in $targetMatches.msg) and (($it.sha | str substring ..8) not-in $ignore) and ($it.msg not-in $ignore) }
+      | filter {|it| ($it.msg not-in $targetMatches.msg) and (($it.sha | str substring ..<8) not-in $ignore) and ($it.msg not-in $ignore) }
       | sort-by date
       | select sha
     )

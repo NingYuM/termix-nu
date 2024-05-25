@@ -12,7 +12,7 @@ def main [
         | from json
         | sort-by -r mergedAt
         | upsert milestone {|it| ($it.milestone).title? }
-        | upsert mergeCommit {|it| ($it.mergeCommit).oid | str substring 0..12 }
+        | upsert mergeCommit {|it| ($it.mergeCommit).oid | str substring 0..<12 }
     let startPRMergedAt = $prs
         | where $it.mergeCommit =~ $fromSha
         | get 0.mergedAt
