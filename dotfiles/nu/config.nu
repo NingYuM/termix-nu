@@ -1,6 +1,6 @@
 # Nushell Config File
-# Update config from: b6c537d78
-# version = 0.92.0
+# Update config from: 95977faf2
+# version = 0.93.1
 
 # source ~/.config/nushell/config.nu
 # Ref:
@@ -519,6 +519,7 @@ let dark_theme = {
   shape_table: blue_bold
   shape_variable: purple
   shape_vardecl: purple
+  shape_raw_string: light_purple
 }
 
 let light_theme = {
@@ -584,6 +585,7 @@ let light_theme = {
   shape_table: blue_bold
   shape_variable: purple
   shape_vardecl: purple
+  shape_raw_string: light_purple
 }
 
 # let carapace_completer = {|spans|
