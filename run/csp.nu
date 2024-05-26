@@ -14,6 +14,14 @@ ls pkgs/ | get name | each {|it| let pkg = open $'($it)/package.json' | upsert s
 # Add assets release version for each package
 ls pkgs/ | get name | each {|it| let pkg = open $'($it)/package.json' | upsert distVersion '1.0.0'; $pkg | save -f $'($it)/package.json' }
 
+# Remove f2elint deps
+ls pkgs/ | get name | each {|it| let pkg = open $'($it)/package.json' | reject -i devDependencies.f2elint; $pkg | save -f $'($it)/package.json' }
+
 # 依赖检查
 let pkgs = ls pkgs/ | get name | each {|it| open $'($it)/package.json' | get name }
 for n in $pkgs { print $'(char nl)($n)(char nl)-----------------------------'; rg $n pkgs/*/package.json }
+
+# Copy missing packages
+let repoRoot = '/Users/hustcer/github/term-o/csp_fe_repos'
+open -r tools/pkgs.yaml | lines | each {|it| $'($repoRoot)/($it)' | path exists }
+open -r tools/pkgs.yaml | lines | each {|it| cp -r $'($repoRoot)/($it)' pkgs/ }
