@@ -1,6 +1,32 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.78.0 - 2024-05-28
+
+**Breaking Changes**
+
+- Adapt to `Nu` v0.93.1
+
+**Bug Fixes**
+
+- Fix pipeline query detail url of `t dp` or `t dq` command
+- Fix actions/nu-nightly.nu for `Nu` nightly install
+
+**Features**
+
+- Add `--all` flag to `t git-pick` command to show empty or merged commits picking error
+- Update `t dp` command add `--override` flag
+- Update `t dq` command add `--override` flag
+- Add groups for all available just commands
+- Prettify default `just` command output
+
+**Miscellaneous Tasks**
+
+- Add Set proxy for Nu tip for `t git-proxy` command
+- Update dotfiles/yazi.toml
+- Add dotfiles/lazygit.yml
+- Update `Nu` config for v0.93.1
+
 ## v1.77.3 - 2024-05-18
 
 **Bug Fixes**

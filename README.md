@@ -79,37 +79,48 @@ winget install Nushell.Nushell
 
    ```bash
    ➜  $ just
-   Available recipes:
-   ··· brew *OPTIONS              # 通过 Brew 国内镜像加速执行 brew 相关命令
-   ··· check-branch               # Check whether all remote branches have descriptions or whether synced branches exist in the remote repo
-   ··· default                    # List available commands by default
-   ··· deploy *OPTIONS            # Run an Erda pipeline, the target can be queried by `dp -l`, default is `dev`, and use `--app` to specify the apps to deploy
-   ··· dp *OPTIONS                # alias for `deploy`
-   ··· deploy-query *OPTIONS      # Query the Erda pipeline running status by CICD id or `--app`
-   ··· dq *OPTIONS                # alias for `deploy-query`
-   ··· git-desc *OPTIONS          # Show branch description from branch description file `d` of `i` branch
-   ··· ding-msg *OPTIONS          # Send a message to DingTalk Group by a custom robot
-   ··· dir-batch-exec *OPTIONS    # 在指定目录(支持'*'通配符)或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
-   ··· emp *OPTIONS               # 查询团队本周工时填报情况
-   ··· git-batch-exec *OPTIONS    # 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用`,`分隔
-   ··· git-branch *OPTIONS        # Listing the branches of a git repo and the time of the last commit
-   ··· git-diff-commit *OPTIONS   # Show commit info diff between two commits, e.g. t git-diff-commit 051da464 0ab1df2d
-   ··· git-proxy status=('on')    # 开启或者关闭 git 代理, 目前仅支持在阿里郎加速模式下开启 git 代理
-   ··· git-remote-branch *OPTIONS # Listing the remote branches of a git repo with the extra info
-   ··· git-stat *OPTIONS          # Show insertions/deletions and number of files changed for each commit
-   ··· go nav=('list')            # Quickly open the matched nav url in default browser, for mac or windows with powershell
-   ··· ls-node *OPTIONS           # 查询已发布Node版本，支持指定最低版本号
-   ··· ls-tags by=('time')        # 按时间顺序列出所有的 git tags, 默认按 `time` 排序，可选按 `tag` 排序：ls-tags tag
-   ··· msync *OPTIONS             # TERP Meta data synchronization tool
-   ··· pull-all                   # Pull all local branches from remote repo
-   ··· rename-branch *OPTIONS     # Rename remote branch, and delete old branch after rename
-   ··· repo-transfer *OPTIONS     # Transfer a git repo from source to the dest
-   ··· show-env                   # 显示本机安装应用版本及环境变量相关信息
-   ··· terp-assets *OPTIONS       # Download, transfer or sync TERP assets
-   ··· ta *OPTIONS                # alias for `terp-assets`
-   ··· gsync *OPTIONS             # 手工触发批量同步本地分支到远程指定分支
-   ··· upgrade *OPTIONS           # Upgrade termix-nu repo, just or nushell to the latest version
-   ··· ver                        # Display termix current version number
+   Available commands:
+
+    [-- Backend --]
+    msync *OPTIONS             # TERP Meta data synchronization tool
+
+    [-- Common  --]
+    art *OPTIONS               # Create, download, upload and deploy from the artifacts
+    brew *OPTIONS              # 通过 Brew 国内镜像加速执行 brew 相关命令
+    default                    # List available commands by default
+    deploy *OPTIONS            # 执行Erda流水线,可通过`dp -l`列出所有部署目标,在批量部署模式下通过`--app`指定待部署应用
+    dp *OPTIONS                # alias for `deploy`
+    deploy-query *OPTIONS      # Query the Erda pipeline running status by CICD id or `--app`
+    dq *OPTIONS                # alias for `deploy-query`
+    ding-msg *OPTIONS          # Send a message to DingTalk Group by a custom robot
+    dir-batch-exec *OPTIONS    # 在指定目录(支持'*'通配符)或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
+    emp *OPTIONS               # 查询团队本周工时填报情况
+    go nav=('list')            # 快速在默认浏览器里打开匹配的链接
+    show-env                   # 显示本机安装应用版本及环境变量相关信息
+    upgrade *OPTIONS           # Upgrade termix-nu repo, just or nushell to the latest version
+    ver                        # Display termix current version number
+
+    [-- Frontend --]
+    ls-node *OPTIONS           # 查询已发布Node版本，支持指定最低版本号
+    query-deps *OPTIONS        # Query node dependencies in all package.json files on specified branches
+    terp-assets *OPTIONS       # Download, transfer or sync TERP assets
+    ta *OPTIONS                # alias for `terp-assets`
+
+    [-- Git --]
+    check-branch               # 分支检查: 检查是否所有分支都有描述信息以及是否有可同步分支在远程仓库被删除
+    git-batch-exec *OPTIONS    # 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用`,`分隔
+    git-branch *OPTIONS        # Listing the branches of a git repo and the time of the last commit
+    git-desc *OPTIONS          # Show branch description from branch description file `d` of `i` branch
+    git-diff-commit *OPTIONS   # Show commit info diff between two commits, e.g. t git-diff-commit 051da464 0ab1df2d
+    git-pick *OPTIONS          # Pick matched commits from one branch to another branch.
+    git-proxy status=('on')    # 开启或者关闭 git 代理, 目前仅支持在阿里郎加速模式下开启 git 代理
+    git-remote-branch *OPTIONS # Listing the remote branches of a git repo with the extra info
+    git-stat *OPTIONS          # Show insertions/deletions and number of files changed for each commit
+    gsync *OPTIONS             # 手工触发批量同步本地分支到远程指定分支
+    ls-tags by=('time')        # 按时间顺序列出所有的 git tags, 默认按 `time` 排序，可选按 `tag` 排序：ls-tags tag
+    pull-all                   # Pull all local branches from remote repo
+    rename-branch *OPTIONS     # Rename remote branch, and delete old branch after rename
+    repo-transfer *OPTIONS     # Transfer a git repo from source to the dest
    ```
 
 4. 如果你希望在本机任意位置都可以使用`termix-nu`提供的功能，需要建立软连接:
