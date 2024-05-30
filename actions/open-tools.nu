@@ -47,11 +47,8 @@ export def get-version-from-brew [name: string] {
     | query web --query a --attribute href
     | where $it =~ $name
   let version = $packages
-    | where $it =~ 'arm64_sonoma.bottle.tar.gz'
-    | get 0
-    | parse '{name}-{version}.arm64_sonoma.bottle.tar.gz'
-    | get version
-    | get 0
+    | where $it =~ 'arm64' | get 0
+    | split row '-' | last | split row '.arm64' | first
   { version: $version, packages: $packages }
 }
 
