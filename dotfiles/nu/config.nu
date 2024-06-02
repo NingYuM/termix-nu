@@ -400,6 +400,17 @@ def --env load-dot-env [
   )
 }
 
+# Load environment variables from envio profile.
+def --env use-env [profile: string, --silent(-s)] {
+  let envs = envio list -n $profile -v
+    | lines
+    | parse '{key}={value}'
+    | reduce -f {} { |it, acc| $acc | insert $it.key ($it.value | str trim -c '"') }
+
+  if not $silent { print $envs }
+  load-env $envs
+}
+
 def "cargo search" [ query: string, --limit=10 ] {
   ^cargo search $query --limit $limit
     | lines
