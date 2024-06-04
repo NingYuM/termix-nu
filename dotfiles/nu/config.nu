@@ -400,6 +400,29 @@ def --env load-dot-env [
   )
 }
 
+# Env management tool
+def --env menv [
+  profile?: string,   # The name of the profile to use
+  --list(-l),         # List all environment variable sets
+  --silent(-s),       # Don't print the environment variables
+  --encrypted(-e),    # Load environment variables from encrypted file
+] {
+  use std null-device
+  let currentDir = (pwd)
+  z share-nu o+e> (null-device)
+  let envs = if $encrypted {
+      openssl enc -d -aes-256-cbc -a -pbkdf2 -iter 100 -in conf/sec.enc | from toml | get envs
+    } else { open conf/sec.toml | get envs }
+  if $list { $envs | columns | sort | print; return }
+
+  let profile = if ($profile | is-empty) { $envs | columns | sort | input list 'Choose a profile to load' } else { $profile }
+  let setting = $envs | get -i $profile
+  if ($setting | is-empty) { print $'Enviroment Profile (ansi r)($profile)(ansi reset) not found.'; return }
+  if not $silent { print $setting }
+  load-env $setting; cd $currentDir
+  print $'Eniroment of (ansi g)($profile)(ansi reset) loaded.'
+}
+
 # Load environment variables from envio profile.
 def --env use-env [profile: string, --silent(-s)] {
   let envs = envio list -n $profile -v
