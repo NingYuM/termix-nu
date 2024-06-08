@@ -36,6 +36,7 @@ use ../utils/common.nu [ECODE, hr-line, ellie, is-installed, is-lower-ver]
 
 const POLL_TICK_CHAR = '*'
 const QUERY_INTERVAL = 1sec
+const KEY_MAPPING = $"(ansi grey66)\(Space: Select, a: Select All, ESC/q: Quit, Enter: Confirm\)(ansi reset)"
 
 # TERP Meta data synchronization tool: create and upload snapshot to OSS, and import
 # meta data snapshot to the dest Console for all modules or selected modules.
@@ -294,7 +295,7 @@ def get-selected-modules [
   print -n (char nl)
   if $selected { return $from.selectedModules }
   let selected = $from.availableModules
-    | input list --multi 'Please select the modules to sync (space to select, esc or q to quit, enter to confirm)'
+    | input list --multi $'Please select the modules to sync ($KEY_MAPPING)'
   if ($selected | is-empty) {
     print $'You have not selected any modules, bye...'
     exit $ECODE.SUCCESS

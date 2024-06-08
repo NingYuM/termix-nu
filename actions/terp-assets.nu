@@ -32,16 +32,14 @@
 
 use ../utils/common.nu [ECODE, is-installed, hr-line, get-tmp-path, compare-ver, _TIME_FMT]
 
+const KEY_MAPPING = $"(ansi grey66)\(Space: Select, a: Select All, ESC/q: Quit, Enter: Confirm\)(ansi reset)"
 const JSON_ENTRY = 'latest.json'
 const VALID_ACTIONS = ['download', 'transfer', 'detect']
-const VALID_MODULES = [t-runtime-mobile-erp t-runtime-erp iam-features dors-page dors-mobile t-material t-mobile t-b2b-ui emp-frontend-erp]
-const NEXT_VALID_MODULES = [terp-mobile terp service service-mobile iam dors dors-mobile base base-mobile b2b emp]
+const VALID_MODULES = [terp-mobile terp service service-mobile iam dors dors-mobile base base-mobile b2b emp]
 const ENDPOINT = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com'
 
 # Don't validate module names by default
 const VALIDATE_MODULES = '0'
-# Ignore new modules while transferring `all` assets
-const IGNORE_NEW_MODULES = '0'
 const PKG_TOOLS_VER = '0.3.0-beta.1'
 
 # Download TERP static assets or transfer assets to other path of the specified cloud storage
@@ -72,23 +70,17 @@ def get-modules [modules?: string, --latest-meta: record, --action: string] {
   if $action == 'detect' { return $allModules }
   if ($modules | is-empty) {
     print $'No module specified, please select the modules manually...'; hr-line
-    let tips = $"Select the modules to sync or download (ansi grey66)\(space to select, esc or q to quit, enter to confirm\)(ansi reset)"
+    let tips = $"Select the modules to sync or download ($KEY_MAPPING)"
     let selected = $allModules | input list --multi $tips
-    if ($selected | is-empty) {
-      print $'You have not selected any modules, bye...'
-      exit $ECODE.SUCCESS
-    }
+    if ($selected | is-empty) { print $'You have not selected any modules, bye...'; exit $ECODE.SUCCESS }
     return $selected
   }
 
-  let ignoreNewModules = if (($env.IGNORE_NEW_MODULES? | default $IGNORE_NEW_MODULES) == '1') { true } else { false }
-  # Sync all modules and exclude new modules if 'all' is specified
-  if $modules == 'all' and $ignoreNewModules { return ($allModules | filter {|it| $it in $VALID_MODULES}) }
   # Sync all modules if 'all' is specified
   if $modules == 'all' { return $allModules }
 
   # Validate and sync specified modules
-  let splits = $modules | split row ','
+  let splits = $modules | default '' | split row ','
   if ($splits | length) > 0 {
     let inexists = $splits | filter {|it| $it not-in $allModules }
     if ($inexists | length) > 0 {
@@ -109,7 +101,7 @@ def get-latest-meta [from: string] {
   let modules = $latest | columns
   let validModules = {|mods, validMods| $mods | all {|m| $m in $validMods } }
   let validateModules = if (($env.VALIDATE_MODULES? | default $VALIDATE_MODULES) == '0') { false } else { true }
-  let validationPassed = (do $validModules $modules $VALID_MODULES) or (do $validModules $modules $NEXT_VALID_MODULES)
+  let validationPassed = (do $validModules $modules $VALID_MODULES)
   if (not $validateModules) or ($validateModules and $validationPassed) {
     return { from: $from, latestUrl: $fromUrl, mountpoint: $mount, latest: $latest }
   }
