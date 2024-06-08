@@ -38,19 +38,20 @@ const VALID_ACTIONS = ['download', 'transfer', 'detect']
 const VALID_MODULES = [terp-mobile terp service service-mobile iam dors dors-mobile base base-mobile b2b emp]
 const ENDPOINT = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com'
 
+# Front end module and descriptions
 const MOD_DESC = {
-  b2b: $'(ansi p)b2b(ansi reset): B2B & SRM 自定义业务组件'
-  base: $'(ansi p)base(ansi reset): PC端设计器基础组件'
-  base-mobile: $'(ansi p)base-mobile(ansi reset): 移动端设计器基础组件'
-  dors: $'(ansi p)dors(ansi reset): PC端报表搭建组件'
-  dors-mobile: $'(ansi p)dors-mobile(ansi reset): 移动端报表搭建组件'
-  emp: $'(ansi p)emp(ansi reset): EMP 自定义业务组件'
-  iam: $'(ansi p)iam(ansi reset): IAM 登录注册相关基础组件'
-  service: $'(ansi p)service(ansi reset): PC端审批/通知/日志/导入导出/打印等基础组件'
-  service-mobile: $'(ansi p)service-mobile(ansi reset): 移动端审批/通知等基础组件'
-  terp: $'(ansi p)terp(ansi reset): TERP PC端业务组件'
-  terp-mobile: $'(ansi p)terp-mobile(ansi reset): TERP 移动端业务组件'
-}
+    b2b: 'b2b: B2B & SRM 自定义业务组件'
+    base: 'base: PC 端设计器基础组件'
+    base-mobile: 'base-mobile: 移动端设计器基础组件'
+    dors: 'dors: PC 端报表搭建组件'
+    dors-mobile: 'dors-mobile: 移动端报表搭建组件'
+    emp: 'emp: EMP 自定义业务组件'
+    iam: 'iam: IAM 登录注册相关基础组件'
+    service: 'service: PC 端审批/通知/日志/导入导出/打印等基础组件'
+    service-mobile: 'service-mobile: 移动端审批/通知等基础组件'
+    terp: 'terp: TERP PC 端业务组件'
+    terp-mobile: 'terp-mobile: TERP 移动端业务组件'
+  }
 
 # Don't validate module names by default
 const VALIDATE_MODULES = '0'
@@ -77,11 +78,23 @@ export def 'terp assets' [
   }
 }
 
+# Format module descriptions for display
+def format-desc [] {
+  let desc = $in
+  $desc | split column : | rename m d
+    | upsert desc {|it| $'(ansi p)($it.m | fill -w 15)(ansi reset):($it.d)'}
+    | get desc.0
+}
+
 # Get valid modules from input and exit if any invalid module is found
 def get-modules [modules?: string, --latest-meta: record, --action: string] {
+
+  let descriptions = $MOD_DESC | columns
+    | reduce --fold {} {|it, acc| $acc | merge { $it: ($MOD_DESC | get $it | format-desc) } }
+
   # Choose modules from latest.json if modules is empty
   let allModules = $latest_meta.latest | columns | wrap mod
-    | upsert desc {|it| $MOD_DESC | get -i $it.mod | default $it.mod }
+    | upsert desc {|it| $descriptions | get -i $it.mod | default $it.mod }
     | sort-by mod
   if $action == 'detect' { return $allModules }
   if ($modules | is-empty) {
