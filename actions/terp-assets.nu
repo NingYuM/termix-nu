@@ -38,6 +38,20 @@ const VALID_ACTIONS = ['download', 'transfer', 'detect']
 const VALID_MODULES = [terp-mobile terp service service-mobile iam dors dors-mobile base base-mobile b2b emp]
 const ENDPOINT = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com'
 
+const MOD_DESC = {
+  b2b: $'(ansi p)b2b(ansi reset): B2B & SRM 自定义业务组件'
+  base: $'(ansi p)base(ansi reset): PC端设计器基础组件'
+  base-mobile: $'(ansi p)base-mobile(ansi reset): 移动端设计器基础组件'
+  dors: $'(ansi p)dors(ansi reset): PC端报表搭建组件'
+  dors-mobile: $'(ansi p)dors-mobile(ansi reset): 移动端报表搭建组件'
+  emp: $'(ansi p)emp(ansi reset): EMP 自定义业务组件'
+  iam: $'(ansi p)iam(ansi reset): IAM 登录注册相关基础组件'
+  service: $'(ansi p)service(ansi reset): PC端审批/通知/日志/导入导出/打印等基础组件'
+  service-mobile: $'(ansi p)service-mobile(ansi reset): 移动端审批/通知等基础组件'
+  terp: $'(ansi p)terp(ansi reset): TERP PC端业务组件'
+  terp-mobile: $'(ansi p)terp-mobile(ansi reset): TERP 移动端业务组件'
+}
+
 # Don't validate module names by default
 const VALIDATE_MODULES = '0'
 const PKG_TOOLS_VER = '0.3.0-beta.1'
@@ -66,12 +80,14 @@ export def 'terp assets' [
 # Get valid modules from input and exit if any invalid module is found
 def get-modules [modules?: string, --latest-meta: record, --action: string] {
   # Choose modules from latest.json if modules is empty
-  let allModules = $latest_meta.latest | columns | sort
+  let allModules = $latest_meta.latest | columns | wrap mod
+    | upsert desc {|it| $MOD_DESC | get -i $it.mod | default $it.mod }
+    | sort-by mod
   if $action == 'detect' { return $allModules }
   if ($modules | is-empty) {
     print $'No module specified, please select the modules manually...'; hr-line
     let tips = $"Select the modules to sync or download ($KEY_MAPPING)"
-    let selected = $allModules | input list --multi $tips
+    let selected = $allModules | input list -d desc --multi $tips | default [] | get mod
     if ($selected | is-empty) { print $'You have not selected any modules, bye...'; exit $ECODE.SUCCESS }
     return $selected
   }
