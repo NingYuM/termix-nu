@@ -47,7 +47,6 @@ window-height = 20
 window-theme = dark
 copy-on-select = clipboard
 mouse-hide-while-typing = true
-macos-titlebar-tabs = true
 macos-non-native-fullscreen = false
 
 keybind = command+right=next_tab

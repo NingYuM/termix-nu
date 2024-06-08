@@ -434,6 +434,14 @@ def --env use-env [profile: string, --silent(-s)] {
   load-env $envs
 }
 
+# Change to the specified directory using fzf
+def --env c [] {
+  $env.CD_DIRS = 'acrm,asrm,bulma,carbon,csp-portal,ep-ui,imall,pp-fe,terp,service,termix-nu,b2b,material,slim,flex,setup-nu,setup-moonbit'
+  let dest = $env.CD_DIRS | split row ',' | str join (char nl)
+    | fzf --layout=reverse --height=50%
+  z $dest
+}
+
 def "cargo search" [ query: string, --limit=10 ] {
   ^cargo search $query --limit $limit
     | lines
