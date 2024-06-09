@@ -319,7 +319,7 @@ def update-transfer-meta [latestMeta: record] {
 # Display front end module meta data
 def detect [latestMeta: record] {
   const TIME_FMT = '%m/%d %H:%M:%S'
-  print $'Latest meta of (ansi g)($latestMeta.latestUrl)(ansi reset)'; hr-line 118
+  print $'Latest meta of (ansi g)($latestMeta.latestUrl)(ansi reset)'; hr-line 108
   let modules = $latestMeta.latest
     | values
     | select namespace deprecated? metadata?
@@ -333,7 +333,11 @@ def detect [latestMeta: record] {
     | sort-by namespace
     | rename module
 
-  $modules | print; hr-line 118
+  if ($modules | get deprecated? | compact | length) > 0 {
+    $modules | print; hr-line -c grey30 118
+  } else {
+    $modules | reject deprecated | print; hr-line -c grey30 108
+  }
   print $'Total modules: (ansi g)($modules | length)(ansi reset), Enabled: (ansi g)($modules | where deprecated? != true | length)(ansi reset), Deprecated modules: (ansi r)($modules | where deprecated? | length)(ansi reset)'
 }
 
