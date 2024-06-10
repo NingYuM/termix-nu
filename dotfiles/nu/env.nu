@@ -110,7 +110,7 @@ $env.PATH = (
     | prepend '/usr/local/bin'
     | prepend '/usr/local/opt/ruby/bin'
     | prepend $'($env.HOME)/.cargo/bin'
-    | prepend '/Users/hustcer/.moon'
+    | prepend '/Users/hustcer/.moon/bin'
 )
 $env.PATH = ($env.PATH | uniq)
 
