@@ -1127,7 +1127,7 @@ export def 'dingtalk notify' [
     echo 'Invalid DINGTALK_ROBOT_AK or DINGTALK_ROBOT_SECRET config, length mismatch!'; exit 7
   }
 
-  for tk in $tokens --numbered {
+  for tk in ($tokens | enumerate) {
     let sign = get-sign ($secrets | get $tk.index)
     let query = { access_token: $tk.item, timestamp: $sign.timestamp, sign: $sign.sign }
     let payload = get-msg-payload --type $type --title $title --text $text --msg-url $msg_url --pic-url $pic_url --at-all $at_all --at-mobiles $at_mobiles

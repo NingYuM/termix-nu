@@ -362,7 +362,7 @@ export def watch-cicd-status [id: int] {
   print $'(char nl)Pipeline Running Detail:'; hr-line
 
   # pipelineTasks status: Created,Analyzed,Success,Queue,Running,Failed,StopByUser,NoNeedBySystem
-  for stage in $stages -n {
+  for stage in ($stages | enumerate) {
     let stageStatus = $stage.item.pipelineTasks | get status
     let tasks = $stage.item.pipelineTasks | get name | str join ', '
     let duration = $'($stage.item.pipelineTasks | get costTimeSec | math sum)sec' | into duration

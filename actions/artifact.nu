@@ -556,7 +556,7 @@ def polling-artifact-deploy [
   print $'(char nl)Artifact deploy Detail:'; hr-line
 
   # pipelineTasks status: Created,Analyzed,Success,Queue,Running,Failed,StopByUser,NoNeedBySystem
-  for g in $groups -n {
+  for g in ($groups | enumerate) {
     let groupStatus = $g.item | get status
     let apps = $g.item | get name | str join ', '
     let groupSuccess = $groupStatus | all {|it| $it == 'OK' }

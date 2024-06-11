@@ -53,7 +53,7 @@ export def 'dingtalk notify' [
     exit $ECODE.INVALID_PARAMETER
   }
 
-  for tk in $tokens --numbered {
+  for tk in ($tokens | enumerate) {
     let sign = get-sign ($secrets | get $tk.index)
     let query = { access_token: $tk.item, timestamp: $sign.timestamp, sign: $sign.sign }
     let payload = get-msg-payload --type $type --title $title --text $text --msg-url $msg_url --pic-url $pic_url --at-all $at_all --at-mobiles $at_mobiles
