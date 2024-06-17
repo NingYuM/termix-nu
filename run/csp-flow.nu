@@ -1,3 +1,8 @@
+# REF:
+#   - 一体化页面接入指南: https://aliyuque.antfin.com/irp6y6/ltdqun/sasf9oorc6ywpnqy#OLQhu
+#   - 采购代码迁移指南: https://alidocs.dingtalk.com/i/nodes/EpGBa2Lm8aZxe5myCl2jRxO2WgN7R35y
+#   - 采购前端页面/组件梳理: https://alidocs.dingtalk.com/i/nodes/Y1OQX0akWmzdBowLFgKNjZ2nVGlDd3mE
+#   - 前端接口调用清单: https://aliyuque.antfin.com/go1688/qg7x5q/gr5xixxtdbqrgtcg#t6k3
 
 # Pnpm workspace 配置文件生成
 # glob pkgs/**/package.json | each { $in | split row 'asrm-ui/' | last | path dirname } | sort | to yaml
@@ -90,4 +95,37 @@ export def prepare-pkg [--add-missing-pkg(-a)] {
     }
     print "\nNothing to be added, bye...\n"
   }
+}
+
+export def gen-page-data [
+  environment: string = 'test', # Get page data of the specified environment
+] {
+  const DEFAULT_PAGE_TITLE = 'Unknown Title'
+  const ENV_MAP = {
+    test: 'public-go1688-trantor-noprod.oss-cn-hangzhou.aliyuncs.com'
+    prod: 'public-go1688-trantor-prod.oss-cn-hangzhou.aliyuncs.com'
+  }
+  let pages = glob pkgs/**/resources/package.json
+    | each { split row 'pkgs/' | last }
+    | wrap pkg
+    | upsert name {|it| $it.pkg | split row / | first }
+    | upsert path cxfe
+    | upsert version {|it| open $'pkgs/($it.pkg)' | get distVersion }
+    | upsert route {|it| $'asrm/($it.name)' }
+    | upsert title {|it|
+        let module = $'pkgs/($it.name)/module.json'
+        if ($module | path exists) {
+          open $module | get title? | default $DEFAULT_PAGE_TITLE
+        } else { $DEFAULT_PAGE_TITLE }
+      }
+    | reject -i pkg
+
+  let data = {
+    title: '云采销 - SRM',
+    assetsDomain: ($ENV_MAP | get -i $environment),
+    pages: $pages,
+  }
+  $data
+    | to json -i 2
+    | print
 }
