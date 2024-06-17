@@ -3,6 +3,8 @@ just clean; just store -i
 # Generate ali* node modules list
 source tools/store.nu; get-alife-modules | to yaml | save tools/ali-pkgs.yaml
 
+t dir-batch-exec "'ls pkgs | length'" acrm-ui,asrm-ui,bulma-ui,carbon-ui,csp-portal-ui,ep-ui,imall-ui
+
 # Clear Husky config
 rg husky -C 3
 ls pkgs/ | get name | each {|it| let pkg = open $'($it)/package.json' | reject -i husky; $pkg | save -f $'($it)/package.json' }

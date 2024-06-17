@@ -54,6 +54,16 @@ export def update-pkg [] {
   just fmt
 }
 
+export def convertGBK2UTF8 [] {
+  let files = glob pkgs/style-go/**/*.*
+  for f in $files {
+    print $'Convert ($f)'
+    if (file $f | str contains 'ISO-8859') {
+      open -r $f | decode gbk | save -rf $f
+    }
+  }
+}
+
 export def prepare-pkg [--add-missing-pkg(-a)] {
   # Copy missing packages
   let repoRoot = '/Users/hustcer/github/term-o/csp_fe_repos'
