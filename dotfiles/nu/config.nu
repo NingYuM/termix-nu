@@ -415,7 +415,10 @@ def --env menv [
     } else { open conf/sec.toml | get envs }
   if $list { $envs | columns | sort | print; return }
 
-  let profile = if ($profile | is-empty) { $envs | columns | sort | input list 'Choose a profile to load' } else { $profile }
+  let profile = if ($profile | is-empty) {
+      $envs | columns | sort | str join (char nl) | fzf --layout=reverse --height=50%
+    } else { $profile }
+  if ($profile | is-empty) { return }
   let setting = $envs | get -i $profile
   if ($setting | is-empty) { print $'Enviroment Profile (ansi r)($profile)(ansi reset) not found.'; return }
   if not $silent { print $setting }
