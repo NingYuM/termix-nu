@@ -111,7 +111,7 @@ def get-modules [modules?: string, --latest-meta: record, --action: string] {
   # Validate and sync specified modules
   let splits = $modules | default '' | split row ','
   if ($splits | length) > 0 {
-    let inexists = $splits | filter {|it| $it not-in $allModules }
+    let inexists = $splits | filter {|it| $it not-in ($allModules | get mod) }
     if ($inexists | length) > 0 {
       print $'Invalid modules (ansi r)($inexists | str join ",")(ansi reset), the module you specified does not exists in latest.json(ansi reset)'
       exit $ECODE.INVALID_PARAMETER
