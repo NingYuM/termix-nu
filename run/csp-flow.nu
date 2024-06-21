@@ -140,14 +140,16 @@ export def remove-seven [
     test: 'oss://public-go1688-trantor-noprod/fe-resources/cxfe-test'
   }
   let oss = $OSS_MAP | get $environment
-  open tools/seven.yml | each {|it|
-    let count = ossutil ls -d -i $env.OSS_AK -k $env.OSS_SK $'($oss)/($it)/'
+  let modules = open tools/seven.yml
+  let total = $modules | length
+  $modules | enumerate | par-each {|it|
+    let count = ossutil ls -d -i $env.OSS_AK -k $env.OSS_SK $'($oss)/($it.item)/'
           | parse 'Object and Directory Number is: {count}' | get count | get 0 | into int
-    let viewCount = ossutil ls -d -i $env.OSS_AK -k $env.OSS_SK $'($oss)/($it)/1.0.0/view/'
+    let viewCount = ossutil ls -d -i $env.OSS_AK -k $env.OSS_SK $'($oss)/($it.item)/1.0.0/view/'
           | parse 'Object and Directory Number is: {count}' | get count | get 0 | into int
-    print $'($oss)/($it)/: ($count) / ($viewCount)'
+    print $'($it.index + 1)/($total) | ($oss)/($it.item)/: ($count) / ($viewCount)'
     if $count > 0 and $viewCount > 0 and $remove {
-      ossutil rm -rf -i $env.OSS_AK -k $env.OSS_SK $'($oss)/($it)/'
+      ossutil rm -rf -i $env.OSS_AK -k $env.OSS_SK $'($oss)/($it.item)/'
     }
   }
 }
