@@ -129,3 +129,25 @@ export def gen-page-data [
     | to json -i 2
     | print
 }
+
+# Remove seven modules
+export def remove-seven [
+  --remove,
+  --environment(-e): string = 'test',
+] {
+  let OSS_MAP = {
+    prod: 'oss://public-go1688-trantor-prod/fe-resources/cxfe',
+    test: 'oss://public-go1688-trantor-noprod/fe-resources/cxfe-test'
+  }
+  let oss = $OSS_MAP | get $environment
+  open tools/seven.yml | each {|it|
+    let count = ossutil ls -d -i $env.OSS_AK -k $env.OSS_SK $'($oss)/($it)/'
+          | parse 'Object and Directory Number is: {count}' | get count | get 0 | into int
+    let viewCount = ossutil ls -d -i $env.OSS_AK -k $env.OSS_SK $'($oss)/($it)/1.0.0/view/'
+          | parse 'Object and Directory Number is: {count}' | get count | get 0 | into int
+    print $'($oss)/($it)/: ($count) / ($viewCount)'
+    if $count > 0 and $viewCount > 0 and $remove {
+      ossutil rm -rf -i $env.OSS_AK -k $env.OSS_SK $'($oss)/($it)/'
+    }
+  }
+}
