@@ -9,6 +9,19 @@
 # ls pkgs/ -s | select name | upsert pass 'init' | upsert isSeven {|it| $'pkgs/($it.name)/resources' | path exists } | upsert description '' | sort-by name | to yaml | save -f tools/build-pkg.yaml
 # open tools/build-pkg.yaml | where isSeven == true | where pass == false | each { just b $in.name }
 
+const CSP_APPS = [
+  ep-ui
+  rad-ui
+  csp-wx
+  acrm-ui
+  asrm-ui
+  bulma-ui
+  buyer-h5
+  imall-ui
+  carbon-ui
+  csp-portal-ui
+]
+
 export def update-pkg [] {
   let pkgs = ls pkgs/ | get name
   # Clear Husky config
@@ -152,4 +165,36 @@ export def remove-seven [
       ossutil rm -rf -i $env.OSS_AK -k $env.OSS_SK $'($oss)/($it.item)/'
     }
   }
+}
+
+# Show pipeline resources of CSP apps
+export def show-resources [] {
+  use std repeat
+
+  const CSP_APP_BUILD_COST = {
+    ep-ui: '11min',
+    rad-ui: '95min',
+    csp-wx: '5min',
+    acrm-ui: '98min',
+    asrm-ui: '50min',
+    bulma-ui: '36min',
+    buyer-h5: '5min',
+    imall-ui: '3min',
+    carbon-ui: '5min',
+    csp-portal-ui: '9min',
+  }
+  mut resources = []
+  for app in $CSP_APPS {
+    z $app
+    let resource = open .erda/pipelines/build-all.yml | get stages.stage.1.0.custom-script.resources
+    let packages = ls pkgs | length
+    let description = open package.json | get description
+    let cost = $CSP_APP_BUILD_COST | get $app
+    let meta = { app: $app, ...$resource, packages: $packages, cost: $cost, description: $description }
+    $resources = $resources ++ $meta
+  }
+  print $resources
+  let total = $resources | reduce --fold 0 {|it, acc| $acc + $it.packages }
+  print $'(ansi g)('-' | repeat 95 | str join)(ansi reset)'
+  print $'Total packages: (ansi p)($total)(ansi reset)'
 }

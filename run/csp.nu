@@ -30,3 +30,6 @@ open -r tools/pkgs.yaml | lines | each {|it| cp -r $'($repoRoot)/($it)' pkgs/ }
 
 # Ignore warning of "Using / for division outside of calc() is deprecated"
 glob pkgs/**/*/rsbuild.config.ts | each {|it| open $it | str replace 'plugins:' (open ttt) | save -rf $it }
+
+# Grep async assets
+glob pkgs/**/*/latest.json | each {|it| open $it | find async | print }
