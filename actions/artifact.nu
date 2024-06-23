@@ -40,15 +40,12 @@
 # Usage:
 
 use pipeline.nu [create-cicd, run-cicd, query-cicd-by-id, fetch-cicd-detail]
-use ../utils/common.nu [ECODE, hr-line, ellie, log, get-tmp-path]
+use ../utils/common.nu [ECODE, FZF_DEFAULT_OPTS, FZF_THEME, hr-line, ellie, log, get-tmp-path]
 use ../utils/erda.nu [VALID_ENV, ERDA_HOST, get-erda-auth, renew-erda-session, should-retry-req]
 
 const DEPLOY_POLLING_INTERVAL = 2sec
 const RELEASE_META_PATH = 'terp/artifacts'
 const SUPPORTED_ACTIONS = [deploy, produce, consume, pack]
-const FZF_KEY_BINDING = '--bind ctrl-b:preview-half-page-up,ctrl-f:preview-half-page-down,ctrl-/:toggle-preview'
-const FZF_DEFAULT_OPTS = $'--height 50% --layout=reverse --highlight-line --marker ▏ --pointer ▌ --prompt "▌ " --exact --preview-window=right:65%:~2 ($FZF_KEY_BINDING)'
-const FZF_THEME = '--color=gutter:-1,selected-bg:238,selected-fg:146,current-fg:189,bg+:#3c3836,bg:#32302f,spinner:#fb4934,hl:#928374,fg:#ebdbb2,header:#928374,info:#8ec07c,pointer:#cf87f2,marker:#cf87f2,fg+:#ebdbb2,prompt:#86b3e7,hl+:#fb4934'
 
 # Build, Download and Upload artifacts, create deploy order then deploy from artifacts
 # Detailed User Manual: https://fe-docs.app.terminus.io/termix/termix-nu#erda-artifacts
