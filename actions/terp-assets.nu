@@ -27,8 +27,8 @@
 #   t ta download pc --from <mode> --to <dir>
 #   t ta transfer pc --from <oss-mode> --to <minio-mode>
 #   t ta transfer all -f dev -v -d oss -t ttt0
-#   t ta transfer all --from dev --to ttt0 --dest-store oss --verbose
-#   t ta transfer all --from foran --to fs-test --dest-store fsmio -v
+#   t ta transfer all --from dev --to ttt0 --dest-store oss --quiet
+#   t ta transfer all --from foran --to fs-test --dest-store fsmio
 
 use ../utils/common.nu [ECODE, is-installed, hr-line, get-tmp-path, compare-ver, _TIME_FMT]
 
@@ -63,7 +63,7 @@ export def 'terp assets' [
   modules?: string,           # Available values: pc/mobile/mat/mmat/iam/dors/mdors/all. Multiple modules separated by `,`
   --from(-f): string,         # Source mount point or source URL
   --to(-t): string,           # Destination mount point
-  --verbose(-v),              # Show verbose info
+  --quiet(-q),                # Show less info
   --dest-store(-d): string,   # Destination store, should be configured in .termixrc
 ] {
   pre-check $action --to $to --dest-store $dest_store
@@ -73,8 +73,8 @@ export def 'terp assets' [
 
   match $action {
     'detect' => { detect $latestMeta },
-    'download' => { download $modules $latestMeta $to --verbose=$verbose },
-    'transfer' => { transfer $modules $latestMeta $to --dest-store $dest_store --verbose=$verbose },
+    'download' => { download $modules $latestMeta $to --quiet=$quiet },
+    'transfer' => { transfer $modules $latestMeta $to --dest-store $dest_store --quiet=$quiet },
   }
 }
 
@@ -204,7 +204,7 @@ def download [
   modules: list,        # End point, available values: pc, mobile, all
   latestMeta: record,   # Latest meta info
   to?: string,          # Destination dir
-  --verbose(-v),        # Show verbose info
+  --quiet(-q),          # Show less info
 ] {
 
   let tmp = $'(get-tmp-path)/terp'
@@ -235,16 +235,16 @@ def download [
     for a in $assets {
       let url = $'($assetUrlPrefix)/($prefix)/($dirname)/($a)'
       let assetPath = $'/($prefix)/($dirname)/($a)'
-      if $verbose {
-        print $'Downloading ($url | ansi link --text $assetPath)'
+      if $quiet {
         http get -r $url | save -rfp $'($assetsDir)/($a)'
       } else {
+        print $'Downloading ($url | ansi link --text $assetPath)'
         http get -r $url | save -rf $'($assetsDir)/($a)'
       }
     }
 
     print $'(ansi p)Assets for ($e) have been downloaded successfully!(ansi reset)'
-    if $verbose { hr-line }
+    if not $quiet { hr-line }
   }
   print "All downloads finished! \n"
 }
@@ -254,14 +254,14 @@ def transfer [
   modules: list,              # Module name or alias available values: pc, mobile, all, etc.
   latestMeta: record,         # Latest meta info
   to: string,
-  --verbose(-v),              # Show verbose info
+  --quiet(-q),                # Show less info
   --dest-store(-d): string,   # Destination store, should be configured in .termixrc
 ] {
   let tmp = $'(get-tmp-path)/terp'
   if (not ($tmp | path exists)) { mkdir $tmp }
 
   let startTime = date now
-  download $modules $latestMeta $tmp --verbose=$verbose
+  download $modules $latestMeta $tmp --quiet=$quiet
   print $'Start to transfer assets from (ansi p)($latestMeta.from) to ($dest_store) ($to)(ansi reset)'
 
   let ossConf = get-dest-oss $dest_store
@@ -279,7 +279,7 @@ def transfer [
     # Update namespace.json add transfer info
     update-transfer-meta $latestMeta
     for t in ($to | split row ',') {
-      print $'Uploading (ansi p)($e)@($mount) to (ansi p)($t)(ansi reset)...'
+      print $'Uploading (ansi p)($e)@($mount) to (ansi p)($t)(ansi reset) ...'
       if ($type | str trim | str downcase) == 'minio' {
         package-tools s3 -c $ak $sk $bucket $endpoint $region -d . -m $t -s path
       } else {
