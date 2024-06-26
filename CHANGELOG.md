@@ -1,6 +1,28 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.79.0 - 2024-06-26
+
+**Bug Fixes**
+
+- Fix version detect of open-tools script
+
+**Features**
+
+- Add `menv` for Nu config
+- Add frontend module descriptions for `t ta` command's module selection TUI
+- Add `c` command to nu config for favorite dir jumping
+- Hide deprecated field if none deprecated for `t ta detect` command
+- Remove `--verbose` and add `--quiet` flag for `t ta` command
+
+**Miscellaneous Tasks**
+
+- Remove deprecated modules for `t ta` command
+- Format module selection descriptions for `t ta` command
+- Adapt to Nu 0.95 use `enumerate` instead of `for -n`
+- Update minJustVer config
+- Extract some FZF constants to common.nu
+
 ## v1.78.0 - 2024-05-28
 
 **Breaking Changes**
