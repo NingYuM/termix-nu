@@ -46,7 +46,7 @@ const MOD_DESC = {
     dors: 'dors: PC 端报表搭建组件'
     dors-mobile: 'dors-mobile: 移动端报表搭建组件'
     emp: 'emp: EMP 自定义业务组件'
-    iam: 'iam: IAM 登录注册相关基础组件'
+    iam: 'iam: IAM 角色 & 用户 & 日志列表及权限授权相关'
     service: 'service: PC 端审批/通知/日志/导入导出/打印等基础组件'
     service-mobile: 'service-mobile: 移动端审批/通知等基础组件'
     terp: 'terp: TERP PC 端业务组件'
@@ -59,7 +59,7 @@ const PKG_TOOLS_VER = '0.3.0-beta.1'
 
 # Download TERP static assets or transfer assets to other path of the specified cloud storage
 export def 'terp assets' [
-  action: string,             # Available actions: download, transfer
+  action: string,             # Available actions: download, transfer, detect
   modules?: string,           # Available values: pc/mobile/mat/mmat/iam/dors/mdors/all. Multiple modules separated by `,`
   --from(-f): string,         # Source mount point or source URL
   --to(-t): string,           # Destination mount point
