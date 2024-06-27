@@ -95,7 +95,7 @@ def get-modules [modules?: string, --latest-meta: record, --action: string] {
   # Choose modules from latest.json if modules is empty
   let allModules = $latest_meta.latest | columns | wrap mod
     | upsert desc {|it| $descriptions | get -i $it.mod | default $it.mod }
-    | sort-by mod
+    | sort-by mod | get mod
   if $action == 'detect' { return $allModules }
   if ($modules | is-empty) {
     print $'No module specified, please select the modules manually...'; hr-line
