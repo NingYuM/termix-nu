@@ -7,7 +7,7 @@
 #   3. VS Code 插件推荐: Even Better TOML;
 
 # Termix-nu version
-version = 'v1.79.0'
+version = 'v1.79.1'
 
 # Min nushell version required to run termix-nu commands
 minNuVer = '0.95.0'
