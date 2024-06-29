@@ -41,5 +41,5 @@ export def git-branch [
   print $'Tags of current repo:'; hr-line
   # Git for Windows does't support sort by `creatordate` field?
   let sort = if (windows?) { '--sort=-v:refname' } else { '--sort=-creatordate' }
-  git tag --format=%(align:1,30)%(color:green)%(refname:strip=2)%(end)%09%09%(color:yellow)%(creatordate:iso) $sort
+  git tag --format='%(align:1,30)%(color:green)%(refname:strip=2)%(end)%09%09%(color:yellow)%(creatordate:iso)' $sort
 }
