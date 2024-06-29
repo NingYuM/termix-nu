@@ -1,6 +1,6 @@
 # Nushell Config File
-# Update config from: 95977faf2
-# version = 0.93.1
+# Update config from: a71732ba1
+# version = 0.95.1
 
 # source ~/.config/nushell/config.nu
 # Ref:
@@ -543,6 +543,7 @@ let dark_theme = {
   shape_float: purple_bold
   # shapes are used to change the cli syntax highlighting
   shape_garbage: { fg: white bg: red attr: b}
+  shape_glob_interpolation: cyan_bold
   shape_globpattern: cyan_bold
   shape_int: purple_bold
   shape_internalcall: cyan_bold
@@ -683,12 +684,7 @@ $env.config = {
       info: {},
       error: { fg: "white", bg: "red" },
     },
-    table: {
-      selected_row: {},
-      selected_column: {},
-      split_line: { fg: "#404040" },
-      selected_cell: { bg: light_blue },
-    },
+    selected_cell: { bg: light_blue },
   }
 
   history: {
