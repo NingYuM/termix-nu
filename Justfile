@@ -47,6 +47,7 @@ _polars_plugin := if os_family() == 'windows' { 'nu_plugin_polars.exe' } else { 
 # alias rb := git-remote-branch
 alias dp := deploy
 alias ta := terp-assets
+alias da := detect-assets
 alias dq := deploy-query
 
 # To pass arguments to a dependency, put the dependency
@@ -108,6 +109,12 @@ msync *OPTIONS: _setup
 terp-assets *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'terp-assets.nu') }}; \
     terp assets {{OPTIONS}}
+
+# Preview TERP assets status
+[group('-- Frontend --')]
+detect-assets *OPTIONS: _setup _setup_fzf
+  @overlay use {{ join(_termix, 'actions', 'check-assets.nu') }}; \
+    check assets {{OPTIONS}}
 
 # Create, download, upload and deploy from the artifacts
 [group('-- Common  --')]

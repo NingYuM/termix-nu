@@ -344,9 +344,9 @@ def detect [latestMeta: record] {
     | rename module
 
   if ($modules | get deprecated? | compact | length) > 0 {
-    $modules | print; hr-line -c grey30 118
+    $modules | table -w 200 | print; hr-line -c grey30 118
   } else {
-    $modules | reject deprecated | print; hr-line -c grey30 108
+    $modules | reject deprecated | table -w 200 | print; hr-line -c grey30 108
   }
   print $'Total modules: (ansi g)($modules | length)(ansi reset), Enabled: (ansi g)($modules | where deprecated? != true | length)(ansi reset), Deprecated modules: (ansi r)($modules | where deprecated? | length)(ansi reset)'
 }
