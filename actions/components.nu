@@ -16,7 +16,7 @@
 
 use ../utils/common.nu [is-installed, is-lower-ver, hr-line, ECODE]
 
-const AST_GREP_VERSION = '0.20.5'
+const AST_GREP_VERSION = '0.23.1'
 const MODULE_NAME_MAP = {
   'emp2': 'emp',
   'b2b-ui': 'b2b',
@@ -35,11 +35,12 @@ const EXTRA_PATTERN = {
 # Description: Scan source code and display components list for Trantor Designer
 export def 'get components' [
   --modified(-m): string,               # Get modified components between two git commits, eg: develop...release/2.5.24.0330
-  --strategy(-s): string = 'behavior',  # Scan strategy: behavior
+  --strategy(-s): string = 'behavior',  # Scan strategy: behavior, json
   --json(-j),                           # Output in json format
 ] {
   match $strategy {
     'behavior' => { list components --json=$json --modified=$modified },
+    'json' => { scan-components-by-json --json=$json --modified=$modified },
     _ => { print $'Invalid scan strategy: ($strategy)' },
   }
 }
@@ -119,6 +120,47 @@ def scan-components [pkgName: string] {
     | sort-by module name
     | reject file
   $components
+}
+
+def scan-components-by-json [
+  --json(-j),               # Output in json format
+  --grep(-g): string,       # Grep component by pattern
+  --modified(-m): string,   # Get modified components between two git commits, eg: develop...release/2.5.24.0330
+] {
+  let basename = $env.JUST_INVOKE_DIR | path basename
+  if $basename not-in $MODULE_NAME_MAP {
+    print $'(ansi r)Unsupported repo, bye...(ansi reset)'
+    exit $ECODE.INVALID_PARAMETER
+  }
+  let pkgName = $MODULE_NAME_MAP | get $basename
+
+  let startTime = (date now)
+  $env.config.table.mode = 'light'
+  mut components = glob packages/**/*/*.behavior.json
+    | wrap file
+    | upsert cmp {|it| open $it.file | select -i name title group }
+    | flatten
+    | filter {|it| $it.group | is-not-empty }
+    | upsert module {|it|
+        let isMobile = ($it.file =~ '/mobile/') or ($it.file =~ '\\mobile\\') or ($it.file =~ 'mobile-behaviors')
+        if $isMobile { $'($pkgName)-mobile' } else { $pkgName }
+      }
+    | sort-by module group name
+    | reject file
+
+  if ($modified | is-not-empty) {
+    let currentBranch = git branch --show-current
+    let commits = $modified | split row ','
+    let diffTo = if ($commits | length) > 1 { $commits.1 } else { $currentBranch }
+    let diff = git diff $commits.0 $diffTo --name-only | lines | each { str title-case | str replace -a ' ' '' }
+    $components = ($components | upsert modified {|it| is-modified $it.name $diff } | where modified | uniq)
+    print $'(char nl)All possibly modified designer components for (ansi g)($pkgName)(ansi reset):'; hr-line -b
+  } else {
+    print $'(char nl)All designer components for (ansi g)($pkgName)(ansi reset):'; hr-line -b
+  }
+  let endTime = (date now)
+  if $json { $components | to json -i 2 | print } else { print $components }
+  print $'(ansi p)Scan completed. Total time cost: (ansi g)($endTime - $startTime)(char nl)(ansi reset)'
 }
 
 alias main = get components
