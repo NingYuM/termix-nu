@@ -40,7 +40,7 @@ export def 'get components' [
 ] {
   match $strategy {
     'behavior' => { list components --json=$json --modified=$modified },
-    'json' => { scan-components-by-json --json=$json --modified=$modified },
+    'json' => { list components --json=$json --modified=$modified --from-json },
     _ => { print $'Invalid scan strategy: ($strategy)' },
   }
 }
@@ -48,6 +48,7 @@ export def 'get components' [
 # Description: Scan source code and display components list
 export def 'list components' [
   --json(-j),               # Output in json format
+  --from-json,              # Scan components from json schema
   --grep(-g): string,       # Grep component by pattern
   --modified(-m): string,   # Get modified components between two git commits, eg: develop...release/2.5.24.0330
 ] {
@@ -70,7 +71,7 @@ export def 'list components' [
 
   let startTime = (date now)
   $env.config.table.mode = 'light'
-  mut components = scan-components $pkgName
+  mut components = scan-components $pkgName --from-json=$from_json
   if ($modified | is-not-empty) {
     let currentBranch = git branch --show-current
     let commits = $modified | split row ','
@@ -100,8 +101,17 @@ def is-modified [name: string, diff: list] {
 # Trim all ' or " from input
 def trim-quotes [] { $in | str trim -c "'" | str trim -c '"' }
 
+def get-module-name [pkgName: string] {
+  let isMobile = ($in =~ '/mobile/') or ($in =~ '\\mobile\\') or ($in =~ 'mobile-behaviors')
+  if $isMobile { $'($pkgName)-mobile' } else { $pkgName }
+}
+
 # Scan components list from source code
-def scan-components [pkgName: string] {
+def scan-components [
+  pkgName: string,
+  --from-json,              # Scan components from json schema
+] {
+  if $from_json { return (scan-components-by-json $pkgName) }
   let pattern = match $pkgName {
     emp => 'registry.add($_, {$$$, name: $NAME, $$$, title: $TITLE, $$$, group: $GROUP, $$$})',
     _ => 'export const $$$ = {$$$, name: $NAME, $$$, title: $TITLE, $$$, group: $GROUP, $$$}',
@@ -113,54 +123,23 @@ def scan-components [pkgName: string] {
     | upsert name { $in | trim-quotes }
     | upsert title { $in | trim-quotes }
     | upsert group { $in | trim-quotes }
-    | upsert module {|it|
-        let isMobile = ($it.file =~ '/mobile/') or ($it.file =~ '\\mobile\\') or ($it.file =~ 'mobile-behaviors')
-        if $isMobile { $'($pkgName)-mobile' } else { $pkgName }
-      }
+    | upsert module {|it| $it.file | get-module-name $pkgName }
     | sort-by module name
     | reject file
   $components
 }
 
 def scan-components-by-json [
-  --json(-j),               # Output in json format
-  --grep(-g): string,       # Grep component by pattern
-  --modified(-m): string,   # Get modified components between two git commits, eg: develop...release/2.5.24.0330
+  pkgName: string,
 ] {
-  let basename = $env.JUST_INVOKE_DIR | path basename
-  if $basename not-in $MODULE_NAME_MAP {
-    print $'(ansi r)Unsupported repo, bye...(ansi reset)'
-    exit $ECODE.INVALID_PARAMETER
-  }
-  let pkgName = $MODULE_NAME_MAP | get $basename
-
-  let startTime = (date now)
-  $env.config.table.mode = 'light'
-  mut components = glob packages/**/*/*.behavior.json
+  glob packages/**/*/*.behavior.json
     | wrap file
     | upsert cmp {|it| open $it.file | select -i name title group }
     | flatten
     | filter {|it| $it.group | is-not-empty }
-    | upsert module {|it|
-        let isMobile = ($it.file =~ '/mobile/') or ($it.file =~ '\\mobile\\') or ($it.file =~ 'mobile-behaviors')
-        if $isMobile { $'($pkgName)-mobile' } else { $pkgName }
-      }
+    | upsert module {|it| $it.file | get-module-name $pkgName }
     | sort-by module group name
     | reject file
-
-  if ($modified | is-not-empty) {
-    let currentBranch = git branch --show-current
-    let commits = $modified | split row ','
-    let diffTo = if ($commits | length) > 1 { $commits.1 } else { $currentBranch }
-    let diff = git diff $commits.0 $diffTo --name-only | lines | each { str title-case | str replace -a ' ' '' }
-    $components = ($components | upsert modified {|it| is-modified $it.name $diff } | where modified | uniq)
-    print $'(char nl)All possibly modified designer components for (ansi g)($pkgName)(ansi reset):'; hr-line -b
-  } else {
-    print $'(char nl)All designer components for (ansi g)($pkgName)(ansi reset):'; hr-line -b
-  }
-  let endTime = (date now)
-  if $json { $components | to json -i 2 | print } else { print $components }
-  print $'(ansi p)Scan completed. Total time cost: (ansi g)($endTime - $startTime)(char nl)(ansi reset)'
 }
 
 alias main = get components
