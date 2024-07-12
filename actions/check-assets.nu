@@ -19,6 +19,7 @@ const MOUNT_POINTS = {
   'rls  0330': '2.5.24.0330'
   'rls  0430': '2.5.24.0430'
   'rls  0530': '2.5.24.0530'
+  'rls  0630': '2.5.24.0630'
   'fs  foran': 'foran'
   'wqweiqiao': 'weiqiao'
   'mill  dev': 'https://millgrid-public.oss-cn-hongkong.aliyuncs.com/fe-resources/millgrid-dev/latest.json'
@@ -33,7 +34,8 @@ const MOUNT_POINTS = {
   'V wq test': 'http://minio-tenant.nonprod.hqzc.com/terminus-new-trantor/fe-resources/test/latest.json'
   'V wq  pre': 'http://minio-tenant.nonprod.hqzc.com/terminus-new-trantor/fe-resources/staging/latest.json'
   'V wq prod': 'http://minio-tenant.inc.ruixinzb.com/terminus-new-trantor/fe-resources/prod/latest.json'
-  'V fs test': 'http://minio-tenant.terp.fsgas.com/terminus-trantor/fe-resources/fs-test/lasted.json'
+  'V fs  dev': 'http://minio-tenant.terp.fsgas.com/terminus-trantor/fe-resources/fs-dev/latest.json'
+  'V fs test': 'http://minio-tenant.terp.fsgas.com/terminus-trantor/fe-resources/fs-test/latest.json'
   'V fs prod': 'http://minio-tenant.terp.fsgas.com/terminus-trantor/fe-resources/fs-prod/latest.json'
 }
 
