@@ -95,11 +95,16 @@ disable-renderer-when-unfocused = false
 width = 1000
 height = 600
 blur = true
+opacity = 0.9
 background-opacity = 0.5
 mode = "Windowed"
 # window.decorations available options are Enabled, Disabled, Transparent and Buttonless.
 decorations = "Buttonless"
 macos-hide-window-buttons = false
+
+[window.background-image]
+path = "/Users/hustcer/Pictures/wallpapers/MI01011728_3200_wallpaper_des.jpg"
+opacity = 0.5
 
 [scroll]
 multiplier = 3.0
@@ -119,7 +124,7 @@ disable-ctlseqs-alt = false
 # Another Note: "cascadiamono" font is built-in.
 #
 [fonts]
-size = 25
+size = 20
 extras = [
   { family = "Lilex" },
   { family = "Sarasa Term SC" },
