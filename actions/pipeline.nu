@@ -96,10 +96,17 @@ def get-pipeline-conf [
     print $'You are running the command in (ansi p)batch mode(ansi reset), Please specify the apps to handle by (ansi r)`--apps` or `-a`(ansi reset) flag(ansi reset)...'
     exit $ECODE.INVALID_PARAMETER
   }
-  let batchMode = ($pipeline | describe) =~ 'table'
+  let batchMode = $pipeline | describe | str starts-with list
   let conf = if $batchMode { $pipeline } else { [$pipeline] }
   mut merged = []
-  for c in $conf { $merged = ($merged ++ ($c | merge ($override | default {}))) }
+  for c in $conf {
+    if ($c | describe | str starts-with record) {
+      $merged = ($merged ++ ($c | merge ($override | default {})))
+    } else {
+      let selected = $c | reduce --fold [] {|it, acc| $acc ++ ($it | merge ($override | default {})) }
+      $merged = ($merged ++ $selected)
+    }
+  }
   check-pipeline-conf $merged
   if not $batchMode { return $merged }
   # The condition to filter the matched apps
@@ -507,6 +514,12 @@ export def main [
         let branch = $app.branch
         let appName = $app.appName
         let pipeline = $app.pipeline
+        if ($app.lock? | default false) {
+          $app.lockTip?
+            | default $'Skip deploying app (ansi y)($appName)(ansi reset), because it is locked by the Admin.'
+            | print
+          continue
+        }
         # 检查是否有正在执行的流水线以及是否该 Commit 已经部署过
         if not $force {
           if not (check-cicd $appid $appName $branch $app.env $pipeline) { continue }
