@@ -127,5 +127,7 @@ if not (which fnm | is-empty) {
   $env.PATH = ($path | prepend [ $node_path ])
 }
 
+$env.NU_USE_IR = 1
+
 # To load from a custom file you can use:
 # source ($nu.default-config-dir | path join 'custom.nu')
