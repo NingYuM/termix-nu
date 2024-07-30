@@ -109,6 +109,7 @@ $env.PATH = (
     | prepend $env.PNPM_HOME
     | prepend $'($env.VOLTA_HOME)/bin'
     | prepend '/usr/local/bin'
+    | prepend '/opt/homebrew/bin'
     | prepend '/usr/local/opt/ruby/bin'
     | prepend $'($env.HOME)/.cargo/bin'
     | prepend '/Users/hustcer/.moon/bin'

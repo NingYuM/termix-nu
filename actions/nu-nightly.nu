@@ -99,7 +99,7 @@ export def get-latest-nightly-build [
       tar xvf nu-*.tar.gz --directory $destDir
       rm nu-*.tar*gz; cd ..
       # `sudo` is required to move the files to `/usr/local/bin` on macOS
-      sudo cp -r nu-nightly/nu-*/* .
+      cp -r nu-nightly/nu-*/* .
       rm -rf nu-nightly
       print $'(char nl)Update to Nu: (ansi g)(./nu --version) - (./nu -c "version | get commit_hash")(ansi reset)'
       print $'Please restart Nu session to use the latest nightly release...'
