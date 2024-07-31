@@ -72,7 +72,7 @@ let poshTheme = $'($poshDir)/share/oh-my-posh/themes/'
 $env.PROMPT_COMMAND = { oh-my-posh prompt print primary --config $'($poshTheme)/zash.omp.json' }
 $env.PROMPT_INDICATOR = $"(ansi y)$> (ansi reset)"
 
-$env.HOMEBREW_BOTTLE_DOMAIN = https://mirrors.ustc.edu.cn/homebrew-bottles/bottles
+$env.HOMEBREW_BOTTLE_DOMAIN = 'https://mirrors.ustc.edu.cn/homebrew-bottles/bottles'
 
 $env.PATH = (
   $env.PATH
