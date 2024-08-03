@@ -23,6 +23,10 @@ export const _DATE_FMT  = '%Y.%m.%d'
 export const _TIME_FMT =  '%Y/%m/%d %H:%M:%S'
 export const _UPGRADE_TAG = '$-FORCE-UPGRADE-$'
 
+# It takes longer to respond to requests made with unknown/rare user agents.
+# When make http post pretend to be curl, it gets a response just as quickly as curl.
+export const HTTP_HEADERS = [User-Agent curl/8.9]
+
 export const FZF_KEY_BINDING = '--bind ctrl-b:preview-half-page-up,ctrl-f:preview-half-page-down,ctrl-/:toggle-preview'
 export const FZF_DEFAULT_OPTS = $'--height 50% --layout=reverse --highlight-line --marker ▏ --pointer ▌ --prompt "▌ " --exact --preview-window=right:65%:~2 ($FZF_KEY_BINDING)'
 export const FZF_THEME = '--color=gutter:-1,selected-bg:238,selected-fg:146,current-fg:189,bg+:#3c3836,bg:#32302f,spinner:#fb4934,hl:#928374,fg:#ebdbb2,header:#928374,info:#8ec07c,pointer:#cf87f2,marker:#cf87f2,fg+:#ebdbb2,prompt:#86b3e7,hl+:#fb4934'

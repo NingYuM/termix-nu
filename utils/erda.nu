@@ -2,7 +2,7 @@
 # Author: hustcer
 # Created: 2023/01/02 13:55:20
 
-use ../utils/common.nu [ECODE, get-tmp-path]
+use ../utils/common.nu [ECODE, HTTP_HEADERS, get-tmp-path]
 
 export const ERDA_HOST = 'https://erda.cloud'
 export const VALID_ENV = [DEV TEST STAGING PROD]
@@ -25,7 +25,7 @@ export def get-erda-auth [host: string = $ERDA_HOST, --type: string = 'curl'] {
   let TERMIX_CONF = $'(get-tmp-path)/.termix-conf'
   let erdaSession = open $TERMIX_CONF | from json | get -i $sessionKey | default $NA
   if $type == 'nu' {
-    return ['cookie' $'OPENAPISESSION=($erdaSession)']
+    return ['cookie' $'OPENAPISESSION=($erdaSession)' ...$HTTP_HEADERS]
   }
   $'cookie: OPENAPISESSION=($erdaSession)'
 }

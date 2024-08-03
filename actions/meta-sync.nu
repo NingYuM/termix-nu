@@ -32,7 +32,7 @@
 #   t msync --selected
 #   t msync --all --from a --to b
 
-use ../utils/common.nu [ECODE, hr-line, ellie, is-installed, is-lower-ver]
+use ../utils/common.nu [ECODE, HTTP_HEADERS, hr-line, ellie, is-installed, is-lower-ver]
 
 const POLL_TICK_CHAR = '*'
 const QUERY_INTERVAL = 1sec
@@ -429,7 +429,7 @@ def create-snapshot [
 ] {
   const snapShotApi = '/api/trantor/task/exec/RebuildObjectTask'
   let query = { teamId: $source.teamId, teamCode: $source.teamCode, userId: $auth.user.id, verbose: 'false' } | url build-query
-  let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team $source.teamCode]
+  let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team $source.teamCode, ...$HTTP_HEADERS]
   let resp = http post --content-type application/json --headers $headers -e $'($source.host)($snapShotApi)?($query)' {}
   if $resp.status? == 401 {
     print $'Create snapshot failed with error: (ansi r)($resp.error)(ansi reset)'
@@ -450,7 +450,7 @@ def upload-snapshot [
   auth: record,         # A authentication record contains user and cookie info
 ] {
   const snapShotUploadApi = '/api/trantor/task/exec/UploadObjectToOSSTask'
-  let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team $source.teamCode]
+  let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team $source.teamCode, ...$HTTP_HEADERS]
   let query = { teamId: $source.teamId, teamCode: $source.teamCode, userId: $auth.user.id, verbose: 'false' } | url build-query
   let resp = http post --content-type application/json --headers $headers $'($source.host)($snapShotUploadApi)?($query)' { rootOid: $rootOid }
   if not $resp.success {
@@ -481,7 +481,7 @@ def import-metadata [
     $importPayload.resetModuleKeys = $modules
     print $'Going to import modules: ($modules | str join ",")'
   }
-  let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team $dest.teamCode]
+  let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team $dest.teamCode, ...$HTTP_HEADERS]
   let resp = http post --content-type application/json --headers $headers $'($dest.host)($destImportApi)?($query)' $importPayload
   if not $resp.success {
     print $'Import meta data failed with error: ($resp.err)'
@@ -552,7 +552,7 @@ def get-user-auth [
   mut iamHost = $platform.iamDomain?
   if not ($iamHost | str starts-with http) { $iamHost = $'https://($iamHost)' }
   const PUB_KEY_FILE = 'tmp/pub.key'
-  let IAM_HEADER = [Referer $iamHost]
+  let IAM_HEADER = [Referer $iamHost ...$HTTP_HEADERS]
   let pubKey = http get --headers $IAM_HEADER $'($iamHost)/iam/api/v1/user/common/front-end-config'
       | get data.transmissionCryptoProps?.publicKey?
 

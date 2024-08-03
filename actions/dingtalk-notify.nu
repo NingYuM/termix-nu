@@ -18,7 +18,7 @@
 #   t ding-msg --type link --title 欢迎访问端点科技 --msg-url https://terminus.io/ --text '作为国内领先的新商业软件提供商，致力于用平台化、端到端的软件生态方式，为全球各行各业的客户提供全方位的软件产品、解决方案和技术服务'
 #   t ding-msg --type markdown --title 欢迎访问端点科技 --text `'## 端点科技 <br/> 欢迎访问 <br/> 友情链接 <br/> [端点科技](https://terminus.io/)'`
 
-use ../utils/common.nu [ECODE, get-env, is-installed]
+use ../utils/common.nu [ECODE, HTTP_HEADERS, get-env, is-installed]
 
 const DINGTALK_API = 'https://oapi.dingtalk.com/robot/send'
 # 链接类型消息的默认图片
@@ -57,7 +57,7 @@ export def 'dingtalk notify' [
     let sign = get-sign ($secrets | get $tk.index)
     let query = { access_token: $tk.item, timestamp: $sign.timestamp, sign: $sign.sign }
     let payload = get-msg-payload --type $type --title $title --text $text --msg-url $msg_url --pic-url $pic_url --at-all $at_all --at-mobiles $at_mobiles
-    let ding = http post -t application/json $'($DINGTALK_API)?($query | url build-query)' $payload
+    let ding = http post -t application/json -H $HTTP_HEADERS $'($DINGTALK_API)?($query | url build-query)' $payload
     if ($ding.errcode != 0) { print $ding.errmsg; exit $ECODE.INVALID_PARAMETER }
   }
   print 'Bravo, DingTalk message sent successfully.'
