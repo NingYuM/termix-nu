@@ -22,6 +22,8 @@ const MOUNT_POINTS = {
   'rls  0630': '2.5.24.0630'
   'fs  foran': 'foran'
   'wqweiqiao': 'weiqiao'
+  'mkt  prod': 'market-prod'
+  'luq   dev': 'luqiao-dev'
   'mill  dev': 'https://millgrid-public.oss-cn-hongkong.aliyuncs.com/fe-resources/millgrid-dev/latest.json'
   'mill  pre': 'https://millgrid-public.oss-cn-hongkong.aliyuncs.com/fe-resources/millgrid-staging/latest.json'
   'emp   dev': 'https://terminus-emp.oss-cn-hangzhou.aliyuncs.com/fe-resources/dev/latest.json'
