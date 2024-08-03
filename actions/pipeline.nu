@@ -249,7 +249,7 @@ def query-latest-cicd [dest: string, --apps: string, --override: record, --show-
   let apps = get-pipeline-conf $dest --apps $apps --override=$override
   check-erda-envs
   for app in $apps {
-    print $'Querying latest CICDs for (ansi pb)($app.appName) on ($app.branch)(ansi reset) branch:'; hr-line -c pb
+    print $'Querying latest CICDs for (ansi pb)($app.appName) on ($app.branch)(ansi reset) branch:'; hr-line -c p
     let ci = (query-cicd $app.appid $app.appName $app.branch $app.env $app.pipeline 10)
     if ($ci.data.total == 0) {
       print $'No CICD found for (ansi pb)($app.appName)(ansi reset) on (ansi g)($app.branch)(ansi reset) branch'
