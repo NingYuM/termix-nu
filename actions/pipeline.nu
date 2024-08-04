@@ -96,7 +96,7 @@ def get-pipeline-conf [
     print $'You are running the command in (ansi p)batch mode(ansi reset), Please specify the apps to handle by (ansi r)`--apps` or `-a`(ansi reset) flag(ansi reset)...'
     exit $ECODE.INVALID_PARAMETER
   }
-  let batchMode = $pipeline | describe | str starts-with list
+  let batchMode = $pipeline | describe | str starts-with table
   let conf = if $batchMode { $pipeline } else { [$pipeline] }
   mut merged = []
   for c in $conf {
