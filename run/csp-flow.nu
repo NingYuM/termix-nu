@@ -204,3 +204,26 @@ export def show-resources [] {
   print $'(ansi g)('-' | repeat 95 | str join)(ansi reset)'
   print $'Total packages: (ansi p)($total)(ansi reset)'
 }
+
+export def get-1688-urls [] {
+  rg 1688.com --glob '!tools' --glob '!*.md' --json
+    | from json -o
+    | filter {|it| $it.type == 'match' }
+    | get data
+    | select path.text lines.text submatches
+    | rename path match submatches
+    | filter { not ($in.match | str trim | str starts-with //) }
+    | upsert url {|it| $it.match | parse-url $it.submatches }
+    | reject match submatches
+    | uniq-by url
+}
+
+def parse-url [matches] {
+  $in
+    | str replace -a '"' "'"
+    | str replace -a '`' "'"
+    | split row "'"
+    | filter {|it| $it =~ '1688.com' }
+    | to text
+    | str trim
+}
