@@ -205,17 +205,21 @@ export def show-resources [] {
   print $'Total packages: (ansi p)($total)(ansi reset)'
 }
 
-export def get-1688-urls [] {
-  rg 1688.com --glob '!tools' --glob '!*.md' --json
+export def get-1688-urls [--save(-s)] {
+  let urls = rg 1688.com --glob '!tools' --glob '!mock*' --glob '!example' --glob '!*.{md,vm,xml}' --glob '!module.json' --glob '!build.config.js' --json
     | from json -o
     | filter {|it| $it.type == 'match' }
     | get data
     | select path.text lines.text submatches
     | rename path match submatches
+    | update path { $in | str replace pkgs/ '' }
     | filter { not ($in.match | str trim | str starts-with //) }
     | upsert url {|it| $it.match | parse-url $it.submatches }
     | reject match submatches
     | uniq-by url
+    | sort-by path
+
+  if $save { $urls | save -f tools/urls.yaml } else { $urls | print }
 }
 
 def parse-url [matches] {
@@ -226,4 +230,30 @@ def parse-url [matches] {
     | filter {|it| $it =~ '1688.com' }
     | to text
     | str trim
+}
+
+export def get-keywords [
+  keyword: string = '阿里',
+  --save(-s)
+] {
+  const NAME_MAP = { 阿里: 'ali' }
+  const IGNORE_PATHS = [notice_detail/resources/modes/view/view.js]
+  let keywords = rg $keyword pkgs --glob '!tools' --glob '!mock*' --glob '!{example,demo}' --glob '!*.{md,vm,xml,groovy}' --glob '!{module.json,Justfile}' --glob '!{build.config.js,rsbuild.config.ts}' --json
+    | from json -o
+    | filter {|it| $it.type == 'match' }
+    | get data
+    | select path.text lines.text submatches
+    | rename path match submatches
+    | update path { $in | str replace pkgs/ '' }
+    | filter { $in.path not-in $IGNORE_PATHS }
+    | filter { not ($in.match | str trim | str starts-with //) }
+    | filter { not ($in.match | str trim | str starts-with *) }
+    | filter { not ($in.match | str trim | str starts-with /*) }
+    | filter {|it| if $keyword == '1688' { $it.match !~ '1688.com' } else { true } }
+    | update match {$in | str trim}
+    | reject submatches
+    | uniq-by match
+    | sort-by path
+
+  if $save { $keywords | save -f $'tools/keyword-($NAME_MAP | get -i $keyword | default $keyword).yaml' } else { $keywords | print }
 }
