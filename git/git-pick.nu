@@ -19,6 +19,7 @@ use ../utils/common.nu [hr-line, has-ref, ECODE]
 export def 'git pick' [
   match: string,              # The commit SHA or the commits that contain the keyword to pick
   --all(-a),                  # Show error picks of `MERGE_IGNORED` and `EMPTY_COMMIT`
+  --verbose(-v),              # Show more picking details
   --list-only(-l),            # List the matched commits only without actually picking them.
   --from(-f): string,         # The source branch to pick from
   --to(-t): string,           # The target branch to pick to
@@ -33,7 +34,7 @@ export def 'git pick' [
     hr-line
     get-commits $options.matches | reject error | print; exit $ECODE.SUCCESS
   }
-  if ($options.matches | is-empty) {
+  if ($options.matches | is-empty) and $verbose {
     print $'No matched commits found from (ansi g)($options.from)(ansi reset) need to be picked to (ansi g)($options.to) ($countTip)(ansi reset)'
   }
 
@@ -100,11 +101,11 @@ def get-valid-options [
   let to = if ($to | is-empty) { git branch --show-current | str trim } else { $to }
   let from = if ($from | is-empty) { git branch --show-current | str trim } else { $from }
   if ($from | is-not-empty) and ($from not-in $branches) {
-    print $'Source branch (ansi r)($from)(ansi reset) not found.'
+    print $'Source branch (ansi r)($from)(ansi reset) not found, make sure you have checked out it from the remote.'
     exit $ECODE.INVALID_PARAMETER
   }
   if ($to | is-not-empty) and ($to not-in $branches) {
-    print $'Destination branch (ansi r)($to)(ansi reset) not found.'
+    print $'Dest branch (ansi r)($to)(ansi reset) not found, make sure you have checked out it from the remote.'
     exit $ECODE.INVALID_PARAMETER
   }
   # 只有输入的字符串长度大于 7 的时候才会尝试判断是不是 commit SHA
