@@ -1,6 +1,6 @@
 # Nushell Config File
-# Update config from: 01891d637
-# version = 0.95.1
+# Update config from: 5473def7e
+# version = 0.96.2
 
 # source ~/.config/nushell/config.nu
 # Ref:
@@ -699,6 +699,7 @@ $env.config = {
     quick: true                 # set this to false to prevent auto-selecting completions when only one remains
     partial: true               # set this to false to prevent partial filling of the prompt
     algorithm: "prefix"         # prefix or fuzzy
+    sort: "smart"               # "smart" (alphabetical for prefix matching, fuzzy score for fuzzy matching) or "alphabetical"
     case_sensitive: false       # set to true to enable case-sensitive completions
     external: {
       enable: true              # set to false to prevent Nushell looking into $env.PATH to find more suggestions, `false` recommended for WSL users as this look up may be very slow
@@ -748,7 +749,7 @@ $env.config = {
     # 633;B - Mark prompt end
     # 633;C - Mark pre-execution
     # 633;D;exit - Mark execution finished with exit code
-    # 633;E - NOT IMPLEMENTED - Explicitly set the command line with an optional nonce
+    # 633;E - Explicitly set the command line with an optional nonce
     # 633;P;Cwd=<path> - Mark the current working directory and communicate it to the terminal
     # and also helps with the run recent menu in vscode
     osc633: true
