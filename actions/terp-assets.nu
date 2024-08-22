@@ -61,11 +61,12 @@ const PKG_TOOLS_VER = '0.3.0-beta.1'
 export def 'terp assets' [
   action: string,             # Available actions: download, transfer, detect
   modules?: string,           # Available values: pc/mobile/mat/mmat/iam/dors/mdors/all. Multiple modules separated by `,`
-  --from(-f): string,         # Source mount point or source URL
+  --from(-f): string,         # Source mount point or source URL. Note: Only `detect` action support multiple sources separated by `,`
   --to(-t): string,           # Destination mount point
   --quiet(-q),                # Show less info
   --dest-store(-d): string,   # Destination store, should be configured in .termixrc
 ] {
+  if ($from =~ ',') and ($action == 'detect') { detect-multiple-assets $from; return }
   pre-check $action --to $to --dest-store $dest_store
   let latestMeta = get-latest-meta $from
   let modules = get-modules $modules --latest-meta $latestMeta --action $action
@@ -75,6 +76,15 @@ export def 'terp assets' [
     'detect' => { detect $latestMeta },
     'download' => { download $modules $latestMeta $to --quiet=$quiet },
     'transfer' => { transfer $modules $latestMeta $to --dest-store $dest_store --quiet=$quiet },
+  }
+}
+
+# Detect multiple static assets and display the meta info
+def detect-multiple-assets [from: string] {
+  let mountPoints = $from | split row ,
+  for mp in $mountPoints {
+    let latestMeta = get-latest-meta $mp
+    detect $latestMeta; print -n (char nl)
   }
 }
 
