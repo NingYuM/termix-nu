@@ -835,6 +835,7 @@ t git-diff-commit -f HEAD~9 -A author1,author2
 
 **参数说明**:
 
+- `-v`, `--verbose` - 显示更多信息
 - `-l`, `--list-only` - 只显示匹配到的 Commit 列表，不执行 `cherry-pick` 操作
 - `-f`, `--from <String>` - 待**Pick**的源分支，默认为当前分支
 - `-t`, `--to <String>` - 待**Pick**到的目标分支，默认为当前分支
@@ -941,6 +942,7 @@ t git-pick 0330 -f release/2.5.24.0330
 2. 在上述配置文件中还可以添加可选的 `description` 字段，用于描述该流水线是干什么的，这个描述在 `dp -l` 的时候会显示出来;
 3. 如果你在一个环境中有两个分支，这两个分支除了名字外其他配置都一样，在执行流水线的时候可能一条命令同时触发了这两条流水线，如果你只想执行其中一条流水线可以设置不同的 `alias` 来达到目的；
 4. erda.[test|dev|staging|prod] 只是示例，实际上这个字段名不重要你可以随便命名比如: `erda.xyz`, 只需要保证其值里面的数组元素结构符合要求即可；
+5. 在某些情况下，比如给客户演示期间可以锁定发布，只需要在对应部署配置里面加上 `lock = true` 即可，此时还可以添加一个锁定说明比如: `lockTip = '今天下午给客户演示，期间禁止发布预发环境'`，不过需要说明的是这个锁定功能只有在通过 `termix-nu` CLI 进行部署的时候才生效, 如果通过浏览器部署则不受此控制；
 
 :::
 
@@ -1265,7 +1267,7 @@ alias main = dingtalk notify
   2. 对于不在上述列表里面的模块，可以使用 `latest.json` 里面的完整模块名，比如 `b2b`, `emp`等。
   3. 当传入模块为 `all` 时会自动下载或者同步 `latest.json` 里面的所有模块，最终目标和源的静态资源应该是完全一致的。
   4. 如果你不记得模块名也可以不传，此时会自动出现前端静态资源模块选择界面，可以手工选择模块并进行同步或者下载。在这个交互中可以使用的快捷键: `Space` 选择某一项，`a` 选择所有或取消全部选择，`q` 或 `ESC` 取消并退出，上下箭头切换模块, `Enter` 确认选择；
-- `-f, --from <String>` - 资源的源挂载目录或者源 `latest.json` 完整 URL 地址，`from` 的 host 为 `https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com` 时可以只指定资源挂载的目录，否则需要 `latest.json` 的完整 URL 地址
+- `-f, --from <String>` - 资源的源挂载目录或者源 `latest.json` 完整 URL 地址，`from` 的 host 为 `https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com` 时可以只指定资源挂载的目录，否则需要 `latest.json` 的完整 URL 地址。对于 `detect` 操作的 `--from` 可以指定多个源，多个源之间用 `,` 分隔；
 - `-t, --to <String>` - 对于 `download` 代表资源下载保存的本机路径，对于 `transfer` 代表资源上传到云存储后的目标挂载目录
 - `-q`, `--quiet` - 不显示资源下载明细信息
 - `-d, --dest-store <String>` - 对于 `transfer` 命令必须在 `.termixrc` 里面配置对应云存储的秘钥等信息
