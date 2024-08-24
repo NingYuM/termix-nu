@@ -257,3 +257,28 @@ export def get-keywords [
 
   if $save { $keywords | save -f $'tools/keyword-($NAME_MAP | get -i $keyword | default $keyword).yaml' } else { $keywords | print }
 }
+
+export def get-assets [--save(-s), assetsDomain = 'gw.alipayobjects.com'] {
+  let currentDir = (pwd)
+  cd /Users/hustcer/iWork/terminus/csp-repos-all
+
+  let urls = rg $assetsDomain --glob '!{tools,example,tests}' --glob '!*.{md,xml}' --json
+    | from json -o
+    | filter {|it| $it.type == 'match' }
+    | get data
+    | select path.text lines.text submatches
+    | rename path match submatches
+    | upsert assets {|it| $it.match | split row '"' | where $it =~ $assetsDomain | get 0 }
+    | update assets { $in | str trim --right --char '\' }
+    | update assets {|it| $it.assets | split row "'" | where $it =~ $assetsDomain | get 0 }
+    | where $it.assets !~ '`'
+    | where $it.assets =~ $'($assetsDomain)/'
+    | where $it.assets !~ '// 注意：'
+    | update assets { $in | str replace '@{' '' | str replace '}' '' }
+    | reject match submatches
+    | uniq-by assets
+    | sort-by assets
+
+  cd $currentDir
+  if $save { $urls | save -f tools/statics.yaml } else { $urls | print }
+}
