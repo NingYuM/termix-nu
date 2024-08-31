@@ -30,7 +30,7 @@
 #   t ta transfer all --from dev --to ttt0 --dest-store oss --quiet
 #   t ta transfer all --from foran --to fs-test --dest-store fsmio
 
-use ../utils/common.nu [ECODE, is-installed, hr-line, get-tmp-path, compare-ver, _TIME_FMT]
+use ../utils/common.nu [ECODE, is-installed, hr-line, get-tmp-path, compare-ver, base64, _TIME_FMT]
 
 const KEY_MAPPING = $"(ansi grey66)\(Space: Select, a: Select All, ESC/q: Quit, Enter: Confirm\)(ansi reset)"
 const JSON_ENTRY = 'latest.json'
@@ -315,7 +315,7 @@ def transfer [
 
 # Add transfer metadata to namespace.json and latest.json
 def update-transfer-meta [latestMeta: record] {
-  let syncBy = $env.DICE_OPERATOR_NAME? | default (git config --get user.name) | encode base64
+  let syncBy = $env.DICE_OPERATOR_NAME? | default (git config --get user.name) | base64 encode
   let syncAt = (date now | format date $_TIME_FMT)
   let syncFrom = if ($latestMeta.from =~ 'latest.json') {
     $latestMeta.from | split row '/' | last 2 | first } else { $latestMeta.from }
@@ -336,7 +336,7 @@ def detect [latestMeta: record] {
     | upsert branch {|it| $it.metadata?.branch? | default '-' }
     | upsert SHA {|it| $it.metadata?.commitSha? | default '-' }
     | upsert buildAt {|it| if ($it.metadata?.buildAt? | is-empty) { '-' } else { $it.metadata.buildAt | format date $TIME_FMT } }
-    | upsert syncBy {|it| $it.metadata?.syncBy? | default 'LQ==' | decode base64 }
+    | upsert syncBy {|it| $it.metadata?.syncBy? | default 'LQ==' | base64 decode }
     | upsert syncFrom {|it| $it.metadata?.syncFrom? | default '-' }
     | upsert syncAt {|it| if ($it.metadata?.syncAt? | is-empty) { '-' } else { $it.metadata.syncAt | format date $TIME_FMT } }
     | reject -i metadata
