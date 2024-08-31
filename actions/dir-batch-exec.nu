@@ -25,7 +25,7 @@ export def main [
   for d in ($destDirs | where ($it | path exists)) {
     cd $d
     print $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi reset) in dir ($d):(char nl)'
-    nu -c $cmdToExec
+    nu --no-std-lib -c $cmdToExec
     hr-line
   }
 }
