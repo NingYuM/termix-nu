@@ -2,7 +2,7 @@
 # Author: hustcer
 # Created: 2023/01/02 13:55:20
 
-use ../utils/common.nu [ECODE, HTTP_HEADERS, get-tmp-path]
+use ../utils/common.nu [ECODE, HTTP_HEADERS, get-tmp-path, base64]
 
 export const ERDA_HOST = 'https://erda.cloud'
 export const VALID_ENV = [DEV TEST STAGING PROD]
@@ -21,7 +21,7 @@ export def check-erda-envs [] {
 # Get Erda OpenAPI session token from .termix-conf file
 export def get-erda-auth [host: string = $ERDA_HOST, --type: string = 'curl'] {
   const NA = 'N/A'
-  let sessionKey = if $host == $ERDA_HOST { 'erdaSession' } else { $host | encode base64 }
+  let sessionKey = if $host == $ERDA_HOST { 'erdaSession' } else { $host | base64 encode }
   let TERMIX_CONF = $'(get-tmp-path)/.termix-conf'
   let erdaSession = open $TERMIX_CONF | from json | get -i $sessionKey | default $NA
   if $type == 'nu' {
@@ -34,7 +34,7 @@ export def get-erda-auth [host: string = $ERDA_HOST, --type: string = 'curl'] {
 export def renew-erda-session [host: string = $ERDA_HOST, --get-uid] {
   if not $get_uid { print 'Renewing Erda session...' }
   let TERMIX_CONF = $'(get-tmp-path)/.termix-conf'
-  let sessionKey = if $host == $ERDA_HOST { 'erdaSession' } else { $host | encode base64 }
+  let sessionKey = if $host == $ERDA_HOST { 'erdaSession' } else { $host | base64 encode }
   let query = { username: $env.ERDA_USERNAME, password: $env.ERDA_PASSWORD } | url build-query
   let openApiHost = $host | str replace '://' '://openapi.'
   let RENEW_URL = $'($openApiHost)/login?($query)'
