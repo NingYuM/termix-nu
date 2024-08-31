@@ -43,6 +43,8 @@ alias tokeid = print (
     | into int Files Lines Code Comments Blanks
 )
 
+def isWindows [] { (sys host | get name) == 'Windows' }
+
 # Show the count of Nushell commands
 def action [action?: string, --list(-l)] {
   const actionMap = {
@@ -65,8 +67,10 @@ $env.EDITOR = 'hx'
 # Disable the date & time displaying on the right of prompt
 $env.PROMPT_COMMAND_RIGHT = { '' }
 
-let poshDir = (brew --prefix oh-my-posh | str trim)
-let poshTheme = $'($poshDir)/share/oh-my-posh/themes/'
+let poshDir = if (isWindows) {
+    which oh-my-posh | get path | path dirname | path dirname | get 0
+  } else { brew --prefix oh-my-posh | str trim }
+let poshTheme = if (isWindows) { $'($poshDir)/themes/' } else { $'($poshDir)/share/oh-my-posh/themes/' }
 # Recommend themes: zash*/space/robbyrussel/powerline/powerlevel10k_lean*/material/half-life/lambda
 # Recommend double lines: amro/pure/spaceship
 $env.PROMPT_COMMAND = { oh-my-posh prompt print primary --config $'($poshTheme)/zash.omp.json' }
@@ -1485,5 +1489,5 @@ $env.PATH = ($env.PATH | each {|r| $r | split row (char esep)} | flatten | uniq 
 
 # REF: https://github.com/atuinsh/atuin
 # atuin init nu --disable-up-arrow | save -rf ~/.local/share/atuin/init.nu
-source ~/.local/share/atuin/init.nu
-source ~/.config/carapace/init.nu
+source $'($nu.home-path)/.atuin.nu'
+source $'($nu.home-path)/.config/carapace/init.nu'
