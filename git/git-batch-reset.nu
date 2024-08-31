@@ -39,7 +39,7 @@ export def 'git batch-reset' [
     if (has-ref $br) {
       print $'Resetting ($br) ...'
       git checkout $br
-      print (do { (nu -c $'^git reset --hard HEAD~($count)') })
+      print (do { (nu --no-std-lib -c $'^git reset --hard HEAD~($count)') })
     } else {
       print $'Branch (ansi r)($br) (ansi reset)not available...(char nl)'
     }
