@@ -69,7 +69,7 @@ Error: nu::parser::registered_file_not_found
 rm '/Users/abc/Library/Application Support/nushell/plugin.nu'
 ```
 
-> 即可, 这个配置文件在后续使用过程中会自动生成的。
+> 即可, 这个配置文件在后续使用过程中会自动生成的。或者执行下这个命令： nu -c 'rm $nu.plugin-path'，效果是一样的。
 
 8. 用 CLI 执行 Erda 流水线的时候提示如下错误：
 
