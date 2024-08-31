@@ -998,15 +998,14 @@ $env.config = {
         {
           send: ExecuteHostCommand
           cmd: "do {
-            $env.SHELL = /usr/local/bin/bash
-            $env.FZF_DEFAULT_OPTS = $'($FZF_THEME)'
+            $env.SHELL = $nu.current-exe
             commandline edit -r (
               history
                 | get command
                 | reverse
                 | uniq
                 | str join (char -i 0)
-                | fzf --scheme=history --read0 --layout=reverse --height=40% --bind 'tab:change-preview-window(right,70%|right)' -q (commandline) --preview='echo -n {} | nu --stdin -c \'nu-highlight\''
+                | fzf --scheme=history --read0 --layout=reverse --height=40% --bind 'tab:change-preview-window(right,70%|right)' -q (commandline) --preview='print -n {} | nu --stdin -c "nu-highlight"'
                 | decode utf-8
                 | str trim
             )
