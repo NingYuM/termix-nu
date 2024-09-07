@@ -291,6 +291,7 @@ def produce-artifact [
   if $need_confirm { confirm-produce $setting }
   let meta = create-artifact-from-pipeline $setting
   print $'(char nl)Artifact has been created successfully:'; hr-line;
+  $meta | table -e | print
   $meta
 }
 
@@ -403,11 +404,22 @@ def consume-artifact [
   if $need_confirm { confirm-consume $version $destEnv $destSetting --no-deploy=$no_deploy }
   let srcPID = $srcSetting.projectId
   let destPID = $destSetting.projectId
-  let matches = query-release-by-version $version $srcSetting --verbose
+  # 先查询项目制品
+  mut matches = query-release-by-version $version $srcSetting --verbose
+  # 如果项目制品里面没找到再查询应用制品
   if ($matches | is-empty) {
-    print $'No artifact found for version ($version) in project ID ($srcPID)'
-    return
+    $matches =  query-release-by-version $version $srcSetting --is-app
+    if ($matches | is-empty) {
+      print $'No artifact found for version ($version) in project ID ($srcPID)'
+      return
+    }
+    # 如果是应用制品则将其转换为项目制品
+    print $'A APP artifact was found and will be packed into a PROJECT artifact...'
+    let projectArtVer = get-project-artifact-version $matches.0.version
+    $matches = create-project-artifact $projectArtVer $matches.0 $srcSetting
   }
+
+  let version = $matches.version.0
   let dest = download-artifact-from-release $matches.releaseId.0 $version $srcSetting
   let destMatches = query-release-by-version $version $destSetting
   if ($destMatches | is-empty) {
@@ -472,7 +484,7 @@ def deploy-artifact [
   mut version = $version
   if $combine {
     let meta = produce-artifact --from=$from --branch=$branch --need-confirm
-    $version = ($meta | where Name == 'version' | get Value?.0?)
+    $version = ($meta | where Name =~ 'version' | get Value?.0?)
   }
   let destSetting = validate-consume-setting $destEnv --to $to --deploy-group $deploy_group --no-deploy=$no_deploy --deploy --doid $doid
   if (not ($doid | is-empty)) and (not $no_deploy) {
@@ -770,6 +782,10 @@ def query-release-by-version [
     $filtered = (curl --silent -H (get-erda-auth $host) $queryUrl | from json)
   }
 
+  if ($filtered | describe) == 'string' and $filtered =~ 'Unauthorized' {
+    print $'Failed to query release with error message: (ansi r)($filtered)(ansi reset)'
+    exit $ECODE.AUTH_FAILED
+  }
   let matches = if $filtered.success {
     $filtered.data.list
       | select projectName projectId createdAt version releaseId
@@ -778,13 +794,14 @@ def query-release-by-version [
   }
   if not $verbose { return $matches }
 
+  let releaseType = if $is_app { 'APP Artifact' } else { 'PROJECT Artifact' }
   if ($matches | is-empty) {
-    print $'No release found for version (ansi g)($version)(ansi reset) in project ID ($setting.projectId)'
+    print $'(char nl)No ($releaseType) found of version (ansi g)($version)(ansi reset) in project (ansi g)($setting.projectName? | default "")@($setting.projectId)(ansi reset)'
   } else {
     let suffix = if ($setting.projectName | is-empty) { '' } else { $' in (ansi g)($setting.projectName)(ansi reset)' }
     print $'Found matched artifact release($suffix):(char nl)'; print $matches
   }
-  return $matches
+  $matches
 }
 
 # 根据创建制品的 ReleaseId 下载项目制品
@@ -858,8 +875,9 @@ def create-project-artifact [
   let resp = http post -e --headers (get-erda-auth $host --type nu) --content-type application/json $'($artifactCreateUrl)' $payload
   if $resp.success {
     print $'Project artifact has been created successfully with version (ansi g)($version)(ansi reset)'; hr-line
-    query-release-by-version $version $destSetting | print
-    return $resp.data.releaseId
+    let matches = query-release-by-version $version $destSetting
+    $matches | print
+    return $matches
   }
   print $'Failed to create project artifact of version ($version) with error message:'
   print $'(ansi r)($resp.err.msg)(ansi reset)'
