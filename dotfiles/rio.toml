@@ -4,18 +4,6 @@
 # Adapt config file to v0.0.33
 # REF: https://raphamorim.io/rio/docs/configuration-file/
 
-# Cursor
-#
-# Default cursor is Block
-# Other available options are: '_' and '|'
-cursor = '|'
-
-# Blinking Cursor
-#
-# Default is false
-#
-blinking_cursor = false
-
 # Theme
 #
 # It makes Rio look for the specified theme in the themes folder
@@ -56,6 +44,19 @@ padding-x = 8
 # Possible choices: 'both', 'left' and 'right'.
 #
 option-as-alt = 'both'
+
+[cursor]
+# Cursor
+#
+# By default, the cursor shape is set to `block`.
+# You can also choose from other options like `underline` and `beam`.
+shape = 'beam'
+
+# Blinking Cursor
+#
+# Default is false
+#
+blinking = false
 
 # Performance
 #
