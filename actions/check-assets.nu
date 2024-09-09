@@ -26,7 +26,7 @@ const MOUNT_POINTS = {
   'mkt  prod': 'market-prod'
   'luq   dev': 'luqiao-dev'
   'luq  test': 'luqiao-test'
-  'mgerp pro': 'https://millgrid-public.oss-cn-hongkong.aliyuncs.com/fe-resources/erp-prod/latest.json'
+  'mgerp prd': 'https://millgrid-public.oss-cn-hongkong.aliyuncs.com/fe-resources/erp-prod/latest.json'
   'mgerp pre': 'https://millgrid-public.oss-cn-hongkong.aliyuncs.com/fe-resources/erp-staging/latest.json'
   'mill  dev': 'https://millgrid-public.oss-cn-hongkong.aliyuncs.com/fe-resources/millgrid-dev/latest.json'
   'mill  prod': 'https://millgrid-public.oss-cn-hongkong.aliyuncs.com/fe-resources/millgrid-prod/latest.json'
@@ -53,7 +53,7 @@ export def 'check assets' [] {
   let PREVIEW_CMD = $"nu actions/check-assets.nu {}"
   let FZF_PREVIEW_CONF = $'--preview "($PREVIEW_CMD)"'
   $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
-  let selected = $MOUNT_POINTS | columns | str join (char nl) | fzf
+  let selected = $MOUNT_POINTS | columns | str join (char nl) | fzf | complete | get stdout
   if ($selected | is-empty) { return }
   terp assets detect -f ($MOUNT_POINTS | get $selected)
 }
