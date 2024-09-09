@@ -26,7 +26,8 @@ export def do-sync [
     # You MUST use '--no-verify' to prevent infinite loops!!!
     git push --no-verify --force $gitUrl $'($syncFrom):refs/heads/($repo.dest)'
   } else {
-    git push --no-verify $gitUrl $'($syncFrom):refs/heads/($repo.dest)'
+    let tryPush = git push --no-verify $gitUrl $'($syncFrom):refs/heads/($repo.dest)' | complete
+    if $tryPush.exit_code != 0 { print $'(ansi y)($tryPush.stderr)(ansi reset)' }
   }
 }
 
