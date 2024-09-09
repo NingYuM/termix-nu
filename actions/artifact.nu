@@ -174,10 +174,10 @@ def preview-artifact [
   const SELECT_COLUMN = [version projectName userId createdAt releaseId modes]
   $env.config.table.mode = 'psql'
   let releases = open $metaPath
-  let selected = $releases.0.data.list | where version == $version | get 0
+  let selected = $releases.data.list | where version == $version | get 0
   mut meta = $selected | select ...$SELECT_COLUMN
   $meta.modes = (($meta.modes | from json | columns) | str join ', ')
-  $meta.createdBy = ($releases.userInfo? | get -i $meta.userId).nick?.0?
+  $meta.createdBy = ($releases.userInfo? | get -i $meta.userId).nick?
   print $'Version: ($version) by ($meta.createdBy)'; hr-line
   $meta | select ...($SELECT_COLUMN | update 2 createdBy) | print; hr-line
   print $selected.changelog
@@ -522,7 +522,7 @@ def select-artifact-by-fzf [
   let PREVIEW_CMD = $"nu actions/artifact.nu {} artifact"
   let FZF_PREVIEW_CONF = $'--preview "($PREVIEW_CMD)"'
   $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
-  let version = $releases.data.list | select version createdAt | sort-by -r createdAt | get version | str join (char nl) | fzf
+  let version = $releases.data.list | select version createdAt | sort-by -r createdAt | get version | str join (char nl) | fzf | complete | get stdout
   $version
 }
 
@@ -648,7 +648,7 @@ def select-deploy-mode-by-fzf [
   let PREVIEW_CMD = $"nu actions/artifact.nu {} group --options ($options)"
   let FZF_PREVIEW_CONF = $'--preview "($PREVIEW_CMD)"'
   $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --multi --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
-  let selected = $modes | columns | str join (char nl) | fzf
+  let selected = $modes | columns | str join (char nl) | fzf | complete | get stdout
   $selected | lines
 }
 
