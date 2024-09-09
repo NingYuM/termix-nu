@@ -1,6 +1,6 @@
 # Nushell Config File
-# Update config from: 5473def7e
-# version = 0.96.2
+# Update config from: aff974552
+# version = 0.97.2
 
 # source ~/.config/nushell/config.nu
 # Ref:
@@ -673,6 +673,14 @@ $env.config = {
   # showing something like "a day ago."
 
   error_style: "fancy"                  # "fancy" or "plain" for screen reader-friendly error messages
+
+  # Whether an error message should be printed if an error of a certain kind is triggered.
+  display_errors: {
+    exit_code: false                    # assume the external command prints an error message
+    # Core dump errors are always printed, and SIGPIPE never triggers an error.
+    # The setting below controls message printing for termination by all other signals.
+    termination_signal: true
+  }
 
   datetime_format: {
     normal: '%a, %d %b %Y %H:%M:%S %z'  # shows up in displays of variables or other datetime's outside of tables
