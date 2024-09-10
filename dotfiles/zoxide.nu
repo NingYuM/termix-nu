@@ -28,7 +28,8 @@ def --env __zoxide_z [...rest:string] {
   let path = if (($rest | length) <= 1) and ($arg0 == '-' or $arg0_is_dir) {
     $arg0
   } else {
-    (zoxide query --exclude $env.PWD -- ...$rest | str trim -r -c "\n")
+    # (zoxide query --exclude $env.PWD -- ...$rest | str trim -r -c "\n")
+    (zoxide query --exclude $env.PWD -- ...$rest | complete | tee { print -n $in.stderr } | get stdout  | str trim -r -c "\n")
   }
   cd $path
 }
