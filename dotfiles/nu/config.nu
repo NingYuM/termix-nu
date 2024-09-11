@@ -107,6 +107,26 @@ def --env yy [...args] {
   rm -fp $tmp
 }
 
+# Checkout branch by fzf
+def gco [branch?: string] {
+  if ($branch | is-not-empty) {
+    git checkout $branch; return
+  }
+  let branch = git branch
+    | lines
+    | par-each -k { str substring 2.. }
+    | sort
+    | to text
+    | fzf --height 30% --layout=reverse --highlight-line
+    | complete
+    | get stdout
+    | str trim
+
+  if ($branch | is-not-empty) {
+    git checkout $branch
+  }
+}
+
 # Get help on commands using fzf
 def 'get help' [] {
   do {
