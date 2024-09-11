@@ -21,6 +21,7 @@ const MOUNT_POINTS = {
   'rls  0530': '2.5.24.0530'
   'rls  0630': '2.5.24.0630'
   'rls  0730': '2.5.24.0730'
+  'rls  0830': '2.5.24.0830'
   'fs  foran': 'foran'
   'wqweiqiao': 'weiqiao'
   'mkt  prod': 'market-prod'
@@ -53,7 +54,7 @@ export def 'check assets' [] {
   let PREVIEW_CMD = $"nu actions/check-assets.nu {}"
   let FZF_PREVIEW_CONF = $'--preview "($PREVIEW_CMD)"'
   $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
-  let selected = $MOUNT_POINTS | columns | str join (char nl) | fzf | complete | get stdout
+  let selected = $MOUNT_POINTS | columns | str join (char nl) | fzf | complete | get stdout | str trim
   if ($selected | is-empty) { return }
   terp assets detect -f ($MOUNT_POINTS | get $selected)
 }
