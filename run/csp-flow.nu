@@ -8,6 +8,8 @@
 # glob pkgs/**/package.json | each { $in | split row 'asrm-ui/' | last | path dirname } | sort | to yaml
 # ls pkgs/ -s | select name | upsert pass 'init' | upsert isSeven {|it| $'pkgs/($it.name)/resources' | path exists } | upsert description '' | sort-by name | to yaml | save -f tools/build-pkg.yaml
 # open tools/build-pkg.yaml | where isSeven == true | where pass == false | each { just b $in.name }
+# ossutil cp -i $env.OSS_AK -k $env.OSS_SK oss://public-daqihui-noprod-uat/fe-resources/csp-pkgs/ -r csp-pkgs
+# ossutil cp -i $env.OSS_AK -k $env.OSS_SK -r csp-pkgs oss://public-daqihui-prod/fe-resources/csp-pkgs/
 
 const CSP_APPS = [
   pp-fe
@@ -258,9 +260,15 @@ export def get-keywords [
   if $save { $keywords | save -f $'tools/keyword-($NAME_MAP | get -i $keyword | default $keyword).yaml' } else { $keywords | print }
 }
 
-export def get-assets [--save(-s), assetsDomain = 'gw.alipayobjects.com'] {
+export def get-assets [
+  --save(-s),
+  --append(-a),
+  --save-path(-p): string = 'tools/assets.yaml',
+  assetsDomain = 'gw.alipayobjects.com',
+  workDir = '/Users/hustcer/iWork/terminus/csp-repos-all',
+] {
   let currentDir = (pwd)
-  cd /Users/hustcer/iWork/terminus/csp-repos-all
+  cd $workDir
 
   let urls = rg $assetsDomain --glob '!{tools,example,tests}' --glob '!*.{md,xml}' --json
     | from json -o
@@ -280,5 +288,7 @@ export def get-assets [--save(-s), assetsDomain = 'gw.alipayobjects.com'] {
     | sort-by assets
 
   cd $currentDir
-  if $save { $urls | save -f tools/statics.yaml } else { $urls | print }
+  if $save {
+    if $append { $urls | save -fa $save_path } else { $urls | save -f $save_path }
+  } else { $urls | print }
 }
