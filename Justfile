@@ -123,6 +123,7 @@ art *OPTIONS: _setup _setup_fzf
     artifacts {{OPTIONS}}
 
 # Deprecated or enable frontend modules by mount point and module names
+[group('-- Frontend --')]
 mod *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'deprecated-mod.nu') }}; \
     deprecated-modules {{OPTIONS}}
