@@ -11,7 +11,7 @@
 use std [repeat]
 
 # use ~/github/terminus/termix-nu/run/zoxide-eq.nu [z, zi]
-source ~/.zoxide.nu
+source $'($nu.home-path)/.zoxide.nu'
 
 # ---------------------- Aliases -------------------------
 # List files and display one entry per line with `eza`
