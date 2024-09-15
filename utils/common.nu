@@ -69,6 +69,20 @@ export def windows? [] {
   (sys host | get name) == 'Windows'
 }
 
+# Calculate the base32 hash of a string or file like pnpm's patch hash implementation
+# The hash result should be consistent across different platforms
+export def base32-hash [file?: string] {
+  mut input = $in
+  if ($file | is-not-empty) {
+    $input = open $file --raw | decode utf-8
+  }
+  $input
+    | str replace -a "\r\n" "\n"
+    | hash md5 --binary
+    | encode base32 --nopad
+    | str downcase
+}
+
 # Check if some command available in current shell
 export def is-installed [ app: string ] {
   (which $app | length) > 0
