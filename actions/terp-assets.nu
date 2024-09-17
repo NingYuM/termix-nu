@@ -43,6 +43,7 @@ const MOD_DESC = {
     b2b: 'b2b: B2B & SRM 自定义业务组件'
     base: 'base: PC 端设计器基础组件'
     base-mobile: 'base-mobile: 移动端设计器基础组件'
+    charts: 'charts: 新版报表搭建相关组件'
     dors: 'dors: PC 端报表搭建组件'
     dors-mobile: 'dors-mobile: 移动端报表搭建组件'
     emp: 'emp: EMP 自定义业务组件'
