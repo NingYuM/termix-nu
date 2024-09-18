@@ -1,6 +1,35 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.81.0 - 2024-09-18
+
+**Bug Fixes**
+
+- Fix base64 encode and decode command for Nu v0.98.0
+- Fix `fzf` history find for Nu
+- Fix utils/common.nu and update Nu config for v0.98.0
+- Fix `t art` command with `fzf` for Nu v0.98.0
+- Fix `t gsync` for Nu v0.98.0
+- Fix zoxide for Nu v0.98.0
+
+**Features**
+
+- Make nu config file work on both macOS and Windows
+- Add consume APP Artifact support for `t art` command
+- Add `gco` to Nu config for checking out git branches with `fzf`
+- Add `base32-hash` command to common.nu
+- Add `charts` module for `t ta transfer` command
+
+**Miscellaneous Tasks**
+
+- Update Nu config file and min just&Nu ver
+- Update cursor config for rio v0.1.12
+- Update zoxide config
+
+**Performance**
+
+- Improve `nu -c` performance
+
 ## v1.80.0 - 2024-08-22
 
 **Bug Fixes**
