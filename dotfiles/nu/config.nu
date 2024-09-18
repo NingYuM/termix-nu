@@ -1,5 +1,5 @@
 # Nushell Config File
-# Update config from: aff974552
+# Update config from: af77bc60e
 # version = 0.97.2
 
 # source ~/.config/nushell/config.nu
@@ -1398,7 +1398,7 @@ $env.config = {
       modifier: control
       keycode: char_k
       mode: emacs
-      event: { edit: cuttoend }
+      event: { edit: cuttolineend }
     }
     {
       name: cut_line_from_start
