@@ -14,10 +14,12 @@
 # [√] Get available modules from latest.json if sync all is selected
 # [√] Display front end module meta data
 # [√] Display module status statistics info in meta data view
+# [√] Revert frontend module to a selected version, ossutil or mc required
 # Ref:
 #   - https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/fe-resources/dev/latest.json
 #   - http://minio-tenant.terp.fsgas.com/terminus-trantor/fe-resources/fs-test/latest.json
 #   - https://min.io/docs/minio/linux/reference/minio-mc/mc-cp.html
+#   - https://min.io/docs/minio/linux/reference/minio-mc.html?ref=docs#install-mc
 #   - https://docs.erda.cloud/2.2/manual/dop/guides/reference/pipeline.html
 #   - https://www.alibabacloud.com/help/zh/oss/developer-reference/install-ossutil#dda54a7096xfh
 # Usage:
@@ -25,16 +27,18 @@
 #   t ta detect -f https://public-go1688-trantor-noprod.oss-cn-hangzhou.aliyuncs.com/fe-resources/csp-test/latest.json
 #   t ta download all -f dev
 #   t ta download pc --from <mode> --to <dir>
+#   t ta revert base -t terp-dev -d oss
+#   t ta revert base --to ttt0 --dest-store oss
 #   t ta transfer pc --from <oss-mode> --to <minio-mode>
 #   t ta transfer all -f dev -v -d oss -t ttt0
 #   t ta transfer all --from dev --to ttt0 --dest-store oss --quiet
 #   t ta transfer all --from foran --to fs-test --dest-store fsmio
 
-use ../utils/common.nu [ECODE, is-installed, hr-line, get-tmp-path, compare-ver, base64, _TIME_FMT]
+use ../utils/common.nu [ECODE, is-installed, hr-line, get-tmp-path, compare-ver, base64, FZF_DEFAULT_OPTS, FZF_THEME, _TIME_FMT]
 
 const KEY_MAPPING = $"(ansi grey66)\(Space: Select, a: Select All, ESC/q: Quit, Enter: Confirm\)(ansi reset)"
 const JSON_ENTRY = 'latest.json'
-const VALID_ACTIONS = ['download', 'transfer', 'detect']
+const VALID_ACTIONS = [download, transfer, detect, revert]
 const VALID_MODULES = [terp-mobile terp service service-mobile iam dors dors-mobile base base-mobile b2b emp]
 const ENDPOINT = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com'
 
@@ -56,17 +60,26 @@ const MOD_DESC = {
 
 # Don't validate module names by default
 const VALIDATE_MODULES = '0'
-const PKG_TOOLS_VER = '0.3.0-beta.1'
+const PKG_TOOLS_VER = '0.5.0-beta.1'
 
 # Download TERP static assets or transfer assets to other path of the specified cloud storage
 export def 'terp assets' [
-  action: string,             # Available actions: download, transfer, detect
+  action: string,             # Available actions: download, transfer, detect and revert
   modules?: string,           # Available values: pc/mobile/mat/mmat/iam/dors/mdors/all. Multiple modules separated by `,`
   --from(-f): string,         # Source mount point or source URL. Note: Only `detect` action support multiple sources separated by `,`
   --to(-t): string,           # Destination mount point
   --quiet(-q),                # Show less info
   --dest-store(-d): string,   # Destination store, should be configured in .termixrc
 ] {
+  # Handle revert action
+  if $action == 'revert' {
+    if ($modules | is-empty) { print $'Please specify the frontend (ansi p)module(ansi reset) to revert' }
+    if ($to | is-empty) { print $'Please specify the dest mountpoint to revert by `(ansi p)-t(ansi reset)` option' }
+    if ($dest_store | is-empty) { print $'Please specify the dest store to revert by `(ansi p)-d(ansi reset)` option' }
+    if ([$modules $to $dest_store] | any { $in | is-empty }) { exit $ECODE.INVALID_PARAMETER }
+    revert-module $modules $to $dest_store; return
+  }
+
   if ($from =~ ',') and ($action == 'detect') { detect-multiple-assets $from; return }
   pre-check $action --to $to --dest-store $dest_store
   let latestMeta = get-latest-meta $from
@@ -86,6 +99,69 @@ def detect-multiple-assets [from: string] {
   for mp in $mountPoints {
     let latestMeta = get-latest-meta $mp
     detect $latestMeta; print -n (char nl)
+  }
+}
+
+# Revert frontend module to a selected version, ossutil or mc required
+def revert-module [modules: string, to: string, destStore: string] {
+  let ossConf = get-dest-oss $destStore
+  revert-precheck $modules $ossConf
+
+  let localPath = $'(get-tmp-path)/terp/revert/($modules)/($to)/'
+  let remoteURI = $'oss://($ossConf.OSS_BUCKET)/fe-resources/($to)'
+  let MODULE_LIST = if $ossConf.TYPE == 'aliyun' {
+      ossutil ls -i $ossConf.OSS_AK -k $ossConf.OSS_SK  $'($remoteURI)/' -d | lines
+                  | where $it =~ $'($remoteURI)/($modules)-\d' | sort -r
+    } else { [] }
+
+  if not ($localPath | path exists) { mkdir $localPath }
+  let title = $'Select the revision to apply:'
+  let PREVIEW_CMD = $"nu actions/terp-assets.nu {} ($localPath) ($remoteURI) ($destStore)"
+  let FZF_PREVIEW_CONF = $'--preview "($PREVIEW_CMD)"'
+  $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
+  let revision = $MODULE_LIST | each { $in | str trim -c '/' | split row '/' | last } | str join "\n"
+    | fzf | complete | get stdout | str trim
+
+  if ($revision | is-empty) { print $'No revision selected, bye...'; exit $ECODE.SUCCESS }
+  # Are you sure to revert to revision (ansi p)($revision)(ansi reset)? (y/n)
+  print $'Attention: You are going to REVERT (ansi p)($modules)(ansi reset) module to (ansi p)($revision) for ($to)@($destStore)(ansi reset)'; hr-line
+  let dest = input $'Please confirm by typing (ansi r)($to)(ansi reset) to continue or (ansi p)q(ansi reset) to quit: '
+  if $dest == 'q' { print $'Revert cancelled, Bye...'; exit $ECODE.SUCCESS }
+  if $dest != $to {
+    print $'You input (ansi p)($dest)(ansi reset) does not match (ansi p)($to)(ansi reset), bye...'; exit $ECODE.INVALID_PARAMETER
+  }
+  # Copy remote latest.json to local at the last moment to make sure the latest version is used
+  ossutil cp -f -i $ossConf.OSS_AK -k $ossConf.OSS_SK $'($remoteURI)/latest.json' $localPath | ignore
+  let module = open $'($localPath)/($revision)/namespace.json'
+  let update = {} | upsert $modules { dirname: $revision, ...$module }
+  let updated = open $'($localPath)/latest.json' | merge $update
+  $updated | save -f $'($localPath)/latest.json'
+  let sync = ossutil cp -f -i $ossConf.OSS_AK -k $ossConf.OSS_SK $'($localPath)/latest.json' $'($remoteURI)/latest.json' | complete
+  if $sync.exit_code == 0 {
+    print $'Revert (ansi p)($modules)(ansi reset) module to (ansi p)($revision) for ($to)@($destStore)(ansi reset) success!'; exit $ECODE.SUCCESS
+  }
+  print $'Revert (ansi p)($modules)(ansi reset) module to (ansi p)($revision) for ($to)@($destStore)(ansi reset) failed:'
+  print $sync.stderr
+}
+
+# Check if the required tools are installed and validating args for module reverting
+def revert-precheck [module: string, ossConf: record] {
+  let TOOL_INSTALL_TIP = {
+    fzf: 'Please install fzf by `brew install fzf` first'
+    mc: 'Please install mc by `brew install minio/stable/mc`'
+    ossutil: 'Please install `ossutil`, see https://alibabacloud.com/help/zh/oss/developer-reference/install-ossutil'
+  }
+  if $module =~ ',' { print $'Revert frontend module is not supported for multiple modules yet'; exit $ECODE.INVALID_PARAMETER }
+  if $ossConf.TYPE == 'minio' { print $'Revert frontend module is not supported for minio yet'; exit $ECODE.CONDITION_NOT_SATISFIED }
+
+  let requiredTools = if $ossConf.TYPE == 'aliyun' { [fzf ossutil] } else { [fzf mc] }
+  let missingTips = $requiredTools | reduce --fold [] {|it, acc|
+      if not (is-installed $it) { $acc ++ ($TOOL_INSTALL_TIP | get $it) } else { $acc }
+    }
+  if ($missingTips | length) > 0 {
+    print $'The following tools are required for reverting frontend module:'; hr-line
+    $missingTips | wrap Tips | table -t psql | print
+    print -n (char nl); exit $ECODE.MISSING_BINARY
   }
 }
 
@@ -158,7 +234,7 @@ def --env get-dest-oss [destStore: string] {
     print $'The storage you specified (ansi p)($destStore)(ansi reset) does not exist in (ansi p)($LOCAL_CONFIG)(ansi reset).'
     exit $ECODE.INVALID_PARAMETER
   }
-  return $ossConf
+  $ossConf
 }
 
 # Check if it's a valid action, and if the required tools are installed.
@@ -352,4 +428,16 @@ def detect [latestMeta: record] {
   print $'Total modules: (ansi g)($modules | length)(ansi reset), Enabled: (ansi g)($modules | where deprecated? != true | length)(ansi reset), Deprecated modules: (ansi r)($modules | where deprecated? | length)(ansi reset)'
 }
 
-alias main = terp assets
+# Preview the module revision meta info in fzf preview window
+def fzf-preview [revision: string, localPath: string, remoteURI: string, destStore: string] {
+  let dest = $'($localPath)/($revision)/namespace.json'
+  let ossConf = get-dest-oss $destStore
+  ossutil cp -i $ossConf.OSS_AK -k $ossConf.OSS_SK $'($remoteURI)/($revision)/namespace.json' $dest | ignore
+  open $dest | rename -c { namespace: 'module' }
+    | merge { revision: $revision, remoteURI: $remoteURI }
+    | select module revision remoteURI metadata
+    | upsert metadata.syncBy {|it| $it.metadata?.syncBy? | default 'LQ==' | base64 decode }
+    | table -e -t compact
+}
+
+alias main = fzf-preview
