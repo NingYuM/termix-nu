@@ -15,6 +15,7 @@
 # [√] Display front end module meta data
 # [√] Display module status statistics info in meta data view
 # [√] Revert frontend module to a selected version, ossutil or mc required
+# [ ] Add Revert metadata to latest.json
 # Ref:
 #   - https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/fe-resources/dev/latest.json
 #   - http://minio-tenant.terp.fsgas.com/terminus-trantor/fe-resources/fs-test/latest.json
@@ -71,6 +72,7 @@ export def 'terp assets' [
   --quiet(-q),                # Show less info
   --dest-store(-d): string,   # Destination store, should be configured in .termixrc
 ] {
+  cd $env.TERMIX_DIR
   # Handle revert action
   if $action == 'revert' {
     if ($modules | is-empty) { print $'Please specify the frontend (ansi p)module(ansi reset) to revert' }
@@ -106,11 +108,12 @@ def detect-multiple-assets [from: string] {
 def revert-module [modules: string, to: string, destStore: string] {
   let ossConf = get-dest-oss $destStore
   revert-precheck $modules $ossConf
+  let ossAuth = [-i $ossConf.OSS_AK -k $ossConf.OSS_SK -e $ossConf.OSS_ENDPOINT]
 
-  let localPath = $'(get-tmp-path)/terp/revert/($modules)/($to)/'
+  let localPath = $'(get-tmp-path)/terp/revert/($modules)/($to)/' | str replace -a \ /
   let remoteURI = $'oss://($ossConf.OSS_BUCKET)/fe-resources/($to)'
   let MODULE_LIST = if $ossConf.TYPE == 'aliyun' {
-      ossutil ls -i $ossConf.OSS_AK -k $ossConf.OSS_SK  $'($remoteURI)/' -d | lines
+      ossutil ls ...$ossAuth $'($remoteURI)/' -d | lines
                   | where $it =~ $'($remoteURI)/($modules)-\d' | sort -r
     } else { [] }
 
@@ -131,12 +134,12 @@ def revert-module [modules: string, to: string, destStore: string] {
     print $'You input (ansi p)($dest)(ansi reset) does not match (ansi p)($to)(ansi reset), bye...'; exit $ECODE.INVALID_PARAMETER
   }
   # Copy remote latest.json to local at the last moment to make sure the latest version is used
-  ossutil cp -f -i $ossConf.OSS_AK -k $ossConf.OSS_SK $'($remoteURI)/latest.json' $localPath | ignore
+  ossutil cp -f ...$ossAuth $'($remoteURI)/latest.json' $localPath | ignore
   let module = open $'($localPath)/($revision)/namespace.json'
   let update = {} | upsert $modules { dirname: $revision, ...$module }
   let updated = open $'($localPath)/latest.json' | merge $update
   $updated | save -f $'($localPath)/latest.json'
-  let sync = ossutil cp -f -i $ossConf.OSS_AK -k $ossConf.OSS_SK $'($localPath)/latest.json' $'($remoteURI)/latest.json' | complete
+  let sync = ossutil cp -f ...$ossAuth $'($localPath)/latest.json' $'($remoteURI)/latest.json' | complete
   if $sync.exit_code == 0 {
     print $'Revert (ansi p)($modules)(ansi reset) module to (ansi p)($revision) for ($to)@($destStore)(ansi reset) success!'; exit $ECODE.SUCCESS
   }
@@ -429,10 +432,15 @@ def detect [latestMeta: record] {
 }
 
 # Preview the module revision meta info in fzf preview window
-def fzf-preview [revision: string, localPath: string, remoteURI: string, destStore: string] {
+export def fzf-preview [revision: string, localPath: string, remoteURI: string, destStore: string] {
   let dest = $'($localPath)/($revision)/namespace.json'
   let ossConf = get-dest-oss $destStore
-  ossutil cp -i $ossConf.OSS_AK -k $ossConf.OSS_SK $'($remoteURI)/($revision)/namespace.json' $dest | ignore
+  let ossAuth = [-i $ossConf.OSS_AK -k $ossConf.OSS_SK -e $ossConf.OSS_ENDPOINT]
+  let mountPoint = $remoteURI | split row '/' | last
+  let module = $revision | split row '-' | drop | str join '-'
+  ossutil cp ...$ossAuth $'($remoteURI)/($revision)/namespace.json' $dest | ignore
+
+  print $'You are going to revert (ansi g)($module)(ansi reset) moudule at mount point (ansi g)($mountPoint)(ansi reset)'; hr-line 66
   open $dest | rename -c { namespace: 'module' }
     | merge { revision: $revision, remoteURI: $remoteURI }
     | select module revision remoteURI metadata
