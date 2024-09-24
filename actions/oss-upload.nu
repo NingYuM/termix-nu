@@ -84,7 +84,7 @@ def sync-latest-assets [
   let assetMeta = http get $'https://api.github.com/repos/($repo)/releases/latest'
   mut assets = $assetMeta | get assets.browser_download_url
   if ($name == 'nushell') {
-    $assets = ($assets | where $it =~ 'full' | where $it !~ 'msi')
+    $assets = ($assets | where $it !~ 'msi')
   }
   print $'Syncing latest assets of ($name) to OSS...'
   ossutil rm --force -r $toolPath
