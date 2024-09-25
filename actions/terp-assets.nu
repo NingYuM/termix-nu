@@ -29,6 +29,7 @@
 #   t ta download all -f dev
 #   t ta download pc --from <mode> --to <dir>
 #   t ta revert base -t terp-dev -d oss
+#   t ta revert base --to dev@wq -d wqtest
 #   t ta revert base --to ttt0 --dest-store oss
 #   t ta transfer pc --from <oss-mode> --to <minio-mode>
 #   t ta transfer all -f dev -v -d oss -t ttt0
@@ -75,9 +76,15 @@ export def 'terp assets' [
   cd $env.TERMIX_DIR
   # Handle revert action
   if $action == 'revert' {
-    if ($modules | is-empty) { print $'Please specify the frontend (ansi p)module(ansi reset) to revert' }
-    if ($to | is-empty) { print $'Please specify the dest mountpoint to revert by `(ansi p)-t(ansi reset)` option' }
-    if ($dest_store | is-empty) { print $'Please specify the dest store to revert by `(ansi p)-d(ansi reset)` option' }
+    if ($modules | is-empty) {
+      print $'Please specify the frontend (ansi p)module(ansi reset) to revert, e.g. `(ansi p)t ta revert base(ansi reset)`'
+    }
+    # If you want to revert module from MINIO the `--to` option should be in the format of `mount-point@mc-alias`
+    if ($to | is-empty) {
+      print $'Please specify the dest mount point to revert by `(ansi p)-t(ansi reset)` or `(ansi p)--to(ansi reset)` option'
+      print $'To revert module in MINIO the `-t` option should like `(ansi p)test@mc-alias(ansi reset)`'
+    }
+    if ($dest_store | is-empty) { print $'Please specify the dest store to revert the FE module by `(ansi p)-d(ansi reset)` option' }
     if ([$modules $to $dest_store] | any { $in | is-empty }) { exit $ECODE.INVALID_PARAMETER }
     revert-module $modules $to $dest_store; return
   }
@@ -107,39 +114,51 @@ def detect-multiple-assets [from: string] {
 # Revert frontend module to a selected version, ossutil or mc required
 def revert-module [modules: string, to: string, destStore: string] {
   let ossConf = get-dest-oss $destStore
-  revert-precheck $modules $ossConf
+  revert-precheck $modules $to $ossConf
+  let target = $to | split row @ | first
+  let mcAlias = $to | split row @ | last
+  let isMinio = ($ossConf.TYPE? | default 'aliyun') == 'minio'
   let ossAuth = [-i $ossConf.OSS_AK -k $ossConf.OSS_SK -e $ossConf.OSS_ENDPOINT]
 
-  let localPath = $'(get-tmp-path)/terp/revert/($modules)/($to)/' | str replace -a \ /
-  let remoteURI = $'oss://($ossConf.OSS_BUCKET)/fe-resources/($to)'
-  let MODULE_LIST = if $ossConf.TYPE == 'aliyun' {
-      ossutil ls ...$ossAuth $'($remoteURI)/' -d | lines
-                  | where $it =~ $'($remoteURI)/($modules)-\d' | sort -r
-    } else { [] }
+  let localPath = $'(get-tmp-path)/terp/revert/($modules)/($target)/' | str replace -a \ /
+  let remoteURI = if $isMinio { $'($mcAlias)/($ossConf.OSS_BUCKET)/fe-resources/($target)' } else { $'oss://($ossConf.OSS_BUCKET)/fe-resources/($target)' }
+  let MODULE_LIST = if $isMinio {
+      mc ls $remoteURI --json | from json -o | where key =~ $'($modules)-\d' | get key
+    } else {
+      ossutil ls ...$ossAuth $'($remoteURI)/' -d | lines | where $it =~ $'($remoteURI)/($modules)-\d'
+    }
 
   if not ($localPath | path exists) { mkdir $localPath }
   let title = $'Select the revision to apply:'
   let PREVIEW_CMD = $"nu actions/terp-assets.nu {} ($localPath) ($remoteURI) ($destStore)"
   let FZF_PREVIEW_CONF = $'--preview "($PREVIEW_CMD)"'
   $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
-  let revision = $MODULE_LIST | each { $in | str trim -c '/' | split row '/' | last } | str join "\n"
+  let revision = $MODULE_LIST | par-each { $in | str trim -c '/' | split row '/' | last } | sort -r | str join "\n"
     | fzf | complete | get stdout | str trim
 
   if ($revision | is-empty) { print $'No revision selected, bye...'; exit $ECODE.SUCCESS }
   # Are you sure to revert to revision (ansi p)($revision)(ansi reset)? (y/n)
-  print $'Attention: You are going to REVERT (ansi p)($modules)(ansi reset) module to (ansi p)($revision) for ($to)@($destStore)(ansi reset)'; hr-line
-  let dest = input $'Please confirm by typing (ansi r)($to)(ansi reset) to continue or (ansi p)q(ansi reset) to quit: '
+  print $'Attention: You are going to REVERT (ansi p)($modules)(ansi reset) module to (ansi p)($revision) for ($target)@($destStore)(ansi reset)'; hr-line
+  let dest = input $'Please confirm by typing (ansi r)($target)(ansi reset) to continue or (ansi p)q(ansi reset) to quit: '
   if $dest == 'q' { print $'Revert cancelled, Bye...'; exit $ECODE.SUCCESS }
-  if $dest != $to {
-    print $'You input (ansi p)($dest)(ansi reset) does not match (ansi p)($to)(ansi reset), bye...'; exit $ECODE.INVALID_PARAMETER
+  if $dest != $target {
+    print $'You input (ansi p)($dest)(ansi reset) does not match (ansi p)($target)(ansi reset), bye...'; exit $ECODE.INVALID_PARAMETER
   }
   # Copy remote latest.json to local at the last moment to make sure the latest version is used
-  ossutil cp -f ...$ossAuth $'($remoteURI)/latest.json' $localPath | ignore
+  if $isMinio {
+    mc cp -q $'($remoteURI)/latest.json' $localPath | ignore
+  } else {
+    ossutil cp -f ...$ossAuth $'($remoteURI)/latest.json' $localPath | ignore
+  }
   let module = open $'($localPath)/($revision)/namespace.json'
-  let update = {} | upsert $modules { dirname: $revision, ...$module }
+  let update = {} | upsert $modules { prefix: $'fe-resources/($target)', dirname: $revision, ...$module }
   let updated = open $'($localPath)/latest.json' | merge $update
   $updated | save -f $'($localPath)/latest.json'
-  let sync = ossutil cp -f ...$ossAuth $'($localPath)/latest.json' $'($remoteURI)/latest.json' | complete
+  let sync = if $isMinio {
+      mc cp -q $'($localPath)/latest.json' $'($remoteURI)/latest.json' | complete
+    } else {
+      ossutil cp -f ...$ossAuth $'($localPath)/latest.json' $'($remoteURI)/latest.json' | complete
+    }
   if $sync.exit_code == 0 {
     print $'Revert (ansi p)($modules)(ansi reset) module to (ansi p)($revision) for ($to)@($destStore)(ansi reset) success!'; exit $ECODE.SUCCESS
   }
@@ -148,14 +167,32 @@ def revert-module [modules: string, to: string, destStore: string] {
 }
 
 # Check if the required tools are installed and validating args for module reverting
-def revert-precheck [module: string, ossConf: record] {
+def revert-precheck [module: string, to: string, ossConf: record] {
+  let mcAlias = $to | split row @ | last
+  let isMinio = ($ossConf.TYPE? | default 'aliyun') == 'minio'
   let TOOL_INSTALL_TIP = {
     fzf: 'Please install fzf by `brew install fzf` first'
     mc: 'Please install mc by `brew install minio/stable/mc`'
     ossutil: 'Please install `ossutil`, see https://alibabacloud.com/help/zh/oss/developer-reference/install-ossutil'
   }
   if $module =~ ',' { print $'Revert frontend module is not supported for multiple modules yet'; exit $ECODE.INVALID_PARAMETER }
-  if $ossConf.TYPE == 'minio' { print $'Revert frontend module is not supported for minio yet'; exit $ECODE.CONDITION_NOT_SATISFIED }
+  if $ossConf.TYPE == 'minio' and ($to !~ '@') {
+    print $'To revert module in MINIO the `-t` option should like `(ansi p)test@mc-alias(ansi reset)`'; exit $ECODE.INVALID_PARAMETER
+  }
+  if $to =~ '@' {
+    if $ossConf.TYPE == 'aliyun' { print '`@` should not be used in `-t` / `--to` option for OSS storage'; exit $ECODE.INVALID_PARAMETER }
+    if $isMinio {
+      if $mcAlias not-in (mc alias ls --json | from json -o | get alias) {
+        print $'The specified mc alias (ansi p)($mcAlias)(ansi reset) does not exist, please check your mc config'; exit $ECODE.INVALID_PARAMETER
+      }
+      # Minio AK/SK/Endpoint check
+      let mconf = mc alias ls --json | from json -o | where alias == $mcAlias | get 0
+      if $mconf.accessKey != $ossConf.OSS_AK or $mconf.secretKey != $ossConf.OSS_SK or $mconf.URL != $ossConf.OSS_ENDPOINT {
+        print $'The specified mc alias (ansi p)($mcAlias)(ansi reset) does not match the oss config, please check your mc config'
+        exit $ECODE.INVALID_PARAMETER
+      }
+    }
+  }
 
   let requiredTools = if $ossConf.TYPE == 'aliyun' { [fzf ossutil] } else { [fzf mc] }
   let missingTips = $requiredTools | reduce --fold [] {|it, acc|
@@ -435,10 +472,15 @@ def detect [latestMeta: record] {
 export def fzf-preview [revision: string, localPath: string, remoteURI: string, destStore: string] {
   let dest = $'($localPath)/($revision)/namespace.json'
   let ossConf = get-dest-oss $destStore
+  let isMinio = ($ossConf.TYPE? | default 'aliyun') == 'minio'
   let ossAuth = [-i $ossConf.OSS_AK -k $ossConf.OSS_SK -e $ossConf.OSS_ENDPOINT]
   let mountPoint = $remoteURI | split row '/' | last
   let module = $revision | split row '-' | drop | str join '-'
-  ossutil cp ...$ossAuth $'($remoteURI)/($revision)/namespace.json' $dest | ignore
+  if $isMinio {
+    mc cp -q $'($remoteURI)/($revision)/namespace.json' $dest | ignore
+  } else {
+    ossutil cp ...$ossAuth $'($remoteURI)/($revision)/namespace.json' $dest | ignore
+  }
 
   print $'You are going to revert (ansi g)($module)(ansi reset) moudule at mount point (ansi g)($mountPoint)(ansi reset)'; hr-line 66
   open $dest | rename -c { namespace: 'module' }
