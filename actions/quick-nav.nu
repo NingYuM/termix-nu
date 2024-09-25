@@ -45,7 +45,7 @@ export def merge-navs [] {
   let useConfBr = get-conf useConfFromBranch
   let confBr = if $useConfBr == '_current_' { (git branch --show-current | str trim) } else { 'i' }
 
-  let termixrc = (do -i { git show $'origin/($confBr):.termixrc' })
+  let termixrc = (do -i { git show $'origin/($confBr):.termixrc' } | complete | get stdout)
   let specialNavs = if ($termixrc | is-empty) { {} } else { ( $termixrc | from toml | to json | query json 'quickNavs') }
   let rcNavs = get-rc-navs
   let rcNavs = if ($rcNavs | is-empty) { {} } else { $rcNavs }
