@@ -104,8 +104,8 @@ decorations = "Buttonless"
 macos-hide-window-buttons = false
 
 [window.background-image]
-path = "/Users/hustcer/Pictures/wallpapers/MI01011728_3200_wallpaper_des.jpg"
-opacity = 0.5
+# path = "/Users/hustcer/Pictures/wallpapers/MI01011728_3200_wallpaper_des.jpg"
+opacity = 0.1
 
 [scroll]
 multiplier = 3.0
@@ -127,9 +127,9 @@ disable-ctlseqs-alt = false
 [fonts]
 size = 20
 extras = [
-  { family = "Lilex" },
-  { family = "Sarasa Term SC" },
-  { family = "PingFang SC" },
+  { family = "Lilex", style = "Normal" },
+  { family = "Sarasa Term SC", style = "Normal" },
+  { family = "PingFang SC", style = "Normal" },
 ]
 
 # # You can also set family on root to overwrite all fonts
@@ -137,29 +137,29 @@ extras = [
 
 [fonts.regular]
 family = "Fira Code"
-style = "normal"
+style = "Normal"
 weight = 400
 
 [fonts.bold]
 family = "Fira Code"
-style = "normal"
+style = "Normal"
 weight = 800
 
 [fonts.italic]
 family = "Fira Code"
-style = "italic"
+style = "Italic"
 weight = 400
 
 [fonts.bold-italic]
 family = "Fira Code"
-style = "italic"
+style = "Italic"
 weight = 800
 
 # Navigation
 #
 # "mode" - Define navigation mode
 #   - NativeTab (MacOs only)
-#   - CollapsedTab
+#   - Bookmark
 #   - BottomTab
 #   - TopTab
 #   - Breadcrumb
@@ -170,7 +170,7 @@ weight = 800
 # "color-automation" - Set a specific color for the tab whenever a specific program is running.
 #
 [navigation]
-mode = "CollapsedTab"
+mode = "Bookmark"
 clickable = true
 use-current-path = true
 color-automation = [
