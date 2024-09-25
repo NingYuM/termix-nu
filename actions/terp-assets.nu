@@ -15,7 +15,8 @@
 # [√] Display front end module meta data
 # [√] Display module status statistics info in meta data view
 # [√] Revert frontend module to a selected version, ossutil or mc required
-# [ ] Add Revert metadata to latest.json
+# [√] Add Revert metadata to latest.json
+
 # Ref:
 #   - https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/fe-resources/dev/latest.json
 #   - http://minio-tenant.terp.fsgas.com/terminus-trantor/fe-resources/fs-test/latest.json
@@ -111,6 +112,9 @@ def detect-multiple-assets [from: string] {
   }
 }
 
+# Decode base64 encoded string, show default as `-`
+def show [] { $in | default 'LQ==' | base64 decode }
+
 # Revert frontend module to a selected version, ossutil or mc required
 def revert-module [modules: string, to: string, destStore: string] {
   let ossConf = get-dest-oss $destStore
@@ -138,7 +142,12 @@ def revert-module [modules: string, to: string, destStore: string] {
 
   if ($revision | is-empty) { print $'No revision selected, bye...'; exit $ECODE.SUCCESS }
   # Are you sure to revert to revision (ansi p)($revision)(ansi reset)? (y/n)
-  print $'Attention: You are going to REVERT (ansi p)($modules)(ansi reset) module to (ansi p)($revision) for ($target)@($destStore)(ansi reset)'; hr-line
+  print $'Attention: You are going to REVERT (ansi p)($modules)(ansi reset) module to (ansi p)($revision) for ($target)@($destStore)(ansi reset)'
+  hr-line; print $'(ansi grey66)Meta Data Detail:(ansi reset)'
+  mut meta = open $'($localPath)/($revision)/namespace.json' | get metadata
+  if ($meta.syncBy? | is-not-empty) { $meta = $meta | upsert syncBy {|it| $it.syncBy? | show } }
+  $meta | print; print -n (char nl)
+
   let dest = input $'Please confirm by typing (ansi r)($target)(ansi reset) to continue or (ansi p)q(ansi reset) to quit: '
   if $dest == 'q' { print $'Revert cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $dest != $target {
@@ -150,7 +159,11 @@ def revert-module [modules: string, to: string, destStore: string] {
   } else {
     ossutil cp -f ...$ossAuth $'($remoteURI)/latest.json' $localPath | ignore
   }
-  let module = open $'($localPath)/($revision)/namespace.json'
+
+  let revertAt = date now | format date $_TIME_FMT
+  let revertBy = $env.DICE_OPERATOR_NAME? | default (git config --get user.name) | base64 encode
+  let revertMeta = { revertAt: $revertAt, revertBy: $revertBy }
+  let module = open $'($localPath)/($revision)/namespace.json' | upsert metadata {|it| $it.metadata | merge $revertMeta }
   let update = {} | upsert $modules { prefix: $'fe-resources/($target)', dirname: $revision, ...$module }
   let updated = open $'($localPath)/latest.json' | merge $update
   $updated | save -f $'($localPath)/latest.json'
@@ -433,7 +446,7 @@ def transfer [
 # Add transfer metadata to namespace.json and latest.json
 def update-transfer-meta [latestMeta: record] {
   let syncBy = $env.DICE_OPERATOR_NAME? | default (git config --get user.name) | base64 encode
-  let syncAt = (date now | format date $_TIME_FMT)
+  let syncAt = date now | format date $_TIME_FMT
   let syncFrom = if ($latestMeta.from =~ 'latest.json') {
     $latestMeta.from | split row '/' | last 2 | first } else { $latestMeta.from }
   let syncMeta = { syncBy: $syncBy, syncFrom: $syncFrom, syncAt: $syncAt }
@@ -453,7 +466,7 @@ def detect [latestMeta: record] {
     | upsert branch {|it| $it.metadata?.branch? | default '-' }
     | upsert SHA {|it| $it.metadata?.commitSha? | default '-' }
     | upsert buildAt {|it| if ($it.metadata?.buildAt? | is-empty) { '-' } else { $it.metadata.buildAt | format date $TIME_FMT } }
-    | upsert syncBy {|it| $it.metadata?.syncBy? | default 'LQ==' | base64 decode }
+    | upsert syncBy {|it| $it.metadata?.syncBy? | show }
     | upsert syncFrom {|it| $it.metadata?.syncFrom? | default '-' }
     | upsert syncAt {|it| if ($it.metadata?.syncAt? | is-empty) { '-' } else { $it.metadata.syncAt | format date $TIME_FMT } }
     | reject -i metadata
@@ -466,6 +479,13 @@ def detect [latestMeta: record] {
     $modules | reject deprecated | table -w 200 | print; hr-line -c grey30 108
   }
   print $'Total modules: (ansi g)($modules | length)(ansi reset), Enabled: (ansi g)($modules | where deprecated? != true | length)(ansi reset), Deprecated modules: (ansi r)($modules | where deprecated? | length)(ansi reset)'
+  let reverted = $latestMeta.latest | values | filter {|it| $it.metadata?.revertAt? | is-not-empty }
+  if ($reverted | length) > 0 {
+    print $'(char nl)Module Revert Found:(char nl)'
+    $reverted | select namespace metadata.revertAt metadata.revertBy
+      | rename module revertAt revertBy | sort-by module
+      | upsert revertBy {|it| $it.revertBy? | show }
+  }
 }
 
 # Preview the module revision meta info in fzf preview window
@@ -486,7 +506,7 @@ export def fzf-preview [revision: string, localPath: string, remoteURI: string, 
   open $dest | rename -c { namespace: 'module' }
     | merge { revision: $revision, remoteURI: $remoteURI }
     | select module revision remoteURI metadata
-    | upsert metadata.syncBy {|it| $it.metadata?.syncBy? | default 'LQ==' | base64 decode }
+    | upsert metadata.syncBy {|it| $it.metadata?.syncBy? | show }
     | table -e -t compact
 }
 
