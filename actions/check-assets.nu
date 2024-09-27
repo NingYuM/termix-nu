@@ -22,6 +22,7 @@ const MOUNT_POINTS = {
   'rls  0630': '2.5.24.0630'
   'rls  0730': '2.5.24.0730'
   'rls  0830': '2.5.24.0830'
+  'rls  0930': '2.5.24.0930'
   'fs  foran': 'foran'
   'wqweiqiao': 'weiqiao'
   'mkt  prod': 'market-prod'
