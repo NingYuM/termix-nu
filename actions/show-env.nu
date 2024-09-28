@@ -25,19 +25,27 @@ export def main [] {
   let time = (date now | format date '%Y/%m/%d %H:%M:%S')
   let gitProxy = if (git config --global --list | grep proxy | is-empty) { 'Off' } else { 'On' }
 
-  char nl; print (version | transpose | rename nu-key value)
+  print -n (char nl)
+  version | select version commit_hash installed_plugins
+    | upsert commit_hash { $in | str substring 0..7 }
+    | transpose | rename Nu value | print
+
+  char nl | print -n
 
   print [
     [name, value];
     ['Git', $gitVer]
     ['Fnm', $fnmVer]
     ['Just', $justVer]
-    ['Herd', $herdVer]
     ['Node', $nodeVer]
     ['Npm', $npmVer]
     ['Pnpm', $pnpmVer]
+    ['fzf', (get-ver fzf 'fzf --version')]
+    ['.OS.', (sys host | get long_os_version | str trim)]
+    ['Herd', $herdVer]
     ['Termix', $termixVer]
-    ['-------', '--------']
+    ['Package Tools', (get-ver package-tools 'package-tools --version')]
+    ['------------', '-------------']
     ['Git Proxy', $gitProxy]
     ['SHELL_TO_RUN_CMD', $shell]
     ['SYNC_IGNORE_ALIAS', $syncIgnore]

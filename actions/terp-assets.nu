@@ -482,9 +482,9 @@ def detect [latestMeta: record] {
   let reverted = $latestMeta.latest | values | filter {|it| $it.metadata?.revertAt? | is-not-empty }
   if ($reverted | length) > 0 {
     print $'(char nl)Module Revert Found:(char nl)'
-    $reverted | select namespace metadata.revertAt metadata.revertBy
-      | rename module revertAt revertBy | sort-by module
-      | upsert revertBy {|it| $it.revertBy? | show }
+    $reverted | select namespace metadata.revertBy metadata.revertAt
+      | rename module revertBy revertAt | sort-by module
+      | upsert revertBy {|it| $it.revertBy? | show } | print; print -n (char nl)
   }
 }
 
