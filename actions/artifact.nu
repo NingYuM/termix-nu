@@ -522,7 +522,8 @@ def select-artifact-by-fzf [
   let PREVIEW_CMD = $"nu actions/artifact.nu {} artifact"
   let FZF_PREVIEW_CONF = $'--preview "($PREVIEW_CMD)"'
   $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
-  let version = $releases.data.list | select version createdAt | sort-by -r createdAt | get version | str join (char nl) | fzf | complete | get stdout
+  let version = $releases.data.list | select version createdAt | sort-by -r createdAt
+      | get version | str join (char nl) | fzf | complete | get stdout | str trim
   $version
 }
 
@@ -648,7 +649,7 @@ def select-deploy-mode-by-fzf [
   let PREVIEW_CMD = $"nu actions/artifact.nu {} group --options ($options)"
   let FZF_PREVIEW_CONF = $'--preview "($PREVIEW_CMD)"'
   $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --multi --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
-  let selected = $modes | columns | str join (char nl) | fzf | complete | get stdout
+  let selected = $modes | columns | str join (char nl) | fzf | complete | get stdout | str trim
   $selected | lines
 }
 
