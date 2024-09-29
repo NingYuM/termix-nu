@@ -35,7 +35,10 @@ export def 'git pick' [
     get-commits $options.matches | reject error | print; exit $ECODE.SUCCESS
   }
   if ($options.matches | is-empty) and $verbose {
-    print $'No matched commits found from (ansi g)($options.from)(ansi reset) need to be picked to (ansi g)($options.to) ($countTip)(ansi reset)'
+    print $'No. matched commits of (ansi g)($match)(ansi reset) found from (ansi g)($options.from)(ansi reset) need to be picked to (ansi g)($options.to) ($countTip)(ansi reset)'
+  }
+  if ($options.matches | is-not-empty) and $verbose {
+    print $'All matched commits of (ansi g)($match)(ansi reset) found from (ansi g)($options.from)(ansi reset) have been  picked to (ansi g)($options.to)(ansi reset)'
   }
 
   git checkout $options.to --quiet
