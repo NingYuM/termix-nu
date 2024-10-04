@@ -26,14 +26,14 @@ font-feature = -calt
 font-feature = -dlig
 font-feature = -liga
 # Does not work on macOS?
-font-variation = wght=300
-font-family = Lilex
-font-family = Sarasa Term SC
+font-variation = wght=200
 font-family = Fira Code
-font-family = Hack Nerd Font Mono
-font-family = Source Code Pro
+font-family = Lilex
 font-family = Cascadia Code
+font-family = Sarasa Term SC
 font-family = JetBrains Mono
+font-family = Source Code Pro
+font-family = Hack Nerd Font Mono
 font-thicken = false
 window-title-font-family = Fira Code
 grapheme-width-method = unicode
@@ -54,4 +54,5 @@ keybind = command+left=previous_tab
 keybind = command+shift+k=clear_screen
 keybind = command+ctrl+shift+v=new_split:down
 keybind = command+ctrl+shift+h=new_split:right
+keybind = global:grave_accent=toggle_quick_terminal
 
