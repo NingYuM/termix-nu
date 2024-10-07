@@ -217,7 +217,7 @@ def install-all-nu [
     print '----------------------------'
 
     cd $nu_root
-    cargo install --force --locked --path . --features=dataframe,extra
+    cargo install --force --locked --path .
   }
 
   if not $plugin_only { install-nushell }
@@ -236,9 +236,10 @@ def install-all-nu [
     nu_plugin_inc,
     nu_plugin_gstat,
     nu_plugin_query,
+    nu_plugin_polars,
+    nu_plugin_formats,
     nu_plugin_example,
     nu_plugin_custom_values,
-    nu_plugin_formats,
   ]
 
   for plugin in $plugins {
