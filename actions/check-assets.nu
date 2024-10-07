@@ -8,7 +8,7 @@
 use terp-assets.nu ['terp assets']
 use ../utils/common.nu [ECODE, FZF_KEY_BINDING, FZF_THEME]
 
-const FZF_DEFAULT_OPTS = $'--height 80% --layout=reverse --highlight-line --marker ▏ --pointer ▌ --prompt "▌ " --exact --preview-window=right:90% ($FZF_KEY_BINDING)'
+const FZF_DEFAULT_OPTS = $'--multi --height 80% --layout=reverse --highlight-line --marker ▏ --pointer ▌ --prompt "▌ " --exact --preview-window=right:90% ($FZF_KEY_BINDING)'
 
 const MOUNT_POINTS = {
   'terp  dev': 'terp-dev'
@@ -57,7 +57,9 @@ export def 'check assets' [] {
   $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
   let selected = $MOUNT_POINTS | columns | str join (char nl) | fzf | complete | get stdout | str trim
   if ($selected | is-empty) { return }
-  terp assets detect -f ($MOUNT_POINTS | get $selected)
+  $selected | lines | each {|it|
+    terp assets detect -f ($MOUNT_POINTS | get $it); print -n (char nl)
+  } | ignore
 }
 
 def main [selected: string] {
