@@ -101,7 +101,7 @@ export def get-latest-nightly-build [
       # `sudo` is required to move the files to `/usr/local/bin` on macOS
       cp -r nu-nightly/nu-*/* .
       rm -rf nu-nightly
-      print $'(char nl)Update to Nu: (ansi g)(./nu --version) - (./nu --no-std-lib -c "version | get commit_hash")(ansi reset)'
+      print $'(char nl)Update to Nu: (ansi g)(./nu --version) - (./nu -n --no-std-lib -c "version | get commit_hash")(ansi reset)'
       print $'Please restart Nu session to use the latest nightly release...'
     },
     'zip' => {
