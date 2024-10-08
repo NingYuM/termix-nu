@@ -43,7 +43,7 @@ export def 'git batch-exec' [
     if (has-ref $branch) {
       git checkout $branch
       # Execute cmd here
-      nu --no-std-lib -c $cmdToExec
+      nu -n --no-std-lib -c $cmdToExec
       hr-line
     } else {
       print $'Branch (ansi r)($branch) (ansi reset)not available...(char nl)'

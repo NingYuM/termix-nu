@@ -93,10 +93,10 @@ export def base64 [action: string] {
   let source = $in
   let useNew = (scope commands | where name =~ 'new-base64' | length) > 0
   match [$action, $useNew] {
-    ['encode', true] => { nu --no-std-lib -c $'"($source)" | encode new-base64 ' },
-    ['encode', false] => { nu --no-std-lib -c $'"($source)" | encode base64' },
-    ['decode', true] => { nu --no-std-lib -c $'"($source)" | decode new-base64 | decode' },
-    ['decode', false] => { nu --no-std-lib -c $'"($source)" | decode base64' },
+    ['encode', true] => { nu -n --no-std-lib -c $'"($source)" | encode new-base64 ' },
+    ['encode', false] => { nu -n --no-std-lib -c $'"($source)" | encode base64' },
+    ['decode', true] => { nu -n --no-std-lib -c $'"($source)" | decode new-base64 | decode' },
+    ['decode', false] => { nu -n --no-std-lib -c $'"($source)" | decode base64 | decode' },
     _ => { print $'Invalid action: ($action), available actions: encode, decode' }
   }
 }
@@ -146,7 +146,7 @@ export def get-ver [
   verCmd: string,  # The Nushell command to get it's version number
 ] {
   let installed = (which $app | length) > 0
-  (if $installed { (nu --no-std-lib -c $verCmd | str trim) } else { 'N/A' })
+  (if $installed { (nu -n --no-std-lib -c $verCmd | str trim) } else { 'N/A' })
 }
 
 # Check if a git repo has the specified ref: could be a branch or tag, etc.

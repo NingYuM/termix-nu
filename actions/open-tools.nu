@@ -146,7 +146,7 @@ export def upgrade-latest-tool [
       # `sudo` is required to move the files to `/usr/local/bin` on macOS
       glob $'($destDir)/**/($bin)*' | each {|it| if ($it | path type) == 'file' { sudo cp $it . } }
       rm -rf $destDir
-      let version = nu --no-std-lib -c $'./($bin) --version'
+      let version = nu -n --no-std-lib -c $'./($bin) --version'
       print $'(char nl)Upgrade to ($name): (ansi g)($version)(ansi reset)'
       if $name == 'nushell' {
         print $'Please restart Nu session to use the latest release...'
@@ -167,7 +167,7 @@ export def upgrade-latest-tool [
       }
       cp $'($destDir)/($bin).exe' $'($bin).exe'
       rm -rf $destDir
-      let version = nu --no-std-lib -c $'./($bin).exe --version'
+      let version = nu -n --no-std-lib -c $'./($bin).exe --version'
       print $'(char nl)Upgrade to ($name): (ansi g)($version)(ansi reset)'
       print $'($name) has been upgraded successfully'
     },
