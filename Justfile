@@ -210,10 +210,10 @@ check-branch: _setup
 
 # Pull all local branches from remote repo
 [group('-- Git --')]
-pull-all: _setup
+pull-all *OPTIONS: _setup
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
     overlay use {{ join(_termix, 'git', 'pull-all.nu') }}; \
-    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git pull-all {{JUST_INVOKE_DIR}} 'origin'
+    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git pull-all {{OPTIONS}}
 
 # Rename remote branch, and delete old branch after rename
 [group('-- Git --')]

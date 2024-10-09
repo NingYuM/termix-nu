@@ -8,11 +8,10 @@ use ../utils/common.nu [hr-line]
 
 # Pull all local branches from remote repo
 export def 'git pull-all' [
-  repoDir: string,   # The git repo dir to run pull action
-  alias: string,     # The remote url alias for git repo
+  alias: string = 'origin',     # The remote alias of git repo to pull from
 ] {
 
-  cd $repoDir
+  cd $env.JUST_INVOKE_DIR
   let currentBranch = (git branch --show-current | str trim)
   # Save changes before switch to other branches
   let statusCheck = (git status --porcelain)
