@@ -488,11 +488,22 @@ t git-batch-reset 2 develop feature/latest
 
 **功能描述**: 从**远程更新本地所有分支代码**到最新的 Commit, 如果执行命令前本地仓库有变更会自动执行 `stash` 操作;
 
-**命令格式**: `t pull-all`
+**命令格式**: `t pull-all alias=('origin')`
 
-**参数说明**: N/A
+**参数说明**:
 
-**使用举例**: Just Try `t pull-all` in your git repo to update them all ! 再也不用反复切换到某一个分支去挨个更新代码了。
+- `alias`: 可选，远程仓库地址对应的 **alias** 名称，默认值 `origin`;
+
+**使用举例**:
+
+```bash
+# 从远程 origin 更新本地所有分支代码到最新的Commit
+t pull-all
+# 从远程地址 alias 为 deploy 的仓库更新本地所有分支代码到最新的Commit
+t pull-all deploy
+```
+
+---
 
 ### 14. Git 远程 & 本地分支重命名{#rename-branch}
 
@@ -1256,7 +1267,7 @@ alias main = dingtalk notify
 
 - 资源摘要查看：`terp-assets detect --from <from>`
 - 资源下载：`terp-assets download <modules> --from <from> --to <to>`
-- 资源同步：`terp-assets transfer <modules> --from <from> --to <to> --dest-store <store>`，资源同步时会先下载然后再上传，实际同步操作的时候不需要单独执行下载操作。资源上传需要在本机安装 `@terminus/t-package-tools`, 执行 `npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io` 即可(Node.js 建议 v18 或者以上版本)，版本不低于 `0.3.0-beta.3`;
+- 资源同步：`terp-assets transfer <modules> --from <from> --to <to> --dest-store <store>`，资源同步时会先下载然后再上传，实际同步操作的时候不需要单独执行下载操作。资源上传需要在本机安装 `@terminus/t-package-tools`, 执行 `npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io` 即可(Node.js 建议 v18 或者以上版本)，版本不低于 `0.5.0-beta.1`;
 
 **命令别名**: `terp-assets` 的别名为 `ta`
 
