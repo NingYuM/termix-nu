@@ -53,5 +53,6 @@ export def renew-erda-session [host: string = $ERDA_HOST, --get-uid] {
 export def should-retry-req [resp: any] {
   let isEmpty = ($resp | is-empty)
   let noAuth = ($resp | describe) == 'string' and ($resp =~ 'auth failed' or $resp =~ 'Unauthorized')
-  { isEmpty: $isEmpty, noAuth: $noAuth, shouldRetry: ($isEmpty or $noAuth) }
+  let badRes = ($resp | describe) == 'string' and (not $noAuth)
+  { isEmpty: $isEmpty, noAuth: $noAuth, shouldRetry: ($isEmpty or $noAuth or $badRes) }
 }
