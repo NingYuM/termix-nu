@@ -427,7 +427,9 @@ def create-snapshot [
   source: record,       # Specify the meta source of the snapshot to create
   auth: record,         # A authentication record contains user and cookie info
 ] {
-  const snapShotApi = '/api/trantor/task/exec/RebuildObjectTask'
+  const LEGACY_VERSIONS = [2.5.24.0330 2.5.24.0430 2.5.24.0530 2.5.24.0630 2.5.24.0730]
+  let taskName = if $auth.version in $LEGACY_VERSIONS { 'RebuildObjectTask' } else { 'SnapshotTask' }
+  let snapShotApi = $'/api/trantor/task/exec/($taskName)'
   let query = { teamId: $source.teamId, teamCode: $source.teamCode, userId: $auth.user.id, verbose: 'false' } | url build-query
   let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team $source.teamCode, ...$HTTP_HEADERS]
   let resp = http post --content-type application/json --headers $headers -e $'($source.host)($snapShotApi)?($query)' {}
