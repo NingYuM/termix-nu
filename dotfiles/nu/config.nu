@@ -1,6 +1,6 @@
 # Nushell Config File
-# Update config from: af77bc60e
-# version = 0.97.2
+# Update config from: 91ff57faa
+# version = 0.99.0
 
 # source ~/.config/nushell/config.nu
 # Ref:
@@ -1005,9 +1005,16 @@ $env.config = {
       event: { send: menuprevious }
     }
     {
+      name: completion_previous_menu
+      modifier: shift
+      keycode: backtab
+      mode: [emacs, vi_normal, vi_insert]
+      event: { send: menuprevious }
+    }
+    {
       name: ide_completion_menu
       modifier: control
-      keycode: char_n
+      keycode: space
       mode: [emacs vi_normal vi_insert]
       event: {
         until: [
@@ -1276,7 +1283,7 @@ $env.config = {
     {
       name: move_down
       modifier: control
-      keycode: char_t
+      keycode: char_n
       mode: [emacs, vi_normal, vi_insert]
       event: {
         until: [
