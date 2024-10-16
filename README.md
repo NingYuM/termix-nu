@@ -1263,11 +1263,12 @@ alias main = dingtalk notify
 
 **命令格式**: `terp-assets {flags} <action> <modules>`
 
-其中 `action` 目前只支持三种 `detect`, `download` & `transfer`:
+其中 `action` 目前只支持三种 `detect`, `download`, `transfer` & `revert`:
 
 - 资源摘要查看：`terp-assets detect --from <from>`
 - 资源下载：`terp-assets download <modules> --from <from> --to <to>`
-- 资源同步：`terp-assets transfer <modules> --from <from> --to <to> --dest-store <store>`，资源同步时会先下载然后再上传，实际同步操作的时候不需要单独执行下载操作。资源上传需要在本机安装 `@terminus/t-package-tools`, 执行 `npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io` 即可(Node.js 建议 v18 或者以上版本)，版本不低于 `0.5.0-beta.1`;
+- 资源同步：`terp-assets transfer <modules> --from <from> --to <to> --dest-store <store>`，资源同步时会先下载然后再上传，实际同步操作的时候不需要单独执行下载操作。资源上传需要在本机安装 `@terminus/t-package-tools`, 执行 `npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io` 即可(Node.js 建议 v18 或者以上版本)，版本不低于 `0.5.0`;
+- 资源回滚：`terp-assets revert <modules> --to <to>`, 资源回滚只能针对单个模块进行操作，不支持多个模块批量回滚，而且如果资源存储在 OSS 上，需要先在本机安装 `ossutil` 工具，如果资源存储在 `minio` 之类的云存储上，需要先在本机安装 `mc` 工具，因为回滚到过程中需要使用这些工具直接对云存储进行操作(在回滚到过程中也会提示安装对应的工具)。另外在进行回滚操作的过程中需要选择回滚的静态资源版本所以需安装 `fzf` 工具。BTW, 回滚操作会留痕，会记录下执行回滚操作的人、时间及模块等信息，方便排查问题。
 
 **命令别名**: `terp-assets` 的别名为 `ta`
 
@@ -1311,6 +1312,10 @@ t ta detect -f terp-dev
 t ta transfer all --from test --to staging --dest-store minio -v
 # 在预发环境验证通过后即可将预发环境经过验证的所有 TERP 依赖静态资源下载到本地然后上传到 minio 的 prod 目录
 t ta transfer all --from http://minio.terp.terminus.com/terminus-trantor/fe-resources/staging/latest.json --to prod --dest-store minio -v
+# 回滚OSS 云存储里面 dev 挂载点上的 base 前端模块
+t ta revert base -t dev -d oss
+# 回滚 minio 云存储里面 dev 挂载点上的 base 前端模块, 其中 `alias` 代表 mc 配置的别名
+t ta revert base -t dev@alias -d minio
 ```
 
 资源同步完毕后记得修改网关配置以使线上的静态资源生效。
