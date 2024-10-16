@@ -1,6 +1,36 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.82.0 - 2024-10-16
+
+**Breaking Changes**
+
+- Upgrade @terminus/t-package-tools min version to 0.5.0 for terp assets syncing
+
+**Bug Fixes**
+
+- Fix `t go` error for Nu v0.98
+- Fix upload-tools.yml workflow
+- Fix fzf selection, trim selected item
+- Fix bad response check
+- Fix meta data syncing for Trantor v2.5.24.0830
+
+**Features**
+
+- Add TERP frontend assets revert command: `t ta revert`
+- Add revert TERP frontend module for Minio support
+- Improve `t ta revert` command, add revert metadata and display it in detect mode
+- Update `t show-env` command add more info
+- Add repo alias arg for `t pull-all` command
+
+**Miscellaneous Tasks**
+
+- Update rio config for v0.16
+- Update commit auto pick tip
+- Update kitty and ghostty conf
+- Adapt to Nushell v0.99
+- Update @terminus/t-package-tools to 0.5.0
+
 ## v1.81.0 - 2024-09-18
 
 **Bug Fixes**

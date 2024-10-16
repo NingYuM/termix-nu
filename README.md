@@ -1267,7 +1267,7 @@ alias main = dingtalk notify
 
 - 资源摘要查看：`terp-assets detect --from <from>`
 - 资源下载：`terp-assets download <modules> --from <from> --to <to>`
-- 资源同步：`terp-assets transfer <modules> --from <from> --to <to> --dest-store <store>`，资源同步时会先下载然后再上传，实际同步操作的时候不需要单独执行下载操作。资源上传需要在本机安装 `@terminus/t-package-tools`, 执行 `npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io` 即可(Node.js 建议 v18 或者以上版本)，版本不低于 `0.5.0-beta.1`;
+- 资源同步：`terp-assets transfer <modules> --from <from> --to <to> --dest-store <store>`，资源同步时会先下载然后再上传，实际同步操作的时候不需要单独执行下载操作。资源上传需要在本机安装 `@terminus/t-package-tools`, 执行 `npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io` 即可(Node.js 建议 v18 或者以上版本)，版本不低于 `0.5.0`;
 
 **命令别名**: `terp-assets` 的别名为 `ta`
 
