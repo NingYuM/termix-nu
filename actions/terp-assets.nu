@@ -301,13 +301,14 @@ def pre-check [
     exit $ECODE.INVALID_PARAMETER
   }
   if not (is-installed package-tools) {
-    print 'Please install package-tools by `npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io` first.'
+    print $'Please install package-tools by (ansi g)`npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io`(ansi reset) first.'
     exit $ECODE.MISSING_BINARY
   }
   let ver = package-tools -v
   let compVer = compare-ver $ver $PKG_TOOLS_VER
   if $compVer < 0 {
-    print $'Only package-tools ($PKG_TOOLS_VER) or above is supported by this tool. Please reinstall it.'
+    print $'Only package-tools (ansi r)($PKG_TOOLS_VER)(ansi reset) or above is supported. Please reinstall it by:'
+    print $'(ansi g)npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io (ansi reset)(char nl)'
     exit $ECODE.CONDITION_NOT_SATISFIED
   }
   if $action == 'transfer' and (($to | is-empty) or ($dest_store | is-empty)) {
