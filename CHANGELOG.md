@@ -1,6 +1,12 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.82.1 - 2024-10-17
+
+**Miscellaneous Tasks**
+
+- Improve `package-tools` upgrade tip
+
 ## v1.82.0 - 2024-10-16
 
 **Breaking Changes**
