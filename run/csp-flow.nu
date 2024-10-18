@@ -14,6 +14,7 @@
 const CSP_APPS = [
   pp-fe
   ep-ui
+  ago-ui
   rad-ui
   csp-wx
   acrm-ui
@@ -24,6 +25,23 @@ const CSP_APPS = [
   carbon-ui
   csp-portal-ui
 ]
+
+# Update all-pkgs.yml
+export def update-all-pkgs [] {
+  $CSP_APPS
+    | reduce --fold [] {|it, acc|
+        z $it;
+        let pkgs = if ('pkgs' | path exists) { ls -s pkgs | get name } else { [] }
+        $acc ++ $pkgs
+      }
+    | uniq
+    | sort
+    | to text
+    | print
+
+  print (char nl)
+  print r#'Copy and paste then do: open tools/all-pkgs.yml -r | lines | uniq | sort | save -f tools/all-pkgs.yml'#
+}
 
 export def update-pkg [] {
   let pkgs = ls pkgs/ | get name
