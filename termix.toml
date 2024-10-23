@@ -87,17 +87,11 @@ gaiaSrcRepos = [
 ]
 
 [empWorkingHour]
-app = 'x-trantor-app: emp_worktime'
-type = 'Content-Type: application/json'
-cookie = 'Cookie: emp_u_c_local=_EMP_UC_COOKIE_'
-timeUrl = 'https://gateway.app.terminus.io/compass/emp-worktime/worktime/17096/api/trantor/func/worktime_GetStaffWorkTimeFunc'
-leaveUrl = 'https://gateway.app.terminus.io/compass/emp-worktime/worktime/17096/api/trantor/func/worktime_GetEmployeeLeaveInfoFunc'
-staffUrl = 'https://gateway.app.terminus.io/compass/emp-worktime/worktime/17096/api/trantor/func/worktime_GetStaffByBaseProjectFunc'
-timeSummaryUrl = 'https://gateway.app.terminus.io/compass/emp-worktime/worktime/17096/api/trantor/func/worktime_GroupCountStaffWorkTimeSummaryFunc'
-timePayload = '[{"beginDate":"_first_day_","endDate":"_last_day_","staffs": _staffs_}]'
-leavePayload = '[{"beginDate":"_first_day_","endDate":"_last_day_","staffBOS": _staffs_}]'
-timeSummaryPayload = '[{"beginDate":"_first_day_","endDate":"_last_day_","staffs": _staffs_,"department": _department_}]'
-staffPayload = '[{"beginDate":"_first_day_","endDate":"_last_day_","baseProjectTOS":[{"type":"DEPARTMENT","projectCode":"_project_code_"}]}]'
+leaveUrl = 'https://emp-portal.app.terminus.io/api/trantor/service/engine/execute/MD$get_employee_leave_info'
+timeUrl = 'https://emp-portal.app.terminus.io/api/trantor/service/engine/execute/WORKTIME$get_employee_project_hours_within_specified_time'
+staffUrl = 'https://emp-portal.app.terminus.io/api/trantor/service/engine/execute/WORKTIME$get_department_employees_with_work_hour_filter'
+timeSummaryUrl = 'https://emp-portal.app.terminus.io/api/trantor/service/engine/execute/WORKTIME$department_employees_work_hours_data_status_statis'
+allStaffUrl = 'https://emp-portal.app.terminus.io/api/trantor/service/engine/execute/PROJECT$SYS_PagingDataService?tmodule=&modelKey=MD%24md__staff_b_o'
 
 # 快捷导航
 [quickNavs]

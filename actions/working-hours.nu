@@ -34,13 +34,16 @@
 #   https://emp.app.terminus.io/view/worktime_WorkTimeBO_DepartmentWorkTime
 
 use dingtalk-notify.nu ['dingtalk notify']
-use ../utils/common.nu [ECODE, get-conf, get-env, log]
+use ../utils/common.nu [ECODE, HTTP_HEADERS, get-conf, get-env, log, is-installed, is-lower-ver]
 
 const _WEEK_FMT = '%A'
 const _MONTH_FMT = '%m'
 const _TIME_FMT = '%Y-%m-%d %H:%M:%S'
 const CHECK_DURATION = 0day
+const STAFFS_FILE = '/tmp/emp-staffs.json'
 const DEFAULT_LASTDAY_MSG = '特别提醒：马上要放假了，请务必在今天完成本周工时填写，因为接下来机器人也要休假了。'
+
+const REFERER = 'https://emp-portal.app.terminus.io/EMP_MANAGER_PORTAL/EMP_MANAGER_PORTAL/EMP_MANAGER_PORTAL$82VVjK/page'
 
 # Run EMP working hours checking job everyday, but only send notifications for Monday, Friday, Saturday, Sunday and Month end
 export def working-hours-daily-checking [--debug(-d)] {
@@ -91,13 +94,16 @@ export def query-hours-by-team-codes [
     print $'(ansi r)Please set the `code` field in all `emp.teams`, bye...(char nl)(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
+
+  let token = get-user-auth {username: $env.EMP_USERNAME, password: $env.EMP_PASSWORD} | get token
+  if $notify { update-staff-list --token $token }
   if not ($month | is-empty) {
-    $teams | each { |it| query-monthly-hours-by-team $it --debug=$debug --show-all=$show_all --month=$month }
+    $teams | each { |it| query-monthly-hours-by-team $it --debug=$debug --show-all=$show_all --month=$month --token=$token }
     return
   }
   if not $keep_polling {
     $teams | each { |it|
-      query-hours-by-team $it --show-all=$show_all --show-prev=$show_prev --notify=$notify --silent=$silent --debug=$debug
+      query-hours-by-team $it --show-all=$show_all --show-prev=$show_prev --notify=$notify --silent=$silent --debug=$debug --token=$token
     } | ignore
     return
   }
@@ -105,7 +111,7 @@ export def query-hours-by-team-codes [
   mut teamWatcher = {}
   loop {
     for it in $teams {
-      let finished = query-hours-by-team $it --show-all=$show_all --show-prev=$show_prev --notify=$notify --silent=$silent --debug=$debug
+      let finished = query-hours-by-team $it --show-all=$show_all --show-prev=$show_prev --notify=$notify --silent=$silent --debug=$debug --token=$token
       $teamWatcher = ($teamWatcher | upsert $it.code $finished)
     }
     log 'teamWatcher' $teamWatcher
@@ -129,10 +135,11 @@ def --env load-emp-conf [] {
 
 # Query working hours filling status by specified month
 export def query-monthly-hours-by-team [
-  team: record,       # Team record, contains name,code,alias,users,etc.
-  --debug(-d),        # Print more debug info
-  --month(-m): int,   # Query working hours by specified month
-  --show-all(-a),     # Show all members even if the working hours filled correctly
+  team: record,         # Team record, contains name,code,alias,users,etc.
+  --debug(-d),          # Print more debug info
+  --month(-m): int,     # Query working hours by specified month
+  --show-all(-a),       # Show all members even if the working hours filled correctly
+  --token(-t): string,  # Token for EMP Portal
 ] {
   if ($month > 12) or ($month < 1) {
     print $'The specified month (ansi r)($month)(ansi reset) should lay in (ansi p)1 ~ 12(char nl)(ansi reset)'
@@ -146,7 +153,7 @@ export def query-monthly-hours-by-team [
   let monday = get-monday
   let sunday = get-sunday
   let emp = get-conf empWorkingHour
-  let staffs = query-staffs-by-team $team.code $monday $sunday
+  let staffs = query-staffs-by-team $team.code $monday $sunday --token=$token
 
   let iptMonth = $month | fill --alignment right -w 2 -c '0'
   let nextMonth = ($month + 1) | fill --alignment right -w 2 -c '0'
@@ -157,14 +164,15 @@ export def query-monthly-hours-by-team [
   let title = $"($team.name) (ansi g)($month)(ansi reset) 月工时填报\(人/天\)"
   print $"\n-------------------------> (ansi p)($title) <-------------------------(ansi reset)\n"
 
-  let timeSummaryPayload = $emp.timeSummaryPayload
-    | str replace '_last_day_' $monthEnd
-    | str replace '_first_day_' $monthStart
-    | str replace '_staffs_' $staffs.staffPayload
-    | str replace '_department_' ({id: $team.code} | to json -r)
-  let summary = curl $emp.timeSummaryUrl -H $emp.type -H $emp.app -s --data-raw $timeSummaryPayload | str join
+  let timeSummaryPayload = {
+      params: {
+        req: { endDate: $monthEnd, beginDate: $monthStart, staffs: $staffs.staffPayload, department: { id: $team.code } }
+      }
+    }
+  let HEADERS = [Referer $REFERER Cookie $'t_emp_iam=($token)']
+  let summary = http post -H $HEADERS --content-type application/json -e $emp.timeSummaryUrl $timeSummaryPayload
   let hourSummary = (
-      ($summary | from json | get res | select staffWorkTimeFillResponseList | flatten
+      ($summary | get data.data | select staffWorkTimeFillResponseList | flatten
         | get staffWorkTimeFillResponseList
         | where ($it | describe) =~ 'record' and ($it.staffBO?.id | default 0) > 0
         | rename --column {
@@ -177,7 +185,7 @@ export def query-monthly-hours-by-team [
       | upsert 剩余应填 { |it| $it.baseProjectWorkTimeSummaryList | where name == '剩余应填' | get 0 | get percentage }
       | upsert 空闲人天 { |it| $it.baseProjectWorkTimeSummaryList | where name == '空闲工时' | get 0 | get percentage }
       | upsert Name { |it| if $it.空闲人天 > 0 { $'(ansi r)($it.staffBO.name)(ansi reset)' } else { $it.staffBO.name } }
-      | reject @id staffBO baseProjectWorkTimeSummaryList Other Surplus
+      | reject id staffBO baseProjectWorkTimeSummaryList Other Surplus
       | move Name --before 理论人天
       | sort-by -r 空闲人天
     )
@@ -193,34 +201,36 @@ export def query-monthly-hours-by-team [
 
 # Query staffs by team code
 def query-staffs-by-team [
-  code: string,       # Team code
-  from: string,       # Start date, like 2023-12-11 00:00:00
-  to: string,         # End date, like 2023-12-17 23:59:59
+  code: string,         # Team code
+  from: string,         # Start date, like 2023-12-11 00:00:00
+  to: string,           # End date, like 2023-12-17 23:59:59
+  --token(-t): string,  # Token for EMP Portal
 ] {
   let emp = get-conf empWorkingHour
-  let staffPayload = $emp.staffPayload
-      | str replace '_last_day_' $from
-      | str replace '_first_day_' $to
-      | str replace '_project_code_' $code
+  let staffPayload = {
+    params: { req: { department: { id: $code } }, pageable: { pageNo: 1, pageSize: 99999999 } }
+  }
 
+  let HEADERS = [Referer $REFERER Cookie $'t_emp_iam=($token)']
   # Week No of now: [(date now)] | polars into-df | polars get-week
-  let staffs = curl $emp.staffUrl -H $emp.type -s --data-raw $staffPayload | str join
+  let staffs = http post -H $HEADERS --content-type application/json -e $emp.staffUrl $staffPayload
 
   handle-exception $staffs
   # 此处把中文名字字段过滤掉，否则在Windows下数据传到后端接口会发生解析错误
-  let staffPayload = $staffs | from json | get res | select id | to json -r
-  let allStaffs = $staffs | from json | get res | select id name | rename id Name
-  return { staffPayload: $staffPayload, allStaffs: $allStaffs }
+  let staffPayload = $staffs | get data.data | select id name | to json -r
+  let allStaffs = $staffs | get data.data | select id name | rename id Name
+  { staffPayload: $staffPayload, allStaffs: $allStaffs }
 }
 
 # Query working hours of the specified team from EMP and display the filling status of each team member
 export def query-hours-by-team [
-  team: record,       # Team record, contains name,code,alias,users,etc.
-  --debug(-d),        # Print more debug info
-  --notify(-n),       # Notify the members who didn't fill the working hours by Dintalk Robot
-  --silent(-s),       # Don't print the result
-  --show-prev(-p),    # Query working hours of previous week
-  --show-all(-a),     # Show all members even if the working hours filled correctly
+  team: record,         # Team record, contains name,code,alias,users,etc.
+  --debug(-d),          # Print more debug info
+  --notify(-n),         # Notify the members who didn't fill the working hours by Dintalk Robot
+  --silent(-s),         # Don't print the result
+  --show-prev(-p),      # Query working hours of previous week
+  --show-all(-a),       # Show all members even if the working hours filled correctly
+  --token(-t): string,  # Token for EMP Portal
 ] {
   let emp = get-conf empWorkingHour
   let monday = get-monday --prev=$show_prev
@@ -232,38 +242,40 @@ export def query-hours-by-team [
     print $'(char nl)Query working hours from ($monday) to ($sunday) --->'
   }
 
-  let staffs = query-staffs-by-team $team.code $monday $sunday
-  let timePayload = $emp.timePayload
-      | str replace '_last_day_' $sunday
-      | str replace '_first_day_' $monday
-      | str replace '_staffs_' $staffs.staffPayload
+  let staffs = query-staffs-by-team $team.code $monday $sunday --token=$token
+  let timeSummaryPayload = {
+    params: {
+      req: { endDate: $sunday, beginDate: $monday, staffs: $staffs.staffPayload, department: { id: $team.code } }
+    }
+  }
 
-  let timeSummaryPayload = $emp.timeSummaryPayload
-      | str replace '_last_day_' $sunday
-      | str replace '_first_day_' $monday
-      | str replace '_staffs_' $staffs.staffPayload
-      | str replace '_department_' ({id: $team.code} | to json -r)
+  let timePayload = {
+    params: {
+      get_work_time_in_range: { endDate: $sunday, beginDate: $monday, staffs: $staffs.staffPayload }
+    }
+  }
 
-  let leavePayload = $emp.leavePayload
-      | str replace '_last_day_' $sunday
-      | str replace '_first_day_' $monday
-      | str replace '_staffs_' $staffs.staffPayload
+  let leavePayload = {
+    params: {
+      date_range: { endDate: $sunday, beginDate: $monday, staffs: $staffs.staffPayload }
+    }
+  }
 
   let allStaffs = $staffs.allStaffs
-  let hours = curl $emp.timeUrl -H $emp.type -H $emp.app -s --data-raw $timePayload | str join
-  let leaves = curl $emp.leaveUrl -H $emp.type -s --data-raw $leavePayload | str join
-
-  let summary = curl $emp.timeSummaryUrl -H $emp.type -H $emp.app -s --data-raw $timeSummaryPayload | str join
+  let HEADERS = [Referer $REFERER Cookie $'t_emp_iam=($token)']
+  let hours = http post -H $HEADERS --content-type application/json -e $emp.timeUrl $timePayload
+  let leaves = http post -H $HEADERS --content-type application/json -e $emp.leaveUrl $leavePayload
+  let summary = http post -H $HEADERS --content-type application/json -e $emp.timeSummaryUrl $timeSummaryPayload
   let hourSummary = (
-    $summary | from json | get res | select staffWorkTimeFillResponseList | flatten
+    $summary | get data.data | select staffWorkTimeFillResponseList | flatten
       | get staffWorkTimeFillResponseList | where ($it | describe) =~ 'record' and ($it.staffBO?.id | default 0) > 0
-      | reject @id | rename --column {
+      | reject id | rename --column {
         leavePercentage: leave, otherPercentage: other, theoryPercentage: theory, actualPercentage: actual, surplusPercentage: surplus
     })
 
   if $debug { log 'hourSummary' ($hourSummary | table -e) }
 
-  let workingHours = $hours | from json | get res
+  let workingHours = $hours | get data?.data?
   let workingHours = if ($workingHours | is-empty) {
       $allStaffs | rename -c { id: staffId } | default 0.00 percentage
     } else {(
@@ -275,7 +287,7 @@ export def query-hours-by-team [
     )}
 
   if $debug { log 'allStaffs' $allStaffs; log 'workingHours' $workingHours }
-  let leavingHours = $leaves | from json | get res
+  let leavingHours = $leaves | get data.data
 
   # Set a default leaving record
   let leavingHours = if ($leavingHours | is-empty) { [[beginTime, duration, staffId]; [0, 0, 0]] } else {
@@ -364,13 +376,36 @@ def handle-working-hours [
     return false
   }
   if $notify and $empSwitchEnv == 'on' {
-    notify-filling-hours $allMembers --summary $hourSummary --team $team --debug=$debug
+    notify-filling-hours $allMembers --team $team --debug=$debug
   }
   return false
 }
 
+def update-staff-list [
+  --token(-t): string,        # Token for EMP Portal
+] {
+  let emp = get-conf empWorkingHour
+  let allStaffPayload = {
+    viewKey: 'PROJECT$all_mine_project_list:list',
+    viewCondition: { conditionKey: 'jhJrmMOrPJbWAwpBACcSd' },
+    teamId: 1,
+    serviceKey: 'PROJECT$SYS_PagingDataService',
+    params: {
+      request: { pageable: { pageSize: 500, pageNo: 1 } },
+      modelKey: 'MD$md__staff_b_o'
+    }
+  }
+
+  let HEADERS = [Referer $REFERER Cookie $'t_emp_iam=($token)']
+  http post -H $HEADERS --content-type application/json -e $emp.allStaffUrl $allStaffPayload
+    | get data.data.data
+    | select jobNumber name phone user?.id?
+    | sort-by name
+    | save -f $STAFFS_FILE
+}
+
 # Notify the members who didn't fill the working hours by Dintalk Robot
-def notify-filling-hours [hours: any, --summary: list, --team: record, --debug] {
+def notify-filling-hours [hours: any, --team: record, --debug] {
   print 'Try to send notifications by DingTalk Robot...'
   let checkPoint = (date now) + $CHECK_DURATION
   let messages = $env.EMP_CONF | get settings?.messages? | default {}
@@ -410,7 +445,7 @@ def notify-filling-hours [hours: any, --summary: list, --team: record, --debug] 
     dingtalk notify --text $message --at-all; return
   }
   let mentions = $notifyCandidates | upsert Mobile {|m|
-    let mobileFetched = $summary | where $it.staffBO.name == $m.Name | get 0 | get staffBO.phone
+    let mobileFetched = open $STAFFS_FILE | where name == $m.Name | get phone
     let mobileFilled = $users | where name == $m.Name | get -i 0 | get -i mobile
     ($mobileFilled | default $mobileFetched)
   }
@@ -464,18 +499,59 @@ def is-month-end [time: datetime] {
   ($time | format date $_MONTH_FMT) != (($time + 1day) | format date $_MONTH_FMT)
 }
 
+
+# Get user authentication info by settings
+def get-user-auth [
+  settings: record,
+] {
+  # OpenSSL Check
+  if not (is-installed openssl) {
+    print $'(ansi r)Please install openssl@3 first by `brew install openssl@3` and try again...(ansi reset)'
+    exit $ECODE.MISSING_BINARY
+  }
+  let opensslVer = openssl version | detect columns -n | rename bin ver | get ver.0
+  if (is-lower-ver $opensslVer '3.0.0') {
+    print $'(ansi r)Openssl v3 or above is required, please install it by `brew install openssl@3` and try again...(ansi reset)'
+    exit $ECODE.MISSING_BINARY
+  }
+
+  cd $env.TERMIX_DIR
+  mut iamHost = 'emp-portal-iam.app.terminus.io'
+  if not ($iamHost | str starts-with http) { $iamHost = $'https://($iamHost)' }
+  const PUB_KEY_FILE = 'tmp/pub.key'
+  let IAM_HEADER = [Referer 'https://emp-portal-iam.app.terminus.io/EMP_MANAGER_PORTAL-EMP-tpf_hkboivmz/account' ...$HTTP_HEADERS]
+  let pubKey = http get --headers $IAM_HEADER $'($iamHost)/iam/api/v1/user/common/front-end-config'
+      | get data.transmissionCryptoProps?.publicKey?
+
+  if not ('tmp/' | path exists) { mkdir tmp }
+  echo ['-----BEGIN PUBLIC KEY-----' $pubKey '-----END PUBLIC KEY-----'] | str join (char nl) | save -rf $PUB_KEY_FILE
+  let password = $settings.password | openssl pkeyutl -encrypt -pubin -inkey $PUB_KEY_FILE | openssl base64
+
+  let payload = { account: $settings.username, password: $password }
+
+  let resp = http post --headers $IAM_HEADER --full --content-type application/json -e $'($iamHost)/iam/api/v1/user/login/account' $payload
+  if not $resp.body.success {
+    print $'Login failed with error: (ansi r)($resp.body.message)(ansi reset)'
+    print $'Please check your auth info at (ansi g)($iamHost)/login(ansi reset)'
+    exit $ECODE.AUTH_FAILED
+  }
+  let user = $resp.body.data.user
+  let cookie = $resp.headers.response | where name == 'set-cookie' | get value.0 | split row ';' | get 0
+  { user: $user, iamHost: $iamHost, token: ($cookie | str replace 't_emp_iam=' '') }
+}
+
 # 处理未登录、超时、服务器错误等
 def handle-exception [
-  res: string
+  res: record
 ] {
 
   # 未登录或者Cookie过期提示, use `do -i` to ignore 'error: Coercion error'
   do -i {
-    if ($res | is-empty) or ($res | from json | get status) == 401 {
+    if ($res | is-empty) or ($res | get status) == 401 {
       print $'(ansi r)You did`t have permission to call this API !(char nl)(ansi reset)'
       exit $ECODE.AUTH_FAILED
     }
-    if (($res | from json | get status) == 500) {
+    if (($res | get status) == 500) {
       print $'(ansi r)Backend internal server error，please try again later!(char nl)(ansi reset)'
       exit $ECODE.SERVER_ERROR
     }
