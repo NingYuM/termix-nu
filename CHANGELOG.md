@@ -1,6 +1,12 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.82.2 - 2024-10-23
+
+**Features**
+
+- Support Trantor 0330 for `t msync` command
+
 ## v1.82.1 - 2024-10-17
 
 **Miscellaneous Tasks**
