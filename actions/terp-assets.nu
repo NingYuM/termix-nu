@@ -503,7 +503,7 @@ export def fzf-preview [revision: string, localPath: string, remoteURI: string, 
     ossutil cp ...$ossAuth $'($remoteURI)/($revision)/namespace.json' $dest | ignore
   }
 
-  print $'You are going to revert (ansi g)($module)(ansi reset) moudule at mount point (ansi g)($mountPoint)(ansi reset)'; hr-line 66
+  print $'You are going to revert (ansi g)($module)(ansi reset) module at mount point (ansi g)($mountPoint)(ansi reset)'; hr-line 66
   open $dest | rename -c { namespace: 'module' }
     | merge { revision: $revision, remoteURI: $remoteURI }
     | select module revision remoteURI metadata

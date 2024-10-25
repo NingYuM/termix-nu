@@ -445,7 +445,7 @@ def --env menv [
     } else { $profile }
   if ($profile | is-empty) { return }
   let setting = $envs | get -i $profile
-  if ($setting | is-empty) { print $'Enviroment Profile (ansi r)($profile)(ansi reset) not found.'; return }
+  if ($setting | is-empty) { print $'Environment Profile (ansi r)($profile)(ansi reset) not found.'; return }
   if not $silent { print $setting }
   load-env $setting; cd $currentDir
   print $'Eniroment of (ansi g)($profile)(ansi reset) loaded.'
