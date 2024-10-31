@@ -15,7 +15,7 @@ title = Ghostty!
 # Rippedcasts, Snazzy, Synthwave-Everything, Tinacious Design (Dark), TokyoNight, Wez
 # Tomorrow Night Blue, Tomorrow Night Eighties, UltraDark, Wombat, Whimsy, WildCherry
 theme = Desert
-background-opacity = 0.9
+background-opacity = 0.92
 background-blur-radius = 30
 unfocused-split-opacity = 0.95
 
@@ -45,7 +45,11 @@ gtk-wide-tabs = false
 window-width = 80
 window-height = 20
 window-theme = dark
+
 copy-on-select = clipboard
+clipboard-paste-protection = true
+clipboard-trim-trailing-spaces = true
+
 mouse-hide-while-typing = true
 macos-non-native-fullscreen = false
 
@@ -54,5 +58,12 @@ keybind = command+left=previous_tab
 keybind = command+shift+k=clear_screen
 keybind = command+ctrl+shift+v=new_split:down
 keybind = command+ctrl+shift+h=new_split:right
-keybind = global:grave_accent=toggle_quick_terminal
 
+keybind = cmd+ctrl+up=resize_split:up,20
+keybind = cmd+ctrl+down=resize_split:down,20
+keybind = cmd+ctrl+left=resize_split:left,20
+keybind = cmd+ctrl+right=resize_split:right,20
+
+quick-terminal-screen = mouse
+quick-terminal-position = bottom
+keybind = global:cmd+grave_accent=toggle_quick_terminal
