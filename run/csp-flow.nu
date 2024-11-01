@@ -193,6 +193,7 @@ export def show-resources [] {
   use std repeat
 
   const CSP_APP_BUILD_COST = {
+    ago-ui: '2min',
     pp-fe: '10min',
     ep-ui: '11min',
     rad-ui: '95min',
@@ -208,12 +209,12 @@ export def show-resources [] {
   mut resources = []
   for app in $CSP_APPS {
     z $app
-    let resource = if $app == 'pp-fe' {
+    let resource = if $app == 'ago-ui' { {} } else if $app == 'pp-fe' {
         open pipeline.yml | get stages.stage.1.0.js-build.resources
       } else {
         open .erda/pipelines/build-all.yml | get stages.stage.1.0.custom-script.resources
       }
-    let packages = if $app == 'pp-fe' { 1 } else { ls pkgs | length }
+    let packages = if $app in [pp-fe ago-ui] { 1 } else { ls pkgs | length }
     let description = open package.json | get description
     let cost = $CSP_APP_BUILD_COST | get $app
     let meta = { app: $app, ...$resource, packages: $packages, cost: $cost, description: $description }
