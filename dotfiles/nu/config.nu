@@ -197,7 +197,7 @@ def nun [] {
 }
 
 # 在本地构建并安装所有 Nushell 二进制文件
-def install-all-nu [
+def nu-install-all [
   --plugin-only,  # Install plugins only
 ] {
   if not ((pwd | path basename | str trim) == 'nushell') { z nushell }
@@ -279,7 +279,7 @@ def nu-fetch-nightly [] {
     | first
     | get assets
     | get browser_download_url
-    | filter { $in =~ $'($nu.os-info.arch)-darwin-full' }
+    | filter { $in =~ $'($nu.os-info.arch)-apple-darwin' }
     | get 0
     | aria2c -i -
   mkdir nu-nightly; tar xvf nu-*.tar.gz --directory=nu-nightly
