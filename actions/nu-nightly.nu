@@ -12,13 +12,15 @@ use ../utils/common.nu [ECODE, is-installed, hr-line]
 export def get-latest-nightly-build [
   --list(-l),           # list all the available binary packages
   --interactive(-i),    # ask the user to choose the target architecture
+  --tag(-t): string,    # the tag name of the release, e.g. 'nightly-eedf833'
   target: string = ''   # the target architecture, matches all of them by default
 ]: nothing -> nothing {
 
   mut target = $target
   let latest = http get https://api.github.com/repos/nushell/nightly/releases
-      | sort-by published_at --reverse
-      | first
+  let latest = if ($tag | is-empty) { $latest } else {
+      $latest | where tag_name =~ $tag
+    } | sort-by published_at --reverse | first
 
   if $list {
     print 'Available packages:'; hr-line
