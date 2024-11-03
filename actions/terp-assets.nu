@@ -37,7 +37,7 @@
 #   t ta transfer all --from dev --to ttt0 --dest-store oss --quiet
 #   t ta transfer all --from foran --to fs-test --dest-store fsmio
 
-use ../utils/common.nu [ECODE, is-installed, hr-line, get-tmp-path, compare-ver, base64, FZF_DEFAULT_OPTS, FZF_THEME, _TIME_FMT]
+use ../utils/common.nu [ECODE, is-installed, hr-line, get-tmp-path, compare-ver, FZF_DEFAULT_OPTS, FZF_THEME, _TIME_FMT]
 
 const KEY_MAPPING = $"(ansi grey66)\(Space: Select, a: Select All, ESC/q: Quit, Enter: Confirm\)(ansi reset)"
 const JSON_ENTRY = 'latest.json'
@@ -113,7 +113,7 @@ def detect-multiple-assets [from: string] {
 }
 
 # Decode base64 encoded string, show default as `-`
-def show [] { $in | default 'LQ==' | base64 decode }
+def show [] { $in | default 'LQ==' | decode base64 | decode }
 
 # Revert frontend module to a selected version, ossutil or mc required
 def revert-module [modules: string, to: string, destStore: string] {
@@ -161,7 +161,7 @@ def revert-module [modules: string, to: string, destStore: string] {
   }
 
   let revertAt = date now | format date $_TIME_FMT
-  let revertBy = $env.DICE_OPERATOR_NAME? | default (git config --get user.name) | base64 encode
+  let revertBy = $env.DICE_OPERATOR_NAME? | default (git config --get user.name) | encode base64
   let revertMeta = { revertAt: $revertAt, revertBy: $revertBy }
   let module = open $'($localPath)/($revision)/namespace.json' | upsert metadata {|it| $it.metadata | merge $revertMeta }
   let update = {} | upsert $modules { prefix: $'fe-resources/($target)', dirname: $revision, ...$module }
@@ -446,7 +446,7 @@ def transfer [
 
 # Add transfer metadata to namespace.json and latest.json
 def update-transfer-meta [latestMeta: record] {
-  let syncBy = $env.DICE_OPERATOR_NAME? | default (git config --get user.name) | base64 encode
+  let syncBy = $env.DICE_OPERATOR_NAME? | default (git config --get user.name) | encode base64
   let syncAt = date now | format date $_TIME_FMT
   let syncFrom = if ($latestMeta.from =~ 'latest.json') {
     $latestMeta.from | split row '/' | last 2 | first } else { $latestMeta.from }

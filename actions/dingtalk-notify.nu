@@ -18,7 +18,7 @@
 #   t ding-msg --type link --title 欢迎访问端点科技 --msg-url https://terminus.io/ --text '作为国内领先的新商业软件提供商，致力于用平台化、端到端的软件生态方式，为全球各行各业的客户提供全方位的软件产品、解决方案和技术服务'
 #   t ding-msg --type markdown --title 欢迎访问端点科技 --text `'## 端点科技 <br/> 欢迎访问 <br/> 友情链接 <br/> [端点科技](https://terminus.io/)'`
 
-use ../utils/common.nu [ECODE, HTTP_HEADERS, get-env, base64, is-installed]
+use ../utils/common.nu [ECODE, HTTP_HEADERS, get-env, is-installed]
 
 const DINGTALK_API = 'https://oapi.dingtalk.com/robot/send'
 # 链接类型消息的默认图片
@@ -99,7 +99,7 @@ def get-msg-payload [
 def get-sign [secret: string] {
   if not (is-installed openssl) { print 'Please install `openssl` first.'; exit $ECODE.MISSING_BINARY }
   let timestamp = date now | format date '%s000'
-  let sign = $'($timestamp)(char nl)($secret)' | openssl dgst -sha256 -hmac $secret -binary | base64 encode
+  let sign = $'($timestamp)(char nl)($secret)' | openssl dgst -sha256 -hmac $secret -binary | encode base64
   { timestamp: $timestamp, sign: $sign }
 }
 
