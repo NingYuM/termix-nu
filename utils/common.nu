@@ -88,19 +88,6 @@ export def is-installed [ app: string ] {
   (which $app | length) > 0
 }
 
-# Base64 encode or decode a string
-export def base64 [action: string] {
-  let source = $in
-  let useNew = (scope commands | where name =~ 'new-base64' | length) > 0
-  match [$action, $useNew] {
-    ['encode', true] => { nu -n --no-std-lib -c $'"($source)" | encode new-base64 ' },
-    ['encode', false] => { nu -n --no-std-lib -c $'"($source)" | encode base64' },
-    ['decode', true] => { nu -n --no-std-lib -c $'"($source)" | decode new-base64 | decode' },
-    ['decode', false] => { nu -n --no-std-lib -c $'"($source)" | decode base64 | decode' },
-    _ => { print $'Invalid action: ($action), available actions: encode, decode' }
-  }
-}
-
 # Get the specified env key's value or ''
 export def get-env [
   key: string,       # The key to get it's env value
