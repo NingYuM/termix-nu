@@ -25,14 +25,13 @@ export def 'git trigger-sync' [
 ] {
 
   cd $env.JUST_INVOKE_DIR
-  let branch = if ($branch | is-empty) { git branch --show-current | str trim } else { $branch | str trim }
-  let ignored = get-env SYNC_IGNORE_ALIAS ''
   let current = git branch --show-current | str trim
-  let selected = if ($branch | is-empty) { $current } else {
-    if (has-ref $branch) { $branch } else {
-      print $'Branch (ansi r)($branch)(ansi reset) does not exist, please check it again.'
-      exit $ECODE.INVALID_PARAMETER
-    }
+  let branches = if ($branch | is-empty) { [$current] } else { $branch | str trim | split row , }
+  let ignored = get-env SYNC_IGNORE_ALIAS ''
+  let invalid = $branches | filter {|it| not (has-ref $it)}
+  if ($invalid | is-not-empty) {
+    print $'Branch (ansi r)($invalid | str join ,)(ansi reset) does not exist, please check it again.'
+    exit $ECODE.INVALID_PARAMETER
   }
 
   let conf = get-push-config $current --all=$all | get pushConf
@@ -44,9 +43,7 @@ export def 'git trigger-sync' [
     exit $ECODE.SUCCESS
   }
 
-  let candidates = if $all {
-    $allSyncs | columns | filter {|it| has-ref $it }
-  } else { [$selected] }
+  let candidates = if $all { $allSyncs | columns | filter {|it| has-ref $it } } else { $branches }
 
   if ($candidates | length) > 1 {
     print 'The following branches will be synced:'; hr-line
