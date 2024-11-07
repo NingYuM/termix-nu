@@ -27,7 +27,8 @@ export def 'git pick' [
   --ignore-file(-i): string,  # The file that contains the commit SHAs or messages to ignore
 ] {
   let options = get-valid-options $match --from $from --to $to --since $since --ignore-file $ignore_file
-  let diffCount = git rev-list --left-right --count $'($options.to)...origin/($options.to)' | detect columns -n | rename ahead behind | get -i 0
+  let remoteBranch = git for-each-ref --format='%(upstream:short)' refs/heads/($options.to)
+  let diffCount = git rev-list --left-right --count $'($options.to)...($remoteBranch)' | detect columns -n | rename ahead behind | get -i 0
   let countTip = if ($diffCount.ahead? | into int) > 0 { $'[AHEAD: ($diffCount.ahead)]' } else { '' }
   if $list_only and ($options.matches | length) > 0 {
     print $'(char nl)The following commits from (ansi g)($options.from)(ansi reset) need to be picked to (ansi g)($options.to) ($countTip)(ansi reset)'
