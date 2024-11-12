@@ -1,6 +1,6 @@
 # Nushell Config File
-# Update config from: 91ff57faa
-# version = 0.99.0
+# Update config from: 919d55f3f
+# version = 0.100.0
 
 # source ~/.config/nushell/config.nu
 # Ref:
@@ -687,6 +687,7 @@ $env.config = {
       truncating_suffix: "..."          # A suffix used by the 'truncating' methodology
       wrapping_try_keep_words: true     # A strategy used by the 'wrapping' methodology
     }
+    footer_inheritance: false           # render footer in parent table if child is big enough (extended table option)
     header_on_separator: false          # show header text on separator/border line
   }
   # datetime_format determines what a datetime rendered in the shell would look like.
@@ -756,7 +757,7 @@ $env.config = {
   color_config: $dark_theme     # if you want a light theme, replace `$dark_theme` to `$light_theme`
   footer_mode: 25               # always, never, number_of_rows, auto
   float_precision: 2            # the precision for displaying floats in tables
-  buffer_editor: null           # command that will be used to edit the current line buffer with ctrl+o, if unset fallback to $env.EDITOR and $env.VISUAL
+  buffer_editor: null           # command that will be used to edit the current line buffer with ctrl+o, if unset fallback to $env.VISUAL and $env.EDITOR
   use_ansi_coloring: true
   bracketed_paste: true         # enable bracketed paste, currently useless on windows
   edit_mode: emacs              # emacs, vi
