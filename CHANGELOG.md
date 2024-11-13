@@ -1,6 +1,26 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.83.0 - 2024-11-13
+
+**Bug Fixes**
+
+- Fix `t git-pick` for non-origin remote repo source picking
+
+**Features**
+
+- Add `--tag` flag for `t nu-use-nightly` command
+- `t gsync` support sync multiple branches separated by `,`
+
+**Miscellaneous Tasks**
+
+- Update EMP man-hour filling DingTalk notify for the new EMP API
+- Update Nu config for v0.100.0
+
+**Refactor**
+
+- Adapt to `Nushell` v0.100 use the new `encode` and `decode base64` commands
+
 ## v1.82.2 - 2024-10-23
 
 **Features**
