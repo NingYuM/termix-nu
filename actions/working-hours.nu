@@ -185,16 +185,15 @@ export def query-monthly-hours-by-team [
       | upsert 剩余应填 { |it| $it.baseProjectWorkTimeSummaryList | where name == '剩余应填' | get 0 | get percentage }
       | upsert 空闲人天 { |it| $it.baseProjectWorkTimeSummaryList | where name == '空闲工时' | get 0 | get percentage }
       | upsert Name { |it| if $it.空闲人天 > 0 { $'(ansi r)($it.staffBO.name)(ansi reset)' } else { $it.staffBO.name } }
-      | reject id staffBO baseProjectWorkTimeSummaryList Other Surplus
-      | move Name --before 理论人天
-      | sort-by -r 空闲人天
+      | select Name 理论人天 实际人天 请假人天 剩余应填 空闲人天
+      | sort-by -r 空闲人天 Name
     )
 
   if $show_all { $hourSummary | print } else {
     if ($hourSummary | where 空闲人天 > 0 | is-empty) {
       print $'(ansi g)All filled! (char nl)(ansi reset)'
     } else {
-      $hourSummary | where 空闲人天 > 0 | print
+      $hourSummary | where 空闲人天 > 0 | print; print (char nl)
     }
   }
 }
