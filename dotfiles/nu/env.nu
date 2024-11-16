@@ -113,6 +113,7 @@ $env.PATH = (
     | prepend '/usr/local/opt/ruby/bin'
     | prepend $'($env.HOME)/.cargo/bin'
     | prepend '/Users/hustcer/.moon/bin'
+    | prepend '/Library/TeX/texbin'
 )
 $env.PATH = ($env.PATH | uniq)
 
