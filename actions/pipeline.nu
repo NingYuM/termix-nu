@@ -101,7 +101,7 @@ def get-pipeline-conf [
   mut merged = []
   for c in $conf {
     if ($c | describe | str starts-with record) {
-      $merged = ($merged ++ ($c | merge ($override | default {})))
+      $merged = ($merged | append ($c | merge ($override | default {})))
     } else {
       let selected = $c | reduce --fold [] {|it, acc| $acc ++ ($it | merge ($override | default {})) }
       $merged = ($merged ++ $selected)
