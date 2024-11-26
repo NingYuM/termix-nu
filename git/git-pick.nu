@@ -61,9 +61,9 @@ export def 'git pick' [
         } else { 'UNKNOWN_ERROR' }
 
       if $error not-in [EMPTY_COMMIT MERGE_IGNORED] {
-        $failedPick ++= { sha: $c.sha, error: $error }
+        $failedPick ++= [{ sha: $c.sha, error: $error }]
       } else if $all {
-        $failedPick ++= { sha: $c.sha, error: $error }
+        $failedPick ++= [{ sha: $c.sha, error: $error }]
       }
       continue
     }

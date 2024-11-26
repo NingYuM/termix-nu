@@ -24,16 +24,16 @@ export def 'git stat' [
   cd $env.JUST_INVOKE_DIR
   mut args = ['--pretty=%h %aN' '--no-merges']
   if $author == '*' {} else if ($author | is-not-empty) {
-    $args ++= $'--author=($author)'
+    $args ++= [$'--author=($author)']
   }
   if ($max_count | is-not-empty) {
-    $args ++= $'--max-count=($max_count)'
+    $args ++= [$'--max-count=($max_count)']
   }
   if ($from | is-not-empty) {
-    $args ++= $'--since=($from)T00:00:00Z'
+    $args ++= [$'--since=($from)T00:00:00Z']
   }
   if ($to | is-not-empty) {
-    $args ++= $'--until=($to)T23:59:59Z'
+    $args ++= [$'--until=($to)T23:59:59Z']
   }
   let log = git log ...$args
   # Use `git diff -- . ':(exclude)src/irrelevant.ts' ':(exclude)src/irrelevant2.ts'` to exclude files

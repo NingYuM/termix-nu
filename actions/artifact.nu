@@ -111,7 +111,7 @@ def show-settings [
   mut sourceTable = []
   let sources = $conf.source | columns
   for s in $sources {
-    $sourceTable ++= { alias: $s, ...($conf.source | get $s) }
+    $sourceTable ++= [{ alias: $s, ...($conf.source | get $s) }]
   }
   $sourceTable
     | upsert project {|it| $'($it.projectId) @ ($it.projectName)' }
@@ -121,7 +121,7 @@ def show-settings [
   mut destTable = []
   let dests = $conf.destination | columns
   for d in $dests {
-    $destTable ++= { alias: $d, ...($conf.destination | get $d) }
+    $destTable ++= [{ alias: $d, ...($conf.destination | get $d) }]
   }
   $destTable
     | upsert project {|it| $'($it.projectId) @ ($it.projectName)' }

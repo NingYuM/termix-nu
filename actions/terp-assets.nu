@@ -209,7 +209,7 @@ def revert-precheck [module: string, to: string, ossConf: record] {
 
   let requiredTools = if $ossConf.TYPE == 'aliyun' { [fzf ossutil] } else { [fzf mc] }
   let missingTips = $requiredTools | reduce --fold [] {|it, acc|
-      if not (is-installed $it) { $acc ++ ($TOOL_INSTALL_TIP | get $it) } else { $acc }
+      if not (is-installed $it) { $acc | append ($TOOL_INSTALL_TIP | get $it) } else { $acc }
     }
   if ($missingTips | length) > 0 {
     print $'The following tools are required for reverting frontend module:'; hr-line
