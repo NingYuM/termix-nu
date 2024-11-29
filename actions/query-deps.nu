@@ -16,6 +16,7 @@ export def 'query deps' [
   --all-local-branches(-l),   # Query from all local branches
   --all-remote-branches(-r),  # Query from all remote branches
 ] {
+  $env.config.table.mode = 'light'
   let start = date now
   let rootDir = git rev-parse --show-toplevel
   cd $rootDir
