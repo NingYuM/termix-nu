@@ -14,6 +14,7 @@ export def git-branch [
   --contains(-c): string,   # Show only branches that contain the specified keyword in their commit messages
 ] {
 
+  $env.config.table.mode = 'light'
   let path = if ($path | is-empty) { $env.JUST_INVOKE_DIR } else { $path }
   let title = if ($contains | is-empty) {
       $'(ansi p)(char nl)Last commit info of local branches: (ansi reset)(char nl)'

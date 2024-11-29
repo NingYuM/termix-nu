@@ -16,6 +16,7 @@ export def git-remote-branch [
   --show-tags(-t),             # Show all the tags
 ] {
 
+  $env.config.table.mode = 'light'
   cd $env.JUST_INVOKE_DIR
   let remoteUrl = (git remote get-url $remote)
   let nameIdx = ($remoteUrl | str index-of -e '/')

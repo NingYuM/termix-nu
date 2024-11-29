@@ -14,6 +14,7 @@ export def main [
   --show-notes(-n),      # Show notes information
 ] {
 
+  $env.config.table.mode = 'psql'
   let descFile = 'd.toml'
   let localIExists = has-ref i
   let remoteIExists = has-ref origin/i

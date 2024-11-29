@@ -11,6 +11,7 @@ use ../utils/git.nu [get-sync-ref do-sync]
 use ../utils/common.nu [ECODE get-conf get-env has-ref hr-line]
 
 export-env {
+  $env.config.table.mode = 'light'
   # FIXME: 去除前导空格背景色
   $env.config.color_config.leading_trailing_space_bg = { attr: n }
 }

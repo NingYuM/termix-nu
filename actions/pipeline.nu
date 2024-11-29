@@ -42,6 +42,7 @@ use ../utils/erda.nu [ERDA_HOST, check-erda-envs, get-erda-auth, renew-erda-sess
 const PIPELINE_POLLING_INTERVAL = 2sec
 
 export-env {
+  $env.config.table.mode = 'light'
   # FIXME: 去除前导空格背景色
   $env.config.color_config.leading_trailing_space_bg = { attr: n }
 }

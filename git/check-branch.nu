@@ -9,6 +9,7 @@ use ../utils/common.nu [ECODE, has-ref]
 # Check whether all remote branches have related description
 export def main [] {
 
+  $env.config.table.mode = 'light'
   git fetch origin -p
   let descFile = 'd.toml'
   let localIExists = has-ref i

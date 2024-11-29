@@ -26,6 +26,7 @@ export def 'git pick' [
   --since(-s): string,        # Filter commits since the specified date, e.g. 2024/03/12 or 2024-03-12
   --ignore-file(-i): string,  # The file that contains the commit SHAs or messages to ignore
 ] {
+  $env.config.table.mode = 'light'
   let options = get-valid-options $match --from $from --to $to --since $since --ignore-file $ignore_file
   let remoteBranch = git for-each-ref --format='%(upstream:short)' refs/heads/($options.to)
   let diffCount = git rev-list --left-right --count $'($options.to)...($remoteBranch)' | detect columns -n | rename ahead behind | get -i 0
