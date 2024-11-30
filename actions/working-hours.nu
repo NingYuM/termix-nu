@@ -216,8 +216,8 @@ def query-staffs-by-team [
 
   handle-exception $staffs
   # 此处把中文名字字段过滤掉，否则在Windows下数据传到后端接口会发生解析错误
-  let staffPayload = $staffs | get data.data | select id name | to json -r
-  let allStaffs = $staffs | get data.data | select id name | rename id Name
+  let staffPayload = $staffs | get data.data | where onJobStatusDict == 'OnJob' | select id name | to json -r
+  let allStaffs = $staffs | get data.data | where onJobStatusDict == 'OnJob' | select id name | rename id Name
   { staffPayload: $staffPayload, allStaffs: $allStaffs }
 }
 
@@ -265,12 +265,20 @@ export def query-hours-by-team [
   let hours = http post -H $HEADERS --content-type application/json -e $emp.timeUrl $timePayload
   let leaves = http post -H $HEADERS --content-type application/json -e $emp.leaveUrl $leavePayload
   let summary = http post -H $HEADERS --content-type application/json -e $emp.timeSummaryUrl $timeSummaryPayload
+  let rename = {
+    leavePercentage: leave,
+    otherPercentage: other,
+    theoryPercentage: theory,
+    actualPercentage: actual,
+    surplusPercentage: surplus
+  }
+
   let hourSummary = (
     $summary | get data.data | select staffWorkTimeFillResponseList | flatten
-      | get staffWorkTimeFillResponseList | where ($it | describe) =~ 'record' and ($it.staffBO?.id | default 0) > 0
-      | reject id | rename --column {
-        leavePercentage: leave, otherPercentage: other, theoryPercentage: theory, actualPercentage: actual, surplusPercentage: surplus
-    })
+      | get staffWorkTimeFillResponseList
+      | where ($it | describe) =~ 'record' and ($it.staffBO?.id | default 0) > 0
+      | reject id | rename --column $rename
+    )
 
   if $debug { log 'hourSummary' ($hourSummary | table -e) }
 
