@@ -196,6 +196,16 @@ def nun [] {
     | select name tag_name id created_at
 }
 
+# Pretty print the OSS list from oss-index
+def pretty-oss [] {
+  const TIME_FMT = '%Y/%m/%d %H:%M:%S'
+  $in | detect columns --guess
+      | drop 2 | select LastModifiedTime 'Size(B)' ObjectName
+      | upsert LastModifiedTime { into datetime | format date $TIME_FMT }
+      | rename -c { 'Size(B)': 'Size' }
+      | upsert Size { into filesize }
+}
+
 # 在本地构建并安装所有 Nushell 二进制文件
 def nu-install-all [
   --plugin-only,  # Install plugins only
