@@ -47,6 +47,7 @@ export def 'meta sync' [
   --all(-a),            # Specify whether to sync all the modules
   --selected(-s),       # Sync the selected modules from config file of the specified source
   --list(-l),           # List all the available sources and destinations
+  --install(-i),        # Install or upgrade the standard modules to the dest project, for 2.5.24.0930 or later
   --snapshot(-S),       # Only create and upload snapshot for meta data
 ] {
   cd $env.TERMIX_DIR
@@ -72,6 +73,7 @@ export def 'meta sync' [
   let destAuth = get-user-auth $dest
   let sourceAuth = get-user-auth $source
   confirm-check --from $source --to $dest --src-auth $sourceAuth --dest-auth $destAuth
+  install-check $dest $destAuth --install=$install
 
   let start = date now
   let snapshotOid = handle-create-snapshot $source $sourceAuth
@@ -80,7 +82,7 @@ export def 'meta sync' [
   let downloadUrl = handle-upload-snapshot $source $snapshotOid $sourceAuth
   print $'Snapshot uploaded successfully with download Url:'
   print $'(ansi p)($downloadUrl)(ansi reset)'
-  handle-import-metadata $dest $snapshotOid $downloadUrl $destAuth --modules $modules --code $securityCode
+  handle-import-metadata $dest $snapshotOid $downloadUrl $destAuth --modules $modules --code $securityCode --install=$install
   let end = date now
   print $'Total time consumed: (ansi p)($end - $start)(ansi reset)'
 }
@@ -253,6 +255,21 @@ def provider-check [type, value, --from: string, --to: string] {
   }
 }
 
+# Install or upgrade the standard modules to the dest project pre-check
+def install-check [
+  dest: record,         # Specify the meta dest config for the snapshot to install
+  auth: record,         # A authentication record contains user and cookie info
+  --install(-i),        # Install or upgrade the standard modules to the dest project, for 2.5.24.0930 or later
+] {
+  if $install { return }
+  let isLegacy = ($auth.version | is-empty) or ($auth.version | str replace -a . '' | str replace 'DEV' '' | into int) < 25240930
+  let shouldInstall = $isLegacy and ($dest | get -i resetModuleForInstall | default false)
+  if $shouldInstall {
+    print $'You are going to INSTALL modules to the dest project, please add (ansi g)`--install` / `-i`(ansi reset) flag and try again.(char nl)'
+    exit $ECODE.INVALID_PARAMETER
+  }
+}
+
 # Make sure you know what you are doing
 def confirm-check [
   --from(-f): record,   # Specify the meta data source config
@@ -377,11 +394,16 @@ def handle-import-metadata [
   rootOid: string,      # Specify the root oid of the snapshot to import
   metaUrl: string,      # Specify the meta data download url for importing
   auth: record,         # A authentication record contains user and cookie info
+  --install(-i),        # Install or upgrade the standard modules to the dest project
   --code: string,       # Specify the security code to import the meta data
   --modules(-m): list,  # Specify the modules to sync
 ] {
   let start = date now
-  let taskId = import-metadata $dest $rootOid $metaUrl $auth --modules $modules --code $code
+  let taskId = if $install {
+    install-metadata $dest $metaUrl $auth --modules $modules --code $code
+  } else {
+    import-metadata $dest $rootOid $metaUrl $auth --modules $modules --code $code
+  }
   print -n (char nl)
   print $'(ansi pr) STEP 3/3: (ansi reset) Meta data importing task started, id: (ansi p)(get-detail-link $dest.host $taskId)(ansi reset)'
   mut detail = fetch-task-detail $taskId $dest.host $auth
@@ -487,6 +509,31 @@ def import-metadata [
   let resp = http post --content-type application/json --headers $headers $'($dest.host)($destImportApi)?($query)' $importPayload
   if not $resp.success {
     print $'Import meta data failed with error: ($resp.err)'
+  }
+  $resp.data.taskId
+}
+
+# Install or upgrade the meta data from OSS to destination
+def install-metadata [
+  dest: record,         # Specify the meta dest config for the snapshot to install
+  metaUrl: string,      # Specify the meta data download url for installing
+  auth: record,         # A authentication record contains user and cookie info
+  --code: string,       # Specify the security code to install the meta data
+  --modules: list,      # Specify the modules to sync
+] {
+  const destInstallApi = '/api/trantor/task/exec/InstallAndUpgradeAppTask'
+  mut installPayload = {
+    downloadUrl: $metaUrl,
+    autoDDL: ($dest | get -i ddlAutoUpdate | default true),
+  }
+  if not ($modules | is-empty) {
+    $installPayload.moduleKeys = $modules
+    print $'Going to install modules: ($modules | str join ",")'
+  }
+  let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team $dest.teamCode, ...$HTTP_HEADERS]
+  let resp = http post --content-type application/json --headers $headers $'($dest.host)($destInstallApi)' $installPayload
+  if not $resp.success {
+    print $'Install meta data failed with error: ($resp.err)'
   }
   $resp.data.taskId
 }
