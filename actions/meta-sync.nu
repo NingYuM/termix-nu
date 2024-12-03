@@ -57,7 +57,7 @@ export def 'meta sync' [
 
   let confMeta = load-meta-conf
   if $list { show-available-providers $confMeta; exit $ECODE.SUCCESS }
-  if $snapshot { create-and-upload-snapshot --from $from; exit $ECODE.SUCCESS }
+  if $snapshot { create-and-upload-snapshot --from $from --install=$install; exit $ECODE.SUCCESS }
   let usedSetting = get-meta-setting --from $from --to $to --all=$all --selected=$selected
   let dest = $usedSetting.dest
   let source = $usedSetting.source
@@ -79,7 +79,7 @@ export def 'meta sync' [
   let snapshotOid = handle-create-snapshot $source $sourceAuth
   hr-line
   print $'Snapshot created successfully with RootOID: (ansi p)($snapshotOid)(ansi reset)'
-  let downloadUrl = handle-upload-snapshot $source $snapshotOid $sourceAuth
+  let downloadUrl = handle-upload-snapshot $source $snapshotOid $sourceAuth --install=$install
   print $'Snapshot uploaded successfully with download Url:'
   print $'(ansi p)($downloadUrl)(ansi reset)'
   handle-import-metadata $dest $snapshotOid $downloadUrl $destAuth --modules $modules --code $securityCode --install=$install
@@ -127,7 +127,10 @@ def get-providers [type: string, metaConf: record] {
 }
 
 # Create and upload meta data snapshot
-def create-and-upload-snapshot [--from: string] {
+def create-and-upload-snapshot [
+  --from: string
+  --install(-i),        # Install or upgrade the standard modules to the dest project, for 2.5.24.0930 or later
+] {
   let metaConf = $env.META_CONF
   check-required source
   let defaultSource = $metaConf.source | values | default false default | where default == true
@@ -143,7 +146,7 @@ def create-and-upload-snapshot [--from: string] {
   let snapshotOid = handle-create-snapshot $source $authentication --snapshot-only
   hr-line
   print $'Snapshot created successfully with RootOID: (ansi p)($snapshotOid)(ansi reset)'
-  let downloadUrl = handle-upload-snapshot $source $snapshotOid $authentication --snapshot-only
+  let downloadUrl = handle-upload-snapshot $source $snapshotOid $authentication --snapshot-only --install=$install
   print $'Snapshot uploaded successfully with download Url:'
   print $'(ansi p)($downloadUrl)(ansi reset)'
   let end = date now
@@ -358,11 +361,12 @@ def handle-upload-snapshot [
   source: record,       # Specify the meta source config of the snapshot to upload
   rootOid: string,      # Specify the root oid of the snapshot to upload
   auth: record,         # A authentication record contains user and cookie info
+  --install,            # Install or upgrade the standard modules to the dest project, for 2.5.24.0930 or later
   --snapshot-only,      # Specify whether to only create and upload snapshot without importing
 ] {
   let start = date now
   let total = if $snapshot_only { 2 } else { 3 }
-  let taskId = upload-snapshot $source $rootOid $auth
+  let taskId = upload-snapshot $source $rootOid $auth --install=$install
   print -n (char nl)
   print $'(ansi pr) STEP 2/($total): (ansi reset) Snapshot uploading task started, id: (ansi p)(get-detail-link $source.host $taskId)(ansi reset)'
   mut detail = fetch-task-detail $taskId $source.host $auth
@@ -405,13 +409,14 @@ def handle-import-metadata [
     import-metadata $dest $rootOid $metaUrl $auth --modules $modules --code $code
   }
   print -n (char nl)
-  print $'(ansi pr) STEP 3/3: (ansi reset) Meta data importing task started, id: (ansi p)(get-detail-link $dest.host $taskId)(ansi reset)'
+  let type = if $install { 'installing' } else { 'importing' }
+  print $'(ansi pr) STEP 3/3: (ansi reset) Meta data ($type) task started, id: (ansi p)(get-detail-link $dest.host $taskId)(ansi reset)'
   mut detail = fetch-task-detail $taskId $dest.host $auth
   print 'Task running detail:'; hr-line
   mut stats = $detail.progress
   print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi reset) is ($detail.status):'
 
-  let webDetailUrl = $'($dest.host)/task/run-detail?taskRunId=($detail.taskRunId)'
+  let webDetailUrl = $'($dest.host)/api/trantor/task/run-detail-page?taskRunId=($detail.taskRunId)'
   print $'For more detail please visit: (ansi p)($webDetailUrl)(ansi reset)'
   print $'Task Status: Total: ($stats.total), Success: ($stats.success), Failed: ($stats.failed)'
   hr-line 60 --color lcd
@@ -472,11 +477,13 @@ def upload-snapshot [
   source: record,       # Specify the meta source config of the snapshot to upload
   rootOid: string,      # Specify the root OID of the snapshot to upload
   auth: record,         # A authentication record contains user and cookie info
+  --install,            # Install or upgrade the standard modules to the dest project, for 2.5.24.0930 or later
 ] {
   const snapShotUploadApi = '/api/trantor/task/exec/UploadObjectToOSSTask'
   let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team $source.teamCode, ...$HTTP_HEADERS]
   let query = { teamId: $source.teamId, teamCode: $source.teamCode, userId: $auth.user.id, verbose: 'false' } | url build-query
-  let resp = http post --content-type application/json --headers $headers $'($source.host)($snapShotUploadApi)?($query)' { rootOid: $rootOid }
+  let payload = { rootOid: $rootOid, install: $'($install)' }
+  let resp = http post --content-type application/json --headers $headers $'($source.host)($snapShotUploadApi)?($query)' $payload
   if not $resp.success {
     print $'Upload snapshot to OSS failed with error: ($resp.err)'
   }
@@ -540,7 +547,7 @@ def install-metadata [
 
 # Get ansi link of the specified taskId and host
 def get-detail-link [host: string, taskId: int] {
-  let webDetailUrl = $'($host)/task/run-detail?taskRunId=($taskId)'
+  let webDetailUrl = $'($host)/api/trantor/task/run-detail-page?taskRunId=($taskId)'
   ($webDetailUrl | ansi link --text $'($taskId)')
 }
 
