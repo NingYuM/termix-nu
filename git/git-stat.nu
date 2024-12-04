@@ -18,6 +18,8 @@ export def 'git stat' [
   --author(-a): string = '*',   # Author to stat
   --exclude(-e): string,        # File name to exclude, separated by comma
 ] {
+  $env.config.table.mode = 'light'
+
   if not $summary_only {
     print $'(ansi p)(char nl)Modification stat info for each commit: (ansi reset)(char nl)'
   }
@@ -51,19 +53,18 @@ export def 'git stat' [
                         | rename insertions deletions file
                         | default 0 deletions
                         | default 0 insertions
-                        | default [] file
 
       if ($diff | is-empty) {
         { fileChanged: 0, insertions: 0, deletions: 0, file: [] }
       } else {
         $diff
-          | upsert fileChanged {|it| $it.file | length }
+          | upsert fileChanged {|it| [$it.file] | compact | length }
           # Replace '-' with 0, because some none text file diff output may have '-' in insertions/deletions
           | upsert deletions {|it| $it.deletions | str replace -a '-' 0 | into int }
           | upsert insertions {|it| $it.insertions | str replace -a '-' 0 | into int }
           | reduce --fold { fileChanged: 0, insertions: 0, deletions: 0, file: [] } { |acc x|
               {
-                file: ($acc.file ++ $x.file),
+                file: ($acc.file | append $x.file),
                 deletions: ($acc.deletions + $x.deletions),
                 insertions: ($acc.insertions + $x.insertions),
                 fileChanged: ($acc.fileChanged + $x.fileChanged),
@@ -88,6 +89,6 @@ export def 'git stat' [
   $total.uniqFileChanged = ($stat.file | flatten | uniq | length)
   $total = ($total | select commits deletions insertions fileChanged uniqFileChanged)
   if $json { return ($total | to json) }
-  print $'Total Summary: '; hr-line 69
+  print $'(char nl)Total Summary: '; hr-line 69
   $total | print
 }
