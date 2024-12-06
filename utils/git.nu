@@ -64,7 +64,7 @@ export def append-desc [
   } else {
     # 本地 i 分支优先级高于远程
     let querySource = if $localIExists { 'i' } else { 'origin/i' }
-    let descriptions = (git show $'($querySource):($descFile)' | from toml | to json)
+    let descriptions = (git show $'($querySource):($descFile)' | complete | get stdout | from toml | to json)
     let summary = (
       $records | insert has-desc { |it|
         # 处理分支名称包含‘.’的情况: `support/release-2.4`
