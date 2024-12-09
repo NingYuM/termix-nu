@@ -197,13 +197,40 @@ def nun [] {
 }
 
 # Pretty print the OSS list from oss-index
-def pretty-oss [] {
+def pretty-oss [
+  name?: string,      # The name of the Object to show details
+  --sort-by(-s): string = 'modified',  # sort-by: 'modified' | 'size' | 'name'
+] {
   const TIME_FMT = '%Y/%m/%d %H:%M:%S'
-  $in | detect columns --guess
+  def empty-to-dot [] { if ($in | is-empty) { '.' } else { $in } }
+  def oname-to-url [] {
+    let bucket = $env.OSS_BUCKET? | default terminus-new-trantor
+    let domainSuffix = $env.OSS_ENDPOINT? | default https://oss-cn-hangzhou.aliyuncs.com | str replace https:// ''
+    $in | str replace oss://($bucket) https://($bucket).($domainSuffix)
+  }
+
+  let raw  = $in | detect columns --guess
       | drop 2 | select LastModifiedTime 'Size(B)' ObjectName
       | upsert LastModifiedTime { into datetime | format date $TIME_FMT }
-      | rename -c { 'Size(B)': 'Size' }
-      | upsert Size { into filesize }
+      | rename -c { 'Size(B)': 'size', LastModifiedTime: 'modified', ObjectName: 'oname' }
+      | upsert size { into filesize }
+      | upsert name {|it| $it.oname | split row '/' | last | empty-to-dot }
+
+  let path = $raw | sort-by oname | first
+  let totalSize = $raw | reduce -f 0mb {|it, acc| $it.size + $acc }
+  print $'(char nl)Total Size: (ansi p)($totalSize)(ansi reset) of (ansi p)($path.oname)(ansi reset)'; hr-line
+  $raw
+      | select name size modified
+      | sort-by -r ([$sort_by] | into cell-path)
+      | print
+
+  if ($name | is-not-empty) {
+    print $'(char nl)Details of (ansi p)($name)(ansi reset):'; hr-line
+    $raw | where name == $name | get 0
+      | select name oname size modified
+      | upsert url {|it| $it.oname | oname-to-url }
+      | print
+  }
 }
 
 # 在本地构建并安装所有 Nushell 二进制文件
