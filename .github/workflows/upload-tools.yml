@@ -5,6 +5,7 @@
 
 name: Upload-OSS-Assets
 on:
+  workflow_dispatch:
   push:
     branches:
       - develop
@@ -26,7 +27,7 @@ jobs:
       - name: Setup Nu
         uses: hustcer/setup-nu@v3
         with:
-          version: 0.98.0
+          version: 0.100.0
 
       - name: Handle Upload
         shell: nu {0}
@@ -37,6 +38,7 @@ jobs:
           let sk = '${{ secrets.OSS_SK }}'
           let endpoint = '${{ vars.OSS_ENDPOINT }}'
           setup-oss-util --ak-id $ak --ak-secret $sk --endpoint $endpoint
+          oss-assets-upload fzf --bucket ${{ vars.OSS_BUCKET }}
           oss-assets-upload just --bucket ${{ vars.OSS_BUCKET }}
           oss-assets-upload nushell --bucket ${{ vars.OSS_BUCKET }}
 

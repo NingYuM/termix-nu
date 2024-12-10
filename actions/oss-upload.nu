@@ -15,6 +15,7 @@ const ASSET_PREFIX = 'open-tools'
 
 const TOOL_MAP = {
   just: 'casey/just',
+  fzf: 'junegunn/fzf',
   nushell: 'nushell/nushell',
   # nushell: 'nushell/nightly',
 }
@@ -24,10 +25,19 @@ const NAME_MAP = {
     'x86_64-apple-darwin': 'x86_64-darwin',
     'aarch64-apple-darwin': 'aarch64-darwin',
     'x86_64-pc-windows-msvc': 'x86_64-windows-msvc',
+    'aarch64-pc-windows-msvc': 'aarch64-windows-msvc',
     'x86_64-unknown-linux-musl': 'x86_64-linux-musl',
     'aarch64-unknown-linux-musl': 'aarch64-linux-musl',
     'arm-unknown-linux-musleabihf': 'arm-linux-musleabihf',
     'armv7-unknown-linux-musleabihf': 'armv7-linux-musleabihf',
+  },
+  fzf: {
+    'linux_amd64': 'x86_64-unknown-linux',
+    'linux_arm64': 'aarch64-unknown-linux',
+    'darwin_amd64': 'x86_64-apple-darwin',
+    'darwin_arm64': 'aarch64-apple-darwin',
+    'windows_amd64': 'x86_64-pc-windows-msvc',
+    'windows_arm64': 'aarch64-pc-windows-msvc',
   }
 }
 
@@ -46,7 +56,7 @@ export def setup-oss-util [
 }
 
 export def oss-assets-upload [
-  name: string,           # The name of the asset, currently support: nushell, just
+  name: string,           # The name of the asset, currently support: nushell, just, fzf
   --bucket(-b): string,   # The bucket name of OSS to store the asset
 ] {
   let rootPath = $'oss://($bucket)/($ASSET_PREFIX)'
