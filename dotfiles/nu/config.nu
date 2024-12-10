@@ -324,6 +324,13 @@ def nu-fetch-nightly [] {
   $'(char nl)Update to Nu: (ansi g)(./nu --version)(ansi reset)'
 }
 
+# Show Nu changed configs
+def nu-cc [] {
+  let defaults = nu -n -c "$env.config = {}; $env.config | reject color_config keybindings menus | to nuon" | from nuon | transpose key default
+  let current = $env.config | reject color_config keybindings menus | transpose key current
+  $current | merge $defaults | where $it.current != $it.default
+}
+
 def cargo-clippy [] {
   cargo clippy --all --all-features -- -D warnings -D clippy::unwrap_used -A clippy::needless_collect
 }
