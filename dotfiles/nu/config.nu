@@ -226,10 +226,10 @@ def pretty-oss [
 
   if ($name | is-not-empty) {
     print $'(char nl)Details of (ansi p)($name)(ansi reset):'; hr-line
-    $raw | where name == $name | get 0
+    $raw | where name == $name
       | select name oname size modified
       | upsert url {|it| $it.oname | oname-to-url }
-      | print
+      | each { print; hr-line -c grey66 }
   }
 }
 
