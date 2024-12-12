@@ -57,7 +57,7 @@ function install_or_update() {
   wget -O $pkg $BASE_URL/$assetName
   if [ -w $DEST_DIR ]; then
     tar xzf $pkg -C $DEST_DIR
-    mv $DEST_DIR/nu-*/* $DEST_DIR/
+    mv $DEST_DIR/nu-*/nu* $DEST_DIR/
     rm -rf $DEST_DIR/nu-*
   else
     if is_installed sudo; then
