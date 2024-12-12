@@ -42,7 +42,7 @@ const LATEST_META = {
 }
 
 # Install or update nushell, fzf, and just to $DEST_DIR
-export def main [dest: string = $DEST_DIR] {
+export def main [dest: string = $DEST_DIR, --all(-a)] {
   let platform = $'($nu.os-info.name)_($nu.os-info.arch)'
   let current = get-versions
   let latest = get-latest-versions
@@ -57,6 +57,16 @@ export def main [dest: string = $DEST_DIR] {
       print $'(ansi g)($bin) is already updated ...(ansi reset)'
     }
   }
+  if $all { upgrade-termix-nu }
+}
+
+# Upgrade termix-nu script source repo
+def upgrade-termix-nu [] {
+  print $'Upgrading termix-nu...'; hr-line
+  if 'TERMIX_DIR' in $env { cd $env.TERMIX_DIR }
+  git checkout master
+  git pull --tags --force
+  git pull origin (git tag -l --sort=-v:refname | lines | select 0).0 --ff-only
 }
 
 # Get current installed versions of nushell, fzf, and just

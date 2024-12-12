@@ -47,7 +47,7 @@ export def setup-oss-util [
   --ak-secret(-s): string,   # The access key secret of OSS
   --sts-token(-t): string,   # The STS token of OSS
 ] {
-  sudo -v ; curl https://gosspublic.alicdn.com/ossutil/install.sh | sudo bash
+  sudo -v; curl https://gosspublic.alicdn.com/ossutil/install.sh | sudo bash
   if ($sts_token | is-empty) {
     ossutil config --endpoint $endpoint --access-key-id $ak_id --access-key-secret $ak_secret
   } else {
