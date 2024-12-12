@@ -227,6 +227,16 @@ export def hr-line [
   if $blank_line { print -n (char nl) }
 }
 
+# Check if a path can be written
+export def can-write [path: string] {
+  try {
+    $'($path)/check_write_perm' | tee { touch $in } | rm $in
+    true
+  } catch {
+    false
+  }
+}
+
 # parallel { print "Oh" } { print "Ah" } { print "Eeh" }
 export def parallel [...closures] {
   $closures | par-each {
