@@ -109,7 +109,7 @@ export def get-latest-nightly-build [
         # Use mv instead of cp to avoid 'terminated by signal SIGKILL (Forced quit)' error
         sudo mv nu-nightly/nu-*/nu* $binDir
       }
-      rm -rf nu-nightly; cd $binDir
+      rm -rf $destDir; cd $binDir
       print $'(char nl)Update to Nu: (ansi g)(./nu --version) - (./nu -n --no-std-lib -c "version | get commit_hash")(ansi reset)'
       print $'Please restart Nu session to use the latest nightly release...'
     },
@@ -120,9 +120,10 @@ export def get-latest-nightly-build [
       rm nu-*.zip; cd ..
       let binDir = (which nu).path.0 | path dirname
       mv nu-nightly/nu_plugin_* $binDir
-      mv nu-nightly/nu.exe nu-nightly.exe
-      rm -rf nu-nightly
-      print $'Please replace nu.exe with nu-nightly.exe manually and restart Nu session'
+      mv nu-nightly/nu.exe $'($binDir)/nu-nightly.exe'
+      rm -rf $destDir
+      print $'(char nl)Please replace (ansi g)nu.exe(ansi reset) with (ansi g)nu-nightly.exe(ansi reset) manually and restart Nu session:'
+      print $'(ansi g)mv -force ($binDir)/nu-nightly.exe ($binDir)/nu.exe(ansi reset)'
     },
     _ => {
       print $"Unknown extension ($build.extension), you'll have to figure out how to extract this archive ;)"
