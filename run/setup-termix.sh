@@ -58,10 +58,12 @@ function install_or_update() {
   if [ -w $DEST_DIR ]; then
     tar xzf $pkg -C $DEST_DIR
     mv $DEST_DIR/nu-*/* $DEST_DIR/
+    rm -rf $DEST_DIR/nu-*
   else
     if is_installed sudo; then
       sudo tar xzf $pkg -C $DEST_DIR
       sudo mv $DEST_DIR/nu-*/nu* $DEST_DIR/
+      sudo rm -rf $DEST_DIR/nu-*
     else
       echo "Error: No write permission for $DEST_DIR and sudo is not available."
       exit 1

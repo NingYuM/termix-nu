@@ -7,8 +7,10 @@
 
 use ../utils/common.nu [is-installed, is-lower-ver, hr-line, can-write]
 
+# Default binary installation directory
 const DEST_DIR = '/usr/local/bin/'
 
+# $'($nu.os-info.name)_($nu.os-info.arch)' --> Bin Name --> Asset keywords
 const ASSETS = {
   macos_aarch64: {
     just: 'aarch64-darwin',
@@ -32,12 +34,14 @@ const ASSETS = {
   },
 }
 
+# Latest binary meta data from Aliyun OSS
 const LATEST_META = {
   nu: 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/open-tools/nushell/latest.json',
   fzf: 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/open-tools/fzf/latest.json',
   just: 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/open-tools/just/latest.json',
 }
 
+# Install or update nushell, fzf, and just to $DEST_DIR
 export def main [dest: string = $DEST_DIR] {
   let platform = $'($nu.os-info.name)_($nu.os-info.arch)'
   let current = get-versions
@@ -55,6 +59,7 @@ export def main [dest: string = $DEST_DIR] {
   }
 }
 
+# Get current installed versions of nushell, fzf, and just
 export def get-versions [] {
   mut versions = {}
   for bin in ($LATEST_META | columns) {
@@ -70,6 +75,7 @@ export def get-versions [] {
   $versions
 }
 
+# Get latest versions of nushell, fzf, and just from meta data
 export def get-latest-versions [] {
   mut versions = {}
   for bin in ($LATEST_META | columns) {
@@ -79,6 +85,7 @@ export def get-latest-versions [] {
   $versions
 }
 
+# Install or update a binary to $DEST_DIR
 export def install-or-update [bin platform dest] {
   print $'Installing or updating (ansi g)($bin) to ($dest) ...(ansi reset)'
   let latestUrl = $LATEST_META | get $bin
@@ -95,13 +102,18 @@ export def install-or-update [bin platform dest] {
   print $'Successfully installed (ansi g)($bin)@($latest.version)(ansi reset)'
 }
 
+# Unzip a binary package to $DEST_DIR
 def unzip-pkg [bin pkg dest] {
   let action = {|bin, sudo?|
       if $sudo == 'sudo' {
         match $bin {
           # Install just binary only without other assets
           just => { sudo tar xzf $pkg -C $dest just },
-          nu => { sudo tar xzf $pkg -C $dest; mv ($'($dest)/nu-*/nu*' | into glob) $dest },
+          nu => {
+            sudo tar xzf $pkg -C $dest
+            sudo mv ($'($dest)/nu-*/nu*' | into glob) $dest
+            sudo rm -rf ($'($dest)/nu-*' | into glob)
+          },
           _ => { sudo tar xzf $pkg -C $dest },
         }
         return
@@ -109,7 +121,11 @@ def unzip-pkg [bin pkg dest] {
       match $bin {
         # Install just binary only without other assets
         just => { tar xzf $pkg -C $dest just },
-        nu => { tar xzf $pkg -C $dest; mv ($'($dest)/nu-*/nu*' | into glob) $dest },
+        nu => {
+          tar xzf $pkg -C $dest
+          mv ($'($dest)/nu-*/nu*' | into glob) $dest
+          rm -rf ($'($dest)/nu-*' | into glob)
+        },
         _ => { tar xzf $pkg -C $dest },
       }
     }
