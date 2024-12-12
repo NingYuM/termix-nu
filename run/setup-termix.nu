@@ -5,7 +5,7 @@
 # Usage:
 #   nu actions/setup.nu
 
-use ../utils/common.nu [is-installed, is-lower-ver, hr-line]
+use ../utils/common.nu [is-installed, is-lower-ver, hr-line, can-write]
 
 const DEST_DIR = '/usr/local/bin/'
 
@@ -18,7 +18,7 @@ const ASSETS = {
 
 const LATEST_META = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/open-tools/nushell/latest.json'
 
-export def main [] {
+export def main [dest: string = $DEST_DIR] {
   let platform = $'($nu.os-info.name)_($nu.os-info.arch)'
   let current = get-versions
   let latest = get-latest-versions
@@ -27,7 +27,7 @@ export def main [] {
 
   for bin in [nu] {
     if (is-lower-ver ($current | get $bin) ($latest | get $bin)) {
-      install-or-update $bin $platform
+      install-or-update $bin $platform $dest
     } else {
       print $'(ansi g)($bin) is updated ...(ansi reset)'
     }
@@ -54,18 +54,25 @@ export def get-latest-versions [] {
   $versions
 }
 
-export def install-or-update [bin platform] {
-  print $'(ansi g)Installing or updating ($bin) ...(ansi reset)'
+export def install-or-update [bin platform dest] {
+  print $'Installing or updating (ansi g)($bin) to ($dest) ...(ansi reset)'
   let latest = http get $LATEST_META
-  let assetName = $latest | get assets | where name =~ ($ASSETS | get $platform | get $bin) | get 0.name
+  let assetName = $latest | get assets | where name =~ ($ASSETS | get $platform) | get 0.name
   let pkg = $'/tmp/($assetName)'
   http get ($LATEST_META | str replace latest.json $assetName) | save -rpf $pkg
   try {
-    if (is-installed sudo) { sudo tar xzf $pkg -C $DEST_DIR } else { tar xzf $pkg -C $DEST_DIR }
+    # Don't use sudo if write permission allowed
+    if not (can-write $dest) and (is-installed sudo) {
+      sudo tar xzf $pkg -C $dest
+      sudo mv ($'($dest)/nu-*/nu*' | into glob) $dest
+    } else {
+      tar xzf $pkg -C $dest
+      mv ($'($dest)/nu-*/nu*' | into glob) $dest
+    }
     rm $pkg
   } catch { |error|
     print $'(ansi r)Failed to install ($bin), due to the error: ($error.msg)(ansi reset)'
     exit 1
   }
-  print $'(ansi g)($bin) is installed successfully with version ($latest.version)(ansi reset)'
+  print $'Successfully installed (ansi g)($bin)@($latest.version)(ansi reset)'
 }
