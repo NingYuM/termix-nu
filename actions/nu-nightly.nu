@@ -7,7 +7,7 @@
 # - download the archive
 # - give some hints about the version and the hash and how to extract the archive
 
-use ../utils/common.nu [ECODE, is-installed, hr-line]
+use ../utils/common.nu [ECODE, is-installed, hr-line, can-write]
 
 export def get-latest-nightly-build [
   --list(-l),           # list all the available binary packages
@@ -83,7 +83,7 @@ export def get-latest-nightly-build [
       | first
       | insert hash { $latest.tag_name | parse 'nightly-{hash}' | get 0.hash }
 
-  let destDir = (which nu).path | path dirname | path join 'nu-nightly'
+  let destDir = mktemp -d | path join 'nu-nightly'
   if not ($destDir | path exists) { mkdir $destDir }
 
   if (is-installed aria2c) {
@@ -98,11 +98,18 @@ export def get-latest-nightly-build [
   match $build.extension {
     'tar.gz' => {
       cd $destDir
-      tar xvf nu-*.tar.gz --directory $destDir
+      tar xvf nu-*.tar.gz
       rm nu-*.tar*gz; cd ..
+      let binDir = (which nu).path.0 | path dirname
+      print $'Nu will be installed to (ansi g)($binDir)(ansi reset)'
       # `sudo` is required to move the files to `/usr/local/bin` on macOS
-      cp -r nu-nightly/nu-*/* .
-      rm -rf nu-nightly
+      if (can-write $binDir) {
+        mv nu-nightly/nu-*/nu* $binDir
+      } else {
+        # Use mv instead of cp to avoid 'terminated by signal SIGKILL (Forced quit)' error
+        sudo mv nu-nightly/nu-*/nu* $binDir
+      }
+      rm -rf nu-nightly; cd $binDir
       print $'(char nl)Update to Nu: (ansi g)(./nu --version) - (./nu -n --no-std-lib -c "version | get commit_hash")(ansi reset)'
       print $'Please restart Nu session to use the latest nightly release...'
     },
@@ -111,8 +118,9 @@ export def get-latest-nightly-build [
       cd $destDir
       tar xvf nu-*.zip
       rm nu-*.zip; cd ..
-      cp nu-nightly/nu_plugin_* .
-      cp nu-nightly/nu.exe nu-nightly.exe
+      let binDir = (which nu).path.0 | path dirname
+      mv nu-nightly/nu_plugin_* $binDir
+      mv nu-nightly/nu.exe nu-nightly.exe
       rm -rf nu-nightly
       print $'Please replace nu.exe with nu-nightly.exe manually and restart Nu session'
     },
