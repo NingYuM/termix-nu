@@ -61,7 +61,7 @@ function install_or_update() {
   else
     if is_installed sudo; then
       sudo tar xzf $pkg -C $DEST_DIR
-      sudo mv $DEST_DIR/nu-*/* $DEST_DIR/
+      sudo mv $DEST_DIR/nu-*/nu* $DEST_DIR/
     else
       echo "Error: No write permission for $DEST_DIR and sudo is not available."
       exit 1
@@ -91,7 +91,7 @@ function main() {
 
   echo '------------------------------------------------------------'
 
-  nu run/setup.nu $DEST_DIR
+  nu actions/setup.nu $DEST_DIR
 }
 
 main
