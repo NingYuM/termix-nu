@@ -8,7 +8,7 @@
 use terp-assets.nu ['terp assets']
 use ../utils/common.nu [ECODE, FZF_KEY_BINDING, FZF_THEME]
 
-const FZF_DEFAULT_OPTS = $'--multi --height 80% --layout=reverse --highlight-line --marker ▏ --pointer ▌ --prompt "▌ " --exact --preview-window=right:90% ($FZF_KEY_BINDING)'
+const FZF_DEFAULT_OPTS = $'--multi --height 80% --layout=reverse --highlight-line --marker ▏ --pointer ▌ --prompt "▌ " --preview-window=right:90% ($FZF_KEY_BINDING)'
 
 export def 'check assets' [] {
   cd $env.TERMIX_DIR
