@@ -266,7 +266,7 @@ def install-check [
 ] {
   if $install { return }
   let isLegacy = ($auth.version | is-empty) or ($auth.version | str replace -a . '' | str replace 'DEV' '' | into int) < 25240930
-  let shouldInstall = $isLegacy and ($dest | get -i resetModuleForInstall | default false)
+  let shouldInstall = (not $isLegacy) and ($dest | get -i resetModuleForInstall | default false)
   if $shouldInstall {
     print $'You are going to INSTALL modules to the dest project, please add (ansi g)`--install` / `-i`(ansi reset) flag and try again.(char nl)'
     exit $ECODE.INVALID_PARAMETER
