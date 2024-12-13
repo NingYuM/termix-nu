@@ -11,8 +11,10 @@
 #   t upgrade just
 #   t upgrade nushell
 
-use ../utils/common.nu [ECODE, hr-line, is-installed]
+use setup.nu [setup-termix]
 use open-tools.nu [upgrade-latest-tool]
+
+use ../utils/common.nu [ECODE, hr-line, is-installed, get-dot-conf]
 
 const VALID_TOOLS = ['just', 'nu', 'nushell', 'termix-nu']
 
@@ -22,6 +24,10 @@ export def upgrade-tool [
   --all(-a),                      # Upgrade all tools: termix-nu, just and nushell
   --force(-f),                    # Force upgrade, even if the latest version is already installed
 ] {
+  # If installed by setup.nu then upgrade by the same way
+  if (get-dot-conf installMethod) == 'setup' {
+    setup-termix --all=$all --in-place-update; exit $ECODE.SUCCESS
+  }
   if $all {
     upgrade-termix-nu
     upgrade-latest-tool just --no-aria2c --force=$force
