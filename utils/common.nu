@@ -255,3 +255,17 @@ export def progress [
   # Available chars: █ ▓ ▒ ░ = - ~ *
   while $x < $count { print -n $char; $x = $x + 1; sleep $duration }
 }
+
+# Get the value of key from ~/.termix-nu/.termix-conf
+export def get-dot-conf [key: string, default?: any] {
+  let TERMIX_CONF = $'(get-tmp-path)/.termix-conf'
+  open $TERMIX_CONF | from json | get -i $key | default $default
+}
+
+# Set the value of key to ~/.termix-nu/.termix-conf
+export def set-dot-conf [key: string, value: any] {
+  let TERMIX_CONF = $'(get-tmp-path)/.termix-conf'
+  open $TERMIX_CONF | from json
+    | upsert $key $value | to json
+    | save -rf $TERMIX_CONF
+}

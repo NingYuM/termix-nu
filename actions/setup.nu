@@ -5,7 +5,7 @@
 # Usage:
 #   nu actions/setup.nu
 
-use ../utils/common.nu [is-installed, is-lower-ver, hr-line, can-write]
+use ../utils/common.nu [is-installed, is-lower-ver, hr-line, can-write, set-dot-conf]
 
 # Default binary installation directory
 const DEST_DIR = '/usr/local/bin/'
@@ -42,7 +42,7 @@ const LATEST_META = {
 }
 
 # Install or update nushell, fzf, and just to $DEST_DIR
-export def main [
+export def setup-termix [
   dest: string = $DEST_DIR,   # Installation directory, default to $DEST_DIR
   --all(-a),                  # Upgrade all tools, including termix-nu
   --in-place-update(-u),      # Replace the current binary(if installed) with the latest version
@@ -62,6 +62,7 @@ export def main [
     }
   }
   if $all { upgrade-termix-nu }
+  set-dot-conf installMethod setup
 }
 
 # Upgrade termix-nu script source repo
@@ -165,3 +166,5 @@ def unzip-pkg [
   }
   rm $pkg
 }
+
+alias main = setup-termix
