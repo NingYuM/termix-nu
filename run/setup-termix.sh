@@ -5,54 +5,55 @@
 
 LATEST_VERSION='0.100.0'
 DEST_DIR='/usr/local/bin/'
+BASE_URL='https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/open-tools/nushell'
 
 # 处理命令行参数
 if [ $# -eq 1 ]; then
-    DEST_DIR=$1
-    # 确保路径以 / 结尾
-    [[ "${DEST_DIR}" != */ ]] && DEST_DIR="${DEST_DIR}/"
+  DEST_DIR=$1
+  # Make sure DEST_DIR ends with a slash
+  [[ "${DEST_DIR}" != */ ]] && DEST_DIR="${DEST_DIR}/"
 fi
 
-# 在 bash 中声明关联数组时需要使用 declare -A 来明确指定
-# 这是一个关联数组，否则，bash 可能会错误地处理数组索引
-declare -A ASSETS
-ASSETS=(
-  ["Darwin_x86_64"]="x86_64-apple-darwin"
-  ["Darwin_arm64"]="aarch64-apple-darwin"
-  ["Darwin_aarch64"]="aarch64-apple-darwin"
-  ["Linux_x86_64"]="x86_64-unknown-linux-musl"
-  ["Linux_arm64"]="aarch64-unknown-linux-musl"
-  ["Linux_aarch64"]="aarch64-unknown-linux-musl"
-)
-
-BASE_URL='https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/open-tools/nushell'
-
+# Check if command exists
 function is_installed() {
   command -v $1 &> /dev/null
 }
 
+# Check if first version is lower than second version
 function is_lower_ver() {
   [ "$(printf '%s\n' $1 $2 | sort -V | head -n1)" != $2 ]
 }
 
+# Get current version of nu, or 0.0.0 if not installed
 function get_versions() {
-  declare -A versions
-  for bin in nu; do
-    if ! is_installed $bin; then
-      versions["$bin"]="0.0.0"
-    else
-      version=$($bin --version)
-      versions[$bin]=$version
-    fi
-  done
-  echo ${versions[@]}
+  local version
+  if ! is_installed nu; then
+    version="0.0.0"
+  else
+    version=$(nu --version)
+  fi
+  echo $version
 }
 
+# Get target package name keyword for the specified platform
+get_target_arch() {
+  local platform=$1
+  case $platform in
+    'Darwin_x86_64')                  echo 'x86_64-apple-darwin' ;;
+    'Darwin_arm64'|'Darwin_aarch64')  echo 'aarch64-apple-darwin' ;;
+    'Linux_x86_64')                   echo 'x86_64-unknown-linux-musl' ;;
+    'Linux_arm64'|'Linux_aarch64')    echo 'aarch64-unknown-linux-musl' ;;
+    *)  echo "Unsupported platform: $platform" && exit 1 ;;
+  esac
+}
+
+# Install or update nu binary for the specified platform
 function install_or_update() {
   local bin=$1
   local platform=$2
   echo "Installing or updating $bin for $platform ..."
-  local assetName=$(wget -qO - $BASE_URL/latest.json | grep name | cut -d '"' -f 4 | grep ${ASSETS[$platform]})
+  local targetArch=$(get_target_arch $platform)
+  local assetName=$(wget -qO - $BASE_URL/latest.json | grep name | cut -d '"' -f 4 | grep ${targetArch})
   local pkg="/tmp/$assetName"
   wget -O $pkg $BASE_URL/$assetName
   if [ -w $DEST_DIR ]; then
@@ -73,6 +74,7 @@ function install_or_update() {
   echo "Successfully installed $bin with version $LATEST_VERSION"
 }
 
+# Install or update nu binary for the current platform
 function main() {
   current=$(get_versions)
   latest=$LATEST_VERSION
