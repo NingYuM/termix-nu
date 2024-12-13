@@ -1,20 +1,24 @@
 # FAQ:
 
-1. 每天第一次执行 `t`（或者 `termix-nu` 目录的 `just`）命令的时候似乎比较慢？
+1. 系统版本太低或者不便使用 `brew` 如何安装？
+
+> 如果由于系统版本太低的原因导致安装失败，或者觉得 `brew` 安装太慢，或者你使用 Linux 系统，无法使用 `brew`，此时可以通过：`bash run/setup-termix.sh` 进行安装，该脚本会自动安装 `nushell`, `just`, `fzf` 等后续可能会用到的二进制文件。而且这种安装方式速度非常快！目前这种安装方式只支持 macOS/Linux 系统。而且使用这种方式安装后续同样可以通过 `t upgrade` 命令进行升级，注意：该方法需要安装前确保你的系统中没有通过 `brew` 安装过这些工具，否则可能导致冲突。
+
+2. 每天第一次执行 `t`（或者 `termix-nu` 目录的 `just`）命令的时候似乎比较慢？
 
 > 是的，每天第一次执行 `t` 的时候会检查有没有新版本, 如果有新版本的话会提示升级，这个过程是同步阻塞的所以会感觉有点慢(`Nushell` 目前不支持异步操作)，不过这个检查每天只会进行一次，后续再次执行就会快一些。
 
-2. 对于 `termix-nu` 的升级提示到底是升还是不升？
+3. 对于 `termix-nu` 的升级提示到底是升还是不升？
 
 > 执行 `t` 命令的时候有时会在终端输出升级提示信息，提醒你 `nushell` 或者 `just` 等的版本较低，如果该提示不影响命令的正常执行可以忽略，但是如果执行命令报错建议按照提示进行升级。尤其是提示 `nushell` 版本过低的时候尽量能升则升，由于 `nushell` 目前还处在活跃开发阶段，在到达 **1.0** 版本前不兼容的变更也会比较多，为了降低维护成本，本工具将始终跟进支持最新版本的 `nushell`，没有兼容老版本的打算。
 
-3. `termix-nu` 有 `master`、`develop` 等分支，这些分支有啥差别？
+4. `termix-nu` 有 `master`、`develop` 等分支，这些分支有啥差别？
 
 > 一般情况下建议大家使用 `master` 分支，该分支通常会适配当前已经正式发布的最新版本的 `nushell`。而 `develop` 分支通常会适配**下一个**即将发布的 `nushell` 版本，该分支上也可能会有一些正在开发中的新特性，一般会在 `nushell` 新版本发布并更新到 `brew` 仓库后的 **0~2** 个工作日内发布 `termix-nu` 的新版本。
 
 > 如果你想尝鲜 `develop` 分支可以自己从源码编译 `nushell`，当然还有更简单的办法: 试试 `t nu-use-nightly` 该命令为私有命令，不过你可以用其下载每日构建的最新完整功能版本的 `nushell`，而且会自动根据你的 CPU 架构下载匹配的版本。下载后安装位置就在原来的位置，直接替换原来的 `nushell` 二进制文件(Windows 系统不允许对当前正在运行的可执行文件进行写操作，所以需要根据提示进行手工操作)。
 
-4. 初次执行 `t` 的时候报错:
+5. 初次执行 `t` 的时候报错:
 
 ```console
 Error: nu::shell::plugin_failed_to_load
@@ -26,7 +30,7 @@ error: Recipe `_register_plugins` failed with exit code 1
 
 > 这可能是因为 `Nushell` 安装后还没有使用过，也没有为其初始化配置文件，可以尝试在命令行执行下 `nu`，然后会有两个交互式提问，直接输入 `y` 即可。这样就会为 `nu` 创建默认的配置文件。接下来可以再次执行 `t` 试试。
 
-5. 首次执行 `t`（或者 `termix-nu` 目录的 `just`）命令的时候报错:
+6. 首次执行 `t`（或者 `termix-nu` 目录的 `just`）命令的时候报错:
 
 ```console
 Error: nu::parser::module_not_found
@@ -44,20 +48,20 @@ error: Recipe `_setup` failed on line 281 with exit code 1
 
 > 请检查 .env 环境变量 `TERMIX_DIR` 的配置，确保其值为 `termix-nu` 的绝对路径，这个环境变量目前是必须要配的，其他环境变量可以根据使用情况选择配置。
 
-6. "Could not find `cygpath` executable to translate recipe..." on Windows
+7. "Could not find `cygpath` executable to translate recipe..." on Windows
 
 > Install git by `winget install Git.Git` and `cygpath` will be available in `C:\Program Files\Git\usr\bin`, add this dir in global `PATH` environment variable should work.
 
-7. 执行 `t` 的时候报类似如下错误:
+8. 执行 `t` 的时候报类似如下错误:
 
 ```console
 Error: nu::parser::registered_file_not_found
 
   × File not found
   ╭─[/Users/abc/Library/Application Support/nushell/plugin.nu:1:1]
-1 │ register /usr/local/Cellar/nushell/0.85.0/bin/nu_plugin_gstat  {
+1 │ register /usr/local/Cellar/nushell/0.95.0/bin/nu_plugin_gstat  {
   ·          ──────────────────────────┬─────────────────────────
-  ·                                    ╰── File not found: /usr/local/Cellar/nushell/0.85.0/bin/nu_plugin_gstat
+  ·                                    ╰── File not found: /usr/local/Cellar/nushell/0.95.0/bin/nu_plugin_gstat
 2 │   "sig": {
   ╰────
   help: registered files need to be available before your script is run
@@ -71,7 +75,7 @@ rm '/Users/abc/Library/Application Support/nushell/plugin.nu'
 
 > 即可, 这个配置文件在后续使用过程中会自动生成的。或者执行下这个命令： nu -c 'rm $nu.plugin-path'，效果是一样的。
 
-8. 用 CLI 执行 Erda 流水线的时候提示如下错误：
+9. 用 CLI 执行 Erda 流水线的时候提示如下错误：
 
 ```console
   Renewing Erda session...

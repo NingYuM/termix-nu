@@ -33,6 +33,10 @@ brew update
 brew upgrade nushell just
 ```
 
+**提示：**
+
+如果由于系统版本太低的原因导致安装失败，或者 `brew` 安装太慢，或者你使用 Linux 系统，无法使用 `brew`，可以通过：`bash run/setup-termix.sh` 进行安装，该脚本会自动安装 `nushell`, `just`, `fzf` 等后续可能会用到的二进制文件。而且这种安装方式速度非常快！
+
 ### Install nushell and just on Windows
 
 ```bash
@@ -1343,7 +1347,7 @@ t ta revert base -t dev@alias -d minio
 - 支持同步所有模块或者选择指定模块同步(指定模块同步功能以后可能会被废弃，详询元数据团队);
 - 同步所有模块时根据需要支持输入**安全码**(0330 版本后新特性), 同步指定模块时无需输入安全码；
 - 所有需要确认或者选择的操作前置，如此以来就可以提前把各种准备工作做好，剩下的只需要喝喝茶等待工具执行完成就可以了；
-- 元数据导入时支持配置文件里面的 `ddlAutoUpdate`, `resetModuleForInstall` 等参数透传；
+- 元数据导入时支持配置文件里面的 `ddlAutoUpdate`, `resetModuleForInstall` 等参数透传（对于 0930 及以后版本不再支持`resetModuleForInstall`参数，若需安装为非原生模块请使用 `--install` 参数）；
 - 同步任务本身仍然是 `Trantor` 的 **API** 完成的，本工具只是对这些接口进行 `TUI` 封装，结果跟原始的手工操作是一致的；
 - 对于所有的异步任务工具会定时轮询(目前每秒一次)并更新状态和进度（然而并不是真实的百分比进度，本质上是一个以进度条形式显示的计时器，告诉你程序还没挂掉）;
 - 分秒必争，所有的任务会无缝串行，同时会显示每条任务和所有任务总执行耗时；
@@ -1359,6 +1363,7 @@ t ta revert base -t dev@alias -d minio
 - `-a`, `--all` - 加上这个开关就表示同步所有模块
 - `-s`, `--selected` - 加了这个开关就表示同步指定同步源中的 `selectedModules` 配置项所包含的模块
 - `-l`, `--list` - 列出所有的同步源和同步目标
+- `-i`, `--install` - 安装或者升级标准模块的元数据到目标项目，支持 Trantor 2.5.24.0930 及以后版本，表示安装为非原生模块
 - `-S`, `--snapshot` - 只创建并上传元数据的 SnapShot 不做导入元数据的操作
 - `-h`, `--help` - 查看帮助信息
 - 如果在调用命令的时候没有传 `--all` 或 `--selected` 参数会让你选择需要同步的模块, 如下图所示，在这个交互中可以使用的快捷键: `Space` 选择某一项，`a` 选择所有或取消全部选择，`q` 或 `ESC` 取消并退出，上下箭头切换模块, `Enter` 确认选择；
@@ -1412,6 +1417,7 @@ teamCode = 'TERP'
 ddlAutoUpdate = false
 # 是否导入为非原生模块，默认为 false, false：导入为原生模块，可以修改；true：安装为非原生模块, 不能修改
 # 这个参数只有在按模块导入时生效（即 resetModuleKeys 不为空）
+# 注意：该参数在 0930 及以后版本不再支持，若需安装为非原生模块请使用 --install 参数
 resetModuleForInstall = false
 # 用户名和密码此处如果配置了则会覆盖 meta.settings 中的配置，如果未配置则使用 meta.settings 中的配置
 username = 'your-username'
