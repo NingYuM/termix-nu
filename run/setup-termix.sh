@@ -93,7 +93,7 @@ function main() {
 
   echo '------------------------------------------------------------'
 
-  nu actions/setup.nu $DEST_DIR
+  nu actions/setup.nu $DEST_DIR --in-place-update
 }
 
 main

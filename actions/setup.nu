@@ -15,22 +15,22 @@ const ASSETS = {
   macos_aarch64: {
     just: 'aarch64-darwin',
     fzf: 'aarch64-apple-darwin',
-    nushell: 'aarch64-apple-darwin',
+    nu: 'aarch64-apple-darwin',
   },
   macos_x86_64: {
     just: 'x86_64-darwin',
     fzf: 'x86_64-apple-darwin',
-    nushell: 'x86_64-apple-darwin',
+    nu: 'x86_64-apple-darwin',
   },
   linux_aarch64: {
     just: 'aarch64-linux-musl',
     fzf: 'aarch64-unknown-linux',
-    nushell: 'aarch64-unknown-linux-musl',
+    nu: 'aarch64-unknown-linux-musl',
   },
   linux_x86_64: {
     just: 'x86_64-linux-musl',
     fzf: 'x86_64-unknown-linux',
-    nushell: 'x86_64-unknown-linux-musl',
+    nu: 'x86_64-unknown-linux-musl',
   },
 }
 
@@ -42,7 +42,11 @@ const LATEST_META = {
 }
 
 # Install or update nushell, fzf, and just to $DEST_DIR
-export def main [dest: string = $DEST_DIR, --all(-a)] {
+export def main [
+  dest: string = $DEST_DIR,   # Installation directory, default to $DEST_DIR
+  --all(-a),                  # Upgrade all tools, including termix-nu
+  --in-place-update(-u),      # Replace the current binary(if installed) with the latest version
+] {
   let platform = $'($nu.os-info.name)_($nu.os-info.arch)'
   let current = get-versions
   let latest = get-latest-versions
@@ -52,7 +56,7 @@ export def main [dest: string = $DEST_DIR, --all(-a)] {
 
   for bin in ($LATEST_META | columns) {
     if (is-lower-ver ($current | get $bin) ($latest | get $bin)) {
-      install-or-update $bin $platform $dest
+      install-or-update $bin $platform $dest --in-place-update=$in_place_update
     } else {
       print $'(ansi g)($bin) is already updated ...(ansi reset)'
     }
@@ -96,15 +100,19 @@ export def get-latest-versions [] {
 }
 
 # Install or update a binary to $DEST_DIR
-export def install-or-update [bin platform dest] {
-  print $'Installing or updating (ansi g)($bin) to ($dest) ...(ansi reset)'
+export def install-or-update [
+  bin: string,           # Binary name, e.g. 'nu', 'fzf', 'just'
+  platform: string,      # Platform name, e.g. 'macos_x86_64', 'linux_aarch64'
+  dest: string,          # Installation directory, default to $DEST_DIR
+  --in-place-update,     # Replace the current binary(if installed) with the latest version
+] {
   let latestUrl = $LATEST_META | get $bin
   let latest = http get $latestUrl
   let assetName = $latest | get assets | where name =~ ($ASSETS | get $platform | get $bin) | get 0.name
   let pkg = $'/tmp/($assetName)'
   http get ($latestUrl | str replace latest.json $assetName) | save -rpf $pkg
   try {
-    unzip-pkg $bin $pkg $dest
+    unzip-pkg $bin $pkg $dest --in-place-update=$in_place_update
   } catch { |error|
     print $'(ansi r)Failed to install ($bin), due to the error: ($error.msg)(ansi reset)'
     exit 1
@@ -113,7 +121,16 @@ export def install-or-update [bin platform dest] {
 }
 
 # Unzip a binary package to $DEST_DIR
-def unzip-pkg [bin pkg dest] {
+def unzip-pkg [
+  bin: string,          # Binary name, e.g. 'nu', 'fzf', 'just'
+  pkg: string,          # Binary package file path
+  dest: string,         # Installation directory, default to $DEST_DIR
+  --in-place-update,    # Replace the current binary(if installed) with the latest version
+] {
+  let replace = $in_place_update and (is-installed $bin)
+  let dest = if $replace { (which $bin).path.0 | path dirname } else { $dest }
+  print $'Installing or updating (ansi g)($bin) to ($dest) ...(ansi reset)'
+
   let action = {|bin, sudo?|
       if $sudo == 'sudo' {
         match $bin {
