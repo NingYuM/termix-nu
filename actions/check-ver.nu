@@ -11,7 +11,7 @@ use ../utils/common.nu [ECODE, _DATE_FMT, _UPGRADE_TAG, get-tmp-path, get-conf, 
 export def nu-ver [] {
 
   let currentVer = (version).version
-  let minVer = get-conf minNuVer '0.90.0'
+  let minVer = get-conf minNuVer '0.100.0'
   upgrade-tip nushell $minVer $currentVer
 }
 
@@ -19,7 +19,7 @@ export def nu-ver [] {
 export def just-ver [] {
 
   let currentVer = (just --version | str replace 'just' '' | str trim)
-  let minVer = get-conf minJustVer '1.25.0'
+  let minVer = get-conf minJustVer '1.37.0'
   upgrade-tip just $minVer $currentVer
 }
 
