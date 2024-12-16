@@ -115,6 +115,12 @@ art *OPTIONS: _setup _setup_fzf
   @overlay use {{ join(_termix, 'actions', 'artifact.nu') }}; \
     artifacts {{OPTIONS}}
 
+# 检查 termix-nu 的配置问题，并尝试修复
+[group('-- Common  --')]
+doctor *OPTIONS:
+  @overlay use {{ join(_termix, 'actions', 'doctor.nu') }}; \
+    termix-doctor {{OPTIONS}}
+
 # 执行Erda流水线,可通过`dp -l`列出所有部署目标,在批量部署模式下通过`--app`指定待部署应用
 [group('-- Common  --')]
 deploy *OPTIONS: _setup
