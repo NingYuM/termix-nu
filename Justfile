@@ -116,17 +116,23 @@ detect-assets *OPTIONS: _setup _setup_fzf
   @overlay use {{ join(_termix, 'actions', 'check-assets.nu') }}; \
     check assets {{OPTIONS}}
 
+# Deprecated or enable frontend modules by mount point and module names
+[group('-- Frontend --')]
+mod *OPTIONS: _setup
+  @overlay use {{ join(_termix, 'actions', 'deprecated-mod.nu') }}; \
+    deprecated-modules {{OPTIONS}}
+
 # Create, download, upload and deploy from the artifacts
 [group('-- Common  --')]
 art *OPTIONS: _setup _setup_fzf
   @overlay use {{ join(_termix, 'actions', 'artifact.nu') }}; \
     artifacts {{OPTIONS}}
 
-# Deprecated or enable frontend modules by mount point and module names
-[group('-- Frontend --')]
-mod *OPTIONS: _setup
-  @overlay use {{ join(_termix, 'actions', 'deprecated-mod.nu') }}; \
-    deprecated-modules {{OPTIONS}}
+# 检查 termix-nu 的配置问题，并尝试修复
+[group('-- Common  --')]
+doctor *OPTIONS:
+  @overlay use {{ join(_termix, 'actions', 'doctor.nu') }}; \
+    termix-doctor {{OPTIONS}}
 
 # 执行Erda流水线,可通过`dp -l`列出所有部署目标,在批量部署模式下通过`--app`指定待部署应用
 [group('-- Common  --')]
