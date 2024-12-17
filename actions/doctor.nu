@@ -8,13 +8,13 @@
 #   [√] Checking Nushell plugin path and version
 #   [√] Registering Nushell plugins if plugin register file not found
 #   [√] Checking Nu config file existence
-#   [ ] Checking macOS version
-#   [ ] Erda User name and password check
+#   [√] Checking macOS version
 #   [ ] Checking nu --version
 #   [ ] Checking just --version
 #   [ ] Checking fzf --version
 #   [ ] Checking termix-nu version
 #   [ ] Checking package-tools version
+#   [ ] Erda User name and password check
 #   [ ] `t` alias check
 
 use ../utils/common.nu [hr-line, windows?]
@@ -30,9 +30,10 @@ export def termix-doctor [
   --fix(-f),    # Try to fix the problem automatically
   --debug(-d),  # Show debug information
 ] {
-  check-env 'Checking $TERMIX_DIR ...'  --fix=$fix --debug=$debug | show-result
-  check-config 'Checking Nu config ...' --fix=$fix --debug=$debug | show-result
-  check-plugins 'Checking plugins ...'  --fix=$fix --debug=$debug | show-result
+  check-env 'Checking $TERMIX_DIR ...'     --fix=$fix --debug=$debug | show-result
+  check-config 'Checking Nu config ...'    --fix=$fix --debug=$debug | show-result
+  check-plugins 'Checking plugins ...'     --fix=$fix --debug=$debug | show-result
+  check-macOS 'Checking macOS version ...' --fix=$fix --debug=$debug | show-result
 }
 
 # Check TERMIX_DIR environment variable
@@ -97,6 +98,24 @@ def check-plugins [description: string, --fix, --debug] {
   $result
 }
 
+# Check macOS version
+def check-macOS [description: string, --fix, --debug] {
+  if $nu.os-info.name != 'macos' { return }
+  const FIX_TIP = '建议升级到最新版本的 macOS'
+  print -n $description
+  mut result = {
+    status: $STATUS.WARN
+    tip: $FIX_TIP,
+  }
+  let macOSVersion = sys host | get os_version
+  if $debug { print -n (char nl); hr-line -c grey66; print $macOSVersion }
+  if ($macOSVersion | split row . | first | into int) < 13 {
+    $result.message = 'macOS outdated'
+    return $result
+  }
+  { status: $STATUS.OK }
+}
+
 # Register Nushell plugins
 def register-plugins [] {
   let nuDir = $nu.current-exe | path dirname
@@ -111,6 +130,7 @@ def register-plugins [] {
 
 # Show diagnostic result
 def show-result [] {
+  if ($in | is-empty) { return }
   if $in.status == $STATUS.OK {
     print -n $'(ansi g)OK(ansi reset)(char nl)'; return
   }
