@@ -63,7 +63,7 @@ const MOD_DESC = {
 
 # Don't validate module names by default
 const VALIDATE_MODULES = '0'
-const PKG_TOOLS_VER = '0.5.0'
+const PKG_TOOLS_VER = '0.5.1'
 
 # Download TERP static assets or transfer assets to other path of the specified cloud storage
 export def 'terp assets' [

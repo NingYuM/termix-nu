@@ -14,6 +14,7 @@
 #   [ ] Checking just --version
 #   [ ] Checking fzf --version
 #   [ ] Checking termix-nu version
+#   [ ] Checking package-tools version
 #   [ ] `t` alias check
 
 use ../utils/common.nu [hr-line, windows?]
@@ -29,18 +30,19 @@ export def termix-doctor [
   --fix(-f),    # Try to fix the problem automatically
   --debug(-d),  # Show debug information
 ] {
-  check-env 'Checking $TERMIX_DIR ...' --fix=$fix | show-result
+  check-env 'Checking $TERMIX_DIR ...' --fix=$fix --debug=$debug | show-result
   check-plugins 'Checking plugins ...' --fix=$fix --debug=$debug | show-result
 }
 
 # Check TERMIX_DIR environment variable
-def check-env [description: string, --fix] {
+def check-env [description: string, --fix, --debug] {
   const FIX_TIP = '请确保 .env 文件存在并且其中的 TERMIX_DIR 指向 termix-nu 根目录'
   print -n $description
   mut result = {
     status: $STATUS.ERROR
     tip: $FIX_TIP,
   }
+  if $debug { print -n (char nl); hr-line -c grey66; print ($env.TERMIX_DIR? | default '') }
   if 'TERMIX_DIR' not-in $env or not ($env.TERMIX_DIR | path exists) {
     $result.message = 'TERMIX_DIR not set or invalid'
     return $result
@@ -68,6 +70,7 @@ def check-plugins [description: string, --fix, --debug] {
   let versionMatch = $allPlugins | all {|it| ($it | get 'metadata.version') == $nuVersion }
   let pluginExists = $allPlugins | any {|it| $it.filename | path exists }
   if $debug {
+    print -n (char nl); hr-line -c grey66
     { nuVersion: $nuVersion, allPlugins: $allPlugins } | table -e | print
   }
   if $versionMatch and $pluginExists { return { status: $STATUS.OK } }
