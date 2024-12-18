@@ -13,19 +13,22 @@
 #   [√] Checking just --version
 #   [√] Checking fzf --version
 #   [√] Checking termix-nu version
-#   [ ] Checking package-tools version
+#   [√] Checking package-tools version
 #   [ ] Erda User name and password check
 #   [x] `t` alias check
 
 use upgrade.nu [upgrade-tool]
 use setup.nu [get-versions, get-latest-versions]
-use ../utils/common.nu [hr-line, windows?, is-lower-ver, get-conf]
+use ../utils/common.nu [hr-line, windows?, is-lower-ver, get-conf, is-installed]
 
 const STATUS = {
   OK: 'OK',
   WARN: 'WARN',
   ERROR: 'ERROR'
 }
+
+# Terminus npm registry
+const REGISTRY = 'https://registry.npm.terminus.io'
 
 # Try to diagnose and fix common problems of termix-nu
 export def termix-doctor [
@@ -38,6 +41,7 @@ export def termix-doctor [
   check-macOS 'Checking macOS version ...'    --fix=$fix --debug=$debug | show-result
   check-bin 'Checking dependency version ...' --fix=$fix --debug=$debug | show-result
   check-termix 'Checking termix version ...'  --fix=$fix --debug=$debug | show-result
+  check-pkg-tool 'Checking package-tools ...' --fix=$fix --debug=$debug | show-result
   # check-alias 'Checking `t` alias ...'      --fix=$fix --debug=$debug | show-result
 }
 
@@ -145,7 +149,7 @@ def check-bin [description: string, --fix, --debug] {
 
 # Check termix-nu version
 def check-termix [description: string, --fix, --debug] {
-  const FIX_TIP = '请通过(ansi g) t upgrade -a (ansi reset)进行升级, 并重启终端'
+  const FIX_TIP = $'请通过(ansi g) t upgrade -a (ansi reset)进行升级, 并重启终端'
   print -n $description
   mut result = {
     tip: $FIX_TIP,
@@ -157,6 +161,24 @@ def check-termix [description: string, --fix, --debug] {
   if not (is-lower-ver $current $latest) { return { status: $STATUS.OK } }
   if $fix { upgrade-tool }
   $result.message = $'Termix-nu outdated, current: ($current), latest: ($latest)'
+  $result
+}
+
+# Check package-tools version
+def check-pkg-tool [description: string, --fix, --debug] {
+  if not (is-installed package-tools) { return }
+  const FIX_TIP = $'请通过(ansi g) npm i -g @terminus/t-package-tools@latest --registry ($REGISTRY) (ansi reset)进行升级'
+  print -n $description
+  mut result = {
+    tip: $FIX_TIP,
+    status: $STATUS.WARN,
+  }
+  let current = package-tools --version
+  let latest = http get $'($REGISTRY)/@terminus/t-package-tools' | get dist-tags.latest
+  if $debug { show-debug { current: $current, latest: $latest } }
+  if not (is-lower-ver $current $latest) { return { status: $STATUS.OK } }
+  if $fix { upgrade-package-tools }
+  $result.message = $'Package-tools outdated, current: ($current), latest: ($latest)'
   $result
 }
 
@@ -192,6 +214,21 @@ def register-plugins [] {
       nu -c $"plugin add '($nuDir)/($it)'"
     }
   }
+}
+
+# Upgrade @terminus/t-package-tools
+def upgrade-package-tools [] {
+  let npmModules = npm ls -g --json | from json | get dependencies? | default {} | columns
+  let installedByNpm = '@terminus/t-package-tools' in $npmModules
+  if $installedByNpm {
+    npm i -g @terminus/t-package-tools@latest --registry $REGISTRY
+    return
+  }
+  if (is-installed pnpm) and (pnpm ls -g @terminus/t-package-tools --json | from json | get -i dependencies.0 | is-not-empty) {
+    pnpm i -g @terminus/t-package-tools@latest --registry $REGISTRY
+    return
+  }
+  print "Sorry, I can't fix it, please fix it yourself."
 }
 
 # Show diagnostic result
