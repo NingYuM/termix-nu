@@ -12,14 +12,14 @@
 #   [√] Checking nu --version
 #   [√] Checking just --version
 #   [√] Checking fzf --version
-#   [ ] Checking termix-nu version
+#   [√] Checking termix-nu version
 #   [ ] Checking package-tools version
 #   [ ] Erda User name and password check
 #   [x] `t` alias check
 
 use upgrade.nu [upgrade-tool]
 use setup.nu [get-versions, get-latest-versions]
-use ../utils/common.nu [hr-line, windows?, is-lower-ver]
+use ../utils/common.nu [hr-line, windows?, is-lower-ver, get-conf]
 
 const STATUS = {
   OK: 'OK',
@@ -37,6 +37,7 @@ export def termix-doctor [
   check-plugins 'Checking plugins ...'        --fix=$fix --debug=$debug | show-result
   check-macOS 'Checking macOS version ...'    --fix=$fix --debug=$debug | show-result
   check-bin 'Checking dependency version ...' --fix=$fix --debug=$debug | show-result
+  check-termix 'Checking termix version ...'  --fix=$fix --debug=$debug | show-result
   # check-alias 'Checking `t` alias ...'      --fix=$fix --debug=$debug | show-result
 }
 
@@ -48,7 +49,7 @@ def check-env [description: string, --fix, --debug] {
     tip: $FIX_TIP,
     status: $STATUS.ERROR,
   }
-  if $debug { print -n (char nl); hr-line -c grey66; print ($env.TERMIX_DIR? | default '') }
+  if $debug { show-debug ($env.TERMIX_DIR? | default '') }
   if 'TERMIX_DIR' not-in $env or not ($env.TERMIX_DIR | path exists) {
     $result.message = 'TERMIX_DIR not set or invalid'
     return $result
@@ -69,7 +70,7 @@ def check-config [description: string, --fix, --debug] {
     tip: $FIX_TIP,
     status: $STATUS.ERROR,
   }
-  if $debug { print -n (char nl); hr-line -c grey66; print $nu.default-config-dir }
+  if $debug { show-debug $nu.default-config-dir }
   if $fix and not ($nu.default-config-dir | path exists) { mkdir $nu.default-config-dir }
   if not ($nu.default-config-dir | path exists) {
     $result.message = $'($nu.default-config-dir) dir does not exist'
@@ -93,8 +94,7 @@ def check-plugins [description: string, --fix, --debug] {
   let versionMatch = $allPlugins | all {|it| ($it | get 'metadata.version') == $nuVersion }
   let pluginExists = $allPlugins | any {|it| $it.filename | path exists }
   if $debug {
-    print -n (char nl); hr-line -c grey66
-    { nuVersion: $nuVersion, allPlugins: $allPlugins } | table -e | print
+    show-debug { nuVersion: $nuVersion, allPlugins: $allPlugins }
   }
   if $versionMatch and $pluginExists { return { status: $STATUS.OK } }
   $result.message = 'Plugins not found or version mismatch'
@@ -112,7 +112,7 @@ def check-macOS [description: string, --fix, --debug] {
     status: $STATUS.WARN,
   }
   let macOSVersion = sys host | get os_version
-  if $debug { print -n (char nl); hr-line -c grey66; print $macOSVersion }
+  if $debug { show-debug $macOSVersion }
   if ($macOSVersion | split row . | first | into int) < 13 {
     $result.message = 'macOS outdated'
     return $result
@@ -135,12 +135,28 @@ def check-bin [description: string, --fix, --debug] {
     if (is-lower-ver ($current | get $it) ($latest | get $it)) { $acc ++ [$it] }
   }
   if $debug {
-    print -n (char nl); hr-line -c grey66
-    { current: $current, latest: $latest, outdated: $outdated } | table -e | print
+    show-debug { current: $current, latest: $latest, outdated: $outdated }
   }
   if ($outdated | is-empty) { return { status: $STATUS.OK } }
   if $fix { upgrade-tool --all }
   $result.message = $'Outdated binary dependencies: ($outdated | str join ", ")'
+  $result
+}
+
+# Check termix-nu version
+def check-termix [description: string, --fix, --debug] {
+  const FIX_TIP = '请通过(ansi g) t upgrade -a (ansi reset)进行升级, 并重启终端'
+  print -n $description
+  mut result = {
+    tip: $FIX_TIP,
+    status: $STATUS.WARN,
+  }
+  let current = get-conf version
+  let latest = do -i { git pull --tags --force | ignore; (git tag -l --sort=-v:refname | lines | select 0).0 }
+  if $debug { show-debug { current: $current, latest: $latest } }
+  if not (is-lower-ver $current $latest) { return { status: $STATUS.OK } }
+  if $fix { upgrade-tool }
+  $result.message = $'Termix-nu outdated, current: ($current), latest: ($latest)'
   $result
 }
 
@@ -158,7 +174,7 @@ def check-alias [description: string, --fix, --debug] {
     } catch {
       which t | get -i type?.0? | default 'NOT_EXIST'
     }
-  if $debug { print -n (char nl); hr-line -c grey66; print $'Type of `t`: ($typeT)' }
+  if $debug { show-debug $'Type of `t`: ($typeT)' }
   if $typeT == 'NOT_EXIST' {
     $result.message = 't alias not found'
     return $result
@@ -188,3 +204,6 @@ def show-result [] {
   $in | select status message? tip | print
   print -n (char nl)
 }
+
+# Show debug information
+def show-debug [data] { print -n (char nl); hr-line -c grey66; $data | table -e | print  }
