@@ -15,6 +15,9 @@ minNuVer = '0.100.0'
 # Min just version required to run termix-nu commands
 minJustVer = '1.37.0'
 
+# Min @terminus/t-package-tools version required to sync terp assets
+minPkgToolVer = '0.5.0'
+
 # 新增的二开标签备注
 redevTagComment = 'This is a release tag'
 
