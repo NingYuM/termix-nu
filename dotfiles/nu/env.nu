@@ -3,10 +3,10 @@
 # version = 0.100.0
 
 # ----------------------- Begin customization -----------------------
+$env.GPG_TTY = (tty)
 $env.VOLTA_HOME = $'($env.HOME)/.volta'
 $env.PNPM_HOME = '/Users/hustcer/Library/pnpm'
 $env.HOMEBREW_BOTTLE_DOMAIN = 'https://mirrors.ustc.edu.cn/homebrew-bottles/bottles'
-$env.GPG_TTY = (tty)
 
 # To add entries to PATH (on Windows you might use Path), you can use the following pattern:
 # $env.PATH = ($env.PATH | split row (char esep) | prepend '/some/path')
@@ -20,18 +20,17 @@ $env.GPG_TTY = (tty)
 $env.PATH = (
   $env.PATH
     | split row (char esep)
-    | prepend '/usr/local/opt/curl/bin'
     | prepend $env.PNPM_HOME
-    | prepend $'($env.VOLTA_HOME)/bin'
     | prepend '/usr/local/bin'
     | prepend '/opt/homebrew/bin'
-    | prepend '/usr/local/opt/ruby/bin'
-    | prepend $'($env.HOME)/.cargo/bin'
-    | prepend '/Users/hustcer/.moon/bin'
     | prepend '/Library/TeX/texbin'
+    | prepend $'($env.VOLTA_HOME)/bin'
+    | prepend '/usr/local/opt/ruby/bin'
+    | prepend $'($env.HOME)/.bun/bin'
+    | prepend $'($env.HOME)/.moon/bin'
+    | prepend $'($env.HOME)/.cargo/bin'
     | append `/Applications/Ghostty.app/Contents/MacOS/`
 )
-$env.PATH = ($env.PATH | uniq)
 
 if not (which fnm | is-empty) {
   ^fnm env --json | from json | load-env
