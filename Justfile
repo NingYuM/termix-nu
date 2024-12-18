@@ -130,7 +130,7 @@ art *OPTIONS: _setup _setup_fzf
 
 # 检查 termix-nu 的配置问题，并尝试修复
 [group('-- Common  --')]
-doctor *OPTIONS:
+doctor *OPTIONS: _termix_check
   @overlay use {{ join(_termix, 'actions', 'doctor.nu') }}; \
     termix-doctor {{OPTIONS}}
 

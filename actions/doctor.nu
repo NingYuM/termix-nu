@@ -15,7 +15,7 @@
 #   [ ] Checking termix-nu version
 #   [ ] Checking package-tools version
 #   [ ] Erda User name and password check
-#   [ ] `t` alias check
+#   [x] `t` alias check
 
 use upgrade.nu [upgrade-tool]
 use setup.nu [get-versions, get-latest-versions]
@@ -37,6 +37,7 @@ export def termix-doctor [
   check-plugins 'Checking plugins ...'        --fix=$fix --debug=$debug | show-result
   check-macOS 'Checking macOS version ...'    --fix=$fix --debug=$debug | show-result
   check-bin 'Checking dependency version ...' --fix=$fix --debug=$debug | show-result
+  # check-alias 'Checking `t` alias ...'      --fix=$fix --debug=$debug | show-result
 }
 
 # Check TERMIX_DIR environment variable
@@ -141,6 +142,28 @@ def check-bin [description: string, --fix, --debug] {
   if $fix { upgrade-tool --all }
   $result.message = $'Outdated binary dependencies: ($outdated | str join ", ")'
   $result
+}
+
+# Check `t` alias
+def check-alias [description: string, --fix, --debug] {
+  const FIX_TIP = '请为 termix-nu 设置 `t` 别名'
+  print -n $description
+  mut result = {
+    tip: $FIX_TIP,
+    status: $STATUS.WARN,
+  }
+  let typeT = try {
+      # FIXME: This command may not work due to the shell havn't sourced yet.
+      ^$env.SHELL -c 'type -t t 2>/dev/null || echo "NOT_EXIST"'
+    } catch {
+      which t | get -i type?.0? | default 'NOT_EXIST'
+    }
+  if $debug { print -n (char nl); hr-line -c grey66; print $'Type of `t`: ($typeT)' }
+  if $typeT == 'NOT_EXIST' {
+    $result.message = 't alias not found'
+    return $result
+  }
+  { status: $STATUS.OK }
 }
 
 # Register Nushell plugins
