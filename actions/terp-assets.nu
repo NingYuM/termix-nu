@@ -37,7 +37,7 @@
 #   t ta transfer all --from dev --to ttt0 --dest-store oss --quiet
 #   t ta transfer all --from foran --to fs-test --dest-store fsmio
 
-use ../utils/common.nu [ECODE, is-installed, hr-line, get-tmp-path, compare-ver, FZF_DEFAULT_OPTS, FZF_THEME, _TIME_FMT]
+use ../utils/common.nu [ECODE, is-installed, hr-line, get-conf, get-tmp-path, compare-ver, FZF_DEFAULT_OPTS, FZF_THEME, _TIME_FMT]
 
 const KEY_MAPPING = $"(ansi grey66)\(Space: Select, a: Select All, ESC/q: Quit, Enter: Confirm\)(ansi reset)"
 const JSON_ENTRY = 'latest.json'
@@ -63,7 +63,6 @@ const MOD_DESC = {
 
 # Don't validate module names by default
 const VALIDATE_MODULES = '0'
-const PKG_TOOLS_VER = '0.5.1'
 
 # Download TERP static assets or transfer assets to other path of the specified cloud storage
 export def 'terp assets' [
@@ -305,9 +304,10 @@ def pre-check [
     exit $ECODE.MISSING_BINARY
   }
   let ver = package-tools -v
-  let compVer = compare-ver $ver $PKG_TOOLS_VER
+  let minPkgToolsVer = get-conf minPkgToolVer
+  let compVer = compare-ver $ver $minPkgToolsVer
   if $compVer < 0 {
-    print $'Only package-tools (ansi r)($PKG_TOOLS_VER)(ansi reset) or above is supported. Please reinstall it by:'
+    print $'Only package-tools (ansi r)($minPkgToolsVer)(ansi reset) or above is supported. Please reinstall it by:'
     print $'(ansi g)npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io (ansi reset)(char nl)'
     exit $ECODE.CONDITION_NOT_SATISFIED
   }
