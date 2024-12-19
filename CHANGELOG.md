@@ -1,6 +1,48 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.85.0 - 2024-12-19
+
+**Bug Fixes**
+
+- Fix table display mode for Nu v0.101.0
+- Fix `t emp` command add staff status checking
+- Fix `t git-stat` command for Nu v0.101.0
+- Fix `t git-branch` when i:d.toml does not exist
+- Fix permission error of `t nu-use-nightly` command
+- Fix `t nu-use-nightly` for Windows OS
+
+**Documentation**
+
+- Update README.md
+
+**Features**
+
+- Add `pretty-oss` custom command to Nu config file
+- Add `--install` or `-i` flag for `t msync` command for Trantor 2.5.24.0930 and later
+- Add `install` field for UploadObjectToOSSTask of Trantor 2.5.24.0930 and later
+- Add `fzf` upload support for Github workflow
+- Add `run/setup-termix.sh` to setup termix-nu without homebrew
+- Make `t upgrade` works for users who install termix-nu by `setup.nu` or `setup-termix.sh`
+- Add `t doctor` command to diagnose and fix termix-nu settings
+- Add Nu config dir checking for `t doctor`
+- Add macOS version check for `t doctor` command
+- Add Nu,just,fzf outdated checking for `t doctor` command
+- Add termix-nu version check for `t doctor` command
+- Add package-tools version check for `t doctor` command
+
+**Miscellaneous Tasks**
+
+- Update `t emp` command monthly query output
+- Adapt to Nu v0.101 for `++` operator
+- Simplify Nushell config for Nu v0.101
+- Read minPkgToolVer from termix.toml for `t terp-assets` command
+- Update Nu env config
+
+**Deps**
+
+- Upgrade min `@terminus/t-package-tools` to v0.5.2
+
 ## v1.83.0 - 2024-11-13
 
 **Bug Fixes**

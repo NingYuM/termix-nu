@@ -49,10 +49,7 @@ export def termix-doctor [
 def check-env [description: string, --fix, --debug] {
   const FIX_TIP = $'请确保 (ansi g).env(ansi reset) 文件存在并且其中的 (ansi g)TERMIX_DIR(ansi reset) 指向 termix-nu 根目录'
   print -n $description
-  mut result = {
-    tip: $FIX_TIP,
-    status: $STATUS.ERROR,
-  }
+  mut result = { tip: $FIX_TIP, status: $STATUS.ERROR }
   if $debug { show-debug ($env.TERMIX_DIR? | default '') }
   if 'TERMIX_DIR' not-in $env or not ($env.TERMIX_DIR | path exists) {
     $result.message = 'TERMIX_DIR not set or invalid'
@@ -70,10 +67,7 @@ def check-env [description: string, --fix, --debug] {
 def check-config [description: string, --fix, --debug] {
   const FIX_TIP = $"请通过(ansi g) t doctor --fix (ansi reset)修复, 并重启终端"
   print -n $description
-  mut result = {
-    tip: $FIX_TIP,
-    status: $STATUS.ERROR,
-  }
+  mut result = { tip: $FIX_TIP, status: $STATUS.ERROR }
   if $debug { show-debug $nu.default-config-dir }
   if ($nu.default-config-dir | path exists) { return { status: $STATUS.OK } }
   if $fix { mkdir $nu.default-config-dir; check-config 'Recheck .. ' | show-result; return }
@@ -85,10 +79,7 @@ def check-config [description: string, --fix, --debug] {
 def check-plugins [description: string, --fix, --debug] {
   const FIX_TIP = $"请通过(ansi g) nu -c 'rm $nu.plugin-path' (ansi reset)或(ansi g) t doctor --fix (ansi reset)修复, 并重启终端"
   print -n $description
-  mut result = {
-    tip: $FIX_TIP,
-    status: $STATUS.ERROR,
-  }
+  mut result = { tip: $FIX_TIP, status: $STATUS.ERROR }
   if not ($nu.plugin-path | path exists) { register-plugins }
   let plugins = open $nu.plugin-path
   let nuVersion = $plugins.nushell_version
@@ -109,10 +100,7 @@ def check-macOS [description: string, --fix, --debug] {
   if $nu.os-info.name != 'macos' { return }
   const FIX_TIP = '建议升级到最新版本的 macOS'
   print -n $description
-  mut result = {
-    tip: $FIX_TIP,
-    status: $STATUS.WARN,
-  }
+  mut result = { tip: $FIX_TIP, status: $STATUS.WARN }
   let macOSVersion = sys host | get os_version
   if $debug { show-debug $macOSVersion }
   if ($macOSVersion | split row . | first | into int) < 13 {
@@ -126,10 +114,7 @@ def check-macOS [description: string, --fix, --debug] {
 def check-bin [description: string, --fix, --debug] {
   const FIX_TIP = $"请通过(ansi g) t upgrade -a (ansi reset)进行升级, 并重启终端"
   print -n $description
-  mut result = {
-    tip: $FIX_TIP,
-    status: $STATUS.WARN,
-  }
+  mut result = { tip: $FIX_TIP, status: $STATUS.WARN }
   let current = get-versions
   let latest = get-latest-versions
   # Get outdated binary dependencies
@@ -147,12 +132,10 @@ def check-bin [description: string, --fix, --debug] {
 
 # Check termix-nu version
 def check-termix [description: string, --fix, --debug] {
+  cd $env.TERMIX_DIR
   const FIX_TIP = $'请通过(ansi g) t upgrade -a (ansi reset)进行升级, 并重启终端'
   print -n $description
-  mut result = {
-    tip: $FIX_TIP,
-    status: $STATUS.WARN,
-  }
+  mut result = { tip: $FIX_TIP, status: $STATUS.WARN }
   let current = get-conf version
   let latest = do -i { git pull --tags --force | ignore; (git tag -l --sort=-v:refname | lines | select 0).0 }
   if $debug { show-debug { current: $current, latest: $latest } }
@@ -167,10 +150,7 @@ def check-pkg-tool [description: string, --fix, --debug] {
   if not (is-installed package-tools) { return }
   const FIX_TIP = $'请通过(ansi g) npm i -g @terminus/t-package-tools@latest --registry ($REGISTRY) (ansi reset)进行升级'
   print -n $description
-  mut result = {
-    tip: $FIX_TIP,
-    status: $STATUS.WARN,
-  }
+  mut result = { tip: $FIX_TIP, status: $STATUS.WARN }
   let current = package-tools --version
   let latest = http get $'($REGISTRY)/@terminus/t-package-tools' | get dist-tags.latest
   if $debug { show-debug { current: $current, latest: $latest } }
@@ -184,10 +164,7 @@ def check-pkg-tool [description: string, --fix, --debug] {
 def check-alias [description: string, --fix, --debug] {
   const FIX_TIP = '请为 termix-nu 设置 `t` 别名'
   print -n $description
-  mut result = {
-    tip: $FIX_TIP,
-    status: $STATUS.WARN,
-  }
+  mut result = { tip: $FIX_TIP, status: $STATUS.WARN }
   let typeT = try {
       # FIXME: This command may not work due to the shell havn't sourced yet.
       ^$env.SHELL -c 'type -t t 2>/dev/null || echo "NOT_EXIST"'
