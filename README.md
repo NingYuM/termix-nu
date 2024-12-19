@@ -1293,7 +1293,7 @@ alias main = dingtalk notify
 
 - 资源摘要查看：`terp-assets detect --from <from>`
 - 资源下载：`terp-assets download <modules> --from <from> --to <to>`
-- 资源同步：`terp-assets transfer <modules> --from <from> --to <to> --dest-store <store>`，资源同步时会先下载然后再上传，实际同步操作的时候不需要单独执行下载操作。资源上传需要在本机安装 `@terminus/t-package-tools`, 执行 `npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io` 即可(Node.js 建议 v18 或者以上版本)，版本不低于 `0.5.0`;
+- 资源同步：`terp-assets transfer <modules> --from <from> --to <to> --dest-store <store>`，资源同步时会先下载然后再上传，实际同步操作的时候不需要单独执行下载操作。资源上传需要在本机安装 `@terminus/t-package-tools`, 执行 `npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io` 即可(Node.js 建议 v18 或者以上版本)，版本不低于 `0.5.2`;
 - 资源回滚：`terp-assets revert <modules> --to <to>`, 资源回滚只能针对单个模块进行操作，不支持多个模块批量回滚，而且如果资源存储在 OSS 上，需要先在本机安装 `ossutil` 工具，如果资源存储在 `minio` 之类的云存储上，需要先在本机安装 `mc` 工具，因为回滚到过程中需要使用这些工具直接对云存储进行操作(在回滚到过程中也会提示安装对应的工具)。另外在进行回滚操作的过程中需要选择回滚的静态资源版本所以需安装 `fzf` 工具。BTW, 回滚操作会留痕，会记录下执行回滚操作的人、时间及模块等信息，方便排查问题。
 
 **命令别名**: `terp-assets` 的别名为 `ta`
