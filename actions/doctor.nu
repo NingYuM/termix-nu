@@ -14,7 +14,7 @@
 #   [√] Checking fzf --version
 #   [√] Checking termix-nu version
 #   [√] Checking package-tools version
-#   [ ] Erda User name and password check
+#   [?] Erda User name and password check
 #   [x] `t` alias check
 
 use upgrade.nu [upgrade-tool]
@@ -47,7 +47,7 @@ export def termix-doctor [
 
 # Check TERMIX_DIR environment variable
 def check-env [description: string, --fix, --debug] {
-  const FIX_TIP = '请确保 .env 文件存在并且其中的 TERMIX_DIR 指向 termix-nu 根目录'
+  const FIX_TIP = $'请确保 (ansi g).env(ansi reset) 文件存在并且其中的 (ansi g)TERMIX_DIR(ansi reset) 指向 termix-nu 根目录'
   print -n $description
   mut result = {
     tip: $FIX_TIP,
@@ -75,12 +75,10 @@ def check-config [description: string, --fix, --debug] {
     status: $STATUS.ERROR,
   }
   if $debug { show-debug $nu.default-config-dir }
-  if $fix and not ($nu.default-config-dir | path exists) { mkdir $nu.default-config-dir }
-  if not ($nu.default-config-dir | path exists) {
-    $result.message = $'($nu.default-config-dir) dir does not exist'
-    return $result
-  }
-  { status: $STATUS.OK }
+  if ($nu.default-config-dir | path exists) { return { status: $STATUS.OK } }
+  if $fix { mkdir $nu.default-config-dir; check-config 'Recheck .. ' | show-result; return }
+  $result.message = $'($nu.default-config-dir) dir does not exist'
+  $result
 }
 
 # Check Nushell plugins
@@ -101,8 +99,8 @@ def check-plugins [description: string, --fix, --debug] {
     show-debug { nuVersion: $nuVersion, allPlugins: $allPlugins }
   }
   if $versionMatch and $pluginExists { return { status: $STATUS.OK } }
+  if $fix { nu -c 'rm $nu.plugin-path'; register-plugins; check-plugins 'Recheck .. ' | show-result; return }
   $result.message = 'Plugins not found or version mismatch'
-  if $fix { nu -c 'rm $nu.plugin-path'; register-plugins }
   $result
 }
 
@@ -142,7 +140,7 @@ def check-bin [description: string, --fix, --debug] {
     show-debug { current: $current, latest: $latest, outdated: $outdated }
   }
   if ($outdated | is-empty) { return { status: $STATUS.OK } }
-  if $fix { upgrade-tool --all }
+  if $fix { upgrade-tool --all; check-bin 'Recheck .. ' | show-result; return }
   $result.message = $'Outdated binary dependencies: ($outdated | str join ", ")'
   $result
 }
@@ -159,7 +157,7 @@ def check-termix [description: string, --fix, --debug] {
   let latest = do -i { git pull --tags --force | ignore; (git tag -l --sort=-v:refname | lines | select 0).0 }
   if $debug { show-debug { current: $current, latest: $latest } }
   if not (is-lower-ver $current $latest) { return { status: $STATUS.OK } }
-  if $fix { upgrade-tool }
+  if $fix { upgrade-tool; check-termix 'Recheck .. ' | show-result; return }
   $result.message = $'Termix-nu outdated, current: ($current), latest: ($latest)'
   $result
 }
@@ -177,7 +175,7 @@ def check-pkg-tool [description: string, --fix, --debug] {
   let latest = http get $'($REGISTRY)/@terminus/t-package-tools' | get dist-tags.latest
   if $debug { show-debug { current: $current, latest: $latest } }
   if not (is-lower-ver $current $latest) { return { status: $STATUS.OK } }
-  if $fix { upgrade-package-tools }
+  if $fix { upgrade-package-tools; check-pkg-tool 'Recheck .. ' | show-result; return }
   $result.message = $'Package-tools outdated, current: ($current), latest: ($latest)'
   $result
 }
