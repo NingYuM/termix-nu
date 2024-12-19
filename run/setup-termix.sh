@@ -53,9 +53,27 @@ function install_or_update() {
   local platform=$2
   echo "Installing or updating $bin for $platform ..."
   local targetArch=$(get_target_arch $platform)
-  local assetName=$(wget -qO - $BASE_URL/latest.json | grep name | cut -d '"' -f 4 | grep ${targetArch})
+
+  # Use wget or curl to get the latest release asset name for the specified platform
+  local assetName
+  if is_installed curl; then
+    assetName=$(curl -s $BASE_URL/latest.json | grep name | cut -d '"' -f 4 | grep ${targetArch})
+  elif is_installed wget; then
+    assetName=$(wget -qO - $BASE_URL/latest.json | grep name | cut -d '"' -f 4 | grep ${targetArch})
+  else
+    echo "Error: Neither wget nor curl is installed. Please install one of them and try again."
+    exit 1
+  fi
+
   local pkg="/tmp/$assetName"
-  wget -O $pkg $BASE_URL/$assetName
+
+  # Use wget or curl to download the package for installation
+  if is_installed wget; then
+    wget -O $pkg $BASE_URL/$assetName
+  else
+    curl -L -o $pkg $BASE_URL/$assetName
+  fi
+
   if [ -w $DEST_DIR ]; then
     tar xzf $pkg -C $DEST_DIR
     mv $DEST_DIR/nu-*/nu* $DEST_DIR/
