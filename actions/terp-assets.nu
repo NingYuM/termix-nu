@@ -263,9 +263,8 @@ def get-modules [modules?: string, --latest-meta: record, --action: string] {
 def get-latest-meta [from: string] {
   let isFullUrl = $from | str ends-with $'/($JSON_ENTRY)'
   let fromUrl = if $isFullUrl { $from } else { $'($ENDPOINT)/fe-resources/($from)/($JSON_ENTRY)' }
-  let mount = $fromUrl
-    | parse $'{base_url}/fe-resources/{mount}/($JSON_ENTRY)' | get mount | get 0
   let latest = http get $fromUrl
+  let mount = $latest | values | first | get prefix | str replace fe-resources/ ''
   let modules = $latest | columns
   let validModules = {|mods, validMods| $mods | all {|m| $m in $validMods } }
   let validateModules = if (($env.VALIDATE_MODULES? | default $VALIDATE_MODULES) == '0') { false } else { true }
