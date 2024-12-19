@@ -265,7 +265,8 @@ export def get-dot-conf [key: string, default?: any] {
 # Set the value of key to ~/.termix-nu/.termix-conf
 export def set-dot-conf [key: string, value: any] {
   let TERMIX_CONF = $'(get-tmp-path)/.termix-conf'
-  open $TERMIX_CONF | from json
+  let conf = if ($TERMIX_CONF | path exists) { open $TERMIX_CONF | from json } else { {} }
+  $conf
     | upsert $key $value | to json
     | save -rf $TERMIX_CONF
 }
