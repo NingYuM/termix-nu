@@ -3,7 +3,6 @@
 # Created: 2024/12/11 09:39:56
 # Description: Setup termix-nu on macOS or Linux.
 
-LATEST_VERSION='0.100.0'
 DEST_DIR='/usr/local/bin/'
 BASE_URL='https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/open-tools/nushell'
 
@@ -35,6 +34,20 @@ function get_versions() {
   echo $version
 }
 
+# Use wget or curl to get the latest binary version
+function get_latest_version() {
+  local latest
+  if is_installed curl; then
+    latest=$(curl -s $BASE_URL/version.json)
+  elif is_installed wget; then
+    latest=$(wget -qO - $BASE_URL/version.json)
+  else
+    echo "Error: Neither wget nor curl is installed. Please install one of them and try again."
+    exit 1
+  fi
+  echo $latest
+}
+
 # Get target package name keyword for the specified platform
 get_target_arch() {
   local platform=$1
@@ -51,6 +64,7 @@ get_target_arch() {
 function install_or_update() {
   local bin=$1
   local platform=$2
+  local version=$3
   echo "Installing or updating $bin for $platform ..."
   local targetArch=$(get_target_arch $platform)
 
@@ -89,13 +103,13 @@ function install_or_update() {
     fi
   fi
   rm $pkg
-  echo "Successfully installed $bin with version $LATEST_VERSION"
+  echo "Successfully installed $bin with version $version"
 }
 
 # Install or update nu binary for the current platform
 function main() {
   current=$(get_versions)
-  latest=$LATEST_VERSION
+  latest=$(get_latest_version)
   platform="$(uname -s)_$(uname -m)"
 
   echo "Current Nu version: $current"
@@ -104,8 +118,8 @@ function main() {
   echo " Install Directory: $DEST_DIR"
 
   for bin in nu; do
-    if is_lower_ver ${current[$bin]} $LATEST_VERSION; then
-      install_or_update $bin $platform
+    if is_lower_ver ${current[$bin]} $latest; then
+      install_or_update $bin $platform $latest
     else
       echo "$bin is already updated ..."
     fi

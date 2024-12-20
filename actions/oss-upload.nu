@@ -122,5 +122,6 @@ def sync-latest-assets [
   }
 
   $latestMeta | save $'($name)/latest.json'
+  $assetMeta.tag_name | str trim -c 'v' | save $'($name)/version.json'
   ossutil cp --recursive $name $toolPath
 }
