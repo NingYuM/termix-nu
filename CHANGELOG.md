@@ -18,7 +18,7 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
-- Meke `t ta detect` support urls without `/fe-resources/` in it
+- Make `t ta detect` support urls without `/fe-resources/` in it
 - Add `pretty-oss` custom command to Nu config file
 - Add `--install` or `-i` flag for `t msync` command for Trantor 2.5.24.0930 and later
 - Add `install` field for UploadObjectToOSSTask of Trantor 2.5.24.0930 and later
