@@ -35,7 +35,7 @@ brew upgrade nushell just
 
 **提示：**
 
-如果由于系统版本太低的原因导致安装失败，或者 `brew` 安装太慢，或者你使用 Linux 系统，无法使用 `brew`，可以通过：`bash run/setup-termix.sh` 进行安装，该脚本会自动安装 `nushell`, `just`, `fzf` 等后续可能会用到的二进制文件。而且这种安装方式速度非常快！
+如果由于系统版本太低的原因导致安装失败，或者 `brew` 安装太慢，或者你使用 Linux 系统，无法使用 `brew`，可以通过：`bash run/setup-termix.sh` 进行安装，该脚本会自动安装 `nushell`, `just`, `fzf` 等后续可能会用到的二进制文件到 `/usr/local/bin/` 目录（如果你想安装到其他目录，可以传参，比如：`bash run/setup-termix.sh /usr/bin/`），而且该命令直接从 OSS 上下载安装，速度非常快！
 
 ### Install nushell and just on Windows
 
