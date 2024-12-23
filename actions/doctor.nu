@@ -119,7 +119,7 @@ def check-bin [description: string, --fix, --debug] {
   let latest = get-latest-versions
   # Get outdated binary dependencies
   let outdated = $current | columns | reduce -f [] {|it, acc|
-    if (is-lower-ver ($current | get $it) ($latest | get $it)) { $acc ++ [$it] }
+    if (is-lower-ver ($current | get $it) ($latest | get $it)) { ($acc | default []) ++ [$it] }
   }
   if $debug {
     show-debug { current: $current, latest: $latest, outdated: $outdated }
