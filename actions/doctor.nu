@@ -166,7 +166,7 @@ def check-alias [description: string, --fix, --debug] {
   print -n $description
   mut result = { tip: $FIX_TIP, status: $STATUS.WARN }
   let typeT = try {
-      # FIXME: This command may not work due to the shell havn't sourced yet.
+      # FIXME: This command may not work due to the shell haven't sourced yet.
       ^$env.SHELL -c 'type -t t 2>/dev/null || echo "NOT_EXIST"'
     } catch {
       which t | get -i type?.0? | default 'NOT_EXIST'

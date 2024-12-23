@@ -17,6 +17,7 @@ words:
 - cicd
 - cicdid
 - cicds
+- clifmrc
 - cloc
 - cond
 - creatordate
@@ -60,15 +61,21 @@ words:
 - inexist
 - inexists
 - inkey
+- junegunn
 - Justfile
 - keybind
 - Lastday
+- lazygit
 - Lilex
 - linewise
 - mcfly
+- mconf
 - mdors
+- menv
+- millgrid
 - minio
 - mklink
+- mktemp
 - mmat
 - monokai
 - mountpoint
@@ -78,6 +85,7 @@ words:
 - MULTISHELL
 - musleabihf
 - navs
+- nopad
 - nucc
 - nudown
 - numstat
@@ -87,9 +95,11 @@ words:
 - oneline
 - OPENAPISESSION
 - ossutil
+- pageable
 - pkeyutl
 - pkgs
 - POSIX
+- precheck
 - psql
 - pubin
 - pwsh
@@ -116,6 +126,7 @@ words:
 - termix
 - termixrc
 - TERP
+- texbin
 - Tinacious
 - tinypng
 - titlebar
@@ -133,6 +144,7 @@ words:
 - WGPU
 - winget
 - worktime
+- wqtest
 - yazi
 - zoxide
 ignorePaths:
@@ -143,3 +155,5 @@ ignorePaths:
 - rio.toml
 - run/
 - tmp/
+- dotfiles/clifmrc
+- dotfiles/kitty.conf
