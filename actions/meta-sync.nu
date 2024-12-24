@@ -466,7 +466,7 @@ def create-snapshot [
     exit $ECODE.AUTH_FAILED
   }
   if ($resp.success? | is-empty) or (not $resp.success?) {
-    print $'Failed to create snapshot, error: ($resp.err)'
+    print $'Failed to create snapshot, error: ($resp.error)'
     exit $ECODE.SERVER_ERROR
   }
   $resp.data.taskId
