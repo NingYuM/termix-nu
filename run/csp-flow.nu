@@ -218,7 +218,7 @@ export def show-resources [] {
     let description = open package.json | get description
     let cost = $CSP_APP_BUILD_COST | get $app
     let meta = { app: $app, ...$resource, packages: $packages, cost: $cost, description: $description }
-    $resources = $resources ++ $meta
+    $resources = $resources ++ [$meta]
   }
   print $resources
   let total = $resources | reduce --fold 0 {|it, acc| $acc + $it.packages }
