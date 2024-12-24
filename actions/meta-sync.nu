@@ -425,6 +425,7 @@ def handle-import-metadata [
   while $stats.success + $stats.failed < $stats.total {
     if $detail.status == 'Failed' { break }
     $detail = (fetch-task-detail $taskId $dest.host $auth)
+    # $detail | select -i taskName taskRunId status progress result endAt finishedAt | table -e | print
     $stats = $detail.progress
     sleep $QUERY_INTERVAL
     print -n $POLL_TICK_CHAR
