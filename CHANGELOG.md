@@ -1,6 +1,13 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.85.1 - 2024-12-24
+
+**Bug Fixes**
+
+- Fix possible `t doctor` error
+- Fix create-snapshot error check for meta data syncing
+
 ## v1.85.0 - 2024-12-19
 
 **Bug Fixes**
