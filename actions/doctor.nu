@@ -85,7 +85,7 @@ def check-plugins [description: string, --fix, --debug] {
   let nuVersion = $plugins.nushell_version
   let allPlugins = $plugins | get plugins | select filename metadata.version
   let versionMatch = $allPlugins | all {|it| ($it | get 'metadata.version') == $nuVersion }
-  let pluginExists = $allPlugins | any {|it| $it.filename | path exists }
+  let pluginExists = $allPlugins | all {|it| $it.filename | path exists }
   if $debug {
     show-debug { nuVersion: $nuVersion, allPlugins: $allPlugins }
   }
