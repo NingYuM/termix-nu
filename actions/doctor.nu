@@ -42,6 +42,7 @@ export def termix-doctor [
   check-bin 'Checking dependency version ...' --fix=$fix --debug=$debug | show-result
   check-termix 'Checking termix version ...'  --fix=$fix --debug=$debug | show-result
   check-pkg-tool 'Checking package-tools ...' --fix=$fix --debug=$debug | show-result
+  if $fix { print -n (char nl); print $'(ansi g)如果执行 `--fix` 后仍有问题可以尝试重启终端(ansi reset)' }
   # check-alias 'Checking `t` alias ...'      --fix=$fix --debug=$debug | show-result
 }
 
