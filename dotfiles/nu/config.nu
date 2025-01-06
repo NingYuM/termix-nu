@@ -622,7 +622,7 @@ $env.config.hooks = {
       }
     }],
     RELOAD_NU: [{
-      condition: {|before, after|  $after }
+      condition: {|before, after|  $after | into bool }
       code: "$env.RELOAD_NU = false; source $nu.env-path;source $nu.config-path;print 'Reloaded Nu Config'"
     }]
   }
