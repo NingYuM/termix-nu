@@ -111,6 +111,7 @@ terp-assets *OPTIONS: _setup
     terp assets {{OPTIONS}}
 
 # Preview TERP assets status
+[private]
 [group('-- Frontend --')]
 detect-assets *OPTIONS: _setup _setup_fzf
   @overlay use {{ join(_termix, 'actions', 'check-assets.nu') }}; \
