@@ -40,8 +40,6 @@ export def get-latest-nightly-build [
       | get name
       | where $it !~ 'msi'
       | where $it =~ $target
-      | parse --regex 'nu-\d\.\d+\.\d-(?<arch>[a-zA-Z0-9-_]*)\..*'
-      | get arch
 
   let arch = match ($matches | length) {
     0 => {
@@ -79,9 +77,10 @@ export def get-latest-nightly-build [
   let target = $target | first
 
   let build = $target.name
-      | parse --regex 'nu-(?<version>\d\.\d+\.\d)-(?<arch>[a-zA-Z0-9-_]*)\.(?<extension>.*)'
-      | first
-      | insert hash { $latest.tag_name | parse 'nightly-{hash}' | get 0.hash }
+      | wrap name
+      | insert hash { $latest.tag_name | parse '{version}-nightly.{build}+{hash}' | get 0.hash }
+      | insert version { $latest.tag_name | parse '{version}-nightly.{build}+{hash}' | get 0.version }
+      | insert extension { $target.name | path parse | get extension }
 
   let destDir = mktemp -d | path join 'nu-nightly'
   if not ($destDir | path exists) { mkdir $destDir }
@@ -96,7 +95,7 @@ export def get-latest-nightly-build [
   print (ls $destDir)
 
   match $build.extension {
-    'tar.gz' => {
+    'gz' => {
       cd $destDir
       tar xvf nu-*.tar.gz
       rm nu-*.tar*gz; cd ..
