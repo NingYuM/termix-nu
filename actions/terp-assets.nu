@@ -452,7 +452,7 @@ def update-transfer-meta [latestMeta: record] {
   let syncMeta = { syncBy: $syncBy, syncFrom: $syncFrom, syncAt: $syncAt }
   mut ns = open namespace.json | upsert metadata {|it| $it.metadata? | default {} | merge $syncMeta }
   # Keep module deprecated status
-  if ((($latestMeta.latest | get $ns.namespace).deprecated? | into string) == 'true') { $ns.deprecated = true }
+  if ((($latestMeta.latest | get $ns.namespace).deprecated? | default false | into string) == 'true') { $ns.deprecated = true }
   $ns | save -f namespace.json
 }
 
