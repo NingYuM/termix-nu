@@ -34,7 +34,12 @@ const REGISTRY = 'https://registry.npm.terminus.io'
 export def termix-doctor [
   --fix(-f),    # Try to fix the problem automatically
   --debug(-d),  # Show debug information
+  --fix-nu,     # 修复 Nushell 配置问题，通常情况下使用 --fix 即可, 若无效再试试这个
 ] {
+  if $fix_nu {
+    print 'Try to fix Nushell config ...'
+    nu -c 'rm $nu.plugin-path'; register-plugins
+  }
   check-env 'Checking $TERMIX_DIR ...'        --fix=$fix --debug=$debug | show-result
   check-config 'Checking Nu config ...'       --fix=$fix --debug=$debug | show-result
   check-plugins 'Checking plugins ...'        --fix=$fix --debug=$debug | show-result
