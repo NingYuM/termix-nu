@@ -185,7 +185,7 @@ def ua [] {
 def nun [] {
   http get https://api.github.com/repos/nushell/nightly/releases
     | sort-by -r created_at
-    | select name tag_name id created_at
+    | select name created_at assets.name.0
 }
 
 # Pretty print the OSS list from oss-index
