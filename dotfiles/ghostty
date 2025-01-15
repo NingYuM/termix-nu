@@ -20,23 +20,25 @@ background-blur-radius = 30
 unfocused-split-opacity = 0.95
 
 #-----------Fonts Settings-----------#
-font-size = 20
+font-size = 20.5
+font-thicken = true
 font-style = Regular
 font-feature = +calt
 font-feature = +dlig
 font-feature = +liga
 # Does not work on macOS?
-font-variation = wght=200
-font-family = Fira Code
-font-family = Lilex
-font-family = Cascadia Code
-font-family = Sarasa Term SC
-font-family = JetBrains Mono
-font-family = Source Code Pro
-font-family = Hack Nerd Font Mono
-font-thicken = false
-window-title-font-family = Fira Code
+font-variation = wght=300
 grapheme-width-method = unicode
+# font-family = Cascadia Code
+# font-family = Sarasa Term SC
+# font-family = JetBrains Mono
+# font-family = Hack Nerd Font Mono
+# font-family = Source Code Pro
+# font-family = Fira Code
+font-family = Lilex ExtraLight
+window-title-font-family = Fira Code
+# 中文字体
+font-codepoint-map = U+4e00-U+9fa5=Sarasa Term SC XLight
 
 # window-decoration = false
 gtk-titlebar = false
@@ -55,6 +57,7 @@ macos-non-native-fullscreen = false
 
 keybind = command+right=next_tab
 keybind = command+left=previous_tab
+# keybind = command+h=toggle_visibility
 keybind = command+shift+k=clear_screen
 keybind = command+ctrl+shift+v=new_split:down
 keybind = command+ctrl+shift+h=new_split:right
