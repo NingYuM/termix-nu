@@ -183,9 +183,20 @@ def ua [] {
 # `git tag -l | lines | filter { $in =~ nightly } | each { git tag -d $in }`
 # Show Nu nightly builds information
 def nun [] {
-  http get https://api.github.com/repos/nushell/nightly/releases
+  let current = nu --version
+  let nightly = http get https://api.github.com/repos/nushell/nightly/releases
     | sort-by -r created_at
     | select name created_at assets.name.0
+  let match = $nightly | where name =~ $current
+  print $'Current version:'; hr-line
+  $match | into record
+    | upsert hash {|it| $it.name | split row + | last }
+    | upsert version $current
+    | select version hash created_at name 'assets.name.0'
+    | print
+
+  print $'(char nl)All nightly versions:'
+  $nightly | print
 }
 
 # Pretty print the OSS list from oss-index
