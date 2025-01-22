@@ -20,6 +20,7 @@ export def git-remote-branch [
   --main-branch(-m): string,  # The base main branch to check merge status
 ] {
 
+  let start = date now
   $env.config.table.mode = 'light'
   cd $env.JUST_INVOKE_DIR
   let remoteUrl = git remote get-url $remote
@@ -34,23 +35,26 @@ export def git-remote-branch [
     print $'(char nl)Branches of (ansi gb)($repoName)(ansi reset) for remote ($remote)(char nl)'
   }
 
-  let basic = (
-    git ls-remote --heads --refs $remote
-      | lines
-      | par-each -k { str substring 52.. }
-      | wrap name
-      | upsert local { |it|  if (has-ref $it.name) { '   √' }}
-      | upsert author { |it| git show $'remotes/($remote)/($it.name)' -s --format='%an' | str trim }
-      | upsert merged { |it| $it.name | is-merged $remote --main-branch $mainBranch }
-      | upsert SHA {|it| do -i { git rev-parse $'($remote)/($it.name)' | str substring 0..<9 } }
-      | upsert last-commit { |it| git show $'remotes/($remote)/($it.name)' --no-patch --format=%ci | into datetime }
-  )
+  mut basic = git ls-remote --heads --refs $remote | lines | par-each -k { str substring 52.. } | wrap name
+
+  $basic = $basic | enumerate | par-each {|b|
+    update item (
+      $b.item |
+        | upsert local { |it|  if (has-ref $it.name) { '   √' }}
+        | upsert author { |it| git show $'remotes/($remote)/($it.name)' -s --format='%an' | str trim }
+        | upsert merged { |it| $it.name | is-merged $remote --main-branch $mainBranch }
+        | upsert SHA {|it| do -i { git rev-parse $'($remote)/($it.name)' | str substring 0..<9 } }
+        | upsert last-commit { |it| git show $'remotes/($remote)/($it.name)' --no-patch --format=%ci | into datetime }
+      )
+  } | get item
+
   if $clean {
     remove-remote-branches ($basic | where merged == '√' and name not-in $DEFAULT_KEEP_BRANCHES | sort-by last-commit | get name) $remote
     return
   }
   print (append-desc $basic)
-
+  let end = date now
+  print $'(char nl)Total time cost: ($end - $start)'
   if (not $show_tags) { exit $ECODE.SUCCESS }
 
   print $'Tags of (ansi gb)($repoName)(ansi reset) for remote ($remote)'; hr-line
