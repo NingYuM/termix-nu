@@ -2,6 +2,7 @@
 # Author: hustcer
 # Created: 2024/12/11 09:39:56
 # Description: Setup termix-nu on macOS or Linux.
+set -euo pipefail
 
 DEST_DIR='/usr/local/bin/'
 BASE_URL='https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/open-tools/nushell'

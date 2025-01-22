@@ -5,7 +5,7 @@ def rgba2rgb [red: int, green: int, blue: int, alpha: float] {
   let g = (($green * $alpha) + (255 * (1 - $alpha))) | math round
   let b = (($blue * $alpha) + (255 * (1 - $alpha))) | math round
   print -n '#'
-  [$r, $g, $b] | each { $in | fmt }
+  [$r, $g, $b] | each { $in | format number }
     | get lowerhex
     | str join
     | str replace -a '0x' ''
