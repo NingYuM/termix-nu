@@ -7,7 +7,7 @@
 #   t git-remote-branch origin -t
 
 use ../utils/git.nu [append-desc]
-use ../utils/common.nu [ECODE, has-ref hr-line windows?]
+use ../utils/common.nu [ECODE, has-ref, hr-line, windows?]
 
 # Creates a table listing the remote branches of
 # a git repository and the time of the last commit
@@ -26,13 +26,14 @@ export def git-remote-branch [
 
   let basic = (
     git ls-remote --heads --refs $remote
-    | lines
-    | par-each -k { str substring 52.. }
-    | wrap name
-    | upsert local { |it|  if (has-ref $it.name) { '   √' }}
-    | upsert author { |it| git show $'remotes/($remote)/($it.name)' -s --format='%an' | str trim }
-    | upsert SHA {|it| do -i { git rev-parse $'($remote)/($it.name)' | str substring 0..<9 } }
-    | upsert last-commit { |it| git show $'remotes/($remote)/($it.name)' --no-patch --format=%ci | into datetime }
+      | lines
+      | par-each -k { str substring 52.. }
+      | wrap name
+      | upsert local { |it|  if (has-ref $it.name) { '   √' }}
+      | upsert author { |it| git show $'remotes/($remote)/($it.name)' -s --format='%an' | str trim }
+      | upsert merged { |it| $it.name | is-merged $remote }
+      | upsert SHA {|it| do -i { git rev-parse $'($remote)/($it.name)' | str substring 0..<9 } }
+      | upsert last-commit { |it| git show $'remotes/($remote)/($it.name)' --no-patch --format=%ci | into datetime }
   )
   print (append-desc $basic)
 
@@ -48,6 +49,20 @@ export def git-remote-branch [
     | rename SHA tag
     | move tag --before SHA
     | upsert SHA { |it| str substring 0..<9 }
+}
+
+# 检查分支是否已合并到主分支（main/master）
+def is-merged [remote: string = 'origin'] {
+  let branch = $in
+  let mainBranch = if (has-ref master) { 'master' } else if (has-ref main) { 'main' } else { 'develop' }
+  # 获取远程分支和主分支的最新 commit
+  let mainCommit = git rev-parse $mainBranch
+  let branchCommit = git rev-parse $'($remote)/($branch)'
+  # 获取两个分支的共同祖先
+  let mergeBase = try { git merge-base $'($remote)/($branch)' $mainBranch } catch { '' }
+  # 如果共同祖先等于远程分支的 commit，或者主分支包含远程分支的 commit，说明远程分支已经被合并
+  # 即：远程分支是主分支的祖先 或者两个分支指向同一个提交
+  if ($mergeBase == $branchCommit) or ($mainCommit == $branchCommit) { '√' } else { '' }
 }
 
 # $env | transpose
