@@ -581,11 +581,6 @@ $env.config.color_config = (dark-theme)
 # Enable or disable the welcome banner at startup
 $env.config.show_banner = false
 
-$env.config.filesize = {
-  metric: true                # true => KB, MB, GB (ISO standard), false => KiB, MiB, GiB (Windows standard)
-  format: "auto"              # b, kb, kib, mb, mib, gb, gib, tb, tib, pb, pib, eb, eib, auto
-}
-
 $env.config.table = {
   mode: light                 # basic, compact, compact_double, light, thin, with_love, rounded, reinforced, heavy, none, other
   index_mode: always          # "always" show indexes, "never" show indexes, "auto" = show indexes when a table has "index" column
