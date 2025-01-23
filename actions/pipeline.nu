@@ -272,7 +272,7 @@ def query-latest-cicd [dest: string, --apps: string, --override: record, --show-
 }
 
 # 检查是否有正在执行的流水线，如果有则显示其概要信息并退出
-def check-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipeline: string] {
+def check-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipeline: string, --ignore-hash] {
   print $'Checking running CICDs for (ansi pb)($appName)(ansi reset) with (ansi g)($pipeline)(ansi reset) from (ansi g)($branch)(ansi reset) branch'
   let ci = (query-cicd $aid $appName $branch $erdaEnv $pipeline)
   if ($ci.data.total == 0) { return true }
@@ -280,7 +280,7 @@ def check-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
   # Update the remote-tracking branches to get the latest commit ID
   # git fetch origin $branch
   # Always use the remote commit id for checking, `str trim` is required here
-  let commitID = if (has-ref $'origin/($branch)') { git rev-parse $'origin/($branch)' | str trim } else { '' }
+  let commitID = if (has-ref $'origin/($branch)') and (not $ignore_hash) { git rev-parse $'origin/($branch)' | str trim } else { '' }
   # Possible pipeline status: Running,Success,Failed,StopByUser
   let running = ($ci.data.pipelines | where status == 'Running')
   # log 'latest' ($ci.data.pipelines | select id commit status)
@@ -515,6 +515,7 @@ export def main [
         let branch = $app.branch
         let appName = $app.appName
         let pipeline = $app.pipeline
+        let ignoreHash = $app.ignoreHash? | default false
         if ($app.lock? | default false) {
           $app.lockTip?
             | default $'Skip deploying app (ansi y)($appName)(ansi reset), because it is locked by the Admin.'
@@ -523,7 +524,7 @@ export def main [
         }
         # 检查是否有正在执行的流水线以及是否该 Commit 已经部署过
         if not $force {
-          if not (check-cicd $appid $appName $branch $app.env $pipeline) { continue }
+          if not (check-cicd $appid $appName $branch $app.env $pipeline --ignore-hash=$ignoreHash) { continue }
         }
         let cicdid = (create-cicd $appid $appName $branch $pipeline)
         run-cicd ($cicdid | into int) $appid $pid --watch=$watch
