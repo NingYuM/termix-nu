@@ -506,6 +506,8 @@ def select-target [candidates: record, --multiple] {
   rm -f $FZF_PREVIEW_FILE
   if ($selection | is-empty) { print $'(ansi grey66)Operation cancelled...(ansi reset)'; return }
   print $'You selected: (ansi pb)($selection | str join ,)(ansi reset)'
+  let confirm = input  $'Please input (ansi g)y(ansi reset) to confirm or (ansi g)other keys(ansi reset) to cancel: '
+  if $confirm != 'y' { print $'(ansi grey66)Operation cancelled...(ansi reset)'; return }
   $candidates | select ...$selection | values
 }
 
@@ -525,13 +527,13 @@ def get-batch-candidates [candidates: record] {
 export def main [
   operation: string,          # 目前支持两种操作类型，run 和 query, run 用于创建并执行 CICD, query 用于查询 CICD 执行结果
   dest?: string = 'dev',      # 当操作为 run 时必须指定，用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, query 时按需指定, 默认为 dev
-  --interactive(-I),          # 以交互式模式选择部署目标，支持模糊匹配
+  --interactive,              # 以交互式模式选择部署目标，支持模糊匹配
   --multiple(-m),             # 交互式模式下允许选择多个应用
   --list(-l),                 # 当操作为 run 时生效，用于列出所有可用的执行目标
   --watch(-w),                # 持续轮询并显示正在执行的流水线的详细信息
   --grep(-g): string,         # 仅在与 `-l` 一起使用时生效，从部署配置里面搜索name,alias或description里包含特定字符串的部署目标
   --force(-f),                # 当操作为 run 时生效，即便已经有正在运行的流水线或者已经部署过也会强制重新执行
-  --cid(-i): int,             # 当操作为 query 时生效，用于查询 CICD 执行结果，如果不传则查询最近 10 条流水线执行结果
+  --cid: int,                 # 当操作为 query 时生效，用于查询 CICD 执行结果，如果不传则查询最近 10 条流水线执行结果
   --apps(-a): string,         # 指定需要批量部署的应用，多个应用以英文逗号分隔
   --stop-by-id(-s): int,      # 当操作为 run 时生效，用于根据流水线ID停止对应的正在运行的流水线
   --override(-o): record,     # 覆盖部署配置里面的同名配置项
@@ -592,7 +594,7 @@ export def main [
 # 创建 Erda 流水线并执行，默认情况下会检查是否有流水线正在执行或者是否该 Commit 已经部署过，若有则停止并给予提示
 export def erda-deploy [
   dest?: string = 'dev',    # 用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, 默认为 dev
-  --interactive(-I),        # 以交互式模式选择部署目标，支持模糊匹配
+  --interactive(-i),        # 以交互式模式选择部署目标，支持模糊匹配
   --multiple(-m),           # 交互式模式下允许选择多个应用
   --list(-l),               # 列出所有可能的部署目标及应用信息
   --watch(-w),              # 执行流水线时持续轮询并显示该流水线各个 Stage 的详细执行信息
@@ -602,14 +604,18 @@ export def erda-deploy [
   --stop-by-id(-s): int,    # 根据流水线ID 停止对应的正在运行的流水线
   --override(-o): record,   # 覆盖部署配置里面的同名配置项
 ] {
-  main run $dest --apps $apps --force=$force --list=$list --watch=$watch --grep $grep --stop-by-id $stop_by_id --override=$override --interactive=$interactive --multiple=$multiple
+  (main run $dest
+    --apps $apps --force=$force --list=$list --watch=$watch --grep $grep
+    --stop-by-id $stop_by_id --override=$override --multiple=$multiple
+    --interactive=$interactive
+  )
 }
 
 # 根据流水线 ID 或目标环境查询流水线执行结果, 例如: 单应用: t dq 997636681239659; t dq test, 多应用: t dq dev -a all
 export def erda-query [
   dest?: string = 'dev',  # 用于指定流水线查询目标环境，如 dev, test, staging, prod 等, 默认为 dev
   --watch(-w),            # 持续轮询并显示指定流水线各个 Stage 的详细执行信息
-  --cid(-i): any,         # 用于通过流水线的执行 ID 查询 CICD 执行结果，如果指定该参数则忽略 dest 参数
+  --cid(-I): any,         # 用于通过流水线的执行 ID 查询 CICD 执行结果，如果指定该参数则忽略 dest 参数
   --apps(-a): string,     # 指定需要批量查询的应用，多个应用以","分隔，在多应用模式下必须指定(`all` 代表所有)，单应用模式忽略
   --override(-o): record, # 覆盖部署配置里面的同名配置项
 ] {
