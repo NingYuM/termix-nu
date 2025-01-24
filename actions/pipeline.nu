@@ -4,6 +4,7 @@
 # TODO:
 #  [✓] 执行流水线要求在仓库目录下，且要有 i 分支 & .termixrc 文件里面的配置正确
 #  [✓] `t dp -l` 列出所有可用的执行目标
+#  [✓] `t dp -I` 以交互式模式选择部署目标，支持模糊匹配和多选
 #  [✓] 查询流水线可以在任意目录下执行，不一定要在仓库目录下，只要流水线 ID 正确即可
 #  [✓] 根据流水线 ID 查询流水线执行结果
 #  [✓] 根据流水线 ID 终止对应的流水线
@@ -36,7 +37,7 @@
 #   t dp dev --apps app1,app2; t dp test -a all
 #   t dq dev --apps app1,app2; t dq test -a all
 
-use ../utils/common.nu [ECODE, has-ref, hr-line, log]
+use ../utils/common.nu [ECODE, has-ref, hr-line, log, FZF_DEFAULT_OPTS, FZF_THEME]
 use ../utils/erda.nu [ERDA_HOST, check-erda-envs, get-erda-auth, renew-erda-session, should-retry-req]
 
 const PIPELINE_POLLING_INTERVAL = 2sec
@@ -62,6 +63,7 @@ def check-pipeline-conf [pipeline: any] {
 # Try to load pipeline config variables from .termixrc file on i branch or current dir, or list available deploy targets
 def get-pipeline-conf [
   dest: string = 'dev',     # 单应用部署时，指定要部署的目标
+  --interactive,            # 交互式模式，用于选择部署目标
   --apps: string,           # 指定需要批量部署的应用，多个应用以英文逗号分隔
   --list,                   # 列出所有可能的部署目标及应用信息
   --grep: string,           # 仅在与 `-l` 一起使用时生效，从部署配置里面搜索name,alias或description里包含特定字符串的部署目标
@@ -85,7 +87,8 @@ def get-pipeline-conf [
     git fetch origin i -q; (git show 'origin/i:.termixrc' | from toml)
   } else { (open $LOCAL_CONFIG | from toml) }
   # Print available deploy targets and apps with more detail
-  if $list { show-available-targets $configFile $repoConf --grep $grep }
+  if $list { get-available-targets $configFile $repoConf --grep $grep }
+  if $interactive { return (get-available-targets $configFile $repoConf --grep $grep --quiet) }
 
   let pipeline = ($repoConf.erda | get -i $dest)
   if ($pipeline | is-empty) {
@@ -117,9 +120,10 @@ def get-pipeline-conf [
 }
 
 # 列出所有可用的执行目标
-def show-available-targets [
+def get-available-targets [
   configFile: string,  # 配置文件路径
   repoConf: record,    # 配置文件内容
+  --quiet,             # 静默模式，只返回结果不打印
   --grep(-g): string,  # 仅在与 `-l` 一起使用时生效，从部署配置里面搜索name,alias或description里包含特定字符串的部署目标
 ] {
   if ($grep | is-empty) {
@@ -128,6 +132,7 @@ def show-available-targets [
     print $'Available deploy targets in ($configFile) which contains ($grep) are:(char nl)'
   }
 
+  if $quiet { return $repoConf.erda }
   for target in ($repoConf.erda | columns) {
     mut deployTarget = (
       $repoConf.erda
@@ -483,10 +488,45 @@ export def query-cicd-by-id [id: int, --watch, --host: string = $ERDA_HOST] {
   if $watch { watch-cicd-status $id }
 }
 
+# Choose the erda deploy target interactively
+def select-target [candidates: record, --multiple] {
+  const FZF_PREVIEW_FILE = '.fzf-preview.nuon'
+  let targets = $candidates | columns
+  let value = $candidates | get ($targets | first)
+  let batchMode = $value | describe | str starts-with table
+  let candidates = if $batchMode { get-batch-candidates $candidates } else { $candidates }
+  let title = $'Select the target to deploy:'
+  $candidates | to nuon | save -f $FZF_PREVIEW_FILE
+  let PREVIEW_CMD = $"nu -m psql -c 'open ($FZF_PREVIEW_FILE) | get {}'"
+  let FZF_PREVIEW_CONF = $'--preview "($PREVIEW_CMD)"'
+  let multiple = if $multiple { '--multi' } else { null }
+  $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
+  let args = [--preview-window=right:70%:wrap $multiple] | compact
+  let selection = $candidates | columns | str join "\n" | fzf ...$args | complete | get stdout | lines
+  rm -f $FZF_PREVIEW_FILE
+  if ($selection | is-empty) { print $'(ansi grey66)Operation cancelled...(ansi reset)'; return }
+  print $'You selected: (ansi pb)($selection | str join ,)(ansi reset)'
+  $candidates | select ...$selection | values
+}
+
+# Get app candidates for batch mode
+def get-batch-candidates [candidates: record] {
+  mut result = {}
+  let targets = $candidates | columns
+  for t in $targets {
+    for app in ($candidates | get $t) {
+      $result = ($result | upsert $'($app.appName)@($t)' $app)
+    }
+  }
+  $result
+}
+
 # 创建 Erda 流水线并执行，同时可以查询流水线执行结果
 export def main [
   operation: string,          # 目前支持两种操作类型，run 和 query, run 用于创建并执行 CICD, query 用于查询 CICD 执行结果
   dest?: string = 'dev',      # 当操作为 run 时必须指定，用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, query 时按需指定, 默认为 dev
+  --interactive(-I),          # 以交互式模式选择部署目标，支持模糊匹配
+  --multiple(-m),             # 交互式模式下允许选择多个应用
   --list(-l),                 # 当操作为 run 时生效，用于列出所有可用的执行目标
   --watch(-w),                # 持续轮询并显示正在执行的流水线的详细信息
   --grep(-g): string,         # 仅在与 `-l` 一起使用时生效，从部署配置里面搜索name,alias或description里包含特定字符串的部署目标
@@ -505,6 +545,9 @@ export def main [
       if not ($stop_by_id | is-empty) { stop-cicd $stop_by_id; exit $ECODE.SUCCESS }
       let apps = (if $list {
           get-pipeline-conf $dest --apps $apps --list --grep $grep
+        } else if $interactive {
+          let candidates = get-pipeline-conf --interactive
+          select-target $candidates --multiple=$multiple
         } else if (not $isIdQuery) {
           get-pipeline-conf $dest --apps $apps --override=$override
         })
@@ -549,6 +592,8 @@ export def main [
 # 创建 Erda 流水线并执行，默认情况下会检查是否有流水线正在执行或者是否该 Commit 已经部署过，若有则停止并给予提示
 export def erda-deploy [
   dest?: string = 'dev',    # 用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, 默认为 dev
+  --interactive(-I),        # 以交互式模式选择部署目标，支持模糊匹配
+  --multiple(-m),           # 交互式模式下允许选择多个应用
   --list(-l),               # 列出所有可能的部署目标及应用信息
   --watch(-w),              # 执行流水线时持续轮询并显示该流水线各个 Stage 的详细执行信息
   --grep(-g): string,       # 仅在与 `-l` 一起使用时生效，从部署配置里面搜索name,alias或description里包含特定字符串的部署目标
@@ -557,7 +602,7 @@ export def erda-deploy [
   --stop-by-id(-s): int,    # 根据流水线ID 停止对应的正在运行的流水线
   --override(-o): record,   # 覆盖部署配置里面的同名配置项
 ] {
-  main run $dest --apps $apps --force=$force --list=$list --watch=$watch --grep $grep --stop-by-id $stop_by_id --override=$override
+  main run $dest --apps $apps --force=$force --list=$list --watch=$watch --grep $grep --stop-by-id $stop_by_id --override=$override --interactive=$interactive --multiple=$multiple
 }
 
 # 根据流水线 ID 或目标环境查询流水线执行结果, 例如: 单应用: t dq 997636681239659; t dq test, 多应用: t dq dev -a all
