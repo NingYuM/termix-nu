@@ -131,7 +131,7 @@ doctor *OPTIONS: _termix_check
 
 # 执行Erda流水线,可通过`dp -l`列出所有部署目标,在批量部署模式下通过`--app`指定待部署应用
 [group('-- Common  --')]
-deploy *OPTIONS: _setup
+deploy *OPTIONS: _setup _setup_fzf
   @overlay use {{ join(_termix, 'actions', 'pipeline.nu') }}; \
     erda-deploy {{OPTIONS}}
 

@@ -5,3 +5,4 @@ tmp
 .termixrc
 .snapshot
 *-compose.nu
+.fzf-preview.nuon
