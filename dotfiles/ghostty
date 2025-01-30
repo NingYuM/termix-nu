@@ -20,7 +20,7 @@ background-blur-radius = 30
 unfocused-split-opacity = 0.95
 
 #-----------Fonts Settings-----------#
-font-size = 20.5
+font-size = 19
 font-thicken = true
 font-style = Regular
 font-feature = +calt
@@ -35,10 +35,12 @@ grapheme-width-method = unicode
 # font-family = Hack Nerd Font Mono
 # font-family = Source Code Pro
 # font-family = Fira Code
-font-family = Lilex ExtraLight
+# font-family = Maple Mono NF CN
+font-family = Lilex Medium
 window-title-font-family = Fira Code
 # 中文字体
-font-codepoint-map = U+4e00-U+9fa5=Sarasa Term SC XLight
+# font-codepoint-map = U+4e00-U+9fa5=Maple Mono NF CN
+font-codepoint-map = U+4e00-U+9fa5=Sarasa Term SC Light
 
 # window-decoration = false
 gtk-titlebar = false
