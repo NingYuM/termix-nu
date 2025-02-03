@@ -148,11 +148,16 @@ export def has-ref [
 }
 
 # A custome command to check if a string is a valid SemVer version
-def is-semver [version: string] {
+def is-semver [version?: string] {
+  let version = if ($version | is-empty) { $in } else { $version }
+  if ($version | is-empty) { return false }
   # Use regex pattern to match the SemVer version string
+  # The `v` prefix is not supported, add `v?` at the beginning of the regex if needed
+  # ^v?(0|[1-9]\d*)\.(0|[1-9]\d*)... Keep the reset of the pattern the same
   let semver_pattern = '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
   # Check if the version string matches the SemVer pattern
   if $version =~ $semver_pattern { true } else { false }
+  # $version | str replace --regex $semver_pattern 'match' | $in == 'match'
 }
 
 # Compare two version number, return `1` if first one is higher than second one,
