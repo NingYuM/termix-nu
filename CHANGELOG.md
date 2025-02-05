@@ -1,6 +1,33 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.86.0 - 2025-02-05
+
+**Bug Fixes**
+
+- Fix Nushell plugin existence checking for `t doctor` command
+- Update `zoxide` init script for Nu v0.102
+- Fix `t nu-use-nightly` command for the latest Nu nightly releases
+- Fix `t ta` command for Nu v0.102
+
+**Features**
+
+- Add merged column to `t git-remote-branch` command
+- Add `--clean` flag for `t git-remote-branch` command to remove merged branches
+- Add `ignoreHash` config to run Erda pipelines without checking commit hash
+- Add erda interactive batch deploy support for `t dp` command
+- Confirm before running erda pipelines for `t dp -i` command
+- Refactor semver comparison and add `is-semver` common command
+
+**Miscellaneous Tasks**
+
+- Add fix tip for `t doctor` command
+- Fix nushell config for Nu v0.102
+
+**Performance**
+
+- Use multi threads to speedup branch info collect for `t git-remote-branch` command
+
 ## v1.85.1 - 2024-12-24
 
 **Bug Fixes**
