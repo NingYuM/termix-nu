@@ -495,13 +495,13 @@ def select-target [candidates: record, --multiple] {
   let value = $candidates | get ($targets | first)
   let batchMode = $value | describe | str starts-with table
   let candidates = if $batchMode { get-batch-candidates $candidates } else { $candidates }
-  let title = $'Select the target to deploy:'
+  let title = $'Select deploy target:'
   $candidates | to nuon | save -f $FZF_PREVIEW_FILE
   let PREVIEW_CMD = $"nu -m psql -c 'open ($FZF_PREVIEW_FILE) | get {}'"
   let FZF_PREVIEW_CONF = $'--preview "($PREVIEW_CMD)"'
   let multiple = if $multiple { '--multi' } else { null }
   $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
-  let args = [--preview-window=right:70%:wrap $multiple] | compact
+  let args = [--preview-window=right:75%:wrap $multiple] | compact
   let selection = $candidates | columns | str join "\n" | fzf ...$args | complete | get stdout | lines
   rm -f $FZF_PREVIEW_FILE
   if ($selection | is-empty) { print $'(ansi grey66)Operation cancelled...(ansi reset)'; return }
