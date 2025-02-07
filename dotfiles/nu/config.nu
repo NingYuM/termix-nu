@@ -99,6 +99,21 @@ def --env yy [...args] {
   rm -fp $tmp
 }
 
+# Ask anything from DeepSeek R1
+def ds-ask [msg: string, --top-p(-p): float = 1.0, --temperature(-t): float = 0.8] {
+  let API_URL = 'http://aihc.hz.hustcer.com:50006/api/chat-process'
+  let message = if ($msg | is-empty) { $in } else { $msg }
+  let args = {
+      top_p: $top_p,
+      prompt: $message,
+      temperature: $temperature,
+      systemMessage: 'You are a helpful assistant.',
+    }
+  http post --content-type application/json $API_URL $args
+    | lines
+    | each {|line| $line | from json | get delta | print -n }
+}
+
 # Checkout branch by fzf
 def gco [branch?: string] {
   if ($branch | is-not-empty) {
