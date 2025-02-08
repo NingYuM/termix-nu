@@ -82,7 +82,7 @@ def get-msg-payload [
     at: $mention, msgtype: 'text', text: { 'content': $text }
   }
 
-  let picUrl = if ($pic_url | str trim | is-empty) { $DEFAULT_PIC } else { $pic_url }
+  let picUrl = if ($pic_url | default '' | str trim | is-empty) { $DEFAULT_PIC } else { $pic_url }
   let LINK_MSG = {
     msgtype: 'link',
     link: { title: $title, text: $text, messageUrl: $msg_url, picUrl: $picUrl }
