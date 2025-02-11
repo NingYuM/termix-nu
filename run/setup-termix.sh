@@ -119,7 +119,7 @@ function main() {
   echo " Install Directory: $DEST_DIR"
 
   for bin in nu; do
-    if is_lower_ver ${current[$bin]} $latest; then
+    if is_lower_ver $current $latest; then
       install_or_update $bin $platform $latest
     else
       echo "$bin is already updated ..."
