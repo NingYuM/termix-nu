@@ -15,13 +15,15 @@ title = Ghostty!
 # Rippedcasts, Snazzy, Synthwave-Everything, Tinacious Design (Dark), TokyoNight, Wez
 # Tomorrow Night Blue, Tomorrow Night Eighties, UltraDark, Wombat, Whimsy, WildCherry
 theme = Desert
+# Other Icons: blueprint, chalkboard, xray, microchip, glass, holographic, paper, retro
+macos-icon = xray
 background-opacity = 0.92
 background-blur-radius = 30
 unfocused-split-opacity = 0.95
 
 #-----------Fonts Settings-----------#
-font-size = 19
-font-thicken = true
+font-size = 20
+font-thicken = false
 font-style = Regular
 font-feature = +calt
 font-feature = +dlig
@@ -34,13 +36,13 @@ grapheme-width-method = unicode
 # font-family = JetBrains Mono
 # font-family = Hack Nerd Font Mono
 # font-family = Source Code Pro
-# font-family = Fira Code
+font-family = Fira Code
 # font-family = Maple Mono NF CN
-font-family = Lilex Medium
+# font-family = Lilex Regular
 window-title-font-family = Fira Code
 # 中文字体
 # font-codepoint-map = U+4e00-U+9fa5=Maple Mono NF CN
-font-codepoint-map = U+4e00-U+9fa5=Sarasa Term SC Light
+font-codepoint-map = U+4e00-U+9fa5=Sarasa Term SC
 
 # window-decoration = false
 gtk-titlebar = false
