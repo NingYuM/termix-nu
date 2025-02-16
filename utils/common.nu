@@ -147,17 +147,39 @@ export def has-ref [
   if ($parse.stdout | is-empty) { false } else { true }
 }
 
-# A custome command to check if a string is a valid SemVer version
+# A custom command to check if a string is a valid SemVer version
 def is-semver [version?: string] {
   let version = if ($version | is-empty) { $in } else { $version }
   if ($version | is-empty) { return false }
   # Use regex pattern to match the SemVer version string
   # The `v` prefix is not supported, add `v?` at the beginning of the regex if needed
   # ^v?(0|[1-9]\d*)\.(0|[1-9]\d*)... Keep the reset of the pattern the same
-  let semver_pattern = '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
+  let semver_pattern = '^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
   # Check if the version string matches the SemVer pattern
   if $version =~ $semver_pattern { true } else { false }
   # $version | str replace --regex $semver_pattern 'match' | $in == 'match'
+}
+
+# Parse a SemVer version string into its components
+# Usage:
+#   parse-semver v1.2.3-beta+build
+#   parse-semver 2.5.8-rc.1+exp.sha.511c985
+def parse-semver [version: string] {
+  if not ($version | is-semver) {
+    error make {
+      msg: 'Invalid SemVer format',
+      label: {
+        text: 'It is not a SemVer',
+        span: (metadata $version).span
+      }
+    }
+  }
+
+  let cleaned = $version | str replace -r '^v' '' | split row - | split row +
+  let core = $cleaned.0 | split row . | each { into int }
+  let pre = $cleaned.1? | default ''
+  let build = $cleaned.2? | default ''
+  { major: $core.0, minor: $core.1, patch: $core.2, pre: $pre, build: $build }
 }
 
 # Compare two version number, return `1` if first one is higher than second one,
@@ -174,8 +196,8 @@ export def compare-ver [v1: string, v2: string] {
   # Parse the version number: remove pre-release and build information,
   # only take the main version part, and convert it to a list of numbers
   def parse-ver [v: string] {
-    $v | str downcase | str trim -c v | str trim
-       | split row - | first | split row . | each { into int }
+    $v | str replace -r '^v' '' | str trim | split row -
+       | first | split row . | each { into int }
   }
   let a = parse-ver $v1
   let b = parse-ver $v2

@@ -1,11 +1,14 @@
 # Usage: cspell lint .
 
 words:
+- armv
+- nuon
 - aarch
-- abcxyzuvw
+- aichat
 - alicdn
 - Aliyun
-- armv
+- TERMINFO
+- abcxyzuvw
 - asciinema
 - atuin
 - Belafonte
