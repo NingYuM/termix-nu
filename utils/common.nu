@@ -108,6 +108,79 @@ export def get-conf [
   if ($result | is-empty) { $default } else { $result }
 }
 
+def --env defer [fn: closure] { $env.deferred ++= [$fn] }
+
+# with-defer {
+#   defer { print "fourth"}
+#   print "first!"
+#   defer { print "third"}
+#   print "second!"
+# }
+def with-defer [fn: closure] {
+  $env.deferred = []
+  let r = try { do --env $fn | { ok: $in } } catch {|e| { err: $e } }
+  for d in ($env.deferred | reverse) {
+    try { do --env $d }
+  }
+  $env.deferred = []
+  match $r {
+    { ok: $ok } => $ok,
+    { err: $err } => $err.raw,
+  }
+}
+
+def children [val: any, path: cell-path]: [nothing -> table<path: cell-path, item: any>] {
+  match ($val | describe -d).type {
+    'record' => { $val | transpose path item }
+    'list' => { $val | enumerate | rename path item }
+    _ => { return [] }
+  }
+  | update path {|row|
+    $path | split cell-path | append {value: $row.path} | into cell-path
+  }
+}
+
+# Streaming traverse
+export def traverse []: [any -> list<any>] {
+  ignore
+  generate {|out|
+      let children = $out | each {|e| children $e.item $e.path } | flatten | compact -e
+      if ($children | is-not-empty) {
+        {out: $out, next: $children}
+      } else {
+        {out: $out}
+      }
+    } [{ path: ($.), item: ($in) }]
+  | flatten
+}
+
+export def 'from sse' [] {
+  lines | generate {|line pending = {data: []}|
+    match ($line | split row -n 2 ':' | each { str trim }) {
+      [$prefix $content] if $prefix == 'id' => {
+        return {next: ($pending | upsert id $content)}
+      }
+
+      [$prefix $content] if $prefix == 'event' => {
+        return {next: ($pending | upsert event $content)}
+      }
+
+      [$prefix $content] if $prefix == 'data' => {
+        return {next: ($pending | update data { append $content })}
+      }
+
+      [$empty] if $empty == '' => {
+        if ($pending == {data: []}) {
+          return {next: $pending}
+        }
+        return {next: {data: []} out: ($pending | update data { str join "\n" })}
+      }
+
+      _ => { error make {msg: $'unexpected: ($line)'} }
+    }
+  }
+}
+
 # Get TERMIX_TMP_PATH from env first and fallback to HOME/.termix-nu
 export def get-tmp-path [] {
   # let homeEnv = if (windows?) { 'USERPROFILE' } else { 'HOME' }
