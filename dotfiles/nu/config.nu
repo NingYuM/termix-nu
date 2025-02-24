@@ -24,6 +24,7 @@ alias .. = cd ..
 alias ... = do { cd ..; cd .. }
 # Global `just` task receipes
 alias t = just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .
+alias cr = nu /Users/hustcer/iWork/terminus/deepseek-review/cr --config /Users/hustcer/iWork/terminus/deepseek-review/config.yml
 # Show Nushell commands
 alias nuc = print (
   help commands | where command_type != custom and command_type != alias
