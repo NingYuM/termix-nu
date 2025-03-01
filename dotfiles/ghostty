@@ -25,18 +25,27 @@ unfocused-split-opacity = 0.95
 font-size = 20
 font-thicken = false
 font-style = Regular
-font-feature = +calt
-font-feature = +dlig
-font-feature = +liga
+font-feature = +calt   # 启用上下文替代字形，根据周围字符调整字符形态
+font-feature = +dlig   # 启用自由连字，额外的可选连字，超出标准集合
+font-feature = +liga   # 启用标准连字，将常见字符组合如 fi, fl 转换成单个字形
+# 更强的连字支持
+font-feature = +hlig  # 启用历史连字，古老的传统连字组合
+font-feature = +ss01  # 启用样式集 1（某些字体有额外的连字样式集）
+font-feature = +ss02  # 启用 (Stylistic Sets 02): 风格集，提供特定风格的替代字形
+font-feature = +cv01  # 字符变体（某些字体提供额外的字符变体）
+font-feature = +cv03
 # Does not work on macOS?
 font-variation = wght=300
 grapheme-width-method = unicode
-# font-family = Cascadia Code
+# font-family = Cascadia Code PL
 # font-family = Sarasa Term SC
-# font-family = JetBrains Mono
+# https://www.jetbrains.com/lp/mono/
+font-family = JetBrains Mono
+# REF: https://typeof.net/Iosevka/
+# font-family = Iosevka Term Extended
 # font-family = Hack Nerd Font Mono
 # font-family = Source Code Pro
-font-family = Fira Code
+# font-family = Fira Code
 # font-family = Maple Mono NF CN
 # font-family = Lilex Regular
 window-title-font-family = Fira Code
