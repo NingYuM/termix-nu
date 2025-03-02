@@ -98,6 +98,43 @@ export def get-env [
   # if $hasEnv { $env | get $key } else { $default }
 }
 
+# Show a progress spinner while running a command
+def with-progress [
+  message: string,         # Message to display
+  action: closure,         # Action to perform
+  --success: string,       # Success message
+  --error: string          # Error message
+] {
+  print -n $'($message)   '
+  # ASCII spinner frames
+  let frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+
+  # Start the spinner in the background
+  let spinner_pid = job spawn {
+    mut i = 0
+    print -n (ansi cursor_off)
+    loop {
+      print -n (ansi cursor_left)
+      print -n ($frames | get $i)
+      sleep 100ms
+      $i = ($i + 1) mod ($frames | length)
+    }
+  }
+
+  # Run the action and capture result
+  let result = try { do $action; { success: true } } catch { { success: false } }
+
+  # Stop the spinner
+  job kill $spinner_pid
+  print "\r                                                  \r"
+
+  if $result.success {
+    print ($success | default '✓ Done!')
+  } else {
+    print ($error | default '✗ Failed!')
+  }
+}
+
 # Get the specified config from `termix.toml` by key
 export def get-conf [
   key: string,       # The key to get it's value from termix.toml
