@@ -23,11 +23,12 @@ export def 'git pick' [
   --list-only(-l),            # List the matched commits only without actually picking them.
   --from(-f): string,         # The source branch to pick from
   --to(-t): string,           # The target branch to pick to
-  --since(-s): string,        # Filter commits since the specified date, e.g. 2024/03/12 or 2024-03-12
+  --since(-s): string,        # Filter commits since the specified date, e.g. 2025/01/12 or 2025-01-12
+  --until(-u): string,        # Filter commits until the specified date, e.g. 2025/03/12 or 2025-03-12
   --ignore-file(-i): string,  # The file that contains the commit SHAs or messages to ignore
 ] {
   $env.config.table.mode = 'light'
-  let options = get-valid-options $match --from $from --to $to --since $since --ignore-file $ignore_file
+  let options = get-valid-options $match --from $from --to $to --since $since --until $until --ignore-file $ignore_file
   let remoteBranch = git for-each-ref --format='%(upstream:short)' refs/heads/($options.to)
   let diffCount = git rev-list --left-right --count $'($options.to)...($remoteBranch)' | detect columns -n | rename ahead behind | get -i 0
   let countTip = if ($diffCount.ahead? | into int) > 0 { $'[AHEAD: ($diffCount.ahead)]' } else { '' }
@@ -98,7 +99,8 @@ def get-valid-options [
   match: string,              # The commit SHA or the commits that contain the keyword to pick
   --from(-f): string,         # The source branch to pick from
   --to(-t): string,           # The target branch to pick to
-  --since(-s): string,        # Filter commits since the specified date, e.g. 2024/03/12
+  --since(-s): string,        # Filter commits since the specified date, e.g. 2025/01/12
+  --until(-u): string,        # Filter commits until the specified date, e.g. 2025/03/12
   --ignore-file(-i): string,  # The file that contains the commit SHAs or messages to ignore
 ] {
   const MIN_SHA_WIDTH = 7
@@ -122,8 +124,9 @@ def get-valid-options [
   # If no matches found, try to match the keyword in commit messages.
   if ($matches | is-empty) {
     let sinceOption = if ($since | is-not-empty) { $'--since=($since)T00:00:00Z' }
-    let sourceArgs = [$from --oneline $'--grep=($match)' --format=%H---%s---%ci $sinceOption] | compact
-    let targetArgs = [$to --oneline $'--grep=($match)' --format=%H---%s $sinceOption] | compact
+    let untilOption = if ($until | is-not-empty) { $'--until=($until)T23:59:59Z' }
+    let sourceArgs = [$from --oneline $'--grep=($match)' --format=%H---%s---%ci $sinceOption $untilOption] | compact
+    let targetArgs = [$to --oneline $'--grep=($match)' --format=%H---%s $sinceOption $untilOption] | compact
     let sourceMatches = git log ...$sourceArgs | lines | split column '---' | rename sha msg date
     let targetMatches = git log ...$targetArgs | lines | split column '---' | rename sha msg
     $matches = ($sourceMatches
