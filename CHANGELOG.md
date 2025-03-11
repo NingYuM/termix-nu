@@ -1,6 +1,22 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.86.1 - 2025-03-11
+
+**Bug Fixes**
+
+- Fix `run/setup-termix.sh` script
+- Fix DingTalk notify for Nu v0.102
+
+**Features**
+
+- Add `--until` option for `git-pick` command
+
+**Miscellaneous Tasks**
+
+- Add `from env` for Nu config file
+- Add `parse-semver` for nu config
+
 ## v1.86.0 - 2025-02-05
 
 **Bug Fixes**
