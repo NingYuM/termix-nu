@@ -37,6 +37,10 @@ use ../utils/common.nu [ECODE, HTTP_HEADERS, hr-line, ellie, is-installed, is-lo
 const POLL_TICK_CHAR = '*'
 const QUERY_INTERVAL = 1sec
 const KEY_MAPPING = $"(ansi grey66)\(Space: Select, a: Select All, ESC/q: Quit, Enter: Confirm\)(ansi reset)"
+# Versions that doesn't support SnapshotTask API
+const LEGACY_L0_VERSIONS = [2.5.24.0430 2.5.24.0530 2.5.24.0630 2.5.24.0730]
+# Versions that doesn't support DIR based meta data import
+const LEGACY_L1_VERSIONS = [2.5.24.0830 2.5.24.0930 2.5.24.1030]
 
 # TERP Meta data synchronization tool: create and upload snapshot to OSS, and import
 # meta data snapshot to the dest Console for all modules or selected modules.
@@ -49,6 +53,7 @@ export def 'meta sync' [
   --list(-l),           # List all the available sources and destinations
   --install(-i),        # Install or upgrade the standard modules to the dest project, for 2.5.24.0930 or later
   --snapshot(-S),       # Only create and upload snapshot for meta data
+  --path(-p): string,   # Specify the meta data path/dir to import (Select one and only one module in this mode)
 ] {
   cd $env.TERMIX_DIR
   let currentBranch = git branch --show-current
@@ -82,7 +87,7 @@ export def 'meta sync' [
   let downloadUrl = handle-upload-snapshot $source $snapshotOid $sourceAuth --install=$install
   print $'Snapshot uploaded successfully with download Url:'
   print $'(ansi p)($downloadUrl)(ansi reset)'
-  handle-import-metadata $dest $snapshotOid $downloadUrl $destAuth --modules $modules --code $securityCode --install=$install
+  handle-import-metadata $dest $snapshotOid $downloadUrl $destAuth --modules $modules --code $securityCode --install=$install --path=$path
   let end = date now
   print $'Total time consumed: (ansi p)($end - $start)(ansi reset)'
 }
@@ -401,12 +406,13 @@ def handle-import-metadata [
   --install(-i),        # Install or upgrade the standard modules to the dest project
   --code: string,       # Specify the security code to import the meta data
   --modules(-m): list,  # Specify the modules to sync
+  --path: string,       # Specify the meta data path or directory to import
 ] {
   let start = date now
   let taskId = if $install {
     install-metadata $dest $metaUrl $auth --modules $modules --code $code
   } else {
-    import-metadata $dest $rootOid $metaUrl $auth --modules $modules --code $code
+    import-metadata $dest $rootOid $metaUrl $auth --modules $modules --code $code --path $path
   }
   print -n (char nl)
   let type = if $install { 'installing' } else { 'importing' }
@@ -455,8 +461,7 @@ def create-snapshot [
   source: record,       # Specify the meta source of the snapshot to create
   auth: record,         # A authentication record contains user and cookie info
 ] {
-  const LEGACY_VERSIONS = [2.5.24.0430 2.5.24.0530 2.5.24.0630 2.5.24.0730]
-  let taskName = if ($auth.version | is-empty) or ($auth.version in $LEGACY_VERSIONS) { 'RebuildObjectTask' } else { 'SnapshotTask' }
+  let taskName = if ($auth.version | is-empty) or ($auth.version in $LEGACY_L0_VERSIONS) { 'RebuildObjectTask' } else { 'SnapshotTask' }
   let snapShotApi = $'/api/trantor/task/exec/($taskName)'
   let query = { teamId: $source.teamId, teamCode: $source.teamCode, userId: $auth.user.id, verbose: 'false' } | url build-query
   let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team $source.teamCode, ...$HTTP_HEADERS]
@@ -499,8 +504,10 @@ def import-metadata [
   auth: record,         # A authentication record contains user and cookie info
   --code: string,       # Specify the security code to import the meta data
   --modules(-m): list,  # Specify the modules to sync
+  --path: string,       # Specify the meta data path or directory to import
 ] {
   const destImportApi = '/api/trantor/task/exec/SyncAllInOneTask'
+  let dirImportNotSupported = ($auth.version | is-empty) or ($auth.version in $LEGACY_L0_VERSIONS) or ($auth.version in $LEGACY_L1_VERSIONS)
   let query = { teamId: $dest.teamId, teamCode: $dest.teamCode, userId: $auth.user.id, verbose: 'false' } | url build-query
   mut importPayload = {
     rootOid: $rootOid,
@@ -512,6 +519,18 @@ def import-metadata [
   if not ($modules | is-empty) {
     $importPayload.resetModuleKeys = $modules
     print $'Going to import modules: ($modules | str join ",")'
+  }
+  if ($path | is-not-empty) {
+    if $dirImportNotSupported {
+      print $'(ansi r)The destination Trantor does not support DIR based meta data import, min version required (ansi g)2.5.24.1130.(ansi reset)'
+      exit $ECODE.INVALID_PARAMETER
+    }
+    if ($modules | length) > 1 {
+      print $'(ansi r)You can only import one module at a time when specifying the `--path` option, please check it again.(ansi reset)'
+      exit $ECODE.INVALID_PARAMETER
+    }
+    $importPayload.path = $path
+    print $'Going to import meta data from path: ($path)'
   }
   let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team $dest.teamCode, ...$HTTP_HEADERS]
   let resp = http post --content-type application/json --headers $headers $'($dest.host)($destImportApi)?($query)' $importPayload
