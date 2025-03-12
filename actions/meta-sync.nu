@@ -53,7 +53,6 @@ export def 'meta sync' [
   --list(-l),           # List all the available sources and destinations
   --install(-i),        # Install or upgrade the standard modules to the dest project, for 2.5.24.0930 or later
   --snapshot(-S),       # Only create and upload snapshot for meta data
-  --path(-p): string,   # Specify the meta data path/dir to import (Select one and only one module in this mode)
 ] {
   cd $env.TERMIX_DIR
   let currentBranch = git branch --show-current
@@ -74,9 +73,12 @@ export def 'meta sync' [
   } else {
     print $'You have selected the following modules to import: (ansi p)($modules | str join ",")(ansi reset)'
   }
+  if ($source.path | is-not-empty) {
+    print $'You are going to import meta data from path: (ansi p)($source.path)(ansi reset)'
+  }
   print -n (char nl)
-  let destAuth = get-user-auth $dest
-  let sourceAuth = get-user-auth $source
+  let destAuth = get-user-auth ($confMeta.settings? | default {} | merge $dest)
+  let sourceAuth = get-user-auth ($confMeta.settings? | default {} | merge $source)
   confirm-check --from $source --to $dest --src-auth $sourceAuth --dest-auth $destAuth
   install-check $dest $destAuth --install=$install
 
@@ -87,7 +89,7 @@ export def 'meta sync' [
   let downloadUrl = handle-upload-snapshot $source $snapshotOid $sourceAuth --install=$install
   print $'Snapshot uploaded successfully with download Url:'
   print $'(ansi p)($downloadUrl)(ansi reset)'
-  handle-import-metadata $dest $snapshotOid $downloadUrl $destAuth --modules $modules --code $securityCode --install=$install --path=$path
+  handle-import-metadata $dest $snapshotOid $downloadUrl $destAuth --modules $modules --code $securityCode --install=$install --path=$source.path?
   let end = date now
   print $'Total time consumed: (ansi p)($end - $start)(ansi reset)'
 }

@@ -121,6 +121,20 @@ availableModules = ['ERP_HR', 'ERP_PRD', 'ERP_PLN', 'ERP_GEN', 'ERP_SCM', 'ERP_F
 # 此描述信息会在使用 --list Flag时展示
 description = '标品 TERP 开发环境'
 
+[meta.source.dev0]
+teamId = 666
+teamCode = 'TERP'
+# 同步源 Console 地址，后面不要加 `/`
+host = 'https://abc-console-dev.app.terminus.io'
+# 预定义的待导入模块, 如果通过 --selected 参数调用命令则同步这些模块
+selectedModules = ['ERP_GEN']
+# 按目录导入元数据，在该模式下只能选择一个模块
+path = '通用管理/打印'
+# 所有可选择模块，如果调用命令的时候既没有使用 --selected 参数，也没有使用 --all 参数则会出现模块选择界面，可以手工选择需要导入的模块
+availableModules = ['ERP_HR', 'ERP_PRD', 'ERP_PLN', 'ERP_GEN', 'ERP_SCM', 'ERP_FI', 'ERP_FIN', 'ERP_CO', 'TERP_PORTAL']
+# 此描述信息会在使用 --list Flag时展示
+description = 'Trantor TERP 开发环境'
+
 # [meta.source.dev0]
 # 若需配置更多同步源参考以上配置
 
