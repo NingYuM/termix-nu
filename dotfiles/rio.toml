@@ -129,7 +129,6 @@ size = 20
 extras = [
   { family = "Lilex", style = "Normal" },
   { family = "Sarasa Term SC", style = "Normal" },
-  { family = "PingFang SC", style = "Normal" },
 ]
 
 # # You can also set family on root to overwrite all fonts
