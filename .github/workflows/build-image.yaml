@@ -2,6 +2,8 @@ name: Build and Push termix-nu Image
 
 on:
   push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
     branches:
       - master
       - develop
@@ -23,6 +25,27 @@ jobs:
           # Number of commits to fetch. 0 indicates all history for all branches and tags.
           fetch-depth: 0
 
+      - name: Set up Nushell
+        uses: hustcer/setup-nu@v3
+        with:
+          check-latest: true
+
+      - name: Set image tag based on branch
+        id: set-tag
+        shell: nu {0}
+        run: |
+          if ('${{ github.ref }}' =~ 'refs/tags/') {
+            let tag = '${{ github.ref }}' | str replace refs/tags/v ''
+            echo $"IMAGE_TAG=($tag)\n" o>> $env.GITHUB_OUTPUT
+            return
+          }
+          let tag = match ${{ github.ref }} {
+            'refs/heads/master' => 'latest',
+            'refs/heads/develop' => 'bleeding',
+            _ => 'bleeding'
+          }
+          echo $"IMAGE_TAG=($tag)\n" o>> $env.GITHUB_OUTPUT
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -35,17 +58,6 @@ jobs:
           registry: erda-registry.cn-hangzhou.cr.aliyuncs.com
           password: ${{ secrets.ERDA_REGISTRY_TOKEN }}
           username: ${{ secrets.ERDA_REGISTRY_USERNAME }}
-
-      - name: Set image tag based on branch
-        id: set-tag
-        run: |
-          if [[ ${{ github.ref }} == 'refs/heads/master' ]]; then
-            echo "IMAGE_TAG=latest" >> $GITHUB_OUTPUT
-          elif [[ ${{ github.ref }} == 'refs/heads/develop' ]]; then
-            echo "IMAGE_TAG=bleeding" >> $GITHUB_OUTPUT
-          else
-            echo "IMAGE_TAG=dev" >> $GITHUB_OUTPUT
-          fi
 
       - name: Build and Push Image
         uses: docker/build-push-action@v6
