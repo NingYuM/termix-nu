@@ -5,7 +5,10 @@ services:
   termix:
     tty: true
     stdin_open: true
-    pull_policy: if_not_present
+    # always: Always pull the image from the registry, ignoring any locally cached copies
+    # never: Never pull the image from the registry. This will cause an error if the image is not present locally
+    # if_not_present: Only fetching an image if it hasn't been downloaded yet
+    pull_policy: always
     image: registry.erda.cloud/terp/termix:latest
     volumes:
       # - ./.env:/home/termix/.env
