@@ -20,11 +20,11 @@ LABEL maintainer="hustcer" \
     org.opencontainers.image.documentation="https://fe-docs.app.terminus.io/termix/termix-nu"
 
 # Add termix-nu to the image
-ADD . /home/termix/termix-nu
+COPY . /home/termix/termix-nu
 
 ENV DISABLE_VERSION_CHECK=true
 
-RUN apk update && apk add git \
+RUN apk update && apk add --no-cache git \
     #  Setup termix user
     && echo '/usr/bin/nu' >> /etc/shells \
     && adduser -D -s /usr/bin/nu termix \
@@ -50,13 +50,15 @@ RUN apk update && apk add git \
     && rm -rf /tmp/* \
     && rm -rf /var/lib/apt/lists/* \
     && git config --global --add safe.directory /home/termix/termix-nu \
-    && nu -c 'echo `alias t="just --justfile ~/.justfile --dotenv-path ~/.env --working-directory ."` o>> /etc/profile' \
-    && nu -c 'echo "alias t = just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .\n" o>> /home/termix/.config/nushell/config.nu' \
-    && nu -c 'echo "$env.config.show_banner = false\n" o>> /home/termix/.config/nushell/config.nu' \
-    && nu -c 'echo `$env.config.table.mode = "light"` o>> /home/termix/.config/nushell/config.nu'
+    && nu -c 'do { \
+        echo `alias t="just --justfile ~/.justfile --dotenv-path ~/.env --working-directory ."` o>> /home/termix/.profile; \
+        echo "alias t = just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .\n" o>> /home/termix/.config/nushell/config.nu; \
+        echo "$env.config.show_banner = false\n" o>> /home/termix/.config/nushell/config.nu; \
+        echo `$env.config.table.mode = "light"` o>> /home/termix/.config/nushell/config.nu; \
+      }'
 
 USER termix
 
 WORKDIR /home/termix
 
-ENTRYPOINT ["nu"]
+CMD ["nu"]
