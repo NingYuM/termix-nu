@@ -1,0 +1,11 @@
+# Run the container with: docker compose up
+# Or for a one-time run: docker compose run --rm termix
+services:
+  termix:
+    tty: true
+    stdin_open: true
+    pull_policy: if_not_present
+    image: hustcer/termix:latest
+    volumes:
+      # - ./.env:/home/termix/.env
+      - ./.termixrc:/home/termix/.termixrc
