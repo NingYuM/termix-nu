@@ -40,7 +40,6 @@ RUN apk update && apk add --no-cache git \
     && ln -s /home/termix/termix-nu/Justfile /home/termix/.justfile \
     && ln -s /home/termix/.env /home/termix/termix-nu/.env \
     && ln -s /home/termix/.termixrc /home/termix/termix-nu/.termixrc \
-    && nu -c 'open /home/termix/.env | str replace /Users/terminus/termix-nu /home/termix/termix-nu | save -rf /home/termix/.env' \
     # Reset Nushell config to default
     && su -c 'config reset -w' termix \
     && ls /usr/bin/nu_plugin_[fgipq]* \
@@ -51,6 +50,7 @@ RUN apk update && apk add --no-cache git \
     && rm -rf /var/lib/apt/lists/* \
     && git config --global --add safe.directory /home/termix/termix-nu \
     && nu -c 'do { \
+        open /home/termix/.env | str replace /Users/terminus/termix-nu /home/termix/termix-nu | save -rf /home/termix/.env; \
         echo `alias t="just --justfile ~/.justfile --dotenv-path ~/.env --working-directory ."` o>> /home/termix/.profile; \
         echo "alias t = just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .\n" o>> /home/termix/.config/nushell/config.nu; \
         echo "$env.config.show_banner = false\n" o>> /home/termix/.config/nushell/config.nu; \
