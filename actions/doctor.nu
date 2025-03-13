@@ -138,7 +138,9 @@ def check-termix [description: string, --fix, --debug] {
   print -n $description
   mut result = { tip: $FIX_TIP, status: $STATUS.WARN }
   let current = get-conf version
-  let latest = do -i { git pull --tags --force | ignore; (git tag -l --sort=-v:refname | lines | select 0).0 }
+  let latest = if ($env.DISABLE_VERSION_CHECK? | default false | into bool) { $current } else {
+      do -i { git pull --tags --force | ignore; (git tag -l --sort=-v:refname | lines | select 0).0 }
+    }
   if $debug { show-debug { current: $current, latest: $latest } }
   if not (is-lower-ver $current $latest) { return { status: $STATUS.OK } }
   if $fix { upgrade-tool; check-termix 'Recheck .. ' | show-result; return }

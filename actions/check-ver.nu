@@ -64,7 +64,10 @@ def query-ver [
   conf: string,   # Termix-nu conf file path
 ] {
   # Update latest commits from remote to local, tags included
-  cd $env.TERMIX_DIR; git fetch origin -p; git fetch origin --tags --force
+  cd $env.TERMIX_DIR
+  if not ($env.DISABLE_VERSION_CHECK? | default false | into bool) {
+    git fetch origin -p; git fetch origin --tags --force
+  }
   let checkDate = date now | format date $_DATE_FMT
   let currentVer = get-conf version
   let versions = git tag -l --sort=-v:refname | lines
