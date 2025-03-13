@@ -6,7 +6,7 @@ services:
     tty: true
     stdin_open: true
     pull_policy: if_not_present
-    image: registry.erda.cloud/terp/termix:bleeding
+    image: registry.erda.cloud/terp/termix:latest
     volumes:
       # - ./.env:/home/termix/.env
       - ./.termixrc:/home/termix/.termixrc
