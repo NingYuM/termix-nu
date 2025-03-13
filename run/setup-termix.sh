@@ -128,7 +128,10 @@ function main() {
 
   echo '------------------------------------------------------------'
 
-  nu actions/setup.nu $DEST_DIR --in-place-update
+  # Get the directory where the script is located
+  SCRIPT_DIR="$(dirname "$0")"
+  # Call the nu script with the correct path
+  nu "$SCRIPT_DIR/../actions/setup.nu" $DEST_DIR --in-place-update
 }
 
 main
