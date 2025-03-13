@@ -19,6 +19,9 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          # Number of commits to fetch. 0 indicates all history for all branches and tags.
+          fetch-depth: 0
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -33,6 +36,17 @@ jobs:
           password: ${{ secrets.ERDA_REGISTRY_TOKEN }}
           username: ${{ secrets.ERDA_REGISTRY_USERNAME }}
 
+      - name: Set image tag based on branch
+        id: set-tag
+        run: |
+          if [[ ${{ github.ref }} == 'refs/heads/master' ]]; then
+            echo "IMAGE_TAG=latest" >> $GITHUB_OUTPUT
+          elif [[ ${{ github.ref }} == 'refs/heads/develop' ]]; then
+            echo "IMAGE_TAG=bleeding" >> $GITHUB_OUTPUT
+          else
+            echo "IMAGE_TAG=dev" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build and Push Image
         uses: docker/build-push-action@v6
         with:
@@ -41,5 +55,5 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           tags: |
-            erda-registry.cn-hangzhou.cr.aliyuncs.com/terp/termix:latest
+            erda-registry.cn-hangzhou.cr.aliyuncs.com/terp/termix:${{ steps.set-tag.outputs.IMAGE_TAG }}
 
