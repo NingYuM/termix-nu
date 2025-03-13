@@ -24,7 +24,7 @@ COPY . /home/termix/termix-nu
 
 ENV DISABLE_VERSION_CHECK=true
 
-RUN apk update && apk add --no-cache git \
+RUN apk update && apk add --no-cache git openssl \
     #  Setup termix user
     && echo '/usr/bin/nu' >> /etc/shells \
     && adduser -D -s /usr/bin/nu termix \
