@@ -1,5 +1,6 @@
 # Run the container with: docker compose up
 # Or for a one-time run: docker compose run --rm termix
+# Home dir of termix-nu in the container: /home/termix/termix-nu
 services:
   termix:
     tty: true
