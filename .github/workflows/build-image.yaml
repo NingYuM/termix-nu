@@ -11,6 +11,9 @@ on:
       - Dockerfile
       - .github/workflows/build-image.yaml
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Docker Tag'
 
 jobs:
   build-and-push-termix:
@@ -34,6 +37,11 @@ jobs:
         id: set-tag
         shell: nu {0}
         run: |
+          let inputTag = '${{ inputs.tag }}'
+          if ($inputTag | is-not-empty) {
+            echo $"IMAGE_TAG=($inputTag)\n" o>> $env.GITHUB_OUTPUT
+            return
+          }
           if ('${{ github.ref }}' =~ 'refs/tags/') {
             let tag = '${{ github.ref }}' | str replace refs/tags/v ''
             echo $"IMAGE_TAG=($tag)\n" o>> $env.GITHUB_OUTPUT
