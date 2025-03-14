@@ -11,6 +11,9 @@
 
 FROM node:lts-alpine
 
+ARG HOME=/home/termix
+ARG TERMIX_HOME=/home/termix/termix-nu
+
 LABEL maintainer="hustcer" \
     org.opencontainers.image.licenses="MIT" \
     org.opencontainers.image.title="Termix-Nu" \
@@ -20,7 +23,7 @@ LABEL maintainer="hustcer" \
     org.opencontainers.image.documentation="https://fe-docs.app.terminus.io/termix/termix-nu"
 
 # Add termix-nu to the image
-COPY . /home/termix/termix-nu
+COPY . ${TERMIX_HOME}
 
 ENV DISABLE_VERSION_CHECK=true
 
@@ -28,18 +31,18 @@ RUN apk update && apk add --no-cache git openssl \
     #  Setup termix user
     && echo '/usr/bin/nu' >> /etc/shells \
     && adduser -D -s /usr/bin/nu termix \
-    && sh /home/termix/termix-nu/run/setup-termix.sh /usr/bin/ \
-    && mkdir -p /home/termix/.config/nushell/ \
+    && sh ${TERMIX_HOME}/run/setup-termix.sh /usr/bin/ \
+    && mkdir -p ${HOME}/.config/nushell/ \
     # Setup default config file for nushell
-    && cd /home/termix/.config/nushell \
+    && cd ${HOME}/.config/nushell \
     && chmod +x /usr/bin/nu \
-    && chown -R termix:termix /home/termix/termix-nu \
-    && chown -R termix:termix /home/termix/.config/nushell \
-    && cp /home/termix/termix-nu/.termixrc-example /home/termix/.termixrc \
-    && cp /home/termix/termix-nu/.env-example /home/termix/.env \
-    && ln -s /home/termix/termix-nu/Justfile /home/termix/.justfile \
-    && ln -s /home/termix/.env /home/termix/termix-nu/.env \
-    && ln -s /home/termix/.termixrc /home/termix/termix-nu/.termixrc \
+    && chown -R termix:termix ${TERMIX_HOME} \
+    && chown -R termix:termix ${HOME}/.config/nushell \
+    && cp ${TERMIX_HOME}/.termixrc-example ${HOME}/.termixrc \
+    && cp ${TERMIX_HOME}/.env-example ${HOME}/.env \
+    && ln -s ${TERMIX_HOME}/Justfile ${HOME}/.justfile \
+    && ln -s ${HOME}/.env ${TERMIX_HOME}/.env \
+    && ln -s ${HOME}/.termixrc ${TERMIX_HOME}/.termixrc \
     # Reset Nushell config to default
     && su -c 'config reset -w' termix \
     && ls /usr/bin/nu_plugin_[fgipq]* \
@@ -48,7 +51,7 @@ RUN apk update && apk add --no-cache git openssl \
     && npm cache clean --force \
     && rm -rf /tmp/* \
     && rm -rf /var/lib/apt/lists/* \
-    && git config --global --add safe.directory /home/termix/termix-nu \
+    && git config --global --add safe.directory ${TERMIX_HOME} \
     && nu -c 'do { \
         open /home/termix/.env | str replace /Users/terminus/termix-nu /home/termix/termix-nu | save -rf /home/termix/.env; \
         echo `alias t="just --justfile ~/.justfile --dotenv-path ~/.env --working-directory ."` o>> /home/termix/.profile; \

@@ -1,4 +1,4 @@
-name: Build and Push termix-nu Image
+name: Build and Push Termix-Nu Image
 
 on:
   push:
@@ -25,12 +25,12 @@ jobs:
           # Number of commits to fetch. 0 indicates all history for all branches and tags.
           fetch-depth: 0
 
-      - name: Set up Nushell
+      - name: Setup Nushell
         uses: hustcer/setup-nu@v3
         with:
           check-latest: true
 
-      - name: Set image tag based on branch
+      - name: Set Image Tag Based on Branch
         id: set-tag
         shell: nu {0}
         run: |
@@ -46,10 +46,10 @@ jobs:
           }
           echo $"IMAGE_TAG=($tag)\n" o>> $env.GITHUB_OUTPUT
 
-      - name: Set up QEMU
+      - name: Setup QEMU
         uses: docker/setup-qemu-action@v3
 
-      - name: Set up Docker Buildx
+      - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Login to Erda Registry
