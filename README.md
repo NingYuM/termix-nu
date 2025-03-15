@@ -172,6 +172,39 @@ winget install Nushell.Nushell
 └── utils               # 通用脚本函数
 ```
 
+## Docker 镜像{#docker-image}
+
+为了方便大家使用，从 `v1.87.0` 版本开始每个发布版本都会同时构建一个 Docker 镜像(基于 Alpine Linux)，比如：
+
+- 特定版本镜像：`registry.erda.cloud/terp/termix:1.87`;
+- 如果需要最新版本稳定镜像也可以从 `registry.erda.cloud/terp/termix:latest` 拉取;
+- 如果想尝试正在开发中的镜像可以从 `registry.erda.cloud/terp/termix:bleeding` 获取;
+
+Docker 镜像里面已经配置好了 `t` 命令（以及各种运行时所需依赖），默认情况下通过 `docker run -it --rm registry.erda.cloud/terp/termix:latest` 启动时会进入 `nushell` 会话，之后可以根据情况调整镜像里面的 `termix-nu` 配置: `/home/termix/.termixrc` & `/home/termix/.env`, 在 `nushell` 会话中你可以执行各种 Alpine Linux 命令，如果你执行的命令在 `nushell` 里面也存在会默认执行 `nushell` 版本，比如 `ls`, 若想强制执行发行版自带的 `ls` 使用 `^ls` 即可。
+
+如果你想使用其它 Shell 比如 `sh` 进入镜像，可通过 `docker run -it --rm registry.erda.cloud/terp/termix:latest sh --login` 启动，之所以要加 `--login` 是为了加载 `sh` 配置文件并设置 `t` alias。
+
+每次输入这么长的命令还是比较繁琐的，也可以创建一个 `docker-compose.yml` 文件，比如：
+
+```yml
+# Run the container with: docker compose up
+# Or for a one-time run: docker compose run --rm termix
+# Home dir of termix-nu in the container: /home/termix/termix-nu
+services:
+  termix:
+    tty: true
+    stdin_open: true
+    # always: Always pull the image from the registry, ignoring any locally cached copies
+    # if_not_present: Only fetching an image if it hasn't been downloaded yet
+    pull_policy: always
+    image: registry.erda.cloud/terp/termix:latest
+    volumes:
+      # - ./.env:/home/termix/.env
+      - ./.termixrc:/home/termix/.termixrc
+```
+
+这样就可以通过 `docker compose up` 或者 `docker compose run --rm termix` 启动了。需要注意的是在这个配置文件中将本地目录里面的 `.termixrc` 配置文件映射到容器里面的 `/home/termix/.termixrc` 位置，这样就可以复用本地配置文件了。
+
 ## 辅助支持命令{#helper-cmd}
 
 ---
@@ -881,6 +914,7 @@ t git-diff-commit -f HEAD~9 -A author1,author2
 - `-f`, `--from <String>` - 待**Pick**的源分支，默认为当前分支
 - `-t`, `--to <String>` - 待**Pick**到的目标分支，默认为当前分支
 - `-s`, `--since <String>` - 待筛选的 Commits 的起始时间, 比如：2024/03/12 or 2024-03-12
+- `-u`, `--until <string>` - 待筛选的 Commits 的截止时间, 比如：2025/03/12 or 2025-03-12
 - `-i`, `--ignore-file <String>` - 通过该文件指定忽略某些 Commit 进行批量 `cherry-pick` 操作，文件为 TOML 格式，内容示例如下：
   ```toml
   GIT_PICK_IGNORE = [
@@ -1370,9 +1404,10 @@ t ta transfer all --from http://minio.terp.terminus.com/terminus-trantor/fe-reso
 - 支持自动登录(从 0330 版本开始要求登录后才能使用)，需要在配置文件里面配置好 Console 应用的用户名和密码 (此功能需要本机安装 `openSSL` 3.0.0 以上版本, 一般系统内置)；
 - 操作简单：在配置得当的情况下只需一条命令即可，比如 `t msync -a`;
 - 支持同步所有模块或者选择指定模块同步(指定模块同步功能以后可能会被废弃，详询元数据团队);
+- 对于 Trantor 2.5.24.1130 及以后版本支持按目录导入元数据：在同步源配置里面加上 `path` 配置项即可，参考示例中 `meta.source.dir-import` 的配置；
 - 同步所有模块时根据需要支持输入**安全码**(0330 版本后新特性), 同步指定模块时无需输入安全码；
 - 所有需要确认或者选择的操作前置，如此以来就可以提前把各种准备工作做好，剩下的只需要喝喝茶等待工具执行完成就可以了；
-- 元数据导入时支持配置文件里面的 `ddlAutoUpdate`, `resetModuleForInstall` 等参数透传（对于 0930 及以后版本不再支持`resetModuleForInstall`参数，若需安装为非原生模块请使用 `--install` 参数）；
+- 元数据导入时支持配置文件里面的 `ddlAutoUpdate`, `resetModuleForInstall` 等参数透传（对于 0930 及以后版本不再支持 `resetModuleForInstall` 参数，若需安装为非原生模块请使用 `--install` 参数）；
 - 同步任务本身仍然是 `Trantor` 的 **API** 完成的，本工具只是对这些接口进行 `TUI` 封装，结果跟原始的手工操作是一致的；
 - 对于所有的异步任务工具会定时轮询(目前每秒一次)并更新状态和进度（然而并不是真实的百分比进度，本质上是一个以进度条形式显示的计时器，告诉你程序还没挂掉）;
 - 分秒必争，所有的任务会无缝串行，同时会显示每条任务和所有任务总执行耗时；
@@ -1425,6 +1460,20 @@ selectedModules = ['ERP_HR', 'ERP_GEN', 'TERP_PORTAL']
 availableModules = ['ERP_HR', 'ERP_PRD', 'ERP_PLN', 'ERP_GEN', 'ERP_SCM', 'ERP_FI', 'ERP_FIN', 'ERP_CO', 'TERP_PORTAL']
 # 此描述信息会在使用 --list Flag 时展示
 description = '标品 TERP 开发环境'
+
+[meta.source.dir-import]
+teamId = 666
+teamCode = 'TERP'
+# 同步源 Console 地址，后面不要加 `/`
+host = 'https://abc-console-dev.app.terminus.io'
+# 预定义的待导入模块, 如果通过 --selected 参数调用命令则同步该模块
+selectedModules = ['ERP_GEN']
+# 按目录导入元数据，在该模式下只能选择一个模块
+path = '通用管理/打印'
+# 所有可选择模块，如果调用命令的时候既没有使用 --selected 参数，也没有使用 --all 参数则会出现模块选择界面，可以手工选择需要导入的模块
+availableModules = ['ERP_HR', 'ERP_PRD', 'ERP_PLN', 'ERP_GEN', 'ERP_SCM', 'ERP_FI', 'ERP_FIN', 'ERP_CO', 'TERP_PORTAL']
+# 此描述信息会在使用 --list Flag时展示
+description = 'Trantor TERP 开发环境按目录导入元数据'
 
 # [meta.source.dev0]
 # 若需配置更多同步源参考以上配置

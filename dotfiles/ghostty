@@ -37,6 +37,7 @@ font-feature = +cv03
 # Does not work on macOS?
 font-variation = wght=300
 grapheme-width-method = unicode
+# font-family = 0xProto
 # font-family = Cascadia Code PL
 # font-family = Sarasa Term SC
 # https://www.jetbrains.com/lp/mono/

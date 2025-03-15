@@ -43,7 +43,7 @@ jobs:
             return
           }
           if ('${{ github.ref }}' =~ 'refs/tags/') {
-            let tag = '${{ github.ref }}' | str replace refs/tags/v ''
+            let tag = '${{ github.ref }}' | str replace refs/tags/v '' | str replace -r '.0$' ''
             echo $"IMAGE_TAG=($tag)\n" o>> $env.GITHUB_OUTPUT
             return
           }
