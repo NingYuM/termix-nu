@@ -47,10 +47,9 @@ RUN apk update && apk add --no-cache git openssl \
     && su -c 'config reset -w' termix \
     && ls /usr/bin/nu_plugin_[fgipq]* \
     | xargs -I{} su -c 'plugin add {}' termix \
-    && npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io \
+    && npm i -g --no-audit --no-fund @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io \
     && npm cache clean --force \
-    && rm -rf /tmp/* \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /tmp/* /var/cache/apk/* \
     && git config --global --add safe.directory ${TERMIX_HOME} \
     && nu -c 'do { \
         open /home/termix/.env | str replace /Users/terminus/termix-nu /home/termix/termix-nu | save -rf /home/termix/.env; \
