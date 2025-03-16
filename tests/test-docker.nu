@@ -3,7 +3,7 @@
 #   This script is used to test the Docker image of termix-nu.
 # Usage:
 #   Change to the directory where the Dockerfile is located and run:
-#   docker run -it --rm -v $"(pwd):/work" hustcer/termix:latest-alpine /work/test-docker.nu
+#   docker run -it --rm -v $"(pwd):/work" hustcer/termix:latest-alpine /work/tests/test-docker.nu
 
 use std assert
 
@@ -118,7 +118,7 @@ def "test temp directory is cleared" [] {
   assert equal $temp []
 }
 
-def "test apk install cache is cleared on alpine containers" [] {
+def "test app install cache is cleared for containers" [] {
   let distro = cat /etc/os-release
       | lines
       | parse "{key}={value}"
@@ -126,9 +126,11 @@ def "test apk install cache is cleared on alpine containers" [] {
       | get value
       | first
 
-  if ($distro == "alpine") {
-    let package_cache = ls /var/cache/apk
-    assert equal $package_cache []
+  match $distro {
+    'alpine' => { assert equal (ls /var/cache/apk) [] }
+    'debian' => { assert equal (ls /var/cache/apt) [] }
+    'ubuntu' => { assert equal (ls /var/cache/apt) [] }
+    _ => {}  # Ignore other distributions
   }
 }
 

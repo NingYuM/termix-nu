@@ -152,6 +152,7 @@ words:
 - wqtest
 - yazi
 - zoxide
+- initialised
 ignorePaths:
 - casts/**
 - config.nu
