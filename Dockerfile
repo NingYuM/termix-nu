@@ -13,6 +13,7 @@ FROM node:lts-alpine
 
 ARG HOME=/home/termix
 ARG TERMIX_HOME=/home/termix/termix-nu
+ARG NPM_REGISTRY=https://registry.npm.terminus.io
 
 LABEL maintainer="hustcer" \
     org.opencontainers.image.licenses="MIT" \
@@ -23,7 +24,7 @@ LABEL maintainer="hustcer" \
     org.opencontainers.image.documentation="https://fe-docs.app.terminus.io/termix/termix-nu"
 
 # Add termix-nu to the image
-COPY . ${TERMIX_HOME}
+COPY --chown=termix:termix . ${TERMIX_HOME}
 
 ENV DISABLE_VERSION_CHECK=true
 
@@ -36,8 +37,7 @@ RUN apk update && apk add --no-cache git openssl \
     # Setup default config file for nushell
     && cd ${HOME}/.config/nushell \
     && chmod +x /usr/bin/nu \
-    && chown -R termix:termix ${TERMIX_HOME} \
-    && chown -R termix:termix ${HOME}/.config/nushell \
+    && chown -R termix:termix ${HOME} \
     && cp ${TERMIX_HOME}/.termixrc-example ${HOME}/.termixrc \
     && cp ${TERMIX_HOME}/.env-example ${HOME}/.env \
     && ln -s ${TERMIX_HOME}/Justfile ${HOME}/.justfile \
@@ -45,9 +45,8 @@ RUN apk update && apk add --no-cache git openssl \
     && ln -s ${HOME}/.termixrc ${TERMIX_HOME}/.termixrc \
     # Reset Nushell config to default
     && su -c 'config reset -w' termix \
-    && ls /usr/bin/nu_plugin_[fgipq]* \
-    | xargs -I{} su -c 'plugin add {}' termix \
-    && npm i -g --no-audit --no-fund @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io \
+    && ls /usr/bin/nu_plugin_[fgipq]* | xargs -I{} su -c 'plugin add {}' termix \
+    && npm i -g --no-audit --no-fund @terminus/t-package-tools@latest --registry ${NPM_REGISTRY} \
     && npm cache clean --force \
     && rm -rf /tmp/* /var/cache/apk/* \
     && git config --global --add safe.directory ${TERMIX_HOME} \
@@ -61,6 +60,6 @@ RUN apk update && apk add --no-cache git openssl \
 
 USER termix
 
-WORKDIR /home/termix
+WORKDIR ${HOME}
 
 CMD ["nu"]
