@@ -33,7 +33,7 @@ jobs:
         with:
           check-latest: true
 
-      - name: Set Image Tag Based on Branch
+      - name: Set Docker Image Tag
         id: set-tag
         shell: nu {0}
         run: |
@@ -66,6 +66,26 @@ jobs:
           registry: erda-registry.cn-hangzhou.cr.aliyuncs.com
           password: ${{ secrets.ERDA_REGISTRY_TOKEN }}
           username: ${{ secrets.ERDA_REGISTRY_USERNAME }}
+
+      - name: Build Alpine Test Image
+        uses: docker/build-push-action@v6
+        env:
+          DOCKER_BUILD_SUMMARY: false
+        with:
+          push: false
+          load: true
+          context: .
+          file: ./Dockerfile
+          tags: termix-test-image
+
+      - name: Test Alpine Image
+        run: |
+          echo "## Alpine Container Test Results" >> $GITHUB_STEP_SUMMARY
+          docker run --rm \
+            -v "$(pwd):/work" \
+            --env GITHUB_ACTIONS=${{ env.GITHUB_ACTIONS }} \
+            termix-test-image nu /work/tests/test-docker.nu \
+            >> $GITHUB_STEP_SUMMARY
 
       - name: Build and Push Image
         uses: docker/build-push-action@v6
