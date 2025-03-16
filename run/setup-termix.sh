@@ -104,6 +104,7 @@ function install_or_update() {
     fi
   fi
   rm $pkg
+  rm $DEST_DIR/nu_*cust* $DEST_DIR/nu_*exam* $DEST_DIR/nu_*str*
   echo "Successfully installed $bin with version $version"
 }
 
