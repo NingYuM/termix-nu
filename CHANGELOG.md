@@ -1,6 +1,37 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.87.0 - 2025-03-21
+
+**Bug Fixes**
+
+- Fix `run/setup-termix.sh` setup script in docker
+
+**Documentation**
+
+- Update README.md
+
+**Features**
+
+- Add import meta data by path or directory support
+- Add `Dockerfile` to create a docker image for termix-nu
+- Add `docker-compose.yml` example
+- Add GitHub workflow to build termix-nu docker image
+- Push docker image tags according to branch
+- Build docker images for each release tag
+- Add manually specify docker release image tag support
+- Add docker image tests for each build
+
+**Miscellaneous Tasks**
+
+- Update rio terminal font config
+- Read path from config file for importing meta data by path
+- Optimize termix-nu Dockerfile
+- Update docker-compose.yml image address
+- Add openssl to alpine docker image
+- Update docker-compose.yml pull policy
+- Remove unnecessary nu plugins
+
 ## v1.86.1 - 2025-03-11
 
 **Bug Fixes**
