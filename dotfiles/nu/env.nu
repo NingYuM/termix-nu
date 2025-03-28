@@ -23,6 +23,7 @@ $env.PATH = (
   $env.PATH
     | split row (char esep)
     | prepend $env.PNPM_HOME
+    | prepend $'($env.HOME)/.local/bin'
     | prepend '/usr/local/bin'
     | prepend '/opt/homebrew/bin'
     | prepend '/Library/TeX/texbin'
