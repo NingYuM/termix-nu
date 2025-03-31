@@ -169,7 +169,7 @@ export def query-monthly-hours-by-team [
         req: { endDate: $monthEnd, beginDate: $monthStart, staffs: $staffs.staffPayload, department: { id: $team.code } }
       }
     }
-  let HEADERS = [Referer $REFERER Cookie $'t_emp_iam=($token)']
+  let HEADERS = [Referer $REFERER Cookie $'emp_cookie=($token)']
   let summary = http post -H $HEADERS --content-type application/json -e $emp.timeSummaryUrl $timeSummaryPayload
   let hourSummary = (
       ($summary | get data.data | select staffWorkTimeFillResponseList | flatten
@@ -210,7 +210,7 @@ def query-staffs-by-team [
     params: { req: { department: { id: $code } }, pageable: { pageNo: 1, pageSize: 99999999 } }
   }
 
-  let HEADERS = [Referer $REFERER Cookie $'t_emp_iam=($token)']
+  let HEADERS = [Referer $REFERER Cookie $'emp_cookie=($token)']
   # Week No of now: [(date now)] | polars into-df | polars get-week
   let staffs = http post -H $HEADERS --content-type application/json -e $emp.staffUrl $staffPayload
 
@@ -261,7 +261,7 @@ export def query-hours-by-team [
   }
 
   let allStaffs = $staffs.allStaffs
-  let HEADERS = [Referer $REFERER Cookie $'t_emp_iam=($token)']
+  let HEADERS = [Referer $REFERER Cookie $'emp_cookie=($token)']
   let hours = http post -H $HEADERS --content-type application/json -e $emp.timeUrl $timePayload
   let leaves = http post -H $HEADERS --content-type application/json -e $emp.leaveUrl $leavePayload
   let summary = http post -H $HEADERS --content-type application/json -e $emp.timeSummaryUrl $timeSummaryPayload
@@ -403,7 +403,7 @@ def update-staff-list [
     }
   }
 
-  let HEADERS = [Referer $REFERER Cookie $'t_emp_iam=($token)']
+  let HEADERS = [Referer $REFERER Cookie $'emp_cookie=($token)']
   http post -H $HEADERS --content-type application/json -e $emp.allStaffUrl $allStaffPayload
     | get data.data.data
     | select jobNumber name phone user?.id?
@@ -544,7 +544,7 @@ def get-user-auth [
   }
   let user = $resp.body.data.user
   let cookie = $resp.headers.response | where name == 'set-cookie' | get value.0 | split row ';' | get 0
-  { user: $user, iamHost: $iamHost, token: ($cookie | str replace 't_emp_iam=' '') }
+  { user: $user, iamHost: $iamHost, token: ($cookie | str replace 'emp_cookie=' '') }
 }
 
 # 处理未登录、超时、服务器错误等
