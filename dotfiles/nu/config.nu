@@ -100,6 +100,24 @@ def --env yy [...args] {
   rm -fp $tmp
 }
 
+def q-deps [] {
+  $env.config.table.mode = 'psql'
+  [setup-moonbit deepseek-review milestone-action setup-nu]
+    | each {|it|
+      let html = http get $'https://github.com/hustcer/($it)/network/dependents'
+      print -n (char nl)
+      let count = $html | query web --query '#dependents a.selected' | get 0.3 | str trim | lines | first
+      print $'($it) (ansi g)($count)(ansi reset) deps:'
+      print $'(ansi g)-------------------------(ansi reset)'
+      $html
+        | query web --query '#dependents a[data-hovercard-url]'
+        | each { get 0 }
+        | window 2 -s 2
+        | each {|r| $'($r.0)/($r.1)' }
+        | print
+    } | ignore
+}
+
 # Ask anything from DeepSeek R1
 def ds-ask [msg: string, --top-p(-p): float = 1.0, --temperature(-t): float = 0.8] {
   let API_URL = 'http://aihc.hz.hustcer.com:50006/api/chat-process'
