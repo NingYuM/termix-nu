@@ -69,6 +69,19 @@ export def windows? [] {
   (sys host | get name) == 'Windows'
 }
 
+# If current host is macOS
+export def mac? [] {
+  # Windows / Darwin
+  (sys host | get name) == 'Darwin'
+}
+
+# Compact the record by removing empty columns
+export def compact-record []: record -> record {
+  let record = $in
+  let empties = $record | columns | filter {|it| $record | get $it | is-empty }
+  $record | reject ...$empties
+}
+
 # Calculate the base32 hash of a string or file like pnpm's patch hash implementation
 # The hash result should be consistent across different platforms
 export def base32-hash [file?: string] {
@@ -350,6 +363,7 @@ export def git-check [
       exit $ECODE.CONDITION_NOT_SATISFIED
     }
   }
+  true
 }
 
 # Create a line by repeating the unit with specified times

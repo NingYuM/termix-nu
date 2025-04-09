@@ -79,6 +79,11 @@ sync-doc: _setup
 upgrade *OPTIONS: _register_plugins
   @overlay use {{ join(_termix, 'actions', 'upgrade.nu') }}; upgrade-tool {{OPTIONS}}
 
+# Perform code review locally with DeepSeek models
+[group('-- Common  --')]
+cr *OPTIONS:
+  @nu {{ join(_termix, 'cr') }} {{OPTIONS}}
+
 # Release a new version for termix-nu
 [private]
 release  *OPTIONS: _setup
