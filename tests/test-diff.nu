@@ -31,6 +31,8 @@ def 'is-safe-git should work as expected' [] {
   assert equal (is-safe-git 'git diff f536acc 0dd0eb5 :!nu/* >> out.txt') false
   assert equal (is-safe-git 'git diff f536acc 0dd0eb5 :!nu/* < in.txt') false
   assert equal (is-safe-git 'git diff f536acc 0dd0eb5 :!nu/* << in.txt') false
+  assert equal (is-safe-git 'git show head:utils/common.nu') true
+  assert equal (is-safe-git 'git show HEAD:utils/common.nu') true
 }
 
 #[test]
