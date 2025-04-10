@@ -232,7 +232,7 @@ export def get-diff [
     exit $ECODE.SUCCESS
   }
 
-  apply-file-filters $content --include $include --exclude $exclude
+  $content
 }
 
 # Get diff content from local git changes
@@ -246,14 +246,14 @@ def get-diff-content [
   let local_repo = $env.PWD
 
   if ($diff_from | is-not-empty) {
-    get-ref-diff $diff_from --diff-to $diff_to
+    get-ref-diff $diff_from --diff-to $diff_to --include $include --exclude $exclude
   } else if not (git-check $local_repo --check-repo=1) {
     print $'Current directory ($local_repo) is (ansi r)NOT(ansi reset) a git repo, bye...(char nl)'
     exit $ECODE.CONDITION_NOT_SATISFIED
   } else if ($patch_cmd | is-not-empty) {
     get-patch-diff $patch_cmd
   } else {
-    git diff
+    git diff ...(generate-include-args $include) ...(generate-exclude-args $exclude)
   }
 }
 
@@ -261,6 +261,8 @@ def get-diff-content [
 def get-ref-diff [
   diff_from: string,    # Diff from git REF
   --diff-to: string,    # Diff to git ref
+  --include: string,    # Comma separated file patterns to include in the code review
+  --exclude: string,    # Comma separated file patterns to exclude in the code review
 ] {
   # Validate the git refs
   if not (has-ref $diff_from) {
@@ -273,7 +275,7 @@ def get-ref-diff [
     exit $ECODE.INVALID_PARAMETER
   }
 
-  git diff $diff_from ($diff_to | default HEAD)
+  git diff $diff_from ($diff_to | default HEAD) ...(generate-include-args $include) ...(generate-exclude-args $exclude)
 }
 
 # Get the diff content from the specified git command
@@ -289,130 +291,22 @@ def get-patch-diff [
   nu -c $cmd
 }
 
-# Apply file filters to the diff content to include or exclude specific files
-def apply-file-filters [
-  content: string,      # The diff content to filter
-  --include: string,    # Comma separated file patterns to include in the code review
-  --exclude: string,    # Comma separated file patterns to exclude in the code review
-] {
-  mut filtered_content = $content
-  let awk_bin = (prepare-awk)
-  let outdated_awk = $'If you are using an (ansi r)outdated awk version(ansi reset), please upgrade to the latest version or use gawk latest instead.'
-
-  if ($include | is-not-empty) {
-    let patterns = $include | split row ','
-    $filtered_content = $filtered_content | try {
-      ^$awk_bin (generate-include-regex $patterns)
-    } catch {
-      print $outdated_awk
-      exit $ECODE.OUTDATED
-    }
-  }
-
-  if ($exclude | is-not-empty) {
-    let patterns = $exclude | split row ','
-    $filtered_content = $filtered_content | try {
-      ^$awk_bin (generate-exclude-regex $patterns)
-    } catch {
-      print $outdated_awk
-      exit $ECODE.OUTDATED
-    }
-  }
-
-  $filtered_content
+# Generate the git include args for the specified patterns
+export def generate-include-args [includes?: string] {
+  if ($includes | is-empty) { return [] }
+  $includes
+    | split row ,
+    | filter {|p| $p | is-not-empty }
+    | each { str trim }
 }
 
-# AWK family version check for both awk and gawk
-#  awk: awk version 20250116 -> 20250116
-# gawk: GNU Awk 5.3.1, API 4.0, (GNU MPFR 4.2.1, GNU MP 6.3.0) -> 5.3.1
-def get-awk-ver [awk_bin: string] {
-  ^$awk_bin --version | lines | first | split row , | first | split row ' ' | last
-}
-
-# Prepare gawk for macOS
-export def prepare-awk [] {
-  const MIN_GAWK_VERSION = '5.3.1'
-  const MIN_AWK_VERSION = '20250116'
-  let awk_installed = is-installed awk
-  let gawk_installed = is-installed gawk
-
-  if $awk_installed {
-    let awk_version = get-awk-ver awk
-    if (compare-ver $awk_version $MIN_AWK_VERSION) >= 0 {
-      print $'Current awk version: ($awk_version)'
-      return 'awk'
-    }
-  }
-  if $gawk_installed {
-    let gawk_version = get-awk-ver gawk
-    if (compare-ver $gawk_version $MIN_GAWK_VERSION) >= 0 {
-      print $'Current gawk version: ($gawk_version)'
-      return 'gawk'
-    }
-  }
-  if (mac?) and (is-installed brew) {
-    brew install gawk
-    print $'Current gawk version: (get-awk-ver gawk)'
-    return 'gawk'
-  }
-  if (not $awk_installed) and (not $gawk_installed) {
-    print $'(ansi r)Neither `awk` nor `gawk` is installed, please install the latest version of `gawk`.(ansi reset)'
-    exit $ECODE.MISSING_BINARY
-  }
-  print $'Current awk version: (get-awk-ver awk)'
-  'awk'
-}
-
-# Convert glob patterns to regex patterns
-# Pass in *.nu directly as a regular expression does not work, because * in
-# a regular expression needs to be attached to the previous pattern, the correct
-# form should be .* So we should convert each glob pattern to a regex pattern:
-# 1. Convert * to .*
-# 2. Convert ? to . (optional, as needed)
-# 3. Convert / to \/
-def glob-to-regex [patterns: list<string>] {
-  # Handle empty patterns list
-  if ($patterns | length) == 0 { return '' }
-
-  # Define a mapping of characters to escape
-  let regex_escapes = {
-    # Escape special regex characters first
-    "\\.": "\\\\.",
-    "\\+": "\\\\+",
-    "\\^": "\\\\^",
-    "\\$": "\\\\$",
-    "\\(": "\\\\(",
-    "\\)": "\\\\)",
-    "\\[": "\\\\[",
-    "\\]": "\\\\]",
-    "\\{": "\\\\{",
-    "\\}": "\\\\}",
-    "\\|": "\\\\|",
-    # Then convert glob patterns to regex patterns
-    "*": ".*",
-    "?": ".",
-    "/": "\\/",
-  }
-
-  $patterns
-    | each { |pat|
-        $regex_escapes | columns | reduce -f $pat { |k, acc|
-          $acc | str replace -a $k ($regex_escapes | get $k)
-        }
-      }
-    | str join '|'
-}
-
-# Generate the awk include regex pattern string for the specified patterns
-export def generate-include-regex [patterns: list<string>] {
-  let pattern = glob-to-regex $patterns
-  $"/^diff --git/{p=/^diff --git a\\/($pattern)/}p"
-}
-
-# Generate the awk exclude regex pattern string for the specified patterns
-export def generate-exclude-regex [patterns: list<string>] {
-  let pattern = glob-to-regex $patterns
-  $"/^diff --git/{p=/^diff --git a\\/($pattern)/}!p"
+# Generate the git exclude args for the specified patterns
+export def generate-exclude-args [excludes?: string] {
+  if ($excludes | is-empty) { return [] }
+  $excludes
+    | split row ,
+    | filter {|p| $p | is-not-empty }
+    | each {|p| $':!($p | str trim)' }
 }
 
 # Check if the git command is safe to run in the shell

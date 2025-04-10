@@ -78,7 +78,7 @@ def check-providers [options: record] {
   # settings.provider correctly configured and related provider exists
   let provider_name = $options.settings.provider
   if ($provider_name | is-empty) {
-    print $'(ansi r)The provider name is missing in `settings.provider` of .termixrc file.(ansi reset)'
+    print $'(ansi r)The provider name is missing in `cr.settings.provider` of .termixrc file.(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
   let provider_exists = $options.providers
