@@ -163,6 +163,176 @@ description = '标品 TERP 测试环境'
 # [meta.destination.test0]
 # 若需配置更多同步目标参考以上配置
 
+# DeepSeek-Review Config File for Local Code Review Only
+[cr.settings]
+# The provider to use for code review, with it's name in 'providers'
+provider = "Infinigence"
+# The maximum length of the content for review, 0 means no limit
+# The value should be a positive integer, with default value 0
+# If the content length exceeds the non-zero limit, the review will be skipped
+# Note that it's unicode width not token length
+max-length = 0
+# The temperature of the model, The value should be between 0 and 2, with default value 1.0
+temperature = 1.0
+# The user prompt name to use for DeepSeek API
+user-prompt = "default"
+# The system prompt name to use for DeepSeek AP
+# Available options: default,frontend,java
+system-prompt = "default"
+# Include changes in the following file patterns
+include-patterns = ""
+# Exclude changes in the following file patterns
+exclude-patterns = "pnpm-lock.yaml,package-lock.json,*.lock"
+
+# Multiple providers could be defined, select the one by name in 'settings.provider'
+# This way you could switch between different providers easily
+[[cr.providers]]
+name = "ollama-local"
+token = "empty"
+chat-url = "http://localhost:11434/api/chat"
+models = [
+  { name = "deepseek-r1", alias = "r1", enabled = true, description = "DeepSeek R1 model running on Ollama" }
+]
+
+[[cr.providers]]
+name = "DeepSeek"
+# My Official DeepSeek Token
+token = "sk-*****"
+base-url = "https://api.deepseek.com"
+models = [
+  { name = "deepseek-chat", alias = "v3", enabled = true, description = "DeepSeek V3 model" },
+  { name = "deepseek-reasoner", alias = "r1", enabled = false, description = "DeepSeek R1 model" }
+]
+
+[[cr.providers]]
+name = "Infinigence"
+# My Infinigence API token, free account
+token = "sk-*****"
+base-url = "https://cloud.infini-ai.com/maas/v1"
+models = [
+  { name = "deepseek-v3", alias = "v3", enabled = true, description = "Infinigence DeepSeek V3 model" },
+  { name = "deepseek-r1", alias = "r1", description = "Infinigence DeepSeek R1 model" }
+]
+
+[[cr.providers]]
+name = "SiliconFlow"
+# Cathys SiliconFlow API token
+token = "sk-******"
+base-url = "https://api.siliconflow.cn/v1"
+models = [
+  { name = "deepseek-ai/DeepSeek-V3", alias = "v3", description = "SiliconFlow DeepSeek V3 model" },
+  { name = "deepseek-ai/DeepSeek-R1", alias = "r1", enabled = true, description = "SiliconFlow DeepSeek R1 model" }
+]
+
+[[cr.providers]]
+name = "OpenRouter"
+token = "sk-or-v1-******"
+base-url = "https://openrouter.ai/api/v1"
+models = [
+  { name = "deepseek/deepseek-chat-v3-0324:free", alias = "v3", enabled = true, description = "OpenRouter DeepSeek V3 model" },
+  { name = "deepseek/deepseek-r1:free", alias = "r1", description = "OpenRouter DeepSeek R1 model" }
+]
+
+# Multiple Prompts could be defined, select the one by name in 'settings.user-prompt' or 'settings.system-prompt'
+[cr.prompts.user.default]
+name = "default"
+prompt = "你是一个前端开发专家，请审查以下代码变更并给出具体的性能优化或者改进建议:"
+
+[cr.prompts.system.default]
+name = "default"
+prompt = """
+您是一名专业的代码审查助手，负责分析Git仓库中的代码变更。需识别潜在问题（如代码风格违规、逻辑错误、安全漏洞等）并提供改进建议。
+请以简洁的方式清晰列出问题与优化方案。并在最后给出整体代码质量评分（1-5分），比如: `**整体质量：​** 评分（1-5）`。
+"""
+
+[cr.prompts.system.frontend]
+name = "frontend"
+prompt = """
+作为资深前端工程师，执行全面的代码审查，重点关注：
+
+## 1. 核心要求：
+- 验证ES规范符合性
+- 检查组件设计模式
+- 确认状态管理效率
+- 评估无障碍访问实现
+
+## 2. 安全分析：
+- XSS防护措施
+- CSRF保护实现
+- 第三方依赖安全审计
+- 敏感数据处理规范
+
+## 3. 性能优化：
+- 资源加载策略优化
+- 渲染性能调优
+- 内存泄漏预防
+- 包体积管理
+
+**规则：​**
+- 遵循React/Vue框架规范
+- 突出安全漏洞风险
+- 建议性能指标优化
+- 提供修复代码示例
+- 使用现代前端术语
+
+**输出结构要求：​**
+
+### 代码分析
+- 关键发现
+
+### 安全审查
+- 漏洞发现
+
+### 优化建议
+- 性能提升方案
+
+**整体质量：​** 评分（1-5）
+"""
+
+[cr.prompts.system.java]
+name = "java"
+prompt = """
+作为一名高级Java后端工程师，进行全面的代码审查，重点关注:
+
+## 1. 核心审查项
+- 验证 Java 编码规范合规性
+- 检查企业级设计模式实现
+- 核实资源管理效率
+- 评估并发控制机制
+
+## 2. 安全分析
+- SQL/NoSQL 注入防护
+- 敏感数据加密处理
+- 认证/授权机制完备性
+- 会话安全管理
+
+## 3. 性能优化
+- 线程池配置分析
+- 数据库连接管理
+- 缓存策略评估
+- GC 调优机会点
+
+**审查规则：​**
+- 针对 Spring Boot/Jakarta EE 框架
+- 标注 OWASP TOP 10 漏洞
+- 提出 JVM 优化策略
+- 提供修复代码示例
+- 使用企业级 Java 术语
+
+**输出模板：​**
+
+### 代码分析
+- 关键发现项
+
+### 安全审查
+- 漏洞发现清单
+
+### 优化建议
+- 性能提升方案
+
+**综合质量评级：​** （1-5 分制）
+"""
+
 # 快捷导航
 [quickNavs]
 erda = 'https://erda.cloud/'
