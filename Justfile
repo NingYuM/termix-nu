@@ -358,6 +358,11 @@ dir-batch-exec *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'dir-batch-exec.nu') }}; \
     dir-batch-exec {{OPTIONS}}
 
+# Run the test cases locally by nutest
+[private]
+test:
+  @nu -c "use $'($nu.default-config-dir)/lib/nutest' *; run-tests"
+
 # Install fzf if not exists
 _setup_fzf:
   @overlay use {{ join(_termix, 'actions', 'open-tools.nu') }}; \
