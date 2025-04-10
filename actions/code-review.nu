@@ -253,7 +253,7 @@ def get-diff-content [
   } else if ($patch_cmd | is-not-empty) {
     get-patch-diff $patch_cmd
   } else {
-    git diff ...(generate-include-args $include) ...(generate-exclude-args $exclude)
+    git diff -- ...(generate-include-args $include) ...(generate-exclude-args $exclude)
   }
 }
 
@@ -275,7 +275,7 @@ def get-ref-diff [
     exit $ECODE.INVALID_PARAMETER
   }
 
-  git diff $diff_from ($diff_to | default HEAD) ...(generate-include-args $include) ...(generate-exclude-args $exclude)
+  git diff $diff_from ($diff_to | default HEAD) -- ...(generate-include-args $include) ...(generate-exclude-args $exclude)
 }
 
 # Get the diff content from the specified git command
