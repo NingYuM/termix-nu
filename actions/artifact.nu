@@ -117,7 +117,7 @@ def show-settings [
     | upsert project {|it| $'($it.projectId) @ ($it.projectName)' }
     | select -i alias project appName env branch default | print
 
-  print $'Available destination settings:(char nl)'
+  print $'(char nl)Available destination settings:(char nl)'
   mut destTable = []
   let dests = $conf.destination | columns
   for d in $dests {
