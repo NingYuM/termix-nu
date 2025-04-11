@@ -8,8 +8,10 @@ on:
       - master
       - develop
     paths:
+      - '**/*.nu'
       - Dockerfile
       - .github/workflows/build-image.yaml
+
   workflow_dispatch:
     inputs:
       tag:
