@@ -9,6 +9,7 @@ tmp
 mall
 casts
 dotfiles
+review*.md
 .typos.toml
 cspell.yml
 cliff.toml

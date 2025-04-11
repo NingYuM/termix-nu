@@ -10,6 +10,7 @@ use actions/code-review.nu [deepseek-review]
 def main [
   token?: string,           # Your DeepSeek API token, fallback to CHAT_TOKEN env var
   --debug(-d),              # Debug mode
+  --output(-o): string,     # Output file path
   --diff-to(-t): string,    # Diff to git REF
   --diff-from(-f): string,  # Diff from git REF
   --patch-cmd(-c): string,  # The `git show` or `git diff` command to get the diff content, for local CR only
@@ -28,6 +29,7 @@ def main [
   (
     deepseek-review $token
       --debug=$debug
+      --output=$output
       --base-url=$base_url
       --chat-url=$chat_url
       --diff-to=$diff_to
