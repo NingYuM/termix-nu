@@ -47,6 +47,7 @@ const DEFAULT_OPTIONS = {
 export def --env deepseek-review [
   token?: string,           # Your DeepSeek API token, fallback to CHAT_TOKEN env var
   --debug(-d),              # Debug mode
+  --output(-o): string,     # Output file path
   --diff-to(-t): string,    # Diff to git REF
   --diff-from(-f): string,  # Diff from git REF
   --patch-cmd(-c): string,  # The `git show` or `git diff` command to get the diff content, for local CR only
@@ -61,11 +62,13 @@ export def --env deepseek-review [
   --temperature(-T): float, # Temperature for the model, between `0` and `2`, default value `1.0`
 ]: nothing -> nothing {
 
-  let stream = true
   $env.config.table.mode = 'psql'
   let local_repo = $env.PWD
+  let write_file = ($output | is-not-empty)
+  let stream = (not $write_file)
   let token = $token | default $env.CHAT_TOKEN?
   let CHAT_HEADER = [Authorization $'Bearer ($token)']
+  let output_mode = if ($output | is-not-empty) { 'file' } else { 'console' }
   let model = $model | default $env.CHAT_MODEL? | default $DEFAULT_OPTIONS.MODEL
   let base_url = $base_url | default $env.BASE_URL? | default $DEFAULT_OPTIONS.BASE_URL
   let url = $chat_url | default $env.CHAT_URL? | default $'($base_url)/chat/completions'
@@ -135,11 +138,42 @@ export def --env deepseek-review [
     exit $ECODE.SERVER_ERROR
   }
   let result = if ($reason | is-empty) { $review } else { $result }
-  print $'Code Review Result:'; hr-line; print $result
+  match $output_mode {
+    'file' => { write-review-to-file $output $setting $result $response }
+    _ => { print $'Code Review Result:'; hr-line; print $result }
+  }
 
   if ($response.usage? | is-not-empty) {
     print $'(char nl)Token Usage:'; hr-line
     $response.usage? | table -e | print
+  }
+}
+
+# Write the code review result to a file
+def write-review-to-file [
+  file: string,           # Output file path
+  setting: record,        # Review settings
+  result: string,         # Review result
+  response: record,       # DeepSeek API response
+] {
+  let file = (if not ($file | str ends-with '.md') { $'($file).md' } else { $file })
+  let token_usage = if ($response.usage? | is-empty) { [] } else {
+    ['## Token Usage', '', ($response.usage? | transpose key val | to md --pretty)]
+  }
+  # Generate content sections
+  let content_sections = [
+    '# DeepSeek Code Review Result', ''
+    $"Generated at: (date now | format date '%Y/%m/%d %H:%M:%S')", ''
+    '## Code Review Settings', ''
+    ($setting | compact-record | reject -i repo | transpose key val | to md --pretty)
+    '', '## Review Detail', '', $result, '', ...$token_usage
+  ]
+  try {
+    $content_sections | str join (char nl) | save --force $file
+    print $'Code Review Result saved to (ansi g)($file)(ansi reset)'
+  } catch {|err|
+    print $'(ansi r)Failed to save review result: (ansi reset)'
+    $err | table -e | print
   }
 }
 

@@ -4,6 +4,7 @@ tmp
 .idea
 .termixrc
 .snapshot
+review*.md
 *-compose.nu
 .fzf-preview.nuon
 docker-compose.dev.yml
