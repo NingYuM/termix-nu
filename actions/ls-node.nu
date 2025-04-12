@@ -19,8 +19,8 @@ export def ls-node-remote [
   --lts,              # Filter the node versions that are LTS
 ] {
 
-  let minVersion = if ($minVer | is-empty) { 16 } else { ($minVer | str replace 'v' '' | into int) }
-  let vers = (http get $RELEASE_SOURCE | select version lts date npm? v8)
+  let minVersion = if ($minVer | is-empty) { 18 } else { $minVer | str trim -c v | into int }
+  let vers = http get $RELEASE_SOURCE | select version lts date npm? v8
   let vRow = (
     $vers
       | upsert lts { if $in == false { '-' } else { $in }}
