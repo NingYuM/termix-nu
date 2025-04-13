@@ -117,7 +117,7 @@ export def install-or-update [
   try {
     unzip-pkg $bin $pkg $dest --in-place-update=$in_place_update
   } catch { |error|
-    print $'(ansi r)Failed to install ($bin), due to the error: ($error.msg)(ansi reset)'
+    print -e $'(ansi r)Failed to install ($bin), due to the error: ($error.msg)(ansi reset)'
     exit 1
   }
   print $'Successfully installed (ansi g)($bin)@($latest.version)(ansi reset)'

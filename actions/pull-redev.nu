@@ -23,7 +23,7 @@ export def 'git pull-redev' [
     print $'(ansi p)Found the following matched repos:(ansi reset)(char nl)(char nl)'
     print $filteredRepos
   } else {
-    print $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'
+    print -e $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'
     exit $ECODE.MISSING_DEPENDENCY
   }
   print $'Pull remote redevelop repos in directory (ansi g)($repoPath)(ansi reset):(char nl)'
@@ -45,7 +45,7 @@ export def 'git pull-redev' [
 
     cd $destRepoPath;
     if not ((has-ref $branch) or (has-ref origin/($branch))) {
-      print $'Dest branch: ($branch) does not exist, bye...(char nl)'
+      print -e $'Dest branch: ($branch) does not exist, bye...(char nl)'
       exit $ECODE.MISSING_DEPENDENCY
     }
     git checkout $branch; git pull

@@ -16,8 +16,8 @@ export def 'git batch-reset' [
 
   let dest = ($branches | str trim | split row ' ' | compact)
   if ($branches | str trim | is-empty) {
-    print $'You did not specify any branches to do reset, bye...(char nl)'
-    exit $ECODE.MISSING_DEPENDENCY
+    print -e $'You did not specify any branches to do reset, bye...(char nl)'
+    exit $ECODE.INVALID_PARAMETER
   }
 
   cd $env.JUST_INVOKE_DIR

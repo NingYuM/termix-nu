@@ -150,7 +150,7 @@ def revert-module [modules: string, to: string, destStore: string] {
   let dest = input $'Please confirm by typing (ansi r)($target)(ansi reset) to continue or (ansi p)q(ansi reset) to quit: '
   if $dest == 'q' { print $'Revert cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $dest != $target {
-    print $'You input (ansi p)($dest)(ansi reset) does not match (ansi p)($target)(ansi reset), bye...'; exit $ECODE.INVALID_PARAMETER
+    print -e $'Your input (ansi p)($dest)(ansi reset) does not match (ansi p)($target)(ansi reset), bye...'; exit $ECODE.INVALID_PARAMETER
   }
   # Copy remote latest.json to local at the last moment to make sure the latest version is used
   if $isMinio {
@@ -174,7 +174,7 @@ def revert-module [modules: string, to: string, destStore: string] {
   if $sync.exit_code == 0 {
     print $'Revert (ansi p)($modules)(ansi reset) module to (ansi p)($revision) for ($to)@($destStore)(ansi reset) success!'; exit $ECODE.SUCCESS
   }
-  print $'Revert (ansi p)($modules)(ansi reset) module to (ansi p)($revision) for ($to)@($destStore)(ansi reset) failed:'
+  print -e $'Revert (ansi p)($modules)(ansi reset) module to (ansi p)($revision) for ($to)@($destStore)(ansi reset) failed:'
   print $sync.stderr
 }
 
@@ -200,7 +200,7 @@ def revert-precheck [module: string, to: string, ossConf: record] {
       # Minio AK/SK/Endpoint check
       let mconf = mc alias ls --json | from json -o | where alias == $mcAlias | get 0
       if $mconf.accessKey != $ossConf.OSS_AK or $mconf.secretKey != $ossConf.OSS_SK or $mconf.URL != $ossConf.OSS_ENDPOINT {
-        print $'The specified mc alias (ansi p)($mcAlias)(ansi reset) does not match the oss config, please check your mc config'
+        print -e $'The specified mc alias (ansi p)($mcAlias)(ansi reset) does not match the oss config, please check your mc config'
         exit $ECODE.INVALID_PARAMETER
       }
     }
@@ -252,7 +252,7 @@ def get-modules [modules?: string, --latest-meta: record, --action: string] {
   if ($splits | length) > 0 {
     let inexists = $splits | filter {|it| $it not-in ($allModules | get mod) }
     if ($inexists | length) > 0 {
-      print $'Invalid modules (ansi r)($inexists | str join ",")(ansi reset), the module you specified does not exists in latest.json(ansi reset)'
+      print -e $'Invalid modules (ansi r)($inexists | str join ",")(ansi reset), the module you specified does not exists in latest.json(ansi reset)'
       exit $ECODE.INVALID_PARAMETER
     }
   }
@@ -272,8 +272,8 @@ def get-latest-meta [from: string] {
   if (not $validateModules) or ($validateModules and $validationPassed) {
     return { from: $from, latestUrl: $fromUrl, mountpoint: $mount, latest: $latest }
   }
-  print $'The latest.json from (ansi p)($fromUrl)(ansi reset) contains invalid modules, module list:'
-  print $'($modules | str join ", ")'
+  print -e $'The latest.json from (ansi p)($fromUrl)(ansi reset) contains invalid modules, module list:'
+  print -e $'($modules | str join ", ")'
   exit $ECODE.INVALID_PARAMETER
 }
 
@@ -282,7 +282,7 @@ def --env get-dest-oss [destStore: string] {
   let LOCAL_CONFIG = if ('.termixrc' | path exists) { '.termixrc' } else { $'($env.TERMIX_DIR)/.termixrc' }
   let ossConf = open $LOCAL_CONFIG | from toml | get -i $destStore
   if ($ossConf | is-empty) {
-    print $'The storage you specified (ansi p)($destStore)(ansi reset) does not exist in (ansi p)($LOCAL_CONFIG)(ansi reset).'
+    print -e $'The storage you specified (ansi p)($destStore)(ansi reset) does not exist in (ansi p)($LOCAL_CONFIG)(ansi reset).'
     exit $ECODE.INVALID_PARAMETER
   }
   $ossConf
@@ -295,27 +295,27 @@ def pre-check [
   --dest-store(-d): string,  # Destination store, should be configured in .termixrc
 ] {
   if $action not-in $VALID_ACTIONS {
-    print $'Invalid action ($action), supported actions: ($VALID_ACTIONS | str join ", ")'
+    print -e $'Invalid action ($action), supported actions: ($VALID_ACTIONS | str join ", ")'
     exit $ECODE.INVALID_PARAMETER
   }
   if not (is-installed package-tools) {
-    print $'Please install package-tools by (ansi g)`npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io`(ansi reset) first.'
+    print -e $'Please install package-tools by (ansi g)`npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io`(ansi reset) first.'
     exit $ECODE.MISSING_BINARY
   }
   let ver = package-tools -v
   let minPkgToolsVer = get-conf minPkgToolVer
   let compVer = compare-ver $ver $minPkgToolsVer
   if $compVer < 0 {
-    print $'Only package-tools (ansi r)($minPkgToolsVer)(ansi reset) or above is supported. Please reinstall it by:'
+    print -e $'Only package-tools (ansi r)($minPkgToolsVer)(ansi reset) or above is supported. Please reinstall it by:'
     print $'(ansi g)npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io (ansi reset)(char nl)'
     exit $ECODE.CONDITION_NOT_SATISFIED
   }
   if $action == 'transfer' and (($to | is-empty) or ($dest_store | is-empty)) {
     if ($to | is-empty) {
-      print $'Please specify the dest to transfer by (ansi p)--to(ansi reset) option.'
+      print -e $'Please specify the dest to transfer by (ansi p)--to(ansi reset) option.'
     }
     if ($dest_store | is-empty) {
-      print $'Please specify the dest store to transfer by (ansi p)--dest-store(ansi reset) option.'
+      print -e $'Please specify the dest store to transfer by (ansi p)--dest-store(ansi reset) option.'
     }
     exit $ECODE.INVALID_PARAMETER
   }
@@ -335,7 +335,7 @@ def confirm-action [
   let dest = input $'Please confirm by typing (ansi r)($to)(ansi reset) to continue or (ansi p)q(ansi reset) to quit: '
   if $dest == 'q' { print $'Transfer cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $dest != $to {
-    print $'You input (ansi p)($dest)(ansi reset) does not match (ansi p)($to)(ansi reset), bye...'; exit $ECODE.INVALID_PARAMETER
+    print -e $'Your input (ansi p)($dest)(ansi reset) does not match (ansi p)($to)(ansi reset), bye...'; exit $ECODE.INVALID_PARAMETER
   }
 }
 

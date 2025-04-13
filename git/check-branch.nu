@@ -16,7 +16,7 @@ export def main [] {
   let remoteIExists = has-ref origin/i
 
   if not ($localIExists or $remoteIExists) {
-    print $'You do not have an i branch, branch description query failed, bye...(char nl)'
+    print -e $'You do not have an i branch, branch description query failed, bye...(char nl)'
     exit $ECODE.MISSING_DEPENDENCY
   }
 

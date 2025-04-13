@@ -91,7 +91,7 @@ export def --env deepseek-review [
   }
 
   if ($token | is-empty) {
-    print $'(ansi r)Please provide your DeepSeek API token by setting `CHAT_TOKEN` or passing it as an argument.(ansi reset)'
+    print -e $'(ansi r)Please provide your DeepSeek API token by setting `CHAT_TOKEN` or passing it as an argument.(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
   let hint = $'🚀 Initiate the code review by DeepSeek AI for local changes ...'
@@ -123,12 +123,12 @@ export def --env deepseek-review [
 
   let response = http post -e -H $CHAT_HEADER -t application/json $url $payload
   if ($response | is-empty) {
-    print $'(ansi r)Oops, No response returned from ($url) ...(ansi reset)'
+    print -e $'(ansi r)Oops, No response returned from ($url) ...(ansi reset)'
     exit $ECODE.SERVER_ERROR
   }
   if $debug { print $'DeepSeek Model Response:'; hr-line; $response | table -e | print }
   if ($response | describe) == 'string' {
-    print $'✖️ Code review failed！Error: '; hr-line; print $response
+    print -e $'✖️ Code review failed！Error: '; hr-line; print $response
     exit $ECODE.SERVER_ERROR
   }
   let message = $response | get -i choices.0.message
@@ -136,7 +136,7 @@ export def --env deepseek-review [
   let review = $message.content? | default ($response | get -i message.content)
   let result = ['<details>' '<summary> Reasoning Details</summary>' $reason "</details>\n" $review] | str join "\n"
   if ($review | is-empty) {
-    print $'✖️ Code review failed！No review result returned from ($base_url) ...'
+    print -e $'✖️ Code review failed！No review result returned from ($base_url) ...'
     exit $ECODE.SERVER_ERROR
   }
   let result = if ($reason | is-empty) { $review } else { $result }
@@ -174,7 +174,7 @@ def write-review-to-file [
     $content_sections | str join (char nl) | save --force $file
     print $'Code Review Result saved to (ansi g)($file)(ansi reset)'
   } catch {|err|
-    print $'(ansi r)Failed to save review result: (ansi reset)'
+    print -e $'(ansi r)Failed to save review result: (ansi reset)'
     $err | table -e | print
   }
 }
@@ -182,7 +182,7 @@ def write-review-to-file [
 # Validate the temperature value
 def validate-temperature [temp: float] {
   if ($temp < 0) or ($temp > 2) {
-    print $'(ansi r)Invalid temperature value, should be in the range of 0 to 2.(ansi reset)'
+    print -e $'(ansi r)Invalid temperature value, should be in the range of 0 to 2.(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
   $temp
@@ -209,7 +209,7 @@ def streaming-output [
           exit $ECODE.SERVER_ERROR
         }
       }
-    | try { lines } catch { print $'(ansi r)Error Happened ...(ansi reset)'; exit $ECODE.SERVER_ERROR }
+    | try { lines } catch { print -e $'(ansi r)Error Happened ...(ansi reset)'; exit $ECODE.SERVER_ERROR }
     | each {|line|
         if ($line | is-empty) { return }
         if ($IGNORED_MESSAGES | get -i $line | default false) { return }
@@ -290,7 +290,7 @@ def get-diff-content [
   if ($diff_from | is-not-empty) {
     get-ref-diff $diff_from --diff-to $diff_to --include $include --exclude $exclude
   } else if not (git-check $local_repo --check-repo=1) {
-    print $'Current directory ($local_repo) is (ansi r)NOT(ansi reset) a git repo, bye...(char nl)'
+    print -e $'Current directory ($local_repo) is (ansi r)NOT(ansi reset) a git repo, bye...(char nl)'
     exit $ECODE.CONDITION_NOT_SATISFIED
   } else if ($patch_cmd | is-not-empty) {
     get-patch-diff $patch_cmd
@@ -305,7 +305,7 @@ def get-diff-by-paths [paths: string] {
     | reduce -f '' {|it, acc|
         let initial_commit = git log --diff-filter=A --format=%H -- $it | lines | last
         if ($initial_commit | is-empty) {
-          print $'(ansi r)The file ($it) does not exist in the git history.(ansi reset)'
+          print -e $'(ansi r)The file ($it) does not exist in the git history.(ansi reset)'
           exit $ECODE.INVALID_PARAMETER
         }
         $acc  + (char nl) + (git diff $'($initial_commit)^' HEAD -- $it)
@@ -321,12 +321,12 @@ def get-ref-diff [
 ] {
   # Validate the git refs
   if not (has-ref $diff_from) {
-    print $'(ansi r)The specified git ref ($diff_from) does not exist, please check it again.(ansi reset)'
+    print -e $'(ansi r)The specified git ref ($diff_from) does not exist, please check it again.(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
 
   if ($diff_to | is-not-empty) and not (has-ref $diff_to) {
-    print $'(ansi r)The specified git ref ($diff_to) does not exist, please check it again.(ansi reset)'
+    print -e $'(ansi r)The specified git ref ($diff_to) does not exist, please check it again.(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
 
@@ -379,7 +379,7 @@ export def is-safe-git [cmd: string] {
   let git_cmd_pattern = '^git\s+(show|diff)(?:\s+(?:[a-zA-Z0-9_\-\.~/]+(?::[a-zA-Z0-9_\-\.\*\/]+)?)){0,3}(?:\s+(?::[!]?)?[a-zA-Z0-9_\-\.\*\/]+){0,2}$'
 
   if ($normalized_cmd | find -r $git_cmd_pattern | is-empty) {
-    print $'(ansi r)Invalid git command format. (ansi g)Only simple `git show` or `git diff` commands are allowed.(ansi reset)'
+    print -e $'(ansi r)Invalid git command format. (ansi g)Only simple `git show` or `git diff` commands are allowed.(ansi reset)'
     return false
   }
   true

@@ -108,11 +108,11 @@ def get-valid-options [
   let to = if ($to | is-empty) { git branch --show-current | str trim } else { $to }
   let from = if ($from | is-empty) { git branch --show-current | str trim } else { $from }
   if ($from | is-not-empty) and ($from not-in $branches) {
-    print $'Source branch (ansi r)($from)(ansi reset) not found, make sure you have checked out it from the remote.'
+    print -e $'Source branch (ansi r)($from)(ansi reset) not found, make sure you have checked out it from the remote.'
     exit $ECODE.INVALID_PARAMETER
   }
   if ($to | is-not-empty) and ($to not-in $branches) {
-    print $'Dest branch (ansi r)($to)(ansi reset) not found, make sure you have checked out it from the remote.'
+    print -e $'Dest branch (ansi r)($to)(ansi reset) not found, make sure you have checked out it from the remote.'
     exit $ECODE.INVALID_PARAMETER
   }
   # 只有输入的字符串长度大于 7 的时候才会尝试判断是不是 commit SHA

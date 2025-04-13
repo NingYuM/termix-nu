@@ -24,16 +24,16 @@ export def main [
   let greatestVer = (git tag -l --sort=-v:refname | lines | select 0).0
 
   if (has-ref $releaseVer) {
-  	print $'The version ($releaseVer) already exists, Please choose another version.(char nl)'
+  	print -e $'The version ($releaseVer) already exists, Please choose another version.(char nl)'
   	exit $ECODE.CONDITION_NOT_SATISFIED
   }
   if (is-lower-ver $releaseVer $greatestVer) {
-  	print $'The release version should be greater than ($greatestVer), however, current release ver: ($releaseVer)(char nl)'
+  	print -e $'The release version should be greater than ($greatestVer), however, current release ver: ($releaseVer)(char nl)'
   	exit $ECODE.CONDITION_NOT_SATISFIED
   }
   let statusCheck = (git status --porcelain)
   if not ($statusCheck | is-empty) {
-  	print $'You have uncommit changes, please commit them and try `release` again!(char nl)'
+  	print -e $'You have uncommit changes, please commit them and try `release` again!(char nl)'
   	exit $ECODE.CONDITION_NOT_SATISFIED
   }
   if $update_log {

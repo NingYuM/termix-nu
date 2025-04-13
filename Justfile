@@ -382,7 +382,7 @@ _setup_fzf:
 # Pre check TERMIX_DIR env variable, make sure it is set correctly
 _termix_check:
   @if not ($env.TERMIX_DIR | path exists) { \
-      print $'Make sure you have set (ansi r)TERMIX_DIR(ansi reset) env variable in (ansi r).env(ansi reset) correctly.'; \
+      print -e $'Make sure you have set (ansi r)TERMIX_DIR(ansi reset) env variable in (ansi r).env(ansi reset) correctly.'; \
       exit 99 }
 
 # 版本检查前置操作
