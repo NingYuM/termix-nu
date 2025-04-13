@@ -27,7 +27,7 @@ export def go [
     # Use powershell command to open url in default browser for Windows
     if (windows?) { ^powershell -c $'Start-Process ($url)' } else { ^open $url }
   } else {
-    print $'(ansi r)Invalid nav url, bye...(char nl)(ansi reset)'
+    print -e $'(ansi r)Invalid nav url, bye...(char nl)(ansi reset)'
   }
 }
 

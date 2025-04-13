@@ -125,7 +125,7 @@ export def get-latest-nightly-build [
       print $'(ansi g)mv -force ($binDir)/nu-nightly.exe ($binDir)/nu.exe(ansi reset)'
     },
     _ => {
-      print $"Unknown extension ($build.extension), you'll have to figure out how to extract this archive ;)"
+      print -e $"Unknown extension ($build.extension), you'll have to figure out how to extract this archive ;)"
     },
   }
 }

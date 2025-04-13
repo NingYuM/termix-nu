@@ -172,7 +172,7 @@ export def upgrade-latest-tool [
       print $'($name) has been upgraded successfully'
     },
     _ => {
-      print $"Unknown extension ($extension), you'll have to figure out how to extract this archive ;)"
+      print -e $"Unknown extension ($extension), you'll have to figure out how to extract this archive ;)"
     },
   }
 }

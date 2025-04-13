@@ -32,7 +32,7 @@ def --env git-proxy [
       }
     })
     if ($proxy | is-empty) {
-      print $'(ansi r)(char nl)Can not find Ali, ClashX or v2ray proxy, please start it and try again, bye...(ansi reset)(char nl)(char nl)'
+      print -e $'(ansi r)(char nl)Can not find Ali, ClashX or v2ray proxy, please start it and try again, bye...(ansi reset)(char nl)(char nl)'
       exit $ECODE.MISSING_DEPENDENCY
     }
 

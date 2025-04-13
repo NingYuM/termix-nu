@@ -34,7 +34,7 @@ export def 'git repo-transfer' [
       git remote set-url origin --push $dest
       do-push $dest
     } else {
-      print $'(ansi r)Path ($tmpPath)/($repoName) already exists(ansi reset), Please remove it and try again...(char nl)'
+      print -e $'(ansi r)Path ($tmpPath)/($repoName) already exists(ansi reset), Please remove it and try again...(char nl)'
       exit $ECODE.CONDITION_NOT_SATISFIED
     }
   } else {
@@ -55,7 +55,7 @@ def do-push [
   if not ($push.stderr | is-empty) { print $push.stderr }
   if not ($push.stdout | is-empty) { print $push.stdout }
   if $push.stderr =~ 'not found' {
-    print $'(ansi r)Error: The dest repo does not exist, please create it and try again, bye...(ansi reset)(char nl)'
+    print -e $'(ansi r)Error: The dest repo does not exist, please create it and try again, bye...(ansi reset)(char nl)'
   }
   if $push.exit_code == 0 {
     print $'(ansi g)Bravo! Repo transfer successfully!(ansi reset)(char nl)'

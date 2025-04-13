@@ -70,14 +70,14 @@ export def artifacts [
   let checkEnv = {|did|
       if ($'($did)' != '0') { return }
       if ($dest_env | is-empty) {
-        print $'(ansi r)Please specify the dest environment to deploy the artifact by --dest-env/-e, such as DEV,TEST,STAGING,PROD, etc.(ansi reset)'
+        print -e $'(ansi r)Please specify the dest environment to deploy the artifact by --dest-env/-e, such as DEV,TEST,STAGING,PROD, etc.(ansi reset)'
         exit $ECODE.INVALID_PARAMETER
       }
     }
 
   let checkVersion = {
       if ($version | is-empty) {
-        print $'(ansi r)Please specify the version of the artifact to process by --version/-v...(ansi reset)'
+        print -e $'(ansi r)Please specify the version of the artifact to process by --version/-v...(ansi reset)'
         exit $ECODE.INVALID_PARAMETER
       }
     }
@@ -95,7 +95,7 @@ export def artifacts [
                        --version $version --to $to --deploy-group $deploy_group --no-deploy=$no_deploy)
     }
     _ => {
-      print $'Unsupported action: (ansi r)($action)(ansi reset), supported actions are: (ansi g)($SUPPORTED_ACTIONS | str join ", ")(ansi reset)'
+      print -e $'Unsupported action: (ansi r)($action)(ansi reset), supported actions are: (ansi g)($SUPPORTED_ACTIONS | str join ", ")(ansi reset)'
       exit $ECODE.INVALID_PARAMETER
     }
   }
@@ -145,7 +145,7 @@ export def fzf-preview [
   match $type {
     artifact => { preview-artifact $selected }
     group => { preview-group $selected --options $options }
-    _ => { print $'Unsupported preview type: (ansi r)($type)(ansi reset)' }
+    _ => { print -e $'Unsupported preview type: (ansi r)($type)(ansi reset)' }
   }
 }
 
@@ -189,7 +189,7 @@ def --env load-art-conf [] {
   # TODO: Validate the artifact settings
   let checkUniqDefault = {|type|
     if ($artConf | get $type | values | default false default | where default == true | length) > 1 {
-      print $'(ansi r)Multiple default ($type) found, make sure that you have at most one default ($type) in .termixrc.(ansi reset)'
+      print -e $'(ansi r)Multiple default ($type) found, make sure that you have at most one default ($type) in .termixrc.(ansi reset)'
       exit $ECODE.INVALID_PARAMETER
     }
   }
@@ -255,7 +255,7 @@ def validate-pack-setting [
   }
 
   if ($setting | compact | is-empty) {
-    print $'(ansi r)No source config found to pack the app artifact, bye...(ansi reset)'
+    print -e $'(ansi r)No source config found to pack the app artifact, bye...(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
   mut setting = ($artConf.settings | merge $setting.0 | default $ERDA_HOST erdaHost)
@@ -276,7 +276,7 @@ def confirm-pack [
   let confirm = input $'Please input (ansi p)($version)(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
   if $confirm == 'q' { print $'Artifact packing cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $confirm != $version {
-    print $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($version)(ansi reset), bye...'
+    print -e $'Your input (ansi p)($confirm)(ansi reset) does not match (ansi p)($version)(ansi reset), bye...'
     exit $ECODE.INVALID_PARAMETER
   }
 }
@@ -306,7 +306,7 @@ def confirm-produce [
   let confirm = input $'Please input (ansi p)($setting.branch)(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
   if $confirm == 'q' { print $'Artifacts creating cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $confirm != $setting.branch {
-    print $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($setting.branch)(ansi reset), bye...'
+    print -e $'Your input (ansi p)($confirm)(ansi reset) does not match (ansi p)($setting.branch)(ansi reset), bye...'
     exit $ECODE.INVALID_PARAMETER
   }
 }
@@ -333,7 +333,7 @@ def confirm-consume [
   let confirm = input $'Please input (ansi p)($version)(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
   if $confirm == 'q' { print $'Operation cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $confirm != $version {
-    print $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($version)(ansi reset), bye...'
+    print -e $'Your input (ansi p)($confirm)(ansi reset) does not match (ansi p)($version)(ansi reset), bye...'
     exit $ECODE.INVALID_PARAMETER
   }
 }
@@ -362,7 +362,7 @@ def confirm-deploy [
   let confirm = input $'Please input (ansi p)($version)(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
   if $confirm == 'q' { print $'Operation cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $confirm != $version {
-    print $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($version)(ansi reset), bye...'
+    print -e $'Your input (ansi p)($confirm)(ansi reset) does not match (ansi p)($version)(ansi reset), bye...'
     exit $ECODE.INVALID_PARAMETER
   }
 }
@@ -446,7 +446,7 @@ def validate-consume-setting [
   if not ($deploy and ($doid | is-not-empty)) {
     let destEnv = $destEnv | str upcase
     if $destEnv not-in $VALID_ENV {
-      print $'Invalid dest environment: (ansi r)($destEnv)(ansi reset), supported environments are: ($VALID_ENV | str join ", ")'
+      print -e $'Invalid dest environment: (ansi r)($destEnv)(ansi reset), supported environments are: ($VALID_ENV | str join ", ")'
       exit $ECODE.INVALID_PARAMETER
     }
   }
@@ -458,7 +458,7 @@ def validate-consume-setting [
   }
 
   if ($setting | compact | is-empty) {
-    print $'(ansi r)No destination config found to deploy the artifact, bye...(ansi reset)'
+    print -e $'(ansi r)No destination config found to deploy the artifact, bye...(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
   mut setting = ($artConf.settings | merge $setting.0 | default $ERDA_HOST erdaHost)
@@ -494,7 +494,7 @@ def deploy-artifact [
   }
   let version = if ($version | is-empty) { select-artifact-by-fzf $destSetting } else { $version }
   if ($version | is-empty) {
-    print $'(ansi grey66)No artifact version selected, deploy cancelled, bye...(ansi reset)'
+    print -e $'(ansi grey66)No artifact version selected, deploy cancelled, bye...(ansi reset)'
     exit $ECODE.SUCCESS
   }
   if $combine {
@@ -704,8 +704,8 @@ def create-deploy-order [
   }
   let do = http post -e --headers (get-erda-auth $host --type nu) --content-type application/json $doCreateUrl $doPayload
   if not $do.success {
-    print $'Failed to create deploy order with error message:'
-    print $'(ansi r)($do.err.msg)(ansi reset)'
+    print -e $'Failed to create deploy order with error message:'
+    print -e $'(ansi r)($do.err.msg)(ansi reset)'
   } else {
     print $'Deploy order has been created successfully with ID (ansi g)($do.data.id)(ansi reset)'
     return $do.data.id
@@ -784,7 +784,7 @@ def query-release-by-version [
   }
 
   if ($filtered | describe) == 'string' and $filtered =~ 'Unauthorized' {
-    print $'Failed to query release with error message: (ansi r)($filtered)(ansi reset)'
+    print -e $'Failed to query release with error message: (ansi r)($filtered)(ansi reset)'
     exit $ECODE.AUTH_FAILED
   }
   let matches = if $filtered.success {
@@ -847,8 +847,8 @@ def upload-artifact [
   if $release.success {
     print $'Artifact has been uploaded successfully with version (ansi g)($version)(ansi reset)'
   } else {
-    print $'Failed to upload artifact of version ($version) with error message:'
-    print $'(ansi r)($release.err.msg)(ansi reset)'
+    print -e $'Failed to upload artifact of version ($version) with error message:'
+    print -e $'(ansi r)($release.err.msg)(ansi reset)'
   }
 }
 
@@ -880,8 +880,8 @@ def create-project-artifact [
     $matches | print
     return $matches
   }
-  print $'Failed to create project artifact of version ($version) with error message:'
-  print $'(ansi r)($resp.err.msg)(ansi reset)'
+  print -e $'Failed to create project artifact of version ($version) with error message:'
+  print -e $'(ansi r)($resp.err.msg)(ansi reset)'
   exit $ECODE.SERVER_ERROR
 }
 
@@ -898,8 +898,8 @@ def upload-file [
     print $'File (ansi g)($file)(ansi reset) has been uploaded successfully to Erda Cloud'
     return { fileID: $upload.data.uuid, url: $upload.data.url, creator: $upload.data.creator }
   }
-  print $'Failed to upload file ($file) to Erda Cloud with error message:'
-  print $upload.err.msg
+  print -e $'Failed to upload file ($file) to Erda Cloud with error message:'
+  print -e $upload.err.msg
 }
 
 alias main = fzf-preview

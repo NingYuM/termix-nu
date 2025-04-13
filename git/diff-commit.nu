@@ -19,11 +19,11 @@ export def 'git diff-commit' [
   --exclude-authors(-A): string,  # Exclude commits by authors
 ] {
   if not (has-ref $from) {
-    print $'Commit hash or ref (ansi p)($from)(ansi reset) not found'
+    print -e $'Commit hash or ref (ansi p)($from)(ansi reset) not found'
     exit $ECODE.INVALID_PARAMETER
   }
   if not (has-ref $to) {
-    print $'Commit hash or ref (ansi p)($to)(ansi reset) not found'
+    print -e $'Commit hash or ref (ansi p)($to)(ansi reset) not found'
     exit $ECODE.INVALID_PARAMETER
   }
 

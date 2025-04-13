@@ -19,7 +19,7 @@ export def main [
   let localIExists = has-ref i
   let remoteIExists = has-ref origin/i
   if not ($localIExists or $remoteIExists) {
-    print $'You do not have an (ansi r)i(ansi reset) branch, branch description query failed, bye...(char nl)'
+    print -e $'You do not have an (ansi r)i(ansi reset) branch, branch description query failed, bye...(char nl)'
     exit $ECODE.MISSING_DEPENDENCY
   }
 

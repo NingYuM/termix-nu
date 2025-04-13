@@ -31,7 +31,7 @@ export def 'git trigger-sync' [
   let ignored = get-env SYNC_IGNORE_ALIAS ''
   let invalid = $branches | filter {|it| not (has-ref $it)}
   if ($invalid | is-not-empty) {
-    print $'Branch (ansi r)($invalid | str join ,)(ansi reset) does not exist, please check it again.'
+    print -e $'Branch (ansi r)($invalid | str join ,)(ansi reset) does not exist, please check it again.'
     exit $ECODE.INVALID_PARAMETER
   }
 

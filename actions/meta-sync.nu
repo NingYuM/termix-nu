@@ -176,7 +176,7 @@ def confirm-snapshot [
   let confirm = input $'Please press (ansi p)y(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
   if $confirm == 'q' { print $'Snapshot creating cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $confirm != 'y' {
-    print $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)y(ansi reset), bye...'
+    print -e $'Your input (ansi p)($confirm)(ansi reset) does not match (ansi p)y(ansi reset), bye...'
     exit $ECODE.INVALID_PARAMETER
   }
   print -n (char nl)
@@ -204,12 +204,12 @@ def get-meta-setting [
   if $selected {
     # CHECK: Make sure the selected and available modules was set in the source config
     if ([selectedModules availableModules] | any {|| $in not-in $source }) {
-      print $'The (ansi p)($from | default default)(ansi reset) source must have (ansi p)selectedModules & availableModules(ansi reset) config.'
+      print -e $'The (ansi p)($from | default default)(ansi reset) source must have (ansi p)selectedModules & availableModules(ansi reset) config.'
       exit $ECODE.INVALID_PARAMETER
     }
     # CHECK: Make sure the selected modules was all in the available modules
     $source.selectedModules | each {|it| if $it not-in $source.availableModules {
-      print $'The (ansi p)($from | default default)(ansi reset) source`s selectedModules ($it) must be one of ($source.availableModules | str join ",")'
+      print -e $'The (ansi p)($from | default default)(ansi reset) source`s selectedModules ($it) must be one of ($source.availableModules | str join ",")'
       exit $ECODE.INVALID_PARAMETER
     }}
     return { source: $source, dest: $destination, selectedModules: $source.selectedModules }
@@ -231,7 +231,7 @@ def check-required [name: string] {
   for provider in ($metaConf | get $name | columns) {
     let keys = $metaConf | get $name | get $provider | columns
     [teamId teamCode host] | each {|it| if $it not-in $keys {
-      print $'The ($name) (ansi p)($provider)(ansi reset) must have (ansi p)($it)(ansi reset) config.'
+      print -e $'The ($name) (ansi p)($provider)(ansi reset) must have (ansi p)($it)(ansi reset) config.'
       exit $ECODE.INVALID_PARAMETER
     }}
   }
@@ -241,7 +241,7 @@ def check-required [name: string] {
 def check-user-auth [settings: record] {
   let authEmpty = [username password] | any {|it| $settings | get -i $it | is-empty }
   if $authEmpty {
-    print $'(ansi r)Please config your username and password for the following setting:(ansi reset)'
+    print -e $'(ansi r)Please config your username and password for the following setting:(ansi reset)'
     $settings | table -e | print
     exit $ECODE.INVALID_PARAMETER
   }
@@ -251,16 +251,16 @@ def check-user-auth [settings: record] {
 def provider-check [type, value, --from: string, --to: string] {
   let metaConf = $env.META_CONF
   if ($value | length) > 1 {
-    print $'Invalid meta data ($type) setting, at most one default ($type) was allowed.'
+    print -e $'Invalid meta data ($type) setting, at most one default ($type) was allowed.'
     exit $ECODE.INVALID_PARAMETER
   }
   let check = if $type == 'source' { $from } else { $to }
   if ($check | is-empty) and ($value | length) == 0 {
-    print $'You must specify the ($type) name or set a default ($type) in the meta.($type) config.'
+    print -e $'You must specify the ($type) name or set a default ($type) in the meta.($type) config.'
     exit $ECODE.INVALID_PARAMETER
   }
   if (not ($check | is-empty)) and ($check not-in ($metaConf | get $type)) {
-    print $'The ($type) name (ansi p)($check)(ansi reset) does`t exists in the meta.($type) config, please check it again.'
+    print -e $'The ($type) name (ansi p)($check)(ansi reset) does`t exists in the meta.($type) config, please check it again.'
     exit $ECODE.INVALID_PARAMETER
   }
 }
@@ -275,7 +275,7 @@ def install-check [
   let isLegacy = ($auth.version | is-empty) or ($auth.version | str replace -a . '' | str replace 'DEV' '' | into int) < 25240930
   let shouldInstall = (not $isLegacy) and ($dest | get -i resetModuleForInstall | default false)
   if $shouldInstall {
-    print $'You are going to INSTALL modules to the dest project, please add (ansi g)`--install` / `-i`(ansi reset) flag and try again.(char nl)'
+    print -e $'You are going to INSTALL modules to the dest project, please add (ansi g)`--install` / `-i`(ansi reset) flag and try again.(char nl)'
     exit $ECODE.INVALID_PARAMETER
   }
 }
@@ -303,7 +303,7 @@ def confirm-check [
   let confirm = input $'Please confirm by typing (ansi r)($check)(ansi reset) to continue or (ansi p)q(ansi reset) to quit: '
   if $confirm == 'q' { print $'Syncing cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $confirm != $check {
-    print $'You input (ansi p)($confirm)(ansi reset) does not match (ansi p)($check)(ansi reset), bye...'
+    print -e $'Your input (ansi p)($confirm)(ansi reset) does not match (ansi p)($check)(ansi reset), bye...'
     exit $ECODE.INVALID_PARAMETER
   }
   print -n (char nl)
@@ -357,7 +357,7 @@ def handle-create-snapshot [
   print ($detail.outputs | table -e)
   print $'Time consumed for 1st step: ($end - $start)'
   if ($stats.failed > 0) {
-    print $'Failed to create snapshot, please try again later.'
+    print -e $'Failed to create snapshot, please try again later.'
     exit $ECODE.SERVER_ERROR
   }
   return $detail.outputs.1
@@ -393,7 +393,7 @@ def handle-upload-snapshot [
   # print ($detail.outputs | table -e)
   print $'Time consumed for 2nd step: ($end - $start)'
   if ($stats.failed > 0) {
-    print $'Failed to upload snapshot, please try again later.'
+    print -e $'Failed to upload snapshot, please try again later.'
     exit $ECODE.SERVER_ERROR
   }
   return $detail.outputs.1
@@ -451,7 +451,7 @@ def handle-import-metadata [
   # print ($detail.subTasks | table -e)
   print $'Time consumed for 3rd step: ($end - $start)'
   if ($stats.failed > 0) {
-    print $'(ansi r)Failed to import metadata with the following outputs:(ansi reset)'
+    print -e $'(ansi r)Failed to import metadata with the following outputs:(ansi reset)'
     hr-line; print $detail.outputs
     exit $ECODE.SERVER_ERROR
   }
@@ -469,12 +469,12 @@ def create-snapshot [
   let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team $source.teamCode, ...$HTTP_HEADERS]
   let resp = http post --content-type application/json --headers $headers -e $'($source.host)($snapShotApi)?($query)' {}
   if $resp.status? == 401 {
-    print $'Create snapshot failed with error: (ansi r)($resp.error)(ansi reset)'
-    print $'Make sure you have set the username and password correctly and try again...'
+    print -e $'Create snapshot failed with error: (ansi r)($resp.error)(ansi reset)'
+    print -e $'Make sure you have set the username and password correctly and try again...'
     exit $ECODE.AUTH_FAILED
   }
   if ($resp.success? | is-empty) or (not $resp.success?) {
-    print $'Failed to create snapshot, error: ($resp.error)'
+    print -e $'Failed to create snapshot, error: ($resp.error)'
     exit $ECODE.SERVER_ERROR
   }
   $resp.data.taskId
@@ -528,7 +528,7 @@ def import-metadata [
       exit $ECODE.INVALID_PARAMETER
     }
     if ($modules | length) > 1 {
-      print $'(ansi r)You can only import one module at a time when specifying the `--path` option, please check it again.(ansi reset)'
+      print -e $'(ansi r)You can only import one module at a time when specifying the `--path` option, please check it again.(ansi reset)'
       exit $ECODE.INVALID_PARAMETER
     }
     $importPayload.path = $path
@@ -584,20 +584,20 @@ def fetch-task-detail [
   let headers = [Cookie $auth.cookie Referer $auth.iamHost]
   let resp = try { http get --headers $headers $DETAIL_URL } catch { http get -e --headers $headers $DETAIL_URL }
   if ($resp | describe) == 'string' {
-    print $'Task query failed with message: (ansi r)($resp)(ansi reset)'
+    print -e $'Task query failed with message: (ansi r)($resp)(ansi reset)'
     exit $ECODE.SERVER_ERROR
   }
   if not $resp.success {
     # 对于“服务器异常”，需要重试
     if $resp.err.code == 'O0003' {
-      print $'(char nl)Fetch task detail failed with error: ($resp.err.msg), retrying...'
+      print -e $'(char nl)Fetch task detail failed with error: ($resp.err.msg), retrying...'
       return (fetch-task-detail $taskId $queryHost $auth)
     }
-    print $'Fetch task detail failed with error: ($resp.err)'
+    print -e $'Fetch task detail failed with error: ($resp.err)'
   }
   if $resp.data.status == 'Failed' {
-    print $'(char nl)Task running failed with error: '
-    print $resp.data.outputs
+    print -e $'(char nl)Task running failed with error: '
+    print -e $resp.data.outputs
   }
   $resp.data
 }
@@ -609,7 +609,7 @@ def get-user-auth [
   let platformApi = $'($settings.host)/api/trantor/platform'
   let platform = try { http get -e $platformApi } catch { http get -e $platformApi }
   if ($platform | describe) == 'string' {
-    print $'Get user auth failed with message: (ansi r)($platform)(ansi reset)'
+    print -e $'Get user auth failed with message: (ansi r)($platform)(ansi reset)'
     exit $ECODE.SERVER_ERROR
   }
   if $platform.status? in [401 404] {
@@ -617,12 +617,12 @@ def get-user-auth [
   }
   # OpenSSL Check
   if not (is-installed openssl) {
-    print $'(ansi r)Please install openssl@3 first by `brew install openssl@3` and try again...(ansi reset)'
+    print -e $'(ansi r)Please install openssl@3 first by `brew install openssl@3` and try again...(ansi reset)'
     exit $ECODE.MISSING_BINARY
   }
   let opensslVer = openssl version | detect columns -n | rename bin ver | get ver.0
   if (is-lower-ver $opensslVer '3.0.0') {
-    print $'(ansi r)Openssl v3 or above is required, please install it by `brew install openssl@3` and try again...(ansi reset)'
+    print -e $'(ansi r)Openssl v3 or above is required, please install it by `brew install openssl@3` and try again...(ansi reset)'
     exit $ECODE.MISSING_BINARY
   }
 
@@ -642,8 +642,8 @@ def get-user-auth [
 
   let resp = http post --headers $IAM_HEADER --full --content-type application/json -e $'($iamHost)/iam/api/v1/user/login/account' $payload
   if not $resp.body.success {
-    print $'Login failed with error: (ansi r)($resp.body.message)(ansi reset)'
-    print $'Please check your auth info at (ansi g)($iamHost)/login(ansi reset)'
+    print -e $'Login failed with error: (ansi r)($resp.body.message)(ansi reset)'
+    print -e $'Please check your auth info at (ansi g)($iamHost)/login(ansi reset)'
     exit $ECODE.AUTH_FAILED
   }
   let user = $resp.body.data.user

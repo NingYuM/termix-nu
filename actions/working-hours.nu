@@ -91,7 +91,7 @@ export def query-hours-by-team-codes [
   mut teams = $confEMP.teams | values | default false ignore | where ignore != true
   if $no_ignore { $teams = ($confEMP.teams | values | default false ignore) }
   if ($teams | get code | is-empty) {
-    print $'(ansi r)Please set the `code` field in all `emp.teams`, bye...(char nl)(ansi reset)'
+    print -e $'(ansi r)Please set the `code` field in all `emp.teams`, bye...(char nl)(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
 
@@ -126,7 +126,7 @@ export def query-hours-by-team-codes [
 def --env load-emp-conf [] {
   let empConf = open $'($env.TERMIX_DIR)/.termixrc' | from toml | get -i emp | default null
   if ($empConf | is-empty) {
-    print $'(ansi r)Please set `emp` related configs in `($env.TERMIX_DIR)/.termixrc`, bye...(char nl)(ansi reset)'
+    print -e $'(ansi r)Please set `emp` related configs in `($env.TERMIX_DIR)/.termixrc`, bye...(char nl)(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
   $env.EMP_CONF = $empConf
@@ -142,7 +142,7 @@ export def query-monthly-hours-by-team [
   --token(-t): string,  # Token for EMP Portal
 ] {
   if ($month > 12) or ($month < 1) {
-    print $'The specified month (ansi r)($month)(ansi reset) should lay in (ansi p)1 ~ 12(char nl)(ansi reset)'
+    print -e $'The specified month (ansi r)($month)(ansi reset) should lay in (ansi p)1 ~ 12(char nl)(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
   # let currentMonth = date now | format date %m | into int
@@ -513,12 +513,12 @@ def get-user-auth [
 ] {
   # OpenSSL Check
   if not (is-installed openssl) {
-    print $'(ansi r)Please install openssl@3 first by `brew install openssl@3` and try again...(ansi reset)'
+    print -e $'(ansi r)Please install openssl@3 first by `brew install openssl@3` and try again...(ansi reset)'
     exit $ECODE.MISSING_BINARY
   }
   let opensslVer = openssl version | detect columns -n | rename bin ver | get ver.0
   if (is-lower-ver $opensslVer '3.0.0') {
-    print $'(ansi r)Openssl v3 or above is required, please install it by `brew install openssl@3` and try again...(ansi reset)'
+    print -e $'(ansi r)Openssl v3 or above is required, please install it by `brew install openssl@3` and try again...(ansi reset)'
     exit $ECODE.MISSING_BINARY
   }
 
@@ -538,8 +538,8 @@ def get-user-auth [
 
   let resp = http post --headers $IAM_HEADER --full --content-type application/json -e $'($iamHost)/iam/api/v1/user/login/account' $payload
   if not $resp.body.success {
-    print $'Login failed with error: (ansi r)($resp.body.message)(ansi reset)'
-    print $'Please check your auth info at (ansi g)($iamHost)/login(ansi reset)'
+    print -e $'Login failed with error: (ansi r)($resp.body.message)(ansi reset)'
+    print -e $'Please check your auth info at (ansi g)($iamHost)/login(ansi reset)'
     exit $ECODE.AUTH_FAILED
   }
   let user = $resp.body.data.user
@@ -555,11 +555,11 @@ def handle-exception [
   # 未登录或者Cookie过期提示, use `do -i` to ignore 'error: Coercion error'
   do -i {
     if ($res | is-empty) or ($res | get status) == 401 {
-      print $'(ansi r)You did`t have permission to call this API !(char nl)(ansi reset)'
+      print -e $'(ansi r)You did`t have permission to call this API !(char nl)(ansi reset)'
       exit $ECODE.AUTH_FAILED
     }
     if (($res | get status) == 500) {
-      print $'(ansi r)Backend internal server error，please try again later!(char nl)(ansi reset)'
+      print -e $'(ansi r)Backend internal server error，please try again later!(char nl)(ansi reset)'
       exit $ECODE.SERVER_ERROR
     }
   }

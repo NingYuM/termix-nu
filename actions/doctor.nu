@@ -206,7 +206,7 @@ def upgrade-package-tools [] {
     pnpm i -g @terminus/t-package-tools@latest --registry $REGISTRY
     return
   }
-  print "Sorry, I can't fix it, please fix it yourself."
+  print -e "Sorry, I can't fix it, please fix it yourself."
 }
 
 # Show diagnostic result

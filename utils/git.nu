@@ -27,7 +27,7 @@ export def do-sync [
     git push --no-verify --force $gitUrl $'($syncFrom):refs/heads/($repo.dest)'
   } else {
     let tryPush = git push --no-verify $gitUrl $'($syncFrom):refs/heads/($repo.dest)' | complete
-    if $tryPush.exit_code != 0 { print $'(ansi y)($tryPush.stderr)(ansi reset)' }
+    if $tryPush.exit_code != 0 { print -e $'(ansi y)($tryPush.stderr)(ansi reset)' }
   }
 }
 

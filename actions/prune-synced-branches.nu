@@ -23,7 +23,7 @@ export def main [
   let confBr = if $useConfBr == '_current_' { $current } else { 'i' }
 
   if not (has-ref $'origin/($confBr)') {
-    print $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
+    print -e $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
     exit $ECODE.MISSING_DEPENDENCY
   }
   let pushConf = (git show $'origin/($confBr):.termixrc' | from toml | to json)
@@ -72,7 +72,7 @@ def prepare-repo [
   --ak: string,          # Git repo access token
 ] {
   if ($repos | is-empty) {
-    print $'No dest repos to be cleaned, bye...(char nl)'
+    print -e $'No dest repos to be cleaned, bye...(char nl)'
     exit $ECODE.MISSING_DEPENDENCY
   }
 

@@ -35,7 +35,7 @@ export def 'git tag-redev' [
     print $'(ansi p)Found the following matched repos:(ansi reset)(char nl)(char nl)'
     print $filteredRepos
   } else {
-    print $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'
+    print -e $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'
     exit $ECODE.MISSING_DEPENDENCY
   }
 
