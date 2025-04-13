@@ -152,6 +152,10 @@ words:
 - wqtest
 - yazi
 - zoxide
+- deepseek
+- nutest
+- Ollama
+- OPENROUTER
 - initialised
 ignorePaths:
 - casts/**

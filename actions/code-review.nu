@@ -49,6 +49,7 @@ export def --env deepseek-review [
   token?: string,           # Your DeepSeek API token, fallback to CHAT_TOKEN env var
   --debug(-d),              # Debug mode
   --output(-o): string,     # Output file path
+  --paths(-p): string,      # Comma separated file paths to review
   --diff-to(-t): string,    # Diff to git REF
   --diff-from(-f): string,  # Diff from git REF
   --patch-cmd(-c): string,  # The `git show` or `git diff` command to get the diff content, for local CR only
@@ -98,7 +99,7 @@ export def --env deepseek-review [
   print 'Current Settings:'; hr-line
   $setting | compact-record | reject -i repo | print; print -n (char nl)
 
-  let content = get-diff --diff-to $diff_to --diff-from $diff_from --include $include --exclude $exclude --patch-cmd $patch_cmd
+  let content = get-diff --paths $paths --diff-to $diff_to --diff-from $diff_from --include $include --exclude $exclude --patch-cmd $patch_cmd
   let length = $content | str stats | get unicode-width
   if ($max_length != 0) and ($length > $max_length) {
     print $'(char nl)(ansi r)The content length ($length) exceeds the maximum limit ($max_length), review skipped.(ansi reset)'
@@ -254,13 +255,17 @@ def coalesce-reasoning [] {
 
 # Get the diff content from local git changes and apply filters
 export def get-diff [
+  --paths(-p): string,  # Comma separated file paths to review
   --diff-to: string,    # Diff to git ref
   --diff-from: string,  # Diff from git ref
   --include: string,    # Comma separated file patterns to include in the code review
   --exclude: string,    # Comma separated file patterns to exclude in the code review
   --patch-cmd: string,  # The `git show` or `git diff` command to get the diff content
 ] {
-  let content = get-diff-content --patch-cmd $patch_cmd --diff-to $diff_to --diff-from $diff_from --include $include --exclude $exclude
+  let content = (
+      get-diff-content --paths $paths --patch-cmd $patch_cmd
+        --diff-to $diff_to --diff-from $diff_from
+        --include $include --exclude $exclude)
 
   if ($content | is-empty) {
     print $'(ansi g)Nothing to review.(ansi reset)'
@@ -272,6 +277,7 @@ export def get-diff [
 
 # Get diff content from local git changes
 def get-diff-content [
+  --paths(-p): string,  # Comma separated file paths to review
   --diff-to: string,    # Diff to git ref
   --diff-from: string,  # Diff from git ref
   --include: string,    # Comma separated file patterns to include in the code review
@@ -280,6 +286,7 @@ def get-diff-content [
 ] {
   let local_repo = $env.PWD
 
+  if ($paths | is-not-empty) { return (get-diff-by-paths $paths) }
   if ($diff_from | is-not-empty) {
     get-ref-diff $diff_from --diff-to $diff_to --include $include --exclude $exclude
   } else if not (git-check $local_repo --check-repo=1) {
@@ -290,6 +297,19 @@ def get-diff-content [
   } else {
     git diff -- ...(generate-include-args $include) ...(generate-exclude-args $exclude)
   }
+}
+
+# Get the full modification diff content by paths
+def get-diff-by-paths [paths: string] {
+  $paths | split row , | filter {|p| $p | is-not-empty }
+    | reduce -f '' {|it, acc|
+        let initial_commit = git log --diff-filter=A --format=%H -- $it | lines | last
+        if ($initial_commit | is-empty) {
+          print $'(ansi r)The file ($it) does not exist in the git history.(ansi reset)'
+          exit $ECODE.INVALID_PARAMETER
+        }
+        $acc  + (char nl) + (git diff $'($initial_commit)^' HEAD -- $it)
+      }
 }
 
 # Get diff content from local git changes
