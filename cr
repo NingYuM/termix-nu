@@ -19,7 +19,7 @@ def main [
   --model(-m): string,      # Model name, or read from CHAT_MODEL env var, `deepseek-chat` by default
   --base-url(-b): string,   # DeepSeek API base URL, fallback to BASE_URL env var
   --chat-url(-U): string,   # DeepSeek Model chat full API URL, e.g. http://localhost:11535/api/chat
-  --sys-prompt(-s): string  # Default to $DEFAULT_OPTIONS.SYS_PROMPT,
+  --sys-prompt(-s): string  # Optional, System prompt message, fallback to SYSTEM_PROMPT env var
   --user-prompt(-u): string # Default to $DEFAULT_OPTIONS.USER_PROMPT,
   --include(-i): string,    # Comma separated file patterns to include in the code review
   --exclude(-x): string,    # Comma separated file patterns to exclude in the code review
@@ -58,7 +58,8 @@ def file-exists [file: string] {
 # Check if the prompt keys exist in the .termixrc file
 def check-prompts [options: record] {
   check-prompt $options user
-  check-prompt $options system
+  # System prompt is optional, so we don't exit if it's missing
+  # check-prompt $options system
 }
 
 # Check if the specified type of prompt key exists in the .termixrc file
