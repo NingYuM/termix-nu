@@ -161,19 +161,21 @@ export def --env config-load [
   --debug(-d),                # Print the loaded environment variables
   --model(-m): string,        # Load the specified model by name
 ] {
+  let default_settings = get-default-config
   let config = [$env.TERMIX_DIR .termixrc] | path join
-  let all_settings = open $config | from toml | get cr
-  let settings = $all_settings | get settings? | default {}
+  let all_settings = open $config | from toml | get cr? | default {}
+  let merged = $default_settings | merge $all_settings
+  let settings = $merged | get settings? | default {}
 
-  let user_prompt = $all_settings.prompts?.user?
+  let user_prompt = $merged.prompts?.user?
     | get -i $settings.user-prompt?
     | get -i prompt
 
-  let system_prompt = $all_settings.prompts?.system?
+  let system_prompt = $merged.prompts?.system?
     | get -i $settings.system-prompt?
     | get -i prompt
 
-  let model_envs = get-model-envs $all_settings $model
+  let model_envs = get-model-envs $merged $model
 
   let env_vars = {
     ...$model_envs,
@@ -189,4 +191,14 @@ export def --env config-load [
     print 'Loaded Environment Variables:'; hr-line
     $env_vars | table -t psql | print
   }
+}
+
+# Get the default config from the remote repo
+export def get-default-config [] {
+  cd $env.TERMIX_DIR
+  let remote = git remote -v | detect columns -n
+  if ($remote | is-empty) { return {} }
+  let name = $remote | rename name url | where url =~ 'frontend-product/termix-nu' | get name.0
+  do -i { git fetch $name i }
+  git show origin/i:termixrc.toml | from toml | get cr? | default {}
 }

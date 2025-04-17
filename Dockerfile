@@ -50,6 +50,7 @@ RUN apk update && apk add --no-cache git openssl \
     && npm cache clean --force \
     && rm -rf /tmp/* /var/cache/apk/* \
     && git config --global --add safe.directory ${TERMIX_HOME} \
+    && cd ${TERMIX_HOME} && git remote remove origin \
     && nu -c 'do { \
         open /home/termix/.env | str replace /Users/terminus/termix-nu /home/termix/termix-nu | save -rf /home/termix/.env; \
         echo `alias t="just --justfile ~/.justfile --dotenv-path ~/.env --working-directory ."` o>> /home/termix/.profile; \
