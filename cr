@@ -12,9 +12,9 @@ def main [
   --debug(-d),              # Debug mode
   --output(-o): string,     # Output file path
   --paths(-p): string,      # Comma separated file paths to review
-  --diff-to(-t): string,    # Diff to git REF
-  --diff-from(-f): string,  # Diff from git REF
-  --patch-cmd(-c): string,  # The `git show` or `git diff` command to get the diff content, for local CR only
+  --diff-from(-f): string,  # Git diff starting commit SHA
+  --diff-to(-t): string,    # Git diff ending commit SHA
+  --patch-cmd(-c): string,  # The `git show` or `git diff` command to get the diff content
   --max-length(-l): int,    # Maximum length of the content for review, 0 means no limit.
   --model(-m): string,      # Model name, or read from CHAT_MODEL env var, `deepseek-chat` by default
   --base-url(-b): string,   # DeepSeek API base URL, fallback to BASE_URL env var
@@ -23,7 +23,7 @@ def main [
   --user-prompt(-u): string # Default to $DEFAULT_OPTIONS.USER_PROMPT,
   --include(-i): string,    # Comma separated file patterns to include in the code review
   --exclude(-x): string,    # Comma separated file patterns to exclude in the code review
-  --temperature(-T): float, # Temperature for the model, between `0` and `2`, default value `1.0`
+  --temperature(-T): float, # Temperature for the model, between `0` and `2`, default value `0.7`
 ] {
   config-check
   config-load --debug=$debug --model=$model
@@ -129,7 +129,9 @@ def check-models [options: record] {
 export def config-check [] {
   let config = [$env.TERMIX_DIR .termixrc] | path join
   file-exists $config
-  let options = open $config | from toml | get cr
+  let defaults = get-default-config
+  let options = open $config | from toml | get cr? | default {}
+  let options = $defaults | merge $options
   check-prompts $options
   check-providers $options
   check-models $options
@@ -161,10 +163,10 @@ export def --env config-load [
   --debug(-d),                # Print the loaded environment variables
   --model(-m): string,        # Load the specified model by name
 ] {
-  let default_settings = get-default-config
+  let defaults = get-default-config
   let config = [$env.TERMIX_DIR .termixrc] | path join
   let all_settings = open $config | from toml | get cr? | default {}
-  let merged = $default_settings | merge $all_settings
+  let merged = $defaults | merge $all_settings
   let settings = $merged | get settings? | default {}
 
   let user_prompt = $merged.prompts?.user?
@@ -199,6 +201,6 @@ export def get-default-config [] {
   let remote = git remote -v | detect columns -n
   if ($remote | is-empty) { return {} }
   let name = $remote | rename name url | where url =~ 'frontend-product/termix-nu' | get name.0
-  do -i { git fetch $name i }
+  do -i { git fetch $name i | complete | ignore }
   git show origin/i:termixrc.toml | from toml | get cr? | default {}
 }

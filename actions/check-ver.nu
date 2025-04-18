@@ -66,7 +66,7 @@ def query-ver [
   # Update latest commits from remote to local, tags included
   cd $env.TERMIX_DIR
   if not ($env.DISABLE_VERSION_CHECK? | default false | into bool) {
-    git fetch origin -p; git fetch origin --tags --force
+    git fetch origin -p --tags --force | complete | ignore
   }
   let checkDate = date now | format date $_DATE_FMT
   let currentVer = get-conf version
