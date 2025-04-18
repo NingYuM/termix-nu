@@ -1664,7 +1664,7 @@ t art deploy --combine --from terp-runtime --branch release/millgrid-uat --to mi
 - 除了支持官方 API 以外，还支持[SiliconFlow](https://cloud.siliconflow.cn/i/rqCdIxzS)、OpenRouter、Infinigence等服务商提供的 **DeepSeek** 服务；
 - 支持通过本地 Ollama 启动的 **DeepSeek** 模型；
 - 支持流式输出，也支持将代码审查结果输出到 Markdown 文件，生成代码审查报告；
-- 支持设定代码审查允许的最大长度，超过长度则跳过审查，节省 Token；
+- 支持设定代码审查允许的最大长度，超过长度则跳过审查，节省 **Token**；
 - 支持审查任何本地仓库的指定提交变更，或者审查指定文件；
 - 允许通过自定义 `git show`/`git diff` 命令生成变更记录并进行审查；
 - 允许配置代码审查时排除特定文件或只包含指定文件；
@@ -1680,7 +1680,7 @@ t art deploy --combine --from terp-runtime --branch release/millgrid-uat --to mi
 - `-f`, `--diff-from <string>`: 待审查的 Git diff 起始提交 SHA
 - `-t`, `--diff-to <string>`: 待审查的 Git diff 终止提交 SHA
 - `-c`, `--patch-cmd <string>`: 用于生成待审查差异内容的自定义 `git show` 或 `git diff` 命令
-- `-l`, `--max-length <int>`: 审查内容的允许最大长度（0 表示无限制）
+- `-l`, `--max-length <int>`: 审查内容的允许最大长度（0 表示无限制），默认值 50000
 - `-m`, `--model <string>`: ​模型名称, 或者从 CHAT_MODEL 环境变量读取, 默认 `deepseek-chat`
 - `-b`, `--base-url <string>`: ​DeepSeek API 基础 URL（默认读取 BASE_URL 环境变量）
 - `-U`, `--chat-url <string>`: DeepSeek 模型聊天接口完整 URL, 如: `http://localhost:11535/api/chat`
@@ -1700,10 +1700,10 @@ t art deploy --combine --from terp-runtime --branch release/millgrid-uat --to mi
 [cr.settings]
 # 采用的模型提供商名称，你可以在后面定义多个模型提供商，然后在这里修改下名称即可轻松切换
 provider = "Infinigence"
-# 待审查内容的允许最大长度（0 表示无限制）
+# 待审查内容的允许最大长度（0 表示无限制）, 默认值 50000
 # 如果該值非 0，而且待审查内容超过这个长度则直接跳过审查，防止意外消耗过多 Token
 # 注意：这里的长度是指 Unicode Width，而不是 Token 长度
-max-length = 0
+max-length = 50000
 # ​模型随机性参数（范围 0-2，默认 0.7），不建议超过 1.0
 temperature = 0.7
 # 输入给 DeepSeek API 进行代码审查的用户提示词名称
