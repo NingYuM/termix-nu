@@ -254,14 +254,11 @@ def peek-prompt [] {
   const PEEK_LENGTH = 50
   if ($prompt | is-empty) { return null }
   let first_line = $prompt | lines | first
-  mut preview = ''
   if ($first_line | str stats | get graphemes) > $PEEK_LENGTH {
-    let peek = $first_line | str substring -g 0..$PEEK_LENGTH
-    $preview = $'($peek)...'
+    $first_line | str substring -g 0..$PEEK_LENGTH | append '...' | str join
   } else {
-    $preview = $first_line
+    $first_line
   }
-  $preview
 }
 
 # Coalesce the reasoning content
@@ -288,7 +285,6 @@ export def get-diff [
     print $'(ansi g)Nothing to review.(ansi reset)'
     exit $ECODE.SUCCESS
   }
-
   $content
 }
 
@@ -302,8 +298,8 @@ def get-diff-content [
   --patch-cmd: string,  # The `git show` or `git diff` command to get the diff content
 ] {
   let local_repo = $env.PWD
-
   if ($paths | is-not-empty) { return (get-diff-by-paths $paths) }
+
   if ($diff_from | is-not-empty) {
     get-ref-diff $diff_from --diff-to $diff_to --include $include --exclude $exclude
   } else if not (git-check $local_repo --check-repo=1) {
@@ -358,7 +354,6 @@ def get-patch-diff [
   if not $valid {
     exit $ECODE.INVALID_PARAMETER
   }
-
   # Get the diff content from the specified git command
   nu -c $cmd
 }
