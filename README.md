@@ -1655,7 +1655,183 @@ t art deploy --combine --from terp-runtime --branch release/millgrid-uat --to mi
 
 ---
 
-### 32. EMP 工时填报查询 & 钉钉强力提醒工具{#emp-query-super-notify}
+### 32. 本地代码仓库 AI Code Review{#ai-code-review}
+
+**功能描述**: 利用 **DeepSeek** 大模型对本地代码仓库进行 **Code Review**，具有如下特性：
+
+- 开箱即用：可以不用配置就直接使用，也可以按需配置；
+- 支持 **DeepSeek** `V3` & `R1` 模型；
+- 除了支持官方 API 以外，还支持[SiliconFlow](https://cloud.siliconflow.cn/i/rqCdIxzS)、OpenRouter、Infinigence等服务商提供的 **DeepSeek** 服务；
+- 支持通过本地 Ollama 启动的 **DeepSeek** 模型；
+- 支持流式输出，也支持将代码审查结果输出到 Markdown 文件，生成代码审查报告；
+- 支持设定代码审查允许的最大长度，超过长度则跳过审查，节省 Token；
+- 支持审查任何本地仓库的指定提交变更，或者审查指定文件；
+- 允许通过自定义 `git show`/`git diff` 命令生成变更记录并进行审查；
+- 允许配置代码审查时排除特定文件或只包含指定文件；
+- 允许配置默认选择模型、**Temperature**、Base URL 和提示词；
+
+**命令格式**: `t cr *OPTIONS`
+
+**参数说明**:
+
+- `-d`, `--debug`: 调试模式
+- `-o`, `--output <string>`: 代码审查结果输出文件路径
+- `-p`, `--paths <string>`: 待审查文件路径，多个文件用`,`分隔，支持 Glob 模式
+- `-f`, `--diff-from <string>`: 待审查的 Git diff 起始提交 SHA
+- `-t`, `--diff-to <string>`: 待审查的 Git diff 终止提交 SHA
+- `-c`, `--patch-cmd <string>`: 用于生成待审查差异内容的自定义 `git show` 或 `git diff` 命令
+- `-l`, `--max-length <int>`: 审查内容的允许最大长度（0 表示无限制）
+- `-m`, `--model <string>`: ​模型名称, 或者从 CHAT_MODEL 环境变量读取, 默认 `deepseek-chat`
+- `-b`, `--base-url <string>`: ​DeepSeek API 基础 URL（默认读取 BASE_URL 环境变量）
+- `-U`, `--chat-url <string>`: DeepSeek 模型聊天接口完整 URL, 如: `http://localhost:11535/api/chat`
+- `-s`, `--sys-prompt <string>`: 系统提示词（默认读取 SYSTEM_PROMPT 环境变量）
+- `-u`, `--user-prompt <string>`: 用户提示词, 默认为 `$DEFAULT_OPTIONS.USER_PROMPT`,
+- `-i`, `--include <string>`: ​包含的文件模式（逗号分隔）
+- `-x`, `--exclude <string>`: ​排除的文件模式（逗号分隔）
+- `-T`, `--temperature <float>`: ​模型随机性参数（范围 0-2，默认 0.7）
+- `-h`, `--help`: 显示帮助文档
+
+**配置说明**:
+
+为了方便大家使用，工具已经预设了一些默认配置，所以大家可以不用配置就直接使用，不过仍然保留了个性化配置的可能性，方便大家根据个人情况进行调整，目前预置的接口调用 **Token** 是公司提供的，不过也有很多免费的 **DeepSeek** 服务，比如 **SiliconFlow** [注册](https://cloud.siliconflow.cn/i/rqCdIxzS) 就**免费赠送 2000 万 Token**。完整的示例配置文件如下:
+
+```toml
+# DeepSeek 本地代码审查配置说明
+[cr.settings]
+# 采用的模型提供商名称，你可以在后面定义多个模型提供商，然后在这里修改下名称即可轻松切换
+provider = "Infinigence"
+# 待审查内容的允许最大长度（0 表示无限制）
+# 如果該值非 0，而且待审查内容超过这个长度则直接跳过审查，防止意外消耗过多 Token
+# 注意：这里的长度是指 Unicode Width，而不是 Token 长度
+max-length = 0
+# ​模型随机性参数（范围 0-2，默认 0.7），不建议超过 1.0
+temperature = 0.7
+# 输入给 DeepSeek API 进行代码审查的用户提示词名称
+# 可以预定义多个用户提示词，然后在此通过名称进行切换
+# 比如这个配置示例文件预定义了三组用户提示词: default,frontend,java
+user-prompt = "default"
+# 系统提示词，跟上面的用户提示词使用方式类似，不过官方不建议使用系统提示词
+# 尽量使用用户提示词来完成代码审查
+system-prompt = ""
+# ​包含的待审查的文件模式，默认为空
+# 该配置项不适用于通过 `--paths` 或者 `--patch-cmd` 参数进行审查
+include-patterns = ""
+# 待​排除的文件模式，默认值如下，可以在通过 diff 命令生成待审查内容时自动忽略一些文件的变更
+# 该配置项不适用于通过 `--paths` 或者 `--patch-cmd` 参数进行审查
+exclude-patterns = "pnpm-lock.yaml,package-lock.json,*.lock"
+
+# 你可以在这里定义一系列的 DeepSeek 模型提供商并为其指定一个名称
+# 然后通过修改上面 `cr.settings.provider` 的值来快速切换服务商
+# 这是一个使用 Ollama 上运行的 DeepSeek 模型进行代码审查的配置示例
+[[cr.providers]]
+name = "ollama-local"
+token = "empty"
+chat-url = "http://localhost:11434/api/chat"
+models = [
+  { name = "deepseek-r1", alias = "r1", enabled = true, description = "DeepSeek R1 model running on Ollama" }
+]
+
+# DeepSeek 官方提供 API 配置示例
+[[cr.providers]]
+name = "DeepSeek"
+token = "sk-*****"
+base-url = "https://api.deepseek.com"
+# 可以在此定义多个模型，但是 `enabled`的只能有一个，表示默认使用的模型
+# 也可以通过 `-m alias` 在命令调用的时候指定模型，比如 `-m r1` 或者 `-m v3`
+models = [
+  { name = "deepseek-chat", alias = "v3", enabled = true, description = "DeepSeek V3 model" },
+  { name = "deepseek-reasoner", alias = "r1", enabled = false, description = "DeepSeek R1 model" }
+]
+
+# SiliconFlow 提供的模型服务配置示例
+[[cr.providers]]
+name = "SiliconFlow"
+token = "sk-******"
+base-url = "https://api.siliconflow.cn/v1"
+models = [
+  { name = "deepseek-ai/DeepSeek-V3", alias = "v3", description = "SiliconFlow DeepSeek V3 model" },
+  { name = "deepseek-ai/DeepSeek-R1", alias = "r1", enabled = true, description = "SiliconFlow DeepSeek R1 model" }
+]
+
+# 无问芯穹提供的模型服务配置示例
+[[cr.providers]]
+name = "Infinigence"
+token = "sk-*****"
+base-url = "https://cloud.infini-ai.com/maas/v1"
+models = [
+  { name = "deepseek-v3", alias = "v3", enabled = true, description = "Infinigence DeepSeek V3 model" },
+  { name = "deepseek-r1", alias = "r1", description = "Infinigence DeepSeek R1 model" }
+]
+
+# OpenRouter 提供的模型服务配置示例
+[[cr.providers]]
+name = "OpenRouter"
+token = "sk-or-v1-******"
+base-url = "https://openrouter.ai/api/v1"
+models = [
+  { name = "deepseek/deepseek-chat-v3-0324:free", alias = "v3", enabled = true, description = "OpenRouter DeepSeek V3 model" },
+  { name = "deepseek/deepseek-r1:free", alias = "r1", description = "OpenRouter DeepSeek R1 model" }
+]
+
+# 可以在此定义一系列的用户提示词或者系统提示词，并指定名称
+# 然后通过修改 `cr.settings.user-prompt` 或 `cr.settings.system-prompt` 的值来切换提示词
+[cr.prompts.user.default]
+name = "default"
+prompt = """
+您是一名专业的代码审查助手和精通 Java/Spring Boot/React/ReactNative 的全栈开发专家，负责分析Git仓库中的代码变更。需识别潜在问题（如代码风格违规、逻辑错误、安全漏洞等）并提供改进建议。请以简洁的方式清晰列出问题与优化方案。并在最后给出整体代码质量
+评分（1-5分），比如: `**整体质量：​** 评分（1-5）`。请审查以下代码变更并给出具体的性能优化或者改进建议,并以中文输出:
+"""
+
+[cr.prompts.system.default]
+name = "default"
+prompt = """
+您是一名专业的代码审查助手，负责分析Git仓库中的代码变更。需识别潜在问题（如代码风格违规、逻辑错误、安全漏洞等）并提供改进建议。请以简洁的方式清晰列出问题与优化方案。并在最后给出整体代码质量评分（1-5分），比如: `**整体质量：​** 评分（1-5）`。
+"""
+
+[cr.prompts.user.frontend]
+name = "frontend"
+prompt = """
+作为资深前端工程师，执行全面的代码审查，重点关注：
+...
+请审查以下代码变更并给出具体的性能优化或者改进建议,并以中文输出:
+"""
+
+[cr.prompts.user.java]
+name = "java"
+prompt = """
+作为一名高级Java后端工程师，进行全面的代码审查，重点关注:
+...
+请审查以下代码变更并给出具体的性能优化或者改进建议,并以中文输出:
+"""
+```
+
+**使用举例**:
+
+```bash
+# 对当前仓库 `git diff` 修改内容进行代码审查
+t cr
+# 对当前仓库 `git diff` 修改内容进行代码审查,且指定模型为 r1
+t cr -m r1
+# 对当前仓库 `git diff f536acc` 修改内容进行代码审查
+t cr -f f536acc
+# 对当前仓库的上一次提交内容进行代码审查
+t cr -f head~1
+# 对当前仓库指定文件进行代码审查
+t cr -f utils/a.ts,utils/b.ts
+# 对当前仓库 `git diff f536acc` 修改内容进行代码审查并将审查结果输出到 review.md
+t cr --diff-from f536acc --output review.md
+# 对当前仓库 `git diff f536acc 0dd0eb5` 修改内容进行代码审查
+t cr -f f536acc -t 0dd0eb5
+# 通过 --patch-cmd 参数对当前仓库变更内容进行审查
+t cr --patch-cmd 'git diff head~3'
+t cr -c 'git show head~3'
+t cr -c 'git diff 2393375 71f5a31'
+t cr -c 'git diff 2393375 71f5a31 nu/*'
+t cr -c 'git diff 2393375 71f5a31 :!nu/*'
+# 像 `t cr -c 'git show head~3; rm ./*'` 这样危险的命令将会被禁止
+```
+
+### 33. EMP 工时填报查询 & 钉钉强力提醒工具{#emp-query-super-notify}
 
 **功能描述**: 该工具允许你通过 CLI 查看团队成员当前 EMP 工时填报情况, 并且可以通过钉钉群机器人@工时未填满的同学进行多次提醒，包你不会忘记。具有如下特性：
 
@@ -1750,7 +1926,7 @@ t emp -a -p
 
 ---
 
-### 33. 让 Homebrew 飞起来{#brew-speed-up}
+### 34. 让 Homebrew 飞起来{#brew-speed-up}
 
 **功能描述**: 由于众所周知的原因 `brew` 更新或者安装应用的时候会比较慢，本工具可以通过给 `brew` 设置国内镜像的方式来提速。具有如下特点：
 
@@ -1776,7 +1952,7 @@ t brew install --tuna nushell
 
 ---
 
-### 34. 查询各分支上某依赖的版本及提交信息{#query-deps}
+### 35. 查询各分支上某依赖的版本及提交信息{#query-deps}
 
 **使用场景**:
 
@@ -1815,7 +1991,7 @@ t query-deps vite -d -b develop,feature/latest,master
 
 ---
 
-### 35. 给标品源码仓库批量打 Tag{#gaia-release}
+### 36. 给标品源码仓库批量打 Tag{#gaia-release}
 
 **功能描述**: 在标品前端需要发布新版本的时候将标品 `gaia-mall,gaia-mobile,gaia-picker` 等源码仓库指定分支批量打 Release Tag, 也可以用于删除指定 Tag
 
@@ -1841,7 +2017,7 @@ t gaia-release v2.2.0.21-2021.11.09 mall,mobile
 
 ---
 
-### 36. 给远程二开仓库批量打 Tag{#tag-redev}
+### 37. 给远程二开仓库批量打 Tag{#tag-redev}
 
 **功能描述**: 给远程二开仓库指定分支批量打 Release Tag, 目前前端二开仓库含增量、全量及所有业态有 13 个，人工挨个仓库打 Tag 是不现实的，也很容易出错。另外，该命令也可以用于删除指定 Tag。
 
@@ -1869,7 +2045,7 @@ t tag-redev v2.2.0.21-2021.11.09 master
 
 ---
 
-### 37. 查询二开仓库的远程分支及 Tag 信息{#ls-redev-refs}
+### 38. 查询二开仓库的远程分支及 Tag 信息{#ls-redev-refs}
 
 **功能描述**:
 
@@ -1893,7 +2069,7 @@ t ls-redev-refs b2c,b2b true
 
 ---
 
-### 38. 批量更新远程二开仓库代码到本地{#pull-redev}
+### 39. 批量更新远程二开仓库代码到本地{#pull-redev}
 
 **功能描述**: 更新远程二开仓库代码到本地，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `TERMIX_TMP_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `termixTmpPath` 配置;
 
@@ -1914,7 +2090,7 @@ t pull-redev
 t pull-redev develop true
 ```
 
-### 39. 扫描(清理)同步仓库里面冗余分支{#prune-branches}
+### 40. 扫描(清理)同步仓库里面冗余分支{#prune-branches}
 
 **功能描述**: 随着时间的推移各个部署环境的仓库里面可能存在很多不需要的分支，尤其是之前通过流水线同步的方式不会自动清理源分支不存在的同步分支，这些分支需要被清理掉，否则部署的时候找流水线也不太方便(这真的不是强行加的理由)，本脚本的作用就是扫描出这些分支，但是安全起见不会直接执行删除操作，只是提示用户这些分支是可以被清理掉的，最终还是需要用户去手工确认删掉, 可清理分支的判定原则就是读取全局同步配置: `i` 分支上的 `.termixrc` 文件然后不在同步配置里面的**部署仓库分支**即为可删除分支，如果确认的时候该分支也不是部署中的分支大概率是可以删掉的了;
 
