@@ -39,6 +39,7 @@ const HTTP_HEADERS = [User-Agent curl/8.9]
 const DEFAULT_OPTIONS = {
   MODEL: 'deepseek-chat',
   TEMPERATURE: 0.7,
+  MAX_LENGTH: 50000,
   BASE_URL: 'https://api.deepseek.com',
   USER_PROMPT: 'You are a professional code review assistant responsible for analyzing code changes. Identify potential issues such as code style violations, logical errors, security vulnerabilities, and provide improvement suggestions. Clearly list the problems and recommendations in a concise manner. Please review the following code changes:',
 }
@@ -73,7 +74,7 @@ export def --env deepseek-review [
   let model = $model | default $env.CHAT_MODEL? | default $DEFAULT_OPTIONS.MODEL
   let base_url = $base_url | default $env.BASE_URL? | default $DEFAULT_OPTIONS.BASE_URL
   let url = $chat_url | default $env.CHAT_URL? | default $'($base_url)/chat/completions'
-  let max_length = try { $max_length | default ($env.MAX_LENGTH? | default 0 | into int) } catch { 0 }
+  let max_length = try { $max_length | default ($env.MAX_LENGTH? | default $DEFAULT_OPTIONS.MAX_LENGTH | into int) } catch { $DEFAULT_OPTIONS.MAX_LENGTH }
   let temperature = try { $temperature | default $env.TEMPERATURE? | default $DEFAULT_OPTIONS.TEMPERATURE | into float } catch { $DEFAULT_OPTIONS.TEMPERATURE }
   validate-temperature $temperature
   let setting = {
