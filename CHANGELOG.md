@@ -1,6 +1,36 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.88.0 - 2025-04-18
+
+**Bug Fixes**
+
+- Fixed `EMP` cookie key for man-hour query
+- Read default `include` and `exclude` patterns from configuration for code review
+
+**Documentation**
+
+- Updated code review documentation for the `t cr` command
+
+**Features**
+
+- Added local code review support with **DeepSeek** models via the `t cr` command
+- Added support for code review of `git show head:path/to/file` command
+- Added ability to write code review results to markdown file with the `t cr` command
+- Added support for performing code review on specified files using the `--paths` flag
+- Made system prompt optional, now using user prompt instead for the `t cr` command
+- Added default settings for the `t cr` command
+
+**Miscellaneous Tasks**
+
+- Added DeepSeek code review example configurations
+- Updated `t ls-node` command and set minimum query version to v18 by default
+- Improved error handling to print error messages to `stderr`
+
+**Refactor**
+
+- Implemented the new `get-diff` method and removed `AWK` dependency
+
 ## v1.87.0 - 2025-03-21
 
 **Bug Fixes**
