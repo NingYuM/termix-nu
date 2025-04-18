@@ -58,7 +58,7 @@ export def --env deepseek-review [
   --base-url(-b): string,   # DeepSeek API base URL, fallback to BASE_URL env var
   --chat-url(-U): string,   # DeepSeek Model chat full API URL, e.g. http://localhost:11535/api/chat
   --sys-prompt(-s): string  # Optional, System prompt message, fallback to SYSTEM_PROMPT env var
-  --user-prompt(-u): string # Default to $DEFAULT_OPTIONS.USER_PROMPT
+  --user-prompt(-u): string # Default to value of $DEFAULT_OPTIONS.USER_PROMPT
   --include(-i): string,    # Comma separated file patterns to include in the code review
   --exclude(-x): string,    # Comma separated file patterns to exclude in the code review
   --temperature(-T): float, # Temperature for the model, between `0` and `2`, default value `0.7`
@@ -76,6 +76,8 @@ export def --env deepseek-review [
   let url = $chat_url | default $env.CHAT_URL? | default $'($base_url)/chat/completions'
   let max_length = try { $max_length | default ($env.MAX_LENGTH? | default $DEFAULT_OPTIONS.MAX_LENGTH | into int) } catch { $DEFAULT_OPTIONS.MAX_LENGTH }
   let temperature = try { $temperature | default $env.TEMPERATURE? | default $DEFAULT_OPTIONS.TEMPERATURE | into float } catch { $DEFAULT_OPTIONS.TEMPERATURE }
+  let sys_prompt = $sys_prompt | default $env.SYSTEM_PROMPT?
+  let user_prompt = $user_prompt | default $env.USER_PROMPT? | default $DEFAULT_OPTIONS.USER_PROMPT
   validate-temperature $temperature
   let setting = {
     model: $model,
@@ -87,6 +89,8 @@ export def --env deepseek-review [
     patch_cmd: $patch_cmd,
     max_length: $max_length,
     local_repo: $local_repo,
+    sys_prompt: ($sys_prompt | peek-prompt),
+    user_prompt: ($user_prompt | peek-prompt),
     temperature: $temperature,
   }
 
@@ -97,7 +101,7 @@ export def --env deepseek-review [
   let hint = $'🚀 Initiate the code review by DeepSeek AI for local changes ...'
   print $hint; print -n (char nl)
   print 'Current Settings:'; hr-line
-  $setting | compact-record | reject -i repo | print; print -n (char nl)
+  $setting | compact-record | print; print -n (char nl)
 
   let content = get-diff --paths $paths --diff-to $diff_to --diff-from $diff_from --include $include --exclude $exclude --patch-cmd $patch_cmd
   let length = $content | str stats | get unicode-width
@@ -106,8 +110,6 @@ export def --env deepseek-review [
     exit $ECODE.SUCCESS
   }
   print $'Review content length: (ansi g)($length)(ansi reset), current max length: (ansi g)($max_length)(ansi reset)'
-  let sys_prompt = $sys_prompt | default $env.SYSTEM_PROMPT?
-  let user_prompt = $user_prompt | default $env.USER_PROMPT? | default $DEFAULT_OPTIONS.USER_PROMPT
   mut messages = if ($sys_prompt | is-empty) { [] } else { [{ role: 'system', content: $sys_prompt }] }
   $messages = $messages | append { role: 'user', content: $"($user_prompt)\n($content)" }
   let payload = {
@@ -166,7 +168,7 @@ def write-review-to-file [
     '# DeepSeek Code Review Result', ''
     $"Generated at: (date now | format date '%Y/%m/%d %H:%M:%S')", ''
     '## Code Review Settings', ''
-    ($setting | compact-record | reject -i repo | transpose key val | to md --pretty)
+    ($setting | compact-record | transpose key val | to md --pretty)
     '', '## Review Detail', '', $result, '', ...$token_usage
   ]
   try {
@@ -244,6 +246,22 @@ def parse-line [] {
     print -e $'(ansi r)Unrecognized content:(ansi reset) ($line)'
     exit $ECODE.SERVER_ERROR
   }
+}
+
+# Peek the prompt content
+def peek-prompt [] {
+  let prompt = $in
+  const PEEK_LENGTH = 50
+  if ($prompt | is-empty) { return null }
+  let first_line = $prompt | lines | first
+  mut preview = ''
+  if ($first_line | str stats | get graphemes) > $PEEK_LENGTH {
+    let peek = $first_line | str substring -g 0..$PEEK_LENGTH
+    $preview = $'($peek)...'
+  } else {
+    $preview = $first_line
+  }
+  $preview
 }
 
 # Coalesce the reasoning content
