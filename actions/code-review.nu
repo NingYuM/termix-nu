@@ -38,7 +38,7 @@ const HTTP_HEADERS = [User-Agent curl/8.9]
 
 const DEFAULT_OPTIONS = {
   MODEL: 'deepseek-chat',
-  TEMPERATURE: 1.0,
+  TEMPERATURE: 0.7,
   BASE_URL: 'https://api.deepseek.com',
   USER_PROMPT: 'You are a professional code review assistant responsible for analyzing code changes. Identify potential issues such as code style violations, logical errors, security vulnerabilities, and provide improvement suggestions. Clearly list the problems and recommendations in a concise manner. Please review the following code changes:',
 }
@@ -49,9 +49,9 @@ export def --env deepseek-review [
   --debug(-d),              # Debug mode
   --output(-o): string,     # Output file path
   --paths(-p): string,      # Comma separated file paths to review
-  --diff-to(-t): string,    # Diff to git REF
-  --diff-from(-f): string,  # Diff from git REF
-  --patch-cmd(-c): string,  # The `git show` or `git diff` command to get the diff content, for local CR only
+  --diff-to(-t): string,    # Git diff ending commit SHA
+  --diff-from(-f): string,  # Git diff starting commit SHA
+  --patch-cmd(-c): string,  # The `git show` or `git diff` command to get the diff content
   --max-length(-l): int,    # Maximum length of the content for review, 0 means no limit.
   --model(-m): string,      # Model name, or read from CHAT_MODEL env var, `deepseek-chat` by default
   --base-url(-b): string,   # DeepSeek API base URL, fallback to BASE_URL env var
@@ -60,7 +60,7 @@ export def --env deepseek-review [
   --user-prompt(-u): string # Default to $DEFAULT_OPTIONS.USER_PROMPT
   --include(-i): string,    # Comma separated file patterns to include in the code review
   --exclude(-x): string,    # Comma separated file patterns to exclude in the code review
-  --temperature(-T): float, # Temperature for the model, between `0` and `2`, default value `1.0`
+  --temperature(-T): float, # Temperature for the model, between `0` and `2`, default value `0.7`
 ]: nothing -> nothing {
 
   $env.config.table.mode = 'psql'
