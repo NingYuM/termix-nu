@@ -41,6 +41,7 @@ use ../utils/common.nu [ECODE, is-installed, hr-line, get-conf, get-tmp-path, co
 
 const KEY_MAPPING = $"(ansi grey66)\(Space: Select, a: Select All, ESC/q: Quit, Enter: Confirm\)(ansi reset)"
 const JSON_ENTRY = 'latest.json'
+const STORE_TYPES = [aliyun minio]
 const VALID_ACTIONS = [download, transfer, detect, revert]
 const VALID_MODULES = [terp-mobile terp service service-mobile iam dors dors-mobile base base-mobile b2b emp]
 const ENDPOINT = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com'
@@ -283,6 +284,10 @@ def --env get-dest-oss [destStore: string] {
   let ossConf = open $LOCAL_CONFIG | from toml | get -i $destStore
   if ($ossConf | is-empty) {
     print -e $'The storage you specified (ansi p)($destStore)(ansi reset) does not exist in (ansi p)($LOCAL_CONFIG)(ansi reset).'
+    exit $ECODE.INVALID_PARAMETER
+  }
+  if ($ossConf.TYPE? | is-not-empty) and ($ossConf.TYPE? not-in $STORE_TYPES) {
+    print -e $'The storage type (ansi r)($ossConf.TYPE)(ansi reset) is invalid. Supported types: (ansi g)($STORE_TYPES | str join ", ")(ansi reset)'
     exit $ECODE.INVALID_PARAMETER
   }
   $ossConf
