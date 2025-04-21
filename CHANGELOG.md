@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
+- Add storage type validation for TERP assets syncing
 - Added local code review support with **DeepSeek** models via the `t cr` command
 - Added support for code review of `git show head:path/to/file` command
 - Added ability to write code review results to markdown file with the `t cr` command
