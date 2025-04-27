@@ -5,7 +5,8 @@
 # ----------------------- Begin customization -----------------------
 $env.GPG_TTY = (tty)
 $env.VOLTA_HOME = $'($env.HOME)/.volta'
-$env.PNPM_HOME = '/Users/hustcer/Library/pnpm'
+$env.PNPM_HOME = $'($env.HOME)/Library/pnpm'
+$env.ANDROID_HOME = $'($env.HOME)/Library/Android/sdk'
 $env.HOMEBREW_BOTTLE_DOMAIN = 'https://mirrors.ustc.edu.cn/homebrew-bottles/bottles'
 
 $env.XDG_CONFIG_HOME = $'($env.HOME)/.config'
@@ -33,6 +34,7 @@ $env.PATH = (
     | prepend $'($env.HOME)/.moon/bin'
     | prepend $'($env.HOME)/.cargo/bin'
     | append `/Applications/Ghostty.app/Contents/MacOS/`
+    | append $'($env.HOME)/Library/Android/sdk/platform-tools'
 )
 
 if not (which fnm | is-empty) {
