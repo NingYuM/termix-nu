@@ -8,8 +8,8 @@
 #  [√] Perform CR for changes that either include or exclude specific files
 #  [√] Support streaming output for local code review
 #  [√] Support using custom patch command to get diff content
-#  [ ] Support using custom prompt for code review
-#  [ ] Support performing code review by default settings from remote server
+#  [√] Support using custom prompt for code review
+#  [√] Support performing code review by default settings from remote server
 # Description: A script to do code review by DeepSeek
 # Env vars:
 #  CHAT_TOKEN: Your DeepSeek API token
