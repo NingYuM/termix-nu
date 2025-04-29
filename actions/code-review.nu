@@ -38,7 +38,7 @@ const HTTP_HEADERS = [User-Agent curl/8.9]
 
 const DEFAULT_OPTIONS = {
   MODEL: 'deepseek-chat',
-  TEMPERATURE: 0.7,
+  TEMPERATURE: 0.3,
   MAX_LENGTH: 50000,
   BASE_URL: 'https://api.deepseek.com',
   USER_PROMPT: 'You are a professional code review assistant responsible for analyzing code changes. Identify potential issues such as code style violations, logical errors, security vulnerabilities, and provide improvement suggestions. Clearly list the problems and recommendations in a concise manner. Please review the following code changes:',

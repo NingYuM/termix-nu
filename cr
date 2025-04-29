@@ -23,7 +23,7 @@ def main [
   --user-prompt(-u): string # Default to value of $DEFAULT_OPTIONS.USER_PROMPT
   --include(-i): string,    # Comma separated file patterns to include in the code review
   --exclude(-x): string,    # Comma separated file patterns to exclude in the code review
-  --temperature(-T): float, # Temperature for the model, between `0` and `2`, default value `0.7`
+  --temperature(-T): float, # Temperature for the model, between `0` and `2`, default value `0.3`
 ] {
   config-check
   config-load --debug=$debug --model=$model
