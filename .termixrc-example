@@ -172,8 +172,8 @@ provider = "Infinigence"
 # If the content length exceeds the non-zero limit, the review will be skipped
 # Note that it's unicode width not token length
 max-length = 50000
-# The temperature of the model, The value should be between 0 and 2, with default value 0.7
-temperature = 0.7
+# The temperature of the model, The value should be between 0 and 2, with default value 0.3
+temperature = 0.3
 # The user prompt name to use for DeepSeek API
 # Available options: default,frontend,java
 user-prompt = "default"

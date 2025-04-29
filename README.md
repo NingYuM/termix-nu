@@ -1688,7 +1688,7 @@ t art deploy --combine --from terp-runtime --branch release/millgrid-uat --to mi
 - `-u`, `--user-prompt <string>`: 用户提示词, 默认为 `$DEFAULT_OPTIONS.USER_PROMPT`,
 - `-i`, `--include <string>`: ​包含的文件模式（逗号分隔）
 - `-x`, `--exclude <string>`: ​排除的文件模式（逗号分隔）
-- `-T`, `--temperature <float>`: ​模型随机性参数（范围 0-2，默认 0.7）
+- `-T`, `--temperature <float>`: ​模型随机性参数（范围 0-2，默认 0.3）
 - `-h`, `--help`: 显示帮助文档
 
 **配置说明**:
@@ -1704,8 +1704,8 @@ provider = "Infinigence"
 # 如果該值非 0，而且待审查内容超过这个长度则直接跳过审查，防止意外消耗过多 Token
 # 注意：这里的长度是指 Unicode Width，而不是 Token 长度
 max-length = 50000
-# ​模型随机性参数（范围 0-2，默认 0.7），不建议超过 1.0
-temperature = 0.7
+# ​模型随机性参数（范围 0-2，默认 0.3），不建议超过 1.0
+temperature = 0.3
 # 输入给 DeepSeek API 进行代码审查的用户提示词名称
 # 可以预定义多个用户提示词，然后在此通过名称进行切换
 # 比如这个配置示例文件预定义了三组用户提示词: default,frontend,java
