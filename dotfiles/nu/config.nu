@@ -248,7 +248,7 @@ def pretty-oss [
 
   let raw  = $in | detect columns --guess
       | drop 2 | select LastModifiedTime 'Size(B)' ObjectName
-      | upsert LastModifiedTime { into datetime | format date $TIME_FMT }
+      | upsert LastModifiedTime { str replace ' CST' '' | into datetime | format date $TIME_FMT }
       | rename -c { 'Size(B)': 'size', LastModifiedTime: 'modified', ObjectName: 'oname' }
       | upsert size { into filesize }
       | upsert name {|it| $it.oname | split row '/' | last | empty-to-dot }
