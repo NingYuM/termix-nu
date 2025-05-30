@@ -40,7 +40,7 @@ def --env git-proxy [
     let proxy = if ($proxy.0 | str contains '*') { $proxy.0 | str replace '*' '127.0.0.1' } else { $proxy.0 }
     let isClashX = ($proxies | lines | first) =~ 'ClashX'
     let LAN_IP = if $isWindows {
-      ipconfig | find IPv4 | get 0 | ansi strip | detect columns -n | transpose k v| last | get v
+      ipconfig | find -n IPv4 | get 0 | detect columns -n | transpose k v| last | get v
      } else {
       ifconfig | grep broadcast | detect columns -n | get column1.0
     }
