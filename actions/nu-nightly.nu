@@ -19,7 +19,7 @@ export def get-latest-nightly-build [
   mut target = $target
   let latest = http get https://api.github.com/repos/nushell/nightly/releases
   let latest = if ($tag | is-empty) { $latest } else {
-      $latest | where tag_name =~ $tag
+      $latest | filter { $in.tag_name | str contains $tag }
     } | sort-by published_at --reverse | first
 
   if $list {
