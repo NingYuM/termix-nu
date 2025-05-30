@@ -341,7 +341,7 @@ def nu-fetch-latest [] {
     | aria2c -i -
   mkdir nu-latest; tar xvf nu-*.tar.gz --directory=nu-latest
   cp -r nu-latest/**/* .; rm -rf nu-*
-  $'(char nl)Update to Nu: (ansi g)(./nu --version)(ansi reset)'
+  print $'(char nl)Update to Nu: (ansi g)(./nu --version)(ansi reset)'
 }
 
 # 将每日構建发布的最新版 Nu 二进制文件下载到本地并安装到 ~/Applications/nu-nightly/ 目录
@@ -358,7 +358,7 @@ def nu-fetch-nightly [] {
     | aria2c -i -
   mkdir nu-nightly; tar xvf nu-*.tar.gz --directory=nu-nightly
   cp -r nu-nightly/**/* .; rm -rf nu-*
-  $'(char nl)Update to Nu: (ansi g)(./nu --version)(ansi reset)'
+  print $'(char nl)Update to Nu: (ansi g)(./nu --version)(ansi reset)'
 }
 
 # Show Nu changed configs
@@ -574,7 +574,7 @@ def nu-sloc [] {
   let stats = (
     ls **/*.nu
       | select name
-      | insert lines {|it| open $it.name | size | get lines }
+      | insert lines {|it| open $it.name | str stats | get lines }
       | insert blank {|s| $s.lines - (open $s.name | lines | find --regex '\S' | length) }
       | insert comments {|s| open $s.name | lines | find --regex '^\s*#' | length }
       | sort-by lines -r
@@ -586,9 +586,9 @@ def nu-sloc [] {
   let total = ($stats | length)
   let avg = ($lines / $total | math round)
 
-  $'(char nl)(ansi pr) SLOC Summary for Nushell (ansi reset)(char nl)'
+  print $'(char nl)(ansi pr) SLOC Summary for Nushell (ansi reset)(char nl)'
   print { 'Total Lines': $lines, 'Blank Lines': $blank, Comments: $comments, 'Total Nu Scripts': $total, 'Avg Lines/Script': $avg }
-  $'(char nl)Source file stat detail:'
+  print $'(char nl)Source file stat detail:'
   print $stats
 }
 
