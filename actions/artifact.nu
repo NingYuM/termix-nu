@@ -88,7 +88,7 @@ export def artifacts [
   match $action {
     pack => { do $checkVersion; pack-artifact $version --from $from --need-confirm }
     produce => { produce-artifact --from=$from --branch=$branch --need-confirm }
-    consume => { do $checkEnv 0; do $checkVersion; consume-artifact $version $dest_env -f $from -t $to -c --deploy-group=$deploy_group --no-deploy=$no_deploy }
+    consume => { do $checkEnv 0; consume-artifact $dest_env -v $version -f $from -t $to -c --deploy-group=$deploy_group --no-deploy=$no_deploy }
     deploy => {
       do $checkEnv $doid
       (deploy-artifact --dest-env $dest_env --combine=$combine --from $from --branch $branch --doid $doid
@@ -144,6 +144,7 @@ export def fzf-preview [
 ] {
   match $type {
     artifact => { preview-artifact $selected }
+    release => { preview-trantor-release $selected }
     group => { preview-group $selected --options $options }
     _ => { print -e $'Unsupported preview type: (ansi r)($type)(ansi reset)' }
   }
@@ -181,6 +182,18 @@ def preview-artifact [
   print $'Version: ($version) by ($meta.createdBy)'; hr-line
   $meta | select ...($SELECT_COLUMN | update 2 createdBy) | print; hr-line
   print $selected.changelog
+}
+
+# Preview the selected Trantor release detail info
+def preview-trantor-release [
+  version: string,      # The version of the selected release
+] {
+  let metaPath = $'(get-tmp-path)/($RELEASE_META_PATH)/releases.json'
+  let selected = open $metaPath | where metadata?.erda_release_version? == $version | get 0
+  print $'Erda Release Version: ($version)'; hr-line
+  print ($selected | select version uploadedAt filename path)
+  print $'(char nl)Changelog:'; hr-line
+  print $selected.metadata.changelog? | default 'N/A'
 }
 
 # Load meta data settings and store them to environment variable
@@ -390,8 +403,8 @@ def validate-produce-setting [
 
 # Consume the artifacts: download, upload and deploy the artifacts to the dest environment
 def consume-artifact [
-  version: string,            # The version number of the artifact to deploy
   destEnv: string,            # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
+  --version(-v): string,      # The version number of the artifact to deploy
   --no-deploy(-n),            # Don't deploy after creating deploy order
   --from(-f): string,         # Source config to build or download artifact
   --to(-t): string,           # Destination config to upload or deploy artifact
@@ -401,7 +414,12 @@ def consume-artifact [
   let destEnv = $destEnv | str upcase
   let srcSetting = validate-produce-setting --from $from
   let destSetting = validate-consume-setting $destEnv --to $to --deploy-group $deploy_group --no-deploy=$no_deploy
+  let version = $version | default (select-artifact-2-consume-by-fzf)
   if $need_confirm { confirm-consume $version $destEnv $destSetting --no-deploy=$no_deploy }
+  if ($version | default '' | str starts-with 'R.') {
+    consume-trantor-artifact $version $destSetting $destEnv --no-deploy=$no_deploy --deploy-group $deploy_group
+    return
+  }
   let srcPID = $srcSetting.projectId
   let destPID = $destSetting.projectId
   # 先查询项目制品
@@ -430,6 +448,40 @@ def consume-artifact [
   }
   let selectedRelease = query-release-by-version $version $destSetting
   let deployGroup = $destSetting.deployGroup | default 'All'
+  let doid = create-deploy-order ($selectedRelease.0 | into record) $destEnv --deploy-group=$deployGroup --dest-setting $destSetting
+  if (not ($doid | is-empty)) and (not $no_deploy) { polling-artifact-deploy $doid $destSetting }
+}
+
+# Consume the Trantor artifact: rebuild and deploy the artifacts to the dest environment
+def consume-trantor-artifact [
+  version: string,            # The version number of the artifact to deploy
+  destSetting: record,        # Destination setting to consume the artifact
+  destEnv: string,            # The dest environment to deploy the artifact, such as DEV,TEST,STAGING,PROD, etc.
+  --no-deploy(-n),            # Don't deploy after creating deploy order
+  --deploy-group(-g): string, # The app group to deploy for the specified artifact, `all` by default
+] {
+  let metaPath = $'(get-tmp-path)/($RELEASE_META_PATH)/releases.json'
+  let auth = get-erda-auth $destSetting.erdaHost | str replace 'cookie: ' ''
+  let selected = open $metaPath | where metadata?.erda_release_version? == $version | get 0
+  print $'You are going to consume the Trantor artifact: (ansi g)($version)(ansi reset)'; hr-line
+  $selected | reject -i metadata.file_hashes metadata.changelog | table -e | print
+  let preCheck = query-release-by-version $version $destSetting
+  if ($preCheck | is-empty) {
+    let artifactUrl = $'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/($selected.path)'
+    let pipeline = (bash run/trantor-artifact-transfer.sh
+        --erda-cookie $auth
+        --artifact-url $artifactUrl
+        --base-url $destSetting.erdaHost
+        --org-name $destSetting.orgAlias
+        --project-id $destSetting.projectId
+        --non-interactive --output-format json
+      ) | complete
+    let pipelineId = $pipeline.stdout | from json | get pipeline_id
+    print $'(char nl)Building artifact with pipeline ID: (ansi g)($pipelineId)(ansi reset)'
+    query-cicd-by-id ($pipelineId | into int) --watch --host $destSetting.erdaHost
+  }
+  let selectedRelease = query-release-by-version $version $destSetting
+  let deployGroup = $deploy_group | default $destSetting.deployGroup | default 'All'
   let doid = create-deploy-order ($selectedRelease.0 | into record) $destEnv --deploy-group=$deployGroup --dest-setting $destSetting
   if (not ($doid | is-empty)) and (not $no_deploy) { polling-artifact-deploy $doid $destSetting }
 }
@@ -498,7 +550,7 @@ def deploy-artifact [
     exit $ECODE.SUCCESS
   }
   if $combine {
-    consume-artifact $version $destEnv --from $from --to $to --deploy-group=$deploy_group --no-deploy=$no_deploy
+    consume-artifact $destEnv -v $version --from $from --to $to --deploy-group=$deploy_group --no-deploy=$no_deploy
     return
   }
   confirm-deploy $version $destEnv $destSetting --doid $doid --no-deploy=$no_deploy
@@ -524,6 +576,27 @@ def select-artifact-by-fzf [
   $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
   let version = $releases.data.list | select version createdAt | sort-by -r createdAt
       | get version | str join (char nl) | fzf | complete | get stdout | str trim
+  $version
+}
+
+# Select the artifact version to consume from source Trantor artifact list
+def select-artifact-2-consume-by-fzf [] {
+  # ~/.termix-nu/terp/artifacts/releases.json
+  let tmp = $'(get-tmp-path)/($RELEASE_META_PATH)'
+  if not ($tmp | path exists) { mkdir $tmp }
+  let releaseMetaPath = $'($tmp)/releases.json'
+  let candidates = http get https://trantor2-installer.app.terminus.io/artifacts
+    | get artifacts
+    | tee { save -f $releaseMetaPath }
+    | select version metadata?.erda_release_version?
+    | rename version release
+    | default '' release
+    | where release =~ 'R.'
+  let title = $'Select the artifact to consume:'
+  let PREVIEW_CMD = $"nu actions/artifact.nu {} release"
+  let FZF_PREVIEW_CONF = $'--preview "($PREVIEW_CMD)"'
+  $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
+  let version = $candidates | get release | str join (char nl) | fzf | complete | get stdout | str trim
   $version
 }
 
