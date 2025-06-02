@@ -745,7 +745,7 @@ def create-deploy-order [
     projectId: $pid, releaseID: $artifact.releaseId, workspace: $environment, orgAlias: $orgAlias, host: $host
   }
   let deployGroup = $deploy_group | default 'All' | split row ','
-  let inexistGroup = $deployGroup | filter {|it| $it not-in ($modes | columns) }
+  let inexistGroup = $deployGroup | where {|it| $it not-in ($modes | columns) }
   # Use specified deploy group or select the deploy mode
   mut selectedMode = if ($inexistGroup | is-empty) { $deployGroup } else {
       print $'You are trying to deploy APP group ($deployGroup), however, (ansi r)($inexistGroup)(ansi reset) does NOT exist, Please select the group manually.(char nl)'
@@ -757,7 +757,7 @@ def create-deploy-order [
   }
   if ($selectedMode | length) > 1 and ('All' in $selectedMode) {
     print $'You have selected (ansi g)`All`(ansi reset) group with other groups, and (ansi r)`All` will be ignored!(ansi reset)'
-    $selectedMode = ($selectedMode | filter {|it| $it != 'All' })
+    $selectedMode = ($selectedMode | where {|it| $it != 'All' })
   }
   print $'You are going to deploy the APP group: (ansi g)($selectedMode)(ansi reset).'
   print $'The following applications will be deployed:(char nl)'

@@ -72,7 +72,7 @@ def query-ver [
   let currentVer = get-conf version
   let versions = git tag -l --sort=-v:refname | lines
   let latestVer = $versions.0
-  let newVersions = $versions | filter {|it| is-lower-ver $currentVer $it }
+  let newVersions = $versions | where {|it| is-lower-ver $currentVer $it }
   let forceUpgrade = $newVersions | any {|it| git show --oneline --no-patch $it | str contains $_UPGRADE_TAG }
   let config = { latestVer: $latestVer, checkDate: $checkDate, forceUpgrade: $forceUpgrade }
   if ($conf | path exists) {

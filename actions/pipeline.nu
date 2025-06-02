@@ -52,7 +52,7 @@ export-env {
 def check-pipeline-conf [pipeline: any] {
   let keys = ['pid', 'appid', 'branch', 'env', 'appName', 'pipeline']
   $pipeline | each {|conf|
-    let empties = ($keys | filter {|it| $conf | get -i $it | is-empty })
+    let empties = ($keys | where {|it| $conf | get -i $it | is-empty })
     if ($empties | length) > 0 {
       print -e $'Please set (ansi r)($empties | str join ',')(ansi reset) in the following pipeline config:'
       print -e $conf; exit $ECODE.INVALID_PARAMETER
@@ -115,7 +115,7 @@ def get-pipeline-conf [
   if not $batchMode { return $merged }
   # The condition to filter the matched apps
   let cond = {|x| $apps | split row ',' | any {|it| $it in [$x.appName ($x | get -i alias)] }}
-  let matched = if $apps == 'all' { $merged } else if not ($apps | is-empty) { $merged | filter $cond }
+  let matched = if $apps == 'all' { $merged } else if not ($apps | is-empty) { $merged | where $cond }
   return $matched
 }
 

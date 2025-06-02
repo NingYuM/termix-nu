@@ -25,7 +25,7 @@ export def git-branch [
   cd $path
   let branches = git branch | lines | par-each -k { str substring 2.. }
   let branches = if ($contains | is-empty) { $branches } else {
-    $branches | filter { |it| not (git log $it --grep $contains | is-empty) }
+    $branches | where { |it| not (git log $it --grep $contains | is-empty) }
   }
   let basic = (
     $branches

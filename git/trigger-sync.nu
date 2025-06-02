@@ -29,7 +29,7 @@ export def 'git trigger-sync' [
   let current = git branch --show-current | str trim
   let branches = if ($branch | is-empty) { [$current] } else { $branch | str trim | split row , }
   let ignored = get-env SYNC_IGNORE_ALIAS ''
-  let invalid = $branches | filter {|it| not (has-ref $it)}
+  let invalid = $branches | where {|it| not (has-ref $it)}
   if ($invalid | is-not-empty) {
     print -e $'Branch (ansi r)($invalid | str join ,)(ansi reset) does not exist, please check it again.'
     exit $ECODE.INVALID_PARAMETER
@@ -44,7 +44,7 @@ export def 'git trigger-sync' [
     exit $ECODE.SUCCESS
   }
 
-  let candidates = if $all { $allSyncs | columns | filter {|it| has-ref $it } } else { $branches }
+  let candidates = if $all { $allSyncs | columns | where {|it| has-ref $it } } else { $branches }
 
   if ($candidates | length) > 1 {
     print 'The following branches will be synced:'; hr-line

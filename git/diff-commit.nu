@@ -45,11 +45,11 @@ export def 'git diff-commit' [
   }
   if not ($exclude_shas | is-empty) {
     let SHAs = $exclude_shas | split row ','
-    $diff = ($diff | filter {|it| $it.SHA not-in $SHAs })
+    $diff = ($diff | where {|it| $it.SHA not-in $SHAs })
   }
   if not ($exclude_authors | is-empty) {
     let authors = $exclude_authors | split row ','
-    $diff = ($diff | filter {|it| $it.Author not-in $authors })
+    $diff = ($diff | where {|it| $it.Author not-in $authors })
   }
   if ($grep | is-empty) {
     print $'(char nl)Modification between (ansi p)($from)(ansi reset) and (ansi p)($to)(ansi reset): (char nl)'

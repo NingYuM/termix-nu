@@ -252,7 +252,7 @@ def get-modules [modules?: string, --latest-meta: record, --action: string] {
   # Validate and sync specified modules
   let splits = $modules | default '' | split row ','
   if ($splits | length) > 0 {
-    let inexists = $splits | filter {|it| $it not-in ($allModules | get mod) }
+    let inexists = $splits | where {|it| $it not-in ($allModules | get mod) }
     if ($inexists | length) > 0 {
       print -e $'Invalid modules (ansi r)($inexists | str join ",")(ansi reset), the module you specified does not exists in latest.json(ansi reset)'
       exit $ECODE.INVALID_PARAMETER
@@ -485,7 +485,7 @@ def detect [latestMeta: record] {
     $modules | reject deprecated | table -w 200 | print; hr-line -c grey30 108
   }
   print $'Total modules: (ansi g)($modules | length)(ansi reset), Enabled: (ansi g)($modules | where deprecated? != true | length)(ansi reset), Deprecated modules: (ansi r)($modules | where deprecated? | length)(ansi reset)'
-  let reverted = $latestMeta.latest | values | filter {|it| $it.metadata?.revertAt? | is-not-empty }
+  let reverted = $latestMeta.latest | values | where {|it| $it.metadata?.revertAt? | is-not-empty }
   if ($reverted | length) > 0 {
     print $'(char nl)Module Revert Found:(char nl)'
     $reverted | select namespace metadata.revertBy metadata.revertAt

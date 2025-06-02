@@ -314,7 +314,7 @@ def get-diff-content [
 
 # Get the full modification diff content by paths
 def get-diff-by-paths [paths: string] {
-  $paths | split row , | filter {|p| $p | is-not-empty }
+  $paths | split row , | where {|p| $p | is-not-empty }
     | reduce -f '' {|it, acc|
         let initial_commit = git log --diff-filter=A --format=%H -- $it | lines | last
         if ($initial_commit | is-empty) {
@@ -363,7 +363,7 @@ export def generate-include-args [includes?: string] {
   if ($includes | is-empty) { return [] }
   $includes
     | split row ,
-    | filter {|p| $p | is-not-empty }
+    | where {|p| $p | is-not-empty }
     | each { str trim }
 }
 
@@ -372,7 +372,7 @@ export def generate-exclude-args [excludes?: string] {
   if ($excludes | is-empty) { return [] }
   $excludes
     | split row ,
-    | filter {|p| $p | is-not-empty }
+    | where {|p| $p | is-not-empty }
     | each {|p| $':!($p | str trim)' }
 }
 
