@@ -214,7 +214,7 @@ def ua [] {
 }
 
 # Clean nightly Tags:
-# `git tag -l | lines | filter { $in =~ nightly } | each { git tag -d $in }`
+# `git tag -l | lines | where { $in =~ nightly } | each { git tag -d $in }`
 # Show Nu nightly builds information
 def nun [] {
   let current = nu --version
@@ -353,7 +353,7 @@ def nu-fetch-nightly [] {
     | first
     | get assets
     | get browser_download_url
-    | filter { $in =~ $'($nu.os-info.arch)-apple-darwin' }
+    | where { $in =~ $'($nu.os-info.arch)-apple-darwin' }
     | get 0
     | aria2c -i -
   mkdir nu-nightly; tar xvf nu-*.tar.gz --directory=nu-nightly

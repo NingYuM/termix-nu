@@ -116,7 +116,7 @@ def get-valid-options [
     exit $ECODE.INVALID_PARAMETER
   }
   # 只有输入的字符串长度大于 7 的时候才会尝试判断是不是 commit SHA
-  mut matches = if ($match | str stats | get chars) >= $MIN_SHA_WIDTH { $match | split row ',' | filter { has-ref $in } | wrap sha } else { [] }
+  mut matches = if ($match | str stats | get chars) >= $MIN_SHA_WIDTH { $match | split row ',' | where { has-ref $in } | wrap sha } else { [] }
   let ignore = $env.GIT_PICK_IGNORE? | default []
   let hasIgnoreFile = ($ignore_file | is-not-empty) and ($ignore_file | path exists)
   let ignoreFromFile = if $hasIgnoreFile { open -r $ignore_file | from toml | get GIT_PICK_IGNORE? | default [] } else { [] }
@@ -130,7 +130,7 @@ def get-valid-options [
     let sourceMatches = git log ...$sourceArgs | lines | split column '---' | rename sha msg date
     let targetMatches = git log ...$targetArgs | lines | split column '---' | rename sha msg
     $matches = ($sourceMatches
-      | filter {|it| ($it.msg not-in $targetMatches.msg) and (($it.sha | str substring ..<8) not-in $ignore) and ($it.msg not-in $ignore) }
+      | where {|it| ($it.msg not-in $targetMatches.msg) and (($it.sha | str substring ..<8) not-in $ignore) and ($it.msg not-in $ignore) }
       | sort-by date
       | select sha
     )

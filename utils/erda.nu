@@ -11,7 +11,7 @@ export const VALID_ENV = [DEV TEST STAGING PROD]
 export def check-erda-envs [] {
   # 部署/查询 Pipeline 操作需要先配置 ERDA_USERNAME & ERDA_PASSWORD
   let envs = ['ERDA_USERNAME' 'ERDA_PASSWORD']
-  let empties = ($envs | filter {|it| $env | get -i $it | is-empty })
+  let empties = ($envs | where {|it| $env | get -i $it | is-empty })
   if ($empties | length) > 0 {
     print -e $'Please set (ansi r)($empties | str join ',')(ansi reset) in your environment first...'
     exit $ECODE.INVALID_PARAMETER
