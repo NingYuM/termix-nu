@@ -1,6 +1,32 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.89.0 - 2025-06-11
+
+**Bug Fixes**
+
+- Use `str contains` for nightly tag filtering
+- Fix carapace init script for Nu 0.105.0
+- Fix `t pull-all` command for Nu v0.105
+- Fix `t query-deps` command for Nu v0.105.0
+
+**Features**
+
+- Set defalut `temperature` to **0.3** for code review
+- Add new Trantor artifact consume support by `t art consume` command
+
+**Miscellaneous Tasks**
+
+- Fix `pretty-oss` output of Nu config
+- Add `charts-mobile` description for terp-assets
+- Add `run/trantor-artifact-transfer.sh`
+- Use `where` instead of `filter` for Nu 0.105
+- Increase default `fzf` panel height from 50% to 70%
+
+**Deps**
+
+- Upgrade `nutest` to v1.1.0 for test running
+
 ## v1.88.0 - 2025-04-18
 
 **Bug Fixes**
