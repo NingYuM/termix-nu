@@ -4,7 +4,7 @@
 # Usage:
 #   Git related helpers
 
-use common.nu [has-ref get-env]
+use common.nu [has-ref]
 
 export-env {
   # FIXME: 去除前导空格背景色
@@ -19,8 +19,8 @@ export def do-sync [
   --force-sync: any = false,  # Force to sync even if refused by the remote repo
 ] {
   print $'Sync from local (ansi g)($syncFrom)(ansi reset) to remote (ansi p)($repo.dest) of repo ($repo.repo)(ansi reset) -->(char nl)'
-  let force = (get-env FORCE '0' | into int)
-  let forcePush = (get-env FORCE_PUSH '0' | into int)
+  let force = $env.FORCE?! | default 0 | into int
+  let forcePush = $env.FORCE_PUSH?! | default 0 | into int
   let hasLock = (do -i { $repo | get lock }) != null
   if ($forcePush == 1 or $force == 1 or $hasLock or $force_sync) {
     # You MUST use '--no-verify' to prevent infinite loops!!!
