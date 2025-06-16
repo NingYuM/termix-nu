@@ -66,8 +66,8 @@ def get-packages [
   let pkgsQueryUrl = $'($ERDA_HOST)/api/($PROJECT_CONF.orgName)/gateway/openapi/packages?($query)'
   http get -e --headers (get-erda-auth $ERDA_HOST --type nu) $pkgsQueryUrl
     | get data.list
-    | filter {|it| if $all { true } else { $it.bindDomain | any { $in in $domainMap } }}
-    | upsert matchDomain {|it| $it.bindDomain | filter { $in in $domainMap } | get 0? | default - }
+    | where {|it| if $all { true } else { $it.bindDomain | any { $in in $domainMap } }}
+    | upsert matchDomain {|it| $it.bindDomain | where { $in in $domainMap } | get 0? | default - }
     | upsert domains {|it| $it.bindDomain | str join "\n" }
     | select name id scene domains createAt matchDomain
 }

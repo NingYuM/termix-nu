@@ -136,7 +136,7 @@ def scan-components-by-json [
     | wrap file
     | upsert cmp {|it| open $it.file | select -i name title group }
     | flatten
-    | filter {|it| $it.group | is-not-empty }
+    | where {|it| $it.group | is-not-empty }
     | upsert module {|it| $it.file | get-module-name $pkgName }
     | sort-by module group name
     | reject file
