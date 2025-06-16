@@ -1,6 +1,12 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.89.1 - 2025-06-16
+
+**Bug Fixes**
+
+- Fix producing and consuming of non-trantor artifacts
+
 ## v1.89.0 - 2025-06-11
 
 **Bug Fixes**
