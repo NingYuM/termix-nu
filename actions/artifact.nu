@@ -414,7 +414,7 @@ def consume-artifact [
   let destEnv = $destEnv | str upcase
   let srcSetting = validate-produce-setting --from $from
   let destSetting = validate-consume-setting $destEnv --to $to --deploy-group $deploy_group --no-deploy=$no_deploy
-  let version = $version | default (select-artifact-2-consume-by-fzf)
+  let version = if ($version | is-empty) { select-artifact-2-consume-by-fzf } else { $version }
   if $need_confirm { confirm-consume $version $destEnv $destSetting --no-deploy=$no_deploy }
   if ($version | default '' | str starts-with 'R.') {
     consume-trantor-artifact $version $destSetting $destEnv --no-deploy=$no_deploy --deploy-group $deploy_group
