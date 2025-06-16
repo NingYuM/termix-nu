@@ -16,7 +16,7 @@ minNuVer = '0.105.0'
 minJustVer = '1.39.0'
 
 # Min @terminus/t-package-tools version required to sync terp assets
-minPkgToolVer = '0.5.3'
+minPkgToolVer = '0.5.4'
 
 # 新增的二开标签备注
 redevTagComment = 'This is a release tag'
