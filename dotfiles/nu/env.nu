@@ -39,14 +39,14 @@ $env.PATH = (
 
 if not (which fnm | is-empty) {
   ^fnm env --json | from json | load-env
-  # Checking `Path` for Windows
-  let path = if 'Path' in $env { $env.Path } else { $env.PATH }
-  let node_path = if (sys host | get name) == 'Windows' {
-    $"($env.FNM_MULTISHELL_PATH)"
-  } else {
-    $"($env.FNM_MULTISHELL_PATH)/bin"
-  }
-  $env.PATH = ($path | prepend [ $node_path ])
+
+  $env.PATH = $env.PATH | prepend ($env.FNM_MULTISHELL_PATH | path join (if $nu.os-info.name == 'windows' { '' } else { 'bin' }))
+  $env.config.hooks.env_change.PWD = (
+    $env.config.hooks.env_change.PWD? | append {
+      condition: {|| ['.nvmrc' '.node-version', 'package.json'] | any {|el| $el | path exists }}
+      code: {|| ^fnm use }
+    }
+  )
 }
 
 # ENV_CONVERSIONS

@@ -662,9 +662,6 @@ $env.config.hooks = {
   pre_execution: [{ null }]           # run before the repl input is run
   env_change: {
     PWD: [{ |before, after|
-      if ('FNM_DIR' in $env) and ([.nvmrc .node-version] | path exists | any { |it| $it }) {
-        fnm use
-      }
     }],
     RELOAD_NU: [{
       condition: {|before, after|  $after | into bool }
