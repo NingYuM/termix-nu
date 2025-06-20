@@ -41,7 +41,7 @@ use ../utils/common.nu [ECODE, is-installed, hr-line, get-conf, get-tmp-path, co
 
 const KEY_MAPPING = $"(ansi grey66)\(Space: Select, a: Select All, ESC/q: Quit, Enter: Confirm\)(ansi reset)"
 const JSON_ENTRY = 'latest.json'
-const STORE_TYPES = [aliyun minio]
+const STORE_TYPES = [aliyun, minio, volc]
 const VALID_ACTIONS = [download, transfer, detect, revert]
 const VALID_MODULES = [terp-mobile terp service service-mobile iam dors dors-mobile base base-mobile b2b emp]
 const ENDPOINT = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com'
@@ -194,7 +194,7 @@ def revert-precheck [module: string, to: string, ossConf: record] {
     print $'To revert module in MINIO the `-t` option should like `(ansi p)test@mc-alias(ansi reset)`'; exit $ECODE.INVALID_PARAMETER
   }
   if $to =~ '@' {
-    if $ossConf.TYPE == 'aliyun' { print '`@` should not be used in `-t` / `--to` option for OSS storage'; exit $ECODE.INVALID_PARAMETER }
+    if not $isMinio { print '`@` should not be used in `-t` / `--to` option for OSS storage'; exit $ECODE.INVALID_PARAMETER }
     if $isMinio {
       if $mcAlias not-in (mc alias ls --json | from json -o | get alias) {
         print $'The specified mc alias (ansi p)($mcAlias)(ansi reset) does not exist, please check your mc config'; exit $ECODE.INVALID_PARAMETER
@@ -443,6 +443,7 @@ def transfer [
   for t in ($to | split row ',') {
     let destUrl = match $type {
       'minio' => $'($endpoint)/($bucket)/fe-resources/($t)/latest.json',
+      'volc' => $'https://($bucket).($region).volces.com/fe-resources/($t)/latest.json',
       'aliyun' => $'https://($bucket).($region).aliyuncs.com/fe-resources/($t)/latest.json',
     }
     print $"(ansi g)($destUrl)(ansi reset)"

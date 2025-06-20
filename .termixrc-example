@@ -36,6 +36,14 @@ oss.OSS_BUCKET = 'YOUR-BUCKET-NAME'
 oss.OSS_REGION = 'oss-cn-hangzhou'
 oss.OSS_ENDPOINT = 'https://oss-cn-hangzhou.aliyuncs.com'
 
+# 火山云 OSS 配置
+hsoss.TYPE = 'volc'
+hsoss.OSS_BUCKET = 'terp'
+hsoss.OSS_REGION = 'tos-s3-cn-shanghai'
+hsoss.OSS_ENDPOINT = 'https://tos-s3-cn-shanghai.volces.com'
+hsoss.OSS_AK = 'YOUR-OSS-AK'
+hsoss.OSS_SK = 'YOUR-OSS-SK'
+
 # Minio 配置
 minio.TYPE = 'minio'
 minio.OSS_AK = 'YOUR-MINIO-AK'
