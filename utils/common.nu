@@ -148,6 +148,57 @@ def with-progress [
   }
 }
 
+# Simple progress bar
+def simple-pv [update_interval: duration = 1sec]: any -> any {
+  tee {
+    each { date now }
+    | enumerate
+    | generate {|row, state={}|
+      let current_count = $row.index
+      let current_timestamp = $row.item
+
+      if ($state == {}) {
+        # Initialize state based on the first row
+        return {
+          next: {
+            prev_count: $current_count
+            first_timestamp: $current_timestamp
+            prev_timestamp: $current_timestamp
+            last_update_time: $current_timestamp
+          }
+        }
+      }
+      if (($current_timestamp - $state.last_update_time) >= $update_interval) {
+        let count_delta = $current_count - $state.prev_count
+        let timestamp_delta_sec = ($current_timestamp - $state.prev_timestamp) / 1sec
+        let elapsed = ($current_timestamp - $state.first_timestamp) // 1sec * 1sec | into string | fill -w 10
+
+        let speed = $count_delta / $timestamp_delta_sec | into string --decimals 2
+        let time_per_item = $timestamp_delta_sec / $count_delta | into string --decimals 6
+
+        print -n $"\r($current_count)  ($elapsed)  ($speed) item/sec  ($time_per_item) sec/item"
+
+        return {
+          next: {
+            prev_count: $current_count
+            first_timestamp: $state.first_timestamp
+            prev_timestamp: $current_timestamp
+            last_update_time: $current_timestamp
+          }
+        }
+      }
+      return {
+        next: {
+          prev_count: $current_count
+          first_timestamp: $state.first_timestamp
+          prev_timestamp: $current_timestamp
+          last_update_time: $state.last_update_time
+        }
+      }
+    }
+  }
+}
+
 # Get the specified config from `termix.toml` by key
 export def get-conf [
   key: string,       # The key to get it's value from termix.toml
