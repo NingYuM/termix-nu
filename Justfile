@@ -396,6 +396,6 @@ _register_plugins:
   let gstatExists = not (scope commands | where name == 'gstat' | is-empty)
   let polarsExists = not (scope commands | where name == 'polars' | is-empty)
   let queryExists = not (scope commands | where name == 'query json' | is-empty)
-  if not $queryExists { plugin add {{ join(NU_DIR, _query_plugin) }} }
-  if not $gstatExists { plugin add {{ join(NU_DIR, _gstat_plugin) }} }
-  if not $polarsExists { plugin add {{ join(NU_DIR, _polars_plugin) }} }
+  if not $queryExists { plugin add '{{ join(NU_DIR, _query_plugin) }}' }
+  if not $gstatExists { plugin add '{{ join(NU_DIR, _gstat_plugin) }}' }
+  if not $polarsExists { plugin add '{{ join(NU_DIR, _polars_plugin) }}' }
