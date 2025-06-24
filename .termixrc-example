@@ -44,6 +44,14 @@ hsoss.OSS_ENDPOINT = 'https://tos-s3-cn-shanghai.volces.com'
 hsoss.OSS_AK = 'YOUR-OSS-AK'
 hsoss.OSS_SK = 'YOUR-OSS-SK'
 
+# 科大讯飞 OSS 配置
+xfoss.TYPE = 'ifly'
+xfoss.OSS_AK = 'YOUR-OSS-AK'
+xfoss.OSS_SK = 'YOUR-OSS-SK'
+xfoss.OSS_REGION = 'ifly'
+xfoss.OSS_BUCKET = 'ifly-digitized'
+xfoss.OSS_ENDPOINT = 'https://???.iflytek.com'
+
 # Minio 配置
 minio.TYPE = 'minio'
 minio.OSS_AK = 'YOUR-MINIO-AK'

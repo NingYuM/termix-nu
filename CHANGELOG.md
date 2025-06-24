@@ -10,7 +10,8 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
-- Add sync TERP assets to volcengine OSS support
+- Add syncing TERP assets to ifly OSS support
+- Add syncing TERP assets to volcengine OSS support
 
 **Miscellaneous Tasks**
 
