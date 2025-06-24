@@ -1,6 +1,23 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.89.2 - 2025-06-24
+
+**Bug Fixes**
+
+- Fix plugin register for Nu 0.106
+- Fix `t cr` for Nu 0.105.0
+
+**Features**
+
+- Add sync TERP assets to volcengine OSS support
+
+**Miscellaneous Tasks**
+
+- Update `fnm` config for Nu
+- Add `with-progress` for nu config
+- Add `simpe-pv` helper
+
 ## v1.89.1 - 2025-06-16
 
 **Bug Fixes**
