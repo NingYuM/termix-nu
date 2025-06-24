@@ -41,7 +41,7 @@ use ../utils/common.nu [ECODE, is-installed, hr-line, get-conf, get-tmp-path, co
 
 const KEY_MAPPING = $"(ansi grey66)\(Space: Select, a: Select All, ESC/q: Quit, Enter: Confirm\)(ansi reset)"
 const JSON_ENTRY = 'latest.json'
-const STORE_TYPES = [aliyun, minio, volc]
+const STORE_TYPES = [aliyun, minio, volc, ifly]
 const VALID_ACTIONS = [download, transfer, detect, revert]
 const VALID_MODULES = [terp-mobile terp service service-mobile iam dors dors-mobile base base-mobile b2b emp]
 const ENDPOINT = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com'
@@ -182,8 +182,14 @@ def revert-module [modules: string, to: string, destStore: string] {
 
 # Check if the required tools are installed and validating args for module reverting
 def revert-precheck [module: string, to: string, ossConf: record] {
+  let type = $ossConf.TYPE? | default 'aliyun' | str downcase
+  if $type not-in [minio, aliyun] {
+    print -e $'The storage type (ansi r)($type)(ansi reset) is invalid for assets reverting. Supported types: (ansi g)($STORE_TYPES | str join ", ")(ansi reset)'
+    exit $ECODE.INVALID_PARAMETER
+  }
+
   let mcAlias = $to | split row @ | last
-  let isMinio = ($ossConf.TYPE? | default 'aliyun') == 'minio'
+  let isMinio = $type == 'minio'
   let TOOL_INSTALL_TIP = {
     fzf: 'Please install fzf by `brew install fzf` first'
     mc: 'Please install mc by `brew install minio/stable/mc`'
@@ -426,7 +432,7 @@ def transfer [
     update-transfer-meta $latestMeta
     for t in ($to | split row ',') {
       print $'Uploading (ansi p)($e)@($mount) to (ansi p)($t)(ansi reset) ...'
-      if ($type | str trim | str downcase) == 'minio' {
+      if ($type | str trim | str downcase) in [minio, ifly] {
         package-tools s3 -c $ak $sk $bucket $endpoint $region -d . -m $t -s path
       } else {
         package-tools s3 -c $ak $sk $bucket $endpoint $region -d . -m $t
@@ -442,6 +448,7 @@ def transfer [
   print $"You can visit the latest.json from: \n"
   for t in ($to | split row ',') {
     let destUrl = match $type {
+      'ifly' => $'($endpoint)/($bucket)/fe-resources/($t)/latest.json',
       'minio' => $'($endpoint)/($bucket)/fe-resources/($t)/latest.json',
       'volc' => $'https://($bucket).($region).volces.com/fe-resources/($t)/latest.json',
       'aliyun' => $'https://($bucket).($region).aliyuncs.com/fe-resources/($t)/latest.json',
