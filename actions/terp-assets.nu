@@ -423,6 +423,8 @@ def transfer [
   let bucket = $ossConf.OSS_BUCKET? | default ''
   let region = $ossConf.OSS_REGION? | default ''
   let endpoint = $ossConf.OSS_ENDPOINT? | default ''
+  let options = $ossConf.OSS_OPTIONS? | default '' | split row ' '
+  let extra = if ($options | compact -e | is-empty) { [] } else { [-o ...$options] }
 
   let mount = $latestMeta.mountpoint
   let fromUrl = $latestMeta.latestUrl
@@ -433,9 +435,9 @@ def transfer [
     for t in ($to | split row ',') {
       print $'Uploading (ansi p)($e)@($mount) to (ansi p)($t)(ansi reset) ...'
       if ($type | str trim | str downcase) in [minio, ifly] {
-        package-tools s3 -c $ak $sk $bucket $endpoint $region -d . -m $t -s path
+        package-tools s3 -c $ak $sk $bucket $endpoint $region -d . -m $t -s path ...$extra
       } else {
-        package-tools s3 -c $ak $sk $bucket $endpoint $region -d . -m $t
+        package-tools s3 -c $ak $sk $bucket $endpoint $region -d . -m $t ...$extra
       }
     }
     print $'Assets (ansi p)($e)(ansi reset) have been transferred successfully!'
