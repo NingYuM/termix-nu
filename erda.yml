@@ -1,0 +1,50 @@
+# REF:
+#   https://docs.openwebui.com/getting-started/env-configuration#security-variables
+#   https://docs.erda.cloud/2.4/manual/dop/guides/cicd-pipeline/project-pipeline.html
+version: "2.0"
+
+values:
+  development:
+    cpu: 0.5
+    mem: 512
+  test:
+    cpu: 0.5
+    mem: 512
+  staging:
+    cpu: 0.5
+    mem: 512
+  production:
+    cpu: 0.5
+    mem: 512
+
+services:
+  termix-nu:
+    image: registry.erda.cloud/terp/termix:bleeding-extra
+    # Keep the alpine container running
+    cmd: tail -f /dev/null
+    resources:
+      disk: 3072
+      cpu: ${cpu:1}
+      mem: ${mem:512}
+    deployments:
+      replicas: ${replicas:1}
+    volumes:
+      - type: DICE-NAS
+        targetPath: /home/termix/data
+    health_check:
+      exec:
+        cmd: nu -c "print 'Hello, Termix!'"
+        duration: 600
+    envs:
+      NAME: termix-nu
+      DATA_DIR: /home/termix/data
+
+environments:
+  development:
+    envs:
+  test:
+    envs:
+  staging:
+    envs:
+  production:
+    envs:
