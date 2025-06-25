@@ -51,6 +51,7 @@ xfoss.OSS_SK = 'YOUR-OSS-SK'
 xfoss.OSS_REGION = 'ifly'
 xfoss.OSS_BUCKET = 'ifly-digitized'
 xfoss.OSS_ENDPOINT = 'https://???.iflytek.com'
+xfoss.OSS_OPTIONS = 'ACL=public-read CacheControl=no-cache'  # 设置为 public-read 以允许公共读取
 
 # Minio 配置
 minio.TYPE = 'minio'
