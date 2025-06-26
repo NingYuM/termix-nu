@@ -97,10 +97,11 @@ def "test user is not root" [] {
       | parse "uid={uid}({user}) gid={gid}({group}){rest}"
       | select uid user gid group
 
-  assert equal $user_info [
-    [uid user gid group];
-    ["1001" termix "1001" termix]
+  assert equal ($user_info | select user group) [
+    [user group];
+    [termix termix]
   ]
+  assert not equal ($user_info | get uid | into int) 0
 }
 
 def "test nu is added as a shell" [] {

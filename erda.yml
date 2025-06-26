@@ -19,7 +19,7 @@ values:
 
 services:
   termix-nu:
-    image: registry.erda.cloud/terp/termix:bleeding-extra
+    image: registry.erda.cloud/terp/debian-nu:0.105-node.20.19-extra
     # Keep the alpine container running
     cmd: tail -f /dev/null
     resources:

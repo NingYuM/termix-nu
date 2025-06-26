@@ -73,7 +73,7 @@ jobs:
           password: ${{ secrets.ERDA_REGISTRY_TOKEN }}
           username: ${{ secrets.ERDA_REGISTRY_USERNAME }}
 
-      - name: Build Alpine Test Image
+      - name: Build Debian Test Image
         uses: docker/build-push-action@v6
         env:
           DOCKER_BUILD_SUMMARY: false
@@ -84,9 +84,9 @@ jobs:
           file: ./Dockerfile.extra
           tags: termix-test-image
 
-      - name: Test Alpine Image
+      - name: Test Debian Image
         run: |
-          echo "## Alpine Container Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "## Debian Container Test Results" >> $GITHUB_STEP_SUMMARY
           docker run --rm \
             -v "$(pwd):/work" \
             --env GITHUB_ACTIONS=${{ env.GITHUB_ACTIONS }} \
