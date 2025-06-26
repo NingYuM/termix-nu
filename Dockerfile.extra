@@ -1,6 +1,14 @@
 # syntax=docker/dockerfile:latest
 
 # A termix-nu image with Nushell and Node installed based on debian
+
+# Nu: 0.105.1, Node: v20.19.2 LTS, npm: 10.8.2, pnpm: 9.15.9, Git: 2.39.5, fnm 1.38.1
+# GNU bash: 5.2.15, Wget 1.21.3, aria2: 1.36.0, curl: 7.88.1, ripgrep 13.0.0, sd 1.0.0
+# fd 10.2.0, just 1.40.0, ossutil v1.7.19, ast-grep(sg) 0.33.0
+# /etc/os-release: Debian GNU/Linux 12 (bookworm)
+# Kernel: Linux bdbfa1bb3a92 6.4.16-linuxkit #1 SMP PREEMPT_DYNAMIC Thu Nov 16 10:55:59 UTC 2023 x86_64 GNU/Linux
+# Build cmd: docker build . -t hustcer/termix:bleeding-extra --no-cache
+# docker buildx build --platform linux/amd64,linux/arm64 . -t hustcer/termix:bleeding-extra --no-cache
 # docker build --no-cache . -t hustcer/termix:latest-extra -f Dockerfile.extra
 # TODO:
 #   [√] Add `t` global alias
@@ -8,13 +16,6 @@
 #   [√] Install @terminus/t-package-tools@latest
 #   [√] Change entry to nu
 
-# Nu: 0.105.1, Node: v20.19.2 LTS, npm: 10.8.2, pnpm: 9.15.9, Git: 2.39.5, fnm 1.37.1
-# GNU bash: 5.2.15, Wget 1.21.3, aria2: 1.36.0, curl: 7.88.1, ripgrep 13.0.0, sd 1.0.0
-# fd 10.2.0, ast-grep(sg) 0.33.0, just 1.40.0, ossutil v1.7.19
-# /etc/os-release: Debian GNU/Linux 12 (bookworm)
-# Kernel: Linux bdbfa1bb3a92 6.4.16-linuxkit #1 SMP PREEMPT_DYNAMIC Thu Nov 16 10:55:59 UTC 2023 x86_64 GNU/Linux
-# Build cmd: docker build . -t hustcer/termix:bleeding-extra --no-cache
-# docker buildx build --platform linux/amd64,linux/arm64 . -t hustcer/termix:bleeding-extra --no-cache
 FROM hustcer/debian-nu:0.105-node.20.19-extra
 
 ARG TARGETARCH
@@ -41,11 +42,7 @@ ENV DISABLE_VERSION_CHECK=true
 # Use mirrors to speed up installation
 RUN apt-get update \
     && apt-get upgrade -y \
-    && apt-get install -y --no-install-recommends --no-install-suggests \
-    # Install latest version of neovim
-    && curl -s https://api.github.com/repos/neovim/neovim/releases/latest | grep browser_download_url | cut -d '"' -f 4 | grep nvim-linux-${ARCH} | aria2c -i - \
-    && mkdir nvim-latest && tar xvf nvim-*.tar.gz --directory=nvim-latest \
-    && cp -aR nvim-latest/nvim* /usr/local/bin/ \
+    && apt-get install -y --no-install-recommends --no-install-suggests neovim \
     && echo '/usr/local/bin/nu' >> /etc/shells \
     # Add and erda user and create home dir
     && useradd -m -s /usr/local/bin/nu termix \
@@ -67,6 +64,7 @@ RUN apt-get update \
         config reset -w; \
         open /home/termix/.env | str replace /Users/terminus/termix-nu /home/termix/termix-nu | save -rf /home/termix/.env; \
         echo `alias t="just --justfile ~/.justfile --dotenv-path ~/.env --working-directory ."` o>> /home/termix/.bashrc; \
+        echo "\neval \"$(fnm env --use-on-cd --shell bash)\"\n" o>> /home/termix/.bashrc; \
         echo "alias t = just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .\n" o>> /home/termix/.config/nushell/config.nu; \
         echo "$env.config.show_banner = false\n" o>> /home/termix/.config/nushell/config.nu; \
         echo "$env.config.table.mode = \"light\"\n" o>> /home/termix/.config/nushell/config.nu; \
