@@ -1,15 +1,25 @@
 # syntax=docker/dockerfile:latest
 
-# A termix-nu image with Nushell and Node installed based on alpine
-# docker build --no-cache . -t hustcer/termix:latest -f Dockerfile
+# A termix-nu image with Nushell and Node installed based on debian
+# docker build --no-cache . -t hustcer/termix:latest-extra -f Dockerfile.extra
 # TODO:
-#   [√] run run/setup-termix.sh to install binary dependencies
 #   [√] Add `t` global alias
 #   [√] Add ~/.env and ~/.termixrc file
 #   [√] Install @terminus/t-package-tools@latest
 #   [√] Change entry to nu
 
-FROM node:lts-alpine
+# Nu: 0.105.1, Node: v20.19.2 LTS, npm: 10.8.2, pnpm: 9.15.9, Git: 2.39.5, fnm 1.37.1
+# GNU bash: 5.2.15, Wget 1.21.3, aria2: 1.36.0, curl: 7.88.1, ripgrep 13.0.0, sd 1.0.0
+# fd 10.2.0, ast-grep(sg) 0.33.0, just 1.40.0, ossutil v1.7.19
+# /etc/os-release: Debian GNU/Linux 12 (bookworm)
+# Kernel: Linux bdbfa1bb3a92 6.4.16-linuxkit #1 SMP PREEMPT_DYNAMIC Thu Nov 16 10:55:59 UTC 2023 x86_64 GNU/Linux
+# Build cmd: docker build . -t hustcer/termix:bleeding-extra --no-cache
+# docker buildx build --platform linux/amd64,linux/arm64 . -t hustcer/termix:bleeding-extra --no-cache
+FROM hustcer/debian-nu:0.105-node.20.19-extra
+
+ARG TARGETARCH
+ARG ARCH=${TARGETARCH/arm64/aarch64}
+ARG ARCH=${ARCH/amd64/x86_64}
 
 ARG HOME=/home/termix
 ARG TERMIX_HOME=/home/termix/termix-nu
@@ -28,35 +38,34 @@ COPY --chown=termix:termix . ${TERMIX_HOME}
 
 ENV DISABLE_VERSION_CHECK=true
 
-RUN apk update && apk add --no-cache git openssl neovim curl \
-    #  Setup termix user
-    && echo '/usr/bin/nu' >> /etc/shells \
-    && adduser -D -s /usr/bin/nu termix \
-    && sh ${TERMIX_HOME}/run/setup-termix.sh /usr/bin/ \
+# Use mirrors to speed up installation
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends --no-install-suggests neovim \
+    && echo '/usr/local/bin/nu' >> /etc/shells \
+    # Add and erda user and create home dir
+    && useradd -m -s /usr/local/bin/nu termix \
     && mkdir -p ${HOME}/.config/nushell/ \
-    # Setup default config file for nushell
-    && cd ${HOME}/.config/nushell \
-    && chmod +x /usr/bin/nu \
     && chown -R termix:termix ${HOME} \
     && cp ${TERMIX_HOME}/.termixrc-example ${HOME}/.termixrc \
     && cp ${TERMIX_HOME}/.env-example ${HOME}/.env \
     && ln -s ${TERMIX_HOME}/Justfile ${HOME}/.justfile \
     && ln -s ${HOME}/.env ${TERMIX_HOME}/.env \
     && ln -s ${HOME}/.termixrc ${TERMIX_HOME}/.termixrc \
-    # Reset Nushell config to default
-    && su -c 'config reset -w' termix \
-    && ls /usr/bin/nu_plugin_[fgipq]* | xargs -I{} su -c 'plugin add {}' termix \
+    && ls /usr/local/bin/nu_plugin_[fgipq]* | xargs -I{} su -c 'plugin add {}' termix \
     && npm i -g --no-audit --no-fund @terminus/t-package-tools@latest --registry ${NPM_REGISTRY} \
     && npm cache clean --force \
-    && rm -rf /tmp/* /var/cache/apk/* \
+    && rm -rf /tmp/* \
     && git config --global --add safe.directory ${TERMIX_HOME} \
     && cd ${TERMIX_HOME} && git remote remove origin \
+    && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /var/cache/apt/* \
     && nu -c 'do { \
+        config reset -w; \
         open /home/termix/.env | str replace /Users/terminus/termix-nu /home/termix/termix-nu | save -rf /home/termix/.env; \
-        echo `alias t="just --justfile ~/.justfile --dotenv-path ~/.env --working-directory ."` o>> /home/termix/.profile; \
+        echo `alias t="just --justfile ~/.justfile --dotenv-path ~/.env --working-directory ."` o>> /home/termix/.bashrc; \
         echo "alias t = just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .\n" o>> /home/termix/.config/nushell/config.nu; \
         echo "$env.config.show_banner = false\n" o>> /home/termix/.config/nushell/config.nu; \
-        echo `$env.config.table.mode = "light"` o>> /home/termix/.config/nushell/config.nu; \
+        echo "$env.config.table.mode = \"light\"\n" o>> /home/termix/.config/nushell/config.nu; \
       }'
 
 USER termix
