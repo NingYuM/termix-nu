@@ -41,7 +41,11 @@ ENV DISABLE_VERSION_CHECK=true
 # Use mirrors to speed up installation
 RUN apt-get update \
     && apt-get upgrade -y \
-    && apt-get install -y --no-install-recommends --no-install-suggests neovim \
+    && apt-get install -y --no-install-recommends --no-install-suggests \
+    # Install latest version of neovim
+    && curl -s https://api.github.com/repos/neovim/neovim/releases/latest | grep browser_download_url | cut -d '"' -f 4 | grep nvim-linux-${ARCH} | aria2c -i - \
+    && mkdir nvim-latest && tar xvf nvim-*.tar.gz --directory=nvim-latest \
+    && cp -aR nvim-latest/nvim* /usr/local/bin/ \
     && echo '/usr/local/bin/nu' >> /etc/shells \
     # Add and erda user and create home dir
     && useradd -m -s /usr/local/bin/nu termix \
