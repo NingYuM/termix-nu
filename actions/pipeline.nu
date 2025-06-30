@@ -119,6 +119,14 @@ def get-pipeline-conf [
   return $matched
 }
 
+# 为目标数据添加 srcBranch 字段的辅助函数
+def enrich-target-data [item: record, repoConf: record] {
+  $item | upsert srcBranch {|it|
+    let src = get-source-branch $it $repoConf
+    if $src == $it.branch { '' } else { $src }
+  } | move srcBranch --before branch | compact-record
+}
+
 # 列出所有可用的执行目标
 def get-available-targets [
   configFile: string,  # 配置文件路径
@@ -132,20 +140,9 @@ def get-available-targets [
     for target in ($repoConf.erda | columns) {
       let targetData = $repoConf.erda | get $target
       let enrichedData = if ($targetData | describe | str starts-with list) {
-        # 如果是list/table，给每个元素添加srcBranch
-        $targetData | each {|item| $item
-          | upsert srcBranch {|it|
-              let src = get-source-branch $it $repoConf
-              if $src == $it.branch { '' } else { $src }
-            }}
-          | move srcBranch --before branch | compact-record
+        $targetData | each {|item| enrich-target-data $item $repoConf }
       } else {
-        # 如果是record，直接添加srcBranch
-        $targetData | upsert srcBranch {|it|
-            let src = get-source-branch $it $repoConf
-            if $src == $it.branch { '' } else { $src }
-          }
-          | move srcBranch --before branch | compact-record
+        enrich-target-data $targetData $repoConf
       }
       $processedData = ($processedData | upsert $target $enrichedData)
     }
