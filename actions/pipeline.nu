@@ -74,7 +74,7 @@ def get-pipeline-conf [
   # 如果都不存在则从 termix-nu 仓库的 .termixrc 文件中读取配置
   # 如果以上都不存在则提示用户创建 .termixrc 文件
   cd $env.JUST_INVOKE_DIR
-  let useI = (has-ref origin/i)
+  let useI = (has-ref origin/i) and not (git show 'origin/i:.termixrc' | complete | get stdout | is-empty)
   let LOCAL_CONFIG = if ('.termixrc' | path exists) { '.termixrc' } else { $'($env.TERMIX_DIR)/.termixrc' }
   let useRc = ($LOCAL_CONFIG | path exists)
   let configFile = if $useI { 'origin/i:.termixrc' } else { $LOCAL_CONFIG }
@@ -100,11 +100,11 @@ def get-pipeline-conf [
     print -e $'You are running the command in (ansi p)batch mode(ansi reset), Please specify the apps to handle by (ansi r)`--apps` or `-a`(ansi reset) flag(ansi reset)...'
     exit $ECODE.INVALID_PARAMETER
   }
-  let batchMode = ($pipeline | describe | str starts-with list) or ($pipeline | describe | str starts-with table)
+  let batchMode = ($pipeline | describe).type == 'list'
   let conf = if $batchMode { $pipeline } else { [$pipeline] }
   mut merged = []
   for c in $conf {
-    if ($c | describe | str starts-with record) {
+    if ($c | describe -d).type == 'record' {
       $merged = ($merged | append ($c | merge ($override | default {})))
     } else {
       let selected = $c | reduce --fold [] {|it, acc| $acc ++ ($it | merge ($override | default {})) }
@@ -139,7 +139,7 @@ def get-available-targets [
     mut processedData = {}
     for target in ($repoConf.erda | columns) {
       let targetData = $repoConf.erda | get $target
-      let enrichedData = if ($targetData | describe | str starts-with list) {
+      let enrichedData = if ($targetData | describe -d).type == 'list' {
         $targetData | each {|item| enrich-target-data $item $repoConf }
       } else {
         enrich-target-data $targetData $repoConf
@@ -165,8 +165,8 @@ def get-available-targets [
         | select appName alias srcBranch branch env pipeline description
         | rename -c { appName: name }
       )
-    let isTable = ($deployTarget | describe) =~ 'table'
-    let isRecord = ($deployTarget | describe) =~ 'record'
+    let isTable = ($deployTarget | describe -d).type == 'list'
+    let isRecord = ($deployTarget | describe -d).type == 'record'
 
     if $isTable { $deployTarget = ($deployTarget | reject srcBranch) }
     if not ($grep | is-empty) {
@@ -515,7 +515,7 @@ def select-target [candidates: record, --multiple] {
   const FZF_PREVIEW_FILE = '.fzf-preview.nuon'
   let targets = $candidates | columns
   let value = $candidates | get ($targets | first)
-  let batchMode = $value | describe | str starts-with table
+  let batchMode = ($value | describe -d).type == 'list'
   let candidates = if $batchMode { get-batch-candidates $candidates } else { $candidates }
   let title = $'Select deploy target:'
   $candidates | to nuon | save -f $FZF_PREVIEW_FILE
