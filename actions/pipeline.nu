@@ -37,7 +37,7 @@
 #   t dp dev --apps app1,app2; t dp test -a all
 #   t dq dev --apps app1,app2; t dq test -a all
 
-use ../utils/common.nu [ECODE, has-ref, hr-line, log, FZF_DEFAULT_OPTS, FZF_THEME]
+use ../utils/common.nu [ECODE, has-ref, hr-line, log, compact-record, FZF_DEFAULT_OPTS, FZF_THEME]
 use ../utils/erda.nu [ERDA_HOST, check-erda-envs, get-erda-auth, renew-erda-session, should-retry-req]
 
 const PIPELINE_POLLING_INTERVAL = 2sec
@@ -126,13 +126,38 @@ def get-available-targets [
   --quiet,             # 静默模式，只返回结果不打印
   --grep(-g): string,  # 仅在与 `-l` 一起使用时生效，从部署配置里面搜索name,alias或description里包含特定字符串的部署目标
 ] {
+  # 如果是quiet模式，处理数据后直接返回
+  if $quiet {
+    mut processedData = {}
+    for target in ($repoConf.erda | columns) {
+      let targetData = $repoConf.erda | get $target
+      let enrichedData = if ($targetData | describe | str starts-with list) {
+        # 如果是list/table，给每个元素添加srcBranch
+        $targetData | each {|item| $item
+          | upsert srcBranch {|it|
+              let src = get-source-branch $it $repoConf
+              if $src == $it.branch { '' } else { $src }
+            }}
+          | move srcBranch --before branch | compact-record
+      } else {
+        # 如果是record，直接添加srcBranch
+        $targetData | upsert srcBranch {|it|
+            let src = get-source-branch $it $repoConf
+            if $src == $it.branch { '' } else { $src }
+          }
+          | move srcBranch --before branch | compact-record
+      }
+      $processedData = ($processedData | upsert $target $enrichedData)
+    }
+    return $processedData
+  }
+
   if ($grep | is-empty) {
     print $'Available deploy targets in ($configFile) are:(char nl)'
   } else {
     print $'Available deploy targets in ($configFile) which contains ($grep) are:(char nl)'
   }
 
-  if $quiet { return $repoConf.erda }
   for target in ($repoConf.erda | columns) {
     mut deployTarget = (
       $repoConf.erda
