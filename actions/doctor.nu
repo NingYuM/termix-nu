@@ -88,14 +88,15 @@ def check-plugins [description: string, --fix, --debug] {
   mut result = { tip: $FIX_TIP, status: $STATUS.ERROR }
   if not ($nu.plugin-path | path exists) { register-plugins }
   let plugins = open $nu.plugin-path
+  let actualVer = ^$nu.current-exe -v | str trim
   let nuVersion = $plugins.nushell_version
   let allPlugins = $plugins | get plugins | select filename metadata.version
   let versionMatch = $allPlugins | all {|it| ($it | get 'metadata.version') == $nuVersion }
   let pluginExists = $allPlugins | all {|it| $it.filename | path exists }
   if $debug {
-    show-debug { nuVersion: $nuVersion, allPlugins: $allPlugins }
+    show-debug { version: $actualVer, registerd: $nuVersion, allPlugins: $allPlugins }
   }
-  if $versionMatch and $pluginExists { return { status: $STATUS.OK } }
+  if $versionMatch and $pluginExists and ($actualVer == $nuVersion) { return { status: $STATUS.OK } }
   if $fix { nu -c 'rm $nu.plugin-path'; register-plugins; check-plugins 'Recheck .. ' | show-result; return }
   $result.message = 'Plugins not found or version mismatch'
   $result
