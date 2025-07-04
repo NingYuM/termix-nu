@@ -36,12 +36,14 @@ export def renew-erda-session [host: string = $ERDA_HOST, --get-uid] {
   let TERMIX_CONF = $'(get-tmp-path)/.termix-conf'
   let sessionKey = if $host == $ERDA_HOST { 'erdaSession' } else { $host | encode base64 }
   let query = { username: $env.ERDA_USERNAME, password: $env.ERDA_PASSWORD } | url build-query
-  let openApiHost = $host | str replace '://' '://openapi.'
+  let openApiHost = if ($host =~ 'openapi') { $host } else { $host | str replace '://' '://openapi.' }
   let RENEW_URL = $'($openApiHost)/login?($query)'
   let renew = curl --silent -X POST $RENEW_URL | from json
   if ($renew | is-empty) { print 'Try renew Erda session again...'; renew-erda-session $host }
   if ($renew | describe) == 'string' {
-    print -e $'Erda session renew failed with message: (ansi r)($renew)(ansi reset)'; exit $ECODE.AUTH_FAILED
+    print -e $'Erda session renew failed with message: (ansi r)($renew)(ansi reset)'
+    print -e $'Session Renew URL: (ansi r)($RENEW_URL)(ansi reset).'
+    exit $ECODE.AUTH_FAILED
   }
   open $TERMIX_CONF | from json
     | upsert $sessionKey $renew.sessionid | to json
