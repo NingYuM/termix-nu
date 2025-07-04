@@ -705,7 +705,7 @@ def get-artifact-deploy-detail [
   # Check session expired, and renew if needed
   let check = should-retry-req $detail
   if ($check.shouldRetry) {
-    if $check.noAuth { renew-erda-session $host }
+    if $check.noAuth { renew-erda-session ($destSetting.erdaOpenApiHost? | default $destSetting.erdaHost) }
     $detail = (http get -e --headers (get-erda-auth $host --type nu) $queryUrl)
   }
   $detail
@@ -821,7 +821,7 @@ def query-release-candidates [
   # Check session expired, and renew if needed
   let check = should-retry-req $filtered
   if ($check.shouldRetry) {
-    if $check.noAuth { renew-erda-session $host }
+    if $check.noAuth { renew-erda-session ($destSetting.erdaOpenApiHost? | default $destSetting.erdaHost) }
     $filtered = (curl --silent -H (get-erda-auth $host) $queryUrl | from json)
   }
 
@@ -852,7 +852,7 @@ def query-release-by-version [
   # Check session expired, and renew if needed
   let check = should-retry-req $filtered
   if ($check.shouldRetry) {
-    if $check.noAuth { renew-erda-session $host }
+    if $check.noAuth { renew-erda-session ($setting.erdaOpenApiHost? | default $setting.erdaHost) }
     $filtered = (curl --silent -H (get-erda-auth $host) $queryUrl | from json)
   }
 
@@ -933,7 +933,7 @@ def create-project-artifact [
 ] {
   let host = $destSetting.erdaHost
   let artifactCreateUrl = $'($host)/api/($destSetting.orgAlias)/releases'
-  let userId = renew-erda-session $host --get-uid
+  let userId = renew-erda-session ($destSetting.erdaOpenApiHost? | default $destSetting.erdaHost) --get-uid
   let payload = {
     isStable: true,
     isFormal: false,
