@@ -15,7 +15,7 @@ export def go [
   # If the key of `just go` is blank or list, then show all the nav items
   if ($nav_key == '' or $nav_key == 'list') { show-navs }
   # Find match from nav keys only
-  let matches = ($allNavs | transpose | rename key url | select key | find -i -r $nav_key)
+  let matches = ($allNavs | transpose | rename key url | select key | find -inr $nav_key)
   # If no match item was found then show all the nav items
   if ($matches | length) == 0 { show-navs }
 
