@@ -150,7 +150,7 @@ alias main = fzf-preview
 
 # Detect multiple static assets and display the meta info
 def detect-multiple-assets [from: string] {
-  let mountPoints = $from | split row ,
+  let mountPoints = $from | split row , | compact -e
   for mp in $mountPoints {
     let latestMeta = get-latest-meta $mp
     detect $latestMeta; print -n (char nl)
@@ -262,7 +262,7 @@ def transfer [
     cd $'($tmp)/assets-($mount)-($e)'
     # Update namespace.json add transfer info
     update-transfer-meta $latestMeta
-    for t in ($to | split row ',') {
+    for t in ($to | split row ',' | compact -e) {
       print $'Uploading (ansi p)($e)@($mount) to (ansi p)($t)(ansi reset) ...'
       if ($type | str trim | str downcase) in [minio, ifly] {
         package-tools s3 -c $ak $sk $bucket $endpoint $region -d . -m $t -s path ...$extra
@@ -278,7 +278,7 @@ def transfer [
   print $"(ansi g)Total Time Cost: ($endTime - $startTime)(ansi reset)\n"
 
   print $"You can visit the latest.json from: \n"
-  for t in ($to | split row ',') {
+  for t in ($to | split row ',' | compact -e) {
     let destUrl = match $type {
       'ifly' => $'($endpoint)/($bucket)/fe-resources/($t)/latest.json',
       'minio' => $'($endpoint)/($bucket)/fe-resources/($t)/latest.json',
@@ -483,7 +483,7 @@ def get-modules [modules?: string, --latest-meta: record, --action: string] {
   if $modules == 'all' { return ($allModules | get mod) }
 
   # Validate and sync specified modules
-  let splits = $modules | default '' | split row ','
+  let splits = $modules | default '' | split row ',' | compact -e
   if ($splits | length) > 0 {
     let inexists = $splits | where {|it| $it not-in ($allModules | get mod) }
     if ($inexists | length) > 0 {
