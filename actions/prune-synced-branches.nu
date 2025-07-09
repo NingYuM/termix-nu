@@ -23,7 +23,7 @@ export def main [
   let confBr = if $useConfBr == '_current_' { $current } else { 'i' }
 
   if not (has-ref $'origin/($confBr)') {
-    print -e $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
+    print -e $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi rst)...(char nl)'
     exit $ECODE.MISSING_DEPENDENCY
   }
   let pushConf = (git show $'origin/($confBr):.termixrc' | from toml | to json)
@@ -35,7 +35,7 @@ export def main [
     $sync.dests
   })
 
-  print $'(ansi p)All available syncing configs:(ansi reset)(char nl)'
+  print $'(ansi p)All available syncing configs:(ansi rst)(char nl)'
   print ($syncs | flatten | select repo dest | sort-by repo dest)
 
   # Must change to the scoped directory before doing the following work
@@ -56,7 +56,7 @@ export def main [
     ) } else { '' }
 
     if (($cleanable | str trim) != '') {
-      print $'Possibly unused branches in (ansi g)($alias):(ansi reset)(char nl)(char nl)'
+      print $'Possibly unused branches in (ansi g)($alias):(ansi rst)(char nl)(char nl)'
       print ($cleanable | lines | wrap branch-name)
       let url = ($repos | get $alias).url
       print $'Visit repo url: ($url)'
@@ -83,7 +83,7 @@ def prepare-repo [
   let destRepoPath = ([$repoPath $repoName] | path join)
   # 仓库存在则更新，不存在则 clone
   if ($destRepoPath | path exists) {
-    print $'(ansi p)Updating remote repos to local...(ansi reset)'; hr-line
+    print $'(ansi p)Updating remote repos to local...(ansi rst)'; hr-line
   } else {
     let gitUrl = if ($user != '' and $ak != '-') {
       ($sampleRepo.git | str replace '//' $'//($user):($ak)@' )
@@ -104,7 +104,7 @@ def prepare-repo [
     # 更新远程仓库信息到本地
     let output = (do -i { git fetch $dest.name -p } | complete)
     if ($output.exit_code == 0) { print -n ($output.stdout | str trim) }
-    if ($output.exit_code == 128) { print $'(ansi y)WARN:(ansi reset) --- No permission for ($dest.name): ($dest.git)' }
+    if ($output.exit_code == 128) { print $'(ansi y)WARN:(ansi rst) --- No permission for ($dest.name): ($dest.git)' }
   }
   print 'Repo preparing done!'; hr-line
   $repoName

@@ -25,7 +25,7 @@ export def hr-line [
   --blank-line(-b),
   --with-arrow(-a),
 ] {
-  print $'(ansi $color)('─' | repeat $width | str join)(if $with_arrow {'>'})(ansi reset)'
+  print $'(ansi $color)('─' | repeat $width | str join)(if $with_arrow {'>'})(ansi rst)'
   if $blank_line { char nl }
 }
 
@@ -35,27 +35,27 @@ def main [
   iconFontURL?: string,    # Iconfont Symbol JS 地址, 比如: //at.alicdn.com/t/font_1949908_fie05xdkkq7.js
 ] {
   if ($bizType == null or $iconFontURL == null) {
-    print $'(char nl)Usage: nu get-icon.nu (ansi r)<bizType> <iconFontURL>(ansi reset)'; hr-line
-    print $'(ansi g)Description: (ansi reset)根据`业务类型`和 `Iconfont Symbol JS 地址` 生成图标配置文件, 两个入参必填'
-    print $'(ansi g)Supported bizTypes: (ansi reset)b2c / b2b / scrm / sea / point'
+    print $'(char nl)Usage: nu get-icon.nu (ansi r)<bizType> <iconFontURL>(ansi rst)'; hr-line
+    print $'(ansi g)Description: (ansi rst)根据`业务类型`和 `Iconfont Symbol JS 地址` 生成图标配置文件, 两个入参必填'
+    print $'(ansi g)Supported bizTypes: (ansi rst)b2c / b2b / scrm / sea / point'
     print $'请确保参数输入无误并重试!(char nl)'
     exit 7
   }
 
   let bizCheck = $bizType in ['b2c', 'b2b', 'scrm', 'sea', 'point']
   if (not $bizCheck) {
-    print $'(ansi r)You have input the wrong biz type, Please try again!(ansi reset)(char nl)'
+    print $'(ansi r)You have input the wrong biz type, Please try again!(ansi rst)(char nl)'
     exit 7
   }
 
   if (is-installed 'termix') {
-    print $'Current termix version: (ansi g)(termix --version | str trim)(ansi reset)'; hr-line
+    print $'Current termix version: (ansi g)(termix --version | str trim)(ansi rst)'; hr-line
   } else {
-    print $'(ansi r)Command `termix` could not be found, Please install it by `npm i -g @terminus/termix@latest`, and try again!(ansi reset)'
+    print $'(ansi r)Command `termix` could not be found, Please install it by `npm i -g @terminus/termix@latest`, and try again!(ansi rst)'
     exit 2
   }
 
-  print $'Running fetch icons from ($iconFontURL) for (ansi p)($bizType)(ansi reset)...'
+  print $'Running fetch icons from ($iconFontURL) for (ansi p)($bizType)(ansi rst)...'
   # The following does NOT work currently
   # termix icon --output=$'./mall-($bizType)/client/fonts' $iconFontURL
   termix icon $'--output=./mall-($bizType)/client/fonts' $iconFontURL

@@ -50,7 +50,7 @@ export def termix-ver [] {
     let forceUpgrade = (if $hasForceUpgrade { $conf.forceUpgrade? and (is-lower-ver $currentVer $latestVer) } else { false })
     # Quit command right now if it's a force upgrade
     if $forceUpgrade {
-      print $'(ansi r)很抱歉，为了更好地为您提供服务请先执行 `just upgrade -a` 更新 termix-nu 并重试...(ansi reset)(char nl)(char nl)'
+      print $'(ansi r)很抱歉，为了更好地为您提供服务请先执行 `just upgrade -a` 更新 termix-nu 并重试...(ansi rst)(char nl)(char nl)'
       (query-ver $confName | ignore); exit $ECODE.OUTDATED    # Query and update latest version again.
     }
     if not $hasForceUpgrade { query-ver $confName | ignore }
@@ -91,17 +91,17 @@ def upgrade-tip [
 ] {
   if (is-lower-ver $current $min) {
     if $cmd == 'termix-nu' {
-      print $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
-      print $'        -----> Your ($cmd) is (ansi r)OUTDATED(ansi reset), latest ver: (ansi p)($min)(ansi reset) <----- (char nl)'
-      print $'         Please run (ansi g)`just upgrade`(ansi reset) to upgrade to the latest version.(char nl)'
-      print $'(ansi lpr)      You may need to run `t upgrade -a` to upgrade `nu` and `just`, too.      (ansi reset)'
-      print $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+      print $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi rst)(char nl)'
+      print $'        -----> Your ($cmd) is (ansi r)OUTDATED(ansi rst), latest ver: (ansi p)($min)(ansi rst) <----- (char nl)'
+      print $'         Please run (ansi g)`just upgrade`(ansi rst) to upgrade to the latest version.(char nl)'
+      print $'(ansi lpr)      You may need to run `t upgrade -a` to upgrade `nu` and `just`, too.      (ansi rst)'
+      print $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi rst)(char nl)'
     } else {
-      print $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
-      print $'      Min required ($cmd) ver: (ansi r)($min)(ansi reset), current ($cmd) ver: ($current)(char nl)'
-      print $'        ------------> Your ($cmd) is (ansi r)OUTDATED(ansi reset) <------------ (char nl)'
-      print $'(ansi lpr)       Please run `t upgrade ($cmd)` to upgrade to the latest version.        (ansi reset)(char nl)'
-      print $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+      print $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi rst)(char nl)'
+      print $'      Min required ($cmd) ver: (ansi r)($min)(ansi rst), current ($cmd) ver: ($current)(char nl)'
+      print $'        ------------> Your ($cmd) is (ansi r)OUTDATED(ansi rst) <------------ (char nl)'
+      print $'(ansi lpr)       Please run `t upgrade ($cmd)` to upgrade to the latest version.        (ansi rst)(char nl)'
+      print $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi rst)(char nl)'
     }
   }
 }

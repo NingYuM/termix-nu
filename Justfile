@@ -366,12 +366,12 @@ test:
 # Install fzf if not exists
 _setup_fzf:
   @overlay use {{ join(_termix, 'actions', 'open-tools.nu') }}; \
-    if (which fzf | length) == 0 { print $'(ansi g)`fzf` is required but not installed, try to install `fzf`...(ansi reset)'; install-from-brew fzf }
+    if (which fzf | length) == 0 { print $'(ansi g)`fzf` is required but not installed, try to install `fzf`...(ansi rst)'; install-from-brew fzf }
 
 # Pre check TERMIX_DIR env variable, make sure it is set correctly
 _termix_check:
   @if not ($env.TERMIX_DIR | path exists) { \
-      print -e $'Make sure you have set (ansi r)TERMIX_DIR(ansi reset) env variable in (ansi r).env(ansi reset) correctly.'; \
+      print -e $'Make sure you have set (ansi r)TERMIX_DIR(ansi rst) env variable in (ansi r).env(ansi rst) correctly.'; \
       exit 99 }
 
 # 版本检查前置操作

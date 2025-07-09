@@ -23,12 +23,12 @@ const BIN_MAP = {
 # Install tools from USTC mirror
 export def install-from-brew [name: string, --force(-f), --post-install: closure] {
   if (sys host | get name) != 'Darwin' {
-    print '(ansi r)Only macOS is supported to install by brew for now...(ansi reset)'; exit $ECODE.INVALID_PARAMETER
+    print '(ansi r)Only macOS is supported to install by brew for now...(ansi rst)'; exit $ECODE.INVALID_PARAMETER
   }
 
   let latest = get-version-from-brew $name
   let installed = is-installed ($BIN_MAP | get $name)
-  let message = if $installed { $'Upgrading ($name) to ($latest.version)...' } else { $'Installing (ansi g)($name)@($latest.version)(ansi reset)...' }
+  let message = if $installed { $'Upgrading ($name) to ($latest.version)...' } else { $'Installing (ansi g)($name)@($latest.version)(ansi rst)...' }
   # Check current version and compare with the latest one stop upgrading if lower than or equal to the latest one
   if (not (should-upgrade $name $latest --force=$force)) { return }
   print $message; hr-line
@@ -86,7 +86,7 @@ export def upgrade-latest-tool [
     0 => {
       let span = metadata $target | get span
       error make {
-        msg: $'(ansi red_bold)No_Match_Found(ansi reset)'
+        msg: $'(ansi red_bold)No_Match_Found(ansi rst)'
         label: {
           span: $span
           text: $'No architecture matching this in the remote OSS storage'
@@ -95,7 +95,7 @@ export def upgrade-latest-tool [
     },
     1 => { $matches.0 },
     _ => {
-      let choice = $matches | input list --fuzzy $'Please (ansi cyan)choose one architecture(ansi reset):'
+      let choice = $matches | input list --fuzzy $'Please (ansi cyan)choose one architecture(ansi rst):'
       if ($choice | is-empty) {
         print 'User chose to exit, bye...'
         return
@@ -109,7 +109,7 @@ export def upgrade-latest-tool [
   if ($target | length) != 1 {
     error make --unspanned {
       msg: (
-          $"(ansi red_bold)unexpected_internal_error(ansi reset):\n"
+          $"(ansi red_bold)unexpected_internal_error(ansi rst):\n"
         + $"expected one match, found ($target | length)\n"
         + $"matches: ($target.name)"
       )
@@ -118,7 +118,7 @@ export def upgrade-latest-tool [
   let target = $target | first
   let bin = $BIN_MAP | get $name
 
-  print $'You are going to upgrade (ansi p)($name)(ansi reset) to (ansi p)($latest.version)(ansi reset)'
+  print $'You are going to upgrade (ansi p)($name)(ansi rst) to (ansi p)($latest.version)(ansi rst)'
   hr-line
 
   let destDir = (which $bin).path | path expand | path dirname | path join 'latest'
@@ -130,7 +130,7 @@ export def upgrade-latest-tool [
     http get $'($TOOL_PREFIX)/($name)/($target.name)' | save --progress --force $'($destDir)/($target.name)'
   }
 
-  print $"Latest ($name) of version: ($latest.version) saved as `(ansi default_dimmed)($target.name)(ansi reset)`\n"
+  print $"Latest ($name) of version: ($latest.version) saved as `(ansi default_dimmed)($target.name)(ansi rst)`\n"
   # print $'Contents of ($destDir)'; hr-line
   # print (ls $destDir)
 
@@ -147,7 +147,7 @@ export def upgrade-latest-tool [
       glob $'($destDir)/**/($bin)*' | each {|it| if ($it | path type) == 'file' { sudo cp $it . } }
       rm -rf $destDir
       let version = nu -n --no-std-lib -c $'./($bin) --version'
-      print $'(char nl)Upgrade to ($name): (ansi g)($version)(ansi reset)'
+      print $'(char nl)Upgrade to ($name): (ansi g)($version)(ansi rst)'
       if $name == 'nushell' {
         print $'Please restart Nu session to use the latest release...'
       }
@@ -161,14 +161,14 @@ export def upgrade-latest-tool [
         cp $'($destDir)/nu_plugin_*' .
         print 'Nushell plugins have been upgraded successfully'
         cp $'($destDir)/($bin).exe' $'($bin)-latest.exe'
-        print $'(ansi r)Please replace ($bin).exe with ($bin)-latest.exe manually in ($destDir | path dirname) directory(ansi reset)'
+        print $'(ansi r)Please replace ($bin).exe with ($bin)-latest.exe manually in ($destDir | path dirname) directory(ansi rst)'
         rm -rf $destDir
         return
       }
       cp $'($destDir)/($bin).exe' $'($bin).exe'
       rm -rf $destDir
       let version = nu -n --no-std-lib -c $'./($bin).exe --version'
-      print $'(char nl)Upgrade to ($name): (ansi g)($version)(ansi reset)'
+      print $'(char nl)Upgrade to ($name): (ansi g)($version)(ansi rst)'
       print $'($name) has been upgraded successfully'
     },
     _ => {
@@ -190,7 +190,7 @@ def should-upgrade [name: string, latest: record, --force] {
 
   let currentVer = do -i ($VERSION_CHECK | get $name) | default 0.0.0
   if (compare-ver $latest.version $currentVer) <= 0 {
-    print $'($name) is already the latest version: (ansi g)($currentVer)(ansi reset), upgrading skipped...'
+    print $'($name) is already the latest version: (ansi g)($currentVer)(ansi rst), upgrading skipped...'
     return false
   }
   return true

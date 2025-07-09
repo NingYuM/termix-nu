@@ -40,7 +40,7 @@ export def upgrade-tool [
 
   let tool = $tool | str trim | str downcase
   if $tool not-in $VALID_TOOLS {
-    print -e $'Unsupported tool upgrading, currently supported: (ansi p)($VALID_TOOLS | str join ,)(ansi reset)'
+    print -e $'Unsupported tool upgrading, currently supported: (ansi p)($VALID_TOOLS | str join ,)(ansi rst)'
     exit $ECODE.INVALID_PARAMETER
   }
   if $tool == 'termix-nu' {

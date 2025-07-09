@@ -50,15 +50,15 @@ export def setup-termix [
   let platform = $'($nu.os-info.name)_($nu.os-info.arch)'
   let current = get-versions
   let latest = get-latest-versions
-  print $'(ansi g)Current version:(ansi reset)'; hr-line 35; $current | table -t psql | print
-  print $'(ansi g)(char nl)Latest version:(ansi reset)'; hr-line 35; $latest | table -t psql | print
+  print $'(ansi g)Current version:(ansi rst)'; hr-line 35; $current | table -t psql | print
+  print $'(ansi g)(char nl)Latest version:(ansi rst)'; hr-line 35; $latest | table -t psql | print
   print -n (char nl)
 
   for bin in ($LATEST_META | columns) {
     if (is-lower-ver ($current | get $bin) ($latest | get $bin)) {
       install-or-update $bin $platform $dest --in-place-update=$in_place_update
     } else {
-      print $'(ansi g)($bin) is already updated ...(ansi reset)'
+      print $'(ansi g)($bin) is already updated ...(ansi rst)'
     }
   }
   if $all { upgrade-termix-nu }
@@ -69,7 +69,7 @@ export def setup-termix [
 def upgrade-termix-nu [] {
   print $'Upgrading termix-nu...'; hr-line
   if 'TERMIX_DIR' in $env { cd $env.TERMIX_DIR } else {
-    print $'Please set (ansi g)TERMIX_DIR(ansi reset) environment variable in (ansi g).env(ansi reset) to upgrade termix-nu'; return
+    print $'Please set (ansi g)TERMIX_DIR(ansi rst) environment variable in (ansi g).env(ansi rst) to upgrade termix-nu'; return
   }
   git checkout master
   git pull --tags --force
@@ -117,10 +117,10 @@ export def install-or-update [
   try {
     unzip-pkg $bin $pkg $dest --in-place-update=$in_place_update
   } catch { |error|
-    print -e $'(ansi r)Failed to install ($bin), due to the error: ($error.msg)(ansi reset)'
+    print -e $'(ansi r)Failed to install ($bin), due to the error: ($error.msg)(ansi rst)'
     exit 1
   }
-  print $'Successfully installed (ansi g)($bin)@($latest.version)(ansi reset)'
+  print $'Successfully installed (ansi g)($bin)@($latest.version)(ansi rst)'
 }
 
 # Unzip a binary package to $DEST_DIR
@@ -132,7 +132,7 @@ def unzip-pkg [
 ] {
   let replace = $in_place_update and (is-installed $bin)
   let dest = if $replace { (which $bin).path.0 | path dirname } else { $dest }
-  print $'Installing or updating (ansi g)($bin) to ($dest) ...(ansi reset)'
+  print $'Installing or updating (ansi g)($bin) to ($dest) ...(ansi rst)'
 
   let action = {|bin, sudo?|
       if $sudo == 'sudo' {

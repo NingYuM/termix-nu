@@ -54,7 +54,7 @@ def check-pipeline-conf [pipeline: any] {
   $pipeline | each {|conf|
     let empties = ($keys | where {|it| $conf | get -i $it | is-empty })
     if ($empties | length) > 0 {
-      print -e $'Please set (ansi r)($empties | str join ',')(ansi reset) in the following pipeline config:'
+      print -e $'Please set (ansi r)($empties | str join ',')(ansi rst) in the following pipeline config:'
       print -e $conf; exit $ECODE.INVALID_PARAMETER
     }
   }
@@ -79,7 +79,7 @@ def get-pipeline-conf [
   let useRc = ($LOCAL_CONFIG | path exists)
   let configFile = if $useI { 'origin/i:.termixrc' } else { $LOCAL_CONFIG }
   if not ($useI or $useRc) {
-    print -e $'No (ansi r)origin/i branch or ($LOCAL_CONFIG)(ansi reset) exits, please create it before running this command...'
+    print -e $'No (ansi r)origin/i branch or ($LOCAL_CONFIG)(ansi rst) exits, please create it before running this command...'
     exit $ECODE.MISSING_DEPENDENCY
   }
 
@@ -92,12 +92,12 @@ def get-pipeline-conf [
 
   let pipeline = ($repoConf.erda | get -i $dest)
   if ($pipeline | is-empty) {
-    print -e $'Please set the App configs for (ansi r)erda.($dest)(ansi reset) in (ansi r)($configFile)(ansi reset) first...'
+    print -e $'Please set the App configs for (ansi r)erda.($dest)(ansi rst) in (ansi r)($configFile)(ansi rst) first...'
     exit $ECODE.INVALID_PARAMETER
   }
   # 批量处理模式必须指定 App
   if (not $useI) and ($apps | str trim | is-empty) {
-    print -e $'You are running the command in (ansi p)batch mode(ansi reset), Please specify the apps to handle by (ansi r)`--apps` or `-a`(ansi reset) flag(ansi reset)...'
+    print -e $'You are running the command in (ansi p)batch mode(ansi rst), Please specify the apps to handle by (ansi r)`--apps` or `-a`(ansi rst) flag(ansi rst)...'
     exit $ECODE.INVALID_PARAMETER
   }
   let batchMode = ($pipeline | describe -d).type == 'list'
@@ -176,7 +176,7 @@ def get-available-targets [
         if ($deployTarget | is-empty) { continue }
       }
     }
-    print $'Target (ansi p)($target)(ansi reset):'; hr-line 60 -c navy
+    print $'Target (ansi p)($target)(ansi rst):'; hr-line 60 -c navy
 
     $deployTarget = if $isRecord and ($deployTarget.branch == $deployTarget.srcBranch) { $deployTarget | reject srcBranch } else { $deployTarget }
     $deployTarget | print
@@ -229,11 +229,11 @@ def query-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
   }
   # log 'Query CICD: ' ($ci.data.pipelines | select id commit status | table -e)
   if ($ci | describe) == 'string' or ($ci | is-empty) {
-    print -e $'Query CICD failed with message: (ansi r)($ci)(ansi reset)'
+    print -e $'Query CICD failed with message: (ansi r)($ci)(ansi rst)'
     exit $ECODE.SERVER_ERROR
   }
   if not $ci.success {
-    print -e $'(ansi r)Query CICD failed, Please try again ...(ansi reset)'
+    print -e $'(ansi r)Query CICD failed, Please try again ...(ansi rst)'
     print -e ($ci | table -e)
     exit $ECODE.SERVER_ERROR
   }
@@ -251,7 +251,7 @@ def format-pipeline-data [pipelines: any, orgName: string] {
       | update commit {|it| $it.commit | str substring 0..<9 }
       | upsert Comment {|it| $it.normalLabels.commitDetail | from json | get -i comment | str trim }
       | upsert Author {|it| $it.normalLabels.commitDetail | from json | get -i author }
-      | update status {|it| $'(ansi pb)($it.status)(ansi reset)' }
+      | update status {|it| $'(ansi pb)($it.status)(ansi rst)' }
       | upsert Runner {|it| $it.extra | get -i runUser | default {name: $NA} | get name? }
       | upsert Begin {|it| if $it.timeBegin == $NA { $it.timeBegin } else { $it.timeBegin | into datetime | date humanize } }
       | upsert Updated {|it| $it.timeUpdated | into datetime | date humanize }
@@ -277,10 +277,10 @@ def query-latest-cicd [dest: string, --apps: string, --override: record, --show-
   let apps = get-pipeline-conf $dest --apps $apps --override=$override
   check-erda-envs
   for app in $apps {
-    print $'Querying latest CICDs for (ansi pb)($app.appName) on ($app.branch)(ansi reset) branch:'; hr-line -c p
+    print $'Querying latest CICDs for (ansi pb)($app.appName) on ($app.branch)(ansi rst) branch:'; hr-line -c p
     let ci = (query-cicd $app.appid $app.appName $app.branch $app.env $app.pipeline 10)
     if ($ci.data.total == 0) {
-      print -e $'No CICD found for (ansi pb)($app.appName)(ansi reset) on (ansi g)($app.branch)(ansi reset) branch'
+      print -e $'No CICD found for (ansi pb)($app.appName)(ansi rst) on (ansi g)($app.branch)(ansi rst) branch'
       exit $ECODE.SUCCESS
     }
     let orgName = (fetch-cicd-detail $ci.data.pipelines.0.id).data.orgName
@@ -300,7 +300,7 @@ def query-latest-cicd [dest: string, --apps: string, --override: record, --show-
 
 # 检查是否有正在执行的流水线，如果有则显示其概要信息并退出
 def check-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipeline: string, --ignore-hash] {
-  print $'Checking running CICDs for (ansi pb)($appName)(ansi reset) with (ansi g)($pipeline)(ansi reset) from (ansi g)($branch)(ansi reset) branch'
+  print $'Checking running CICDs for (ansi pb)($appName)(ansi rst) with (ansi g)($pipeline)(ansi rst) from (ansi g)($branch)(ansi rst) branch'
   let ci = (query-cicd $aid $appName $branch $erdaEnv $pipeline)
   if ($ci.data.total == 0) { return true }
 
@@ -319,7 +319,7 @@ def check-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
   if $nRunning > 0 {
     print $'There are running pipelines, please wait with patience or re-run with `-f` flag.'
   } else if $nDeployed > 0 {
-    print $'The commit (ansi p)($commitID | str substring 0..<9)@($branch)(ansi reset) has been deployed, re-run with `-f` flag to deploy it again.'
+    print $'The commit (ansi p)($commitID | str substring 0..<9)@($branch)(ansi rst) has been deployed, re-run with `-f` flag to deploy it again.'
   }
   let result = if $nRunning > 0 { $running } else { $deployed }
   let orgName = (fetch-cicd-detail $result.0.id).data.orgName
@@ -332,7 +332,7 @@ def check-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
 export def create-cicd [aid: int, appName: string, branch: string, pipeline: string, --host: string = $ERDA_HOST] {
   let cicdUrl = $'($host)/api/terminus/cicds'
   let cicd = { appID: $aid, branch: $branch, pipelineYmlName: $pipeline }
-  print $'Initialize CICD for (ansi pb)($appName)(ansi reset) with (ansi g)($pipeline)(ansi reset) from (ansi g)($branch)(ansi reset) branch'
+  print $'Initialize CICD for (ansi pb)($appName)(ansi rst) with (ansi g)($pipeline)(ansi rst) from (ansi g)($branch)(ansi rst) branch'
 
   # Query the ID of newly created CICD
   mut ci = (curl --silent -H (get-erda-auth $host) --data-raw $'($cicd | to json)' $cicdUrl | from json)
@@ -343,11 +343,11 @@ export def create-cicd [aid: int, appName: string, branch: string, pipeline: str
     $ci = (curl --silent -H (get-erda-auth $host) --data-raw $'($cicd | to json)' $cicdUrl | from json)
   }
   if ($ci | describe) == 'string' {
-    print -e $'Initialize CICD failed with message: (ansi r)($ci)(ansi reset)'
+    print -e $'Initialize CICD failed with message: (ansi r)($ci)(ansi rst)'
     exit $ECODE.SERVER_ERROR
   }
-  if $ci.success { print $'(ansi g)Initialize CICD successfully...(ansi reset)'; return $ci.data.id }
-  print -e $'(ansi r)Initialize CICD failed, Please try again ...(ansi reset)'
+  if $ci.success { print $'(ansi g)Initialize CICD successfully...(ansi rst)'; return $ci.data.id }
+  print -e $'(ansi r)Initialize CICD failed, Please try again ...(ansi rst)'
   print -e ($ci | table -e)
   exit $ECODE.SERVER_ERROR
 }
@@ -363,7 +363,7 @@ export def run-cicd [id: int, appid: int, pid: int, --watch, --host: string = $E
     $run = (curl --silent -H (get-erda-auth $host) -X POST $runUrl | from json)
   }
   if $run.success {
-    print $'CICD started, You can query the pipeline running status with id: (ansi g)($id)(ansi reset)'
+    print $'CICD started, You can query the pipeline running status with id: (ansi g)($id)(ansi rst)'
     let orgName = (fetch-cicd-detail $id).data.orgName
     let url = $'($host)/($orgName)/dop/projects/($pid)/apps/($appid)/pipeline/obsoleted?pipelineID=($id)'
     print $'Or visit ($url) for more details'
@@ -383,7 +383,7 @@ def stop-cicd [id: int, --host: string = $ERDA_HOST] {
     $run = (curl --silent -H (get-erda-auth $host) -X POST $cancelUrl | from json)
   }
   if $run.success {
-    print $'CICD stopped, pipeline current status of id: (ansi g)($id)(ansi reset)'
+    print $'CICD stopped, pipeline current status of id: (ansi g)($id)(ansi rst)'
     query-cicd-by-id $id
   }
 }
@@ -407,17 +407,17 @@ export def watch-cicd-status [id: int] {
     let stageSkipped = $stageStatus | all {|it| $it == 'NoNeedBySystem' }
     let stageUnfinished = $stageStatus | any {|it| $it in $UNFINISHED_STATUS }
     let indicator = if $stageSuccess {
-        $'(ansi g)✓(ansi reset)  Stage: (ansi g)($tasks)(ansi reset) Finished Successfully! Time cost: ($duration)'
+        $'(ansi g)✓(ansi rst)  Stage: (ansi g)($tasks)(ansi rst) Finished Successfully! Time cost: ($duration)'
       } else if $stageSkipped {
-        $'(ansi y)☕(ansi reset) Stage: (ansi y)($tasks)(ansi reset) Was skipped!' # 💥 💭 👻 💨 ☕
+        $'(ansi y)☕(ansi rst) Stage: (ansi y)($tasks)(ansi rst) Was skipped!' # 💥 💭 👻 💨 ☕
       } else if $stageFailed {
-        $'(ansi y)⚠(ansi reset)  Stage: (ansi y)($tasks)(ansi reset) Failed! Time cost: ($duration)'
+        $'(ansi y)⚠(ansi rst)  Stage: (ansi y)($tasks)(ansi rst) Failed! Time cost: ($duration)'
       } else if $stageStopped {
-        $'(ansi y)👻(ansi reset) Stage: (ansi y)($tasks)(ansi reset) Was stopped! Time cost: ($duration)'
+        $'(ansi y)👻(ansi rst) Stage: (ansi y)($tasks)(ansi rst) Was stopped! Time cost: ($duration)'
       } else if $stageUnfinished {
-        $'(ansi pb)🪄(ansi reset) Stage: (ansi g)($tasks)(ansi reset) is Running...'
+        $'(ansi pb)🪄(ansi rst) Stage: (ansi g)($tasks)(ansi rst) is Running...'
       } else {
-        $'(ansi r)✗(ansi reset) Unknown Status: ($stageStatus | str join ",")'
+        $'(ansi r)✗(ansi rst) Unknown Status: ($stageStatus | str join ",")'
       }
 
     $env.config.table.mode = 'psql'
@@ -447,7 +447,7 @@ export def watch-cicd-status [id: int] {
   # Refresh the query result and print the final costTimeSec
   let query = fetch-cicd-detail $id
   let totalTime = $'($query.data.costTimeSec)sec' | into duration
-  print $'(char nl)Pipeline run finished with status: (ansi p)($query.data.status)(ansi reset)! Total time cost: ($totalTime)'
+  print $'(char nl)Pipeline run finished with status: (ansi p)($query.data.status)(ansi rst)! Total time cost: ($totalTime)'
 }
 
 # 查询流水线执行结果的相应阶段的详细信息
@@ -481,19 +481,19 @@ export def fetch-cicd-detail [id: int, --host: string = $ERDA_HOST] {
 export def query-cicd-by-id [id: int, --watch, --host: string = $ERDA_HOST] {
   let query = fetch-cicd-detail $id --host $host
   if ($query | describe) == 'string' {
-    print -e $'Query CICD failed with message: (ansi r)($query)(ansi reset)'
+    print -e $'Query CICD failed with message: (ansi r)($query)(ansi rst)'
     exit $ECODE.SERVER_ERROR
   }
   if (not $query.success ) {
-    print -e $'Query CICD failed with error message: (ansi r)($query.err.msg)(ansi reset)'
+    print -e $'Query CICD failed with error message: (ansi r)($query.err.msg)(ansi rst)'
     exit $ECODE.SERVER_ERROR
   }
-  let timeEnd = if ($query.data.timeEnd | is-empty) { $'(ansi wd)---Not Yet!---(ansi reset)' } else { $query.data.timeEnd }
+  let timeEnd = if ($query.data.timeEnd | is-empty) { $'(ansi wd)---Not Yet!---(ansi rst)' } else { $query.data.timeEnd }
 
   let output = {
     App: $query.data.applicationName
     Branch: $query.data.branch
-    Status: $'(ansi pb)($query.data.status)(ansi reset)'
+    Status: $'(ansi pb)($query.data.status)(ansi rst)'
     Runner: $query.data.extra.runUser.name
     Committer: $query.data.commitDetail.author
     Commit: ($query.data.commit | str substring 0..<9)
@@ -504,7 +504,7 @@ export def query-cicd-by-id [id: int, --watch, --host: string = $ERDA_HOST] {
     # 此处之所以没有直接用 $appid & $pid 是因为可能存在在 A 应用仓库中查询 B 应用的流水线执行结果的情况，故而以返回数据为准
     URL: $'($host)/($query.data.orgName)/dop/projects/($query.data.projectID)/apps/($query.data.applicationID)/pipeline/obsoleted?pipelineID=($id)'
   }
-  print $'(char nl)(ansi pb)Current Running Status of CICD ($id):(ansi reset)'
+  print $'(char nl)(ansi pb)Current Running Status of CICD ($id):(ansi rst)'
   hr-line; print $output
   # print ($query | table -e)     # Just for debugging purpose
   if $watch { watch-cicd-status $id }
@@ -526,10 +526,10 @@ def select-target [candidates: record, --multiple] {
   let args = [--preview-window=right:75%:wrap $multiple] | compact
   let selection = $candidates | columns | str join "\n" | fzf ...$args | complete | get stdout | lines
   rm -f $FZF_PREVIEW_FILE
-  if ($selection | is-empty) { print $'(ansi grey66)Operation cancelled...(ansi reset)'; return }
-  print $'You selected: (ansi pb)($selection | str join ,)(ansi reset)'
-  let confirm = input  $'Please input (ansi g)y(ansi reset) to confirm or (ansi g)other keys(ansi reset) to cancel: '
-  if $confirm != 'y' { print $'(ansi grey66)Operation cancelled...(ansi reset)'; return }
+  if ($selection | is-empty) { print $'(ansi grey66)Operation cancelled...(ansi rst)'; return }
+  print $'You selected: (ansi pb)($selection | str join ,)(ansi rst)'
+  let confirm = input  $'Please input (ansi g)y(ansi rst) to confirm or (ansi g)other keys(ansi rst) to cancel: '
+  if $confirm != 'y' { print $'(ansi grey66)Operation cancelled...(ansi rst)'; return }
   $candidates | select ...$selection | values
 }
 
@@ -585,7 +585,7 @@ export def main [
         let ignoreHash = $app.ignoreHash? | default false
         if ($app.lock? | default false) {
           $app.lockTip?
-            | default $'Skip deploying app (ansi y)($appName)(ansi reset), because it is locked by the Admin.'
+            | default $'Skip deploying app (ansi y)($appName)(ansi rst), because it is locked by the Admin.'
             | print
           continue
         }
@@ -601,13 +601,13 @@ export def main [
       # 未指定 cid 则查询最近 10 条流水线执行结果
       if ($cid | is-empty) { query-latest-cicd $dest --apps $apps --override=$override; exit $ECODE.SUCCESS }
       if ($cid | describe) != 'int' {
-        print -e $'Invalid value for --cid: (ansi r)($cid)(ansi reset), should be an integer number.'
+        print -e $'Invalid value for --cid: (ansi r)($cid)(ansi rst), should be an integer number.'
         exit $ECODE.INVALID_PARAMETER
       }
       query-cicd-by-id $cid --watch=$watch
     }
     _ => {
-      print -e $'Unsupported operation: (ansi r)($operation)(ansi reset), should be (ansi g)run(ansi reset) or (ansi g)query(ansi reset)'
+      print -e $'Unsupported operation: (ansi r)($operation)(ansi rst), should be (ansi g)run(ansi rst) or (ansi g)query(ansi rst)'
       exit $ECODE.INVALID_PARAMETER
     }
   }

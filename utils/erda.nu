@@ -13,7 +13,7 @@ export def check-erda-envs [] {
   let envs = ['ERDA_USERNAME' 'ERDA_PASSWORD']
   let empties = ($envs | where {|it| $env | get -i $it | is-empty })
   if ($empties | length) > 0 {
-    print -e $'Please set (ansi r)($empties | str join ',')(ansi reset) in your environment first...'
+    print -e $'Please set (ansi r)($empties | str join ',')(ansi rst) in your environment first...'
     exit $ECODE.INVALID_PARAMETER
   }
 }
@@ -41,8 +41,8 @@ export def renew-erda-session [host: string = $ERDA_HOST, --get-uid] {
   let renew = curl --silent -X POST $RENEW_URL | from json
   if ($renew | is-empty) { print 'Try renew Erda session again...'; renew-erda-session $host }
   if ($renew | describe) == 'string' {
-    print -e $'Erda session renew failed with message: (ansi r)($renew)(ansi reset)'
-    print -e $'Session Renew URL: (ansi r)($RENEW_URL)(ansi reset).'
+    print -e $'Erda session renew failed with message: (ansi r)($renew)(ansi rst)'
+    print -e $'Session Renew URL: (ansi r)($RENEW_URL)(ansi rst).'
     exit $ECODE.AUTH_FAILED
   }
   open $TERMIX_CONF | from json

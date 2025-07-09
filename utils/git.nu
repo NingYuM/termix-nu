@@ -18,7 +18,7 @@ export def do-sync [
   repo: any,                  # The git repo config options, such as: { repo: 'terp-rls', dest: 'main', lock: true }
   --force-sync: any = false,  # Force to sync even if refused by the remote repo
 ] {
-  print $'Sync from local (ansi g)($syncFrom)(ansi reset) to remote (ansi p)($repo.dest) of repo ($repo.repo)(ansi reset) -->(char nl)'
+  print $'Sync from local (ansi g)($syncFrom)(ansi rst) to remote (ansi p)($repo.dest) of repo ($repo.repo)(ansi rst) -->(char nl)'
   let force = $env.FORCE?! | default 0 | into int
   let forcePush = $env.FORCE_PUSH?! | default 0 | into int
   let hasLock = (do -i { $repo | get lock }) != null
@@ -27,7 +27,7 @@ export def do-sync [
     git push --no-verify --force $gitUrl $'($syncFrom):refs/heads/($repo.dest)'
   } else {
     let tryPush = git push --no-verify $gitUrl $'($syncFrom):refs/heads/($repo.dest)' | complete
-    if $tryPush.exit_code != 0 { print -e $'(ansi y)($tryPush.stderr)(ansi reset)' }
+    if $tryPush.exit_code != 0 { print -e $'(ansi y)($tryPush.stderr)(ansi rst)' }
   }
 }
 

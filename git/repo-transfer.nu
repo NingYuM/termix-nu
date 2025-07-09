@@ -17,7 +17,7 @@ export def 'git repo-transfer' [
   let tmpPath = get-tmp-path
   cd $tmpPath
   print $'(char nl)Sync git repo from ($source)(char nl)'
-  print $'to dest:      (ansi g)---> ($dest)(ansi reset)(char nl)'
+  print $'to dest:      (ansi g)---> ($dest)(ansi rst)(char nl)'
   hr-line
   let nameIndexStart = ($source | str index-of -e '/')
   let repoName = $'($source | str substring ($nameIndexStart + 1)..)-sync'
@@ -34,11 +34,11 @@ export def 'git repo-transfer' [
       git remote set-url origin --push $dest
       do-push $dest
     } else {
-      print -e $'(ansi r)Path ($tmpPath)/($repoName) already exists(ansi reset), Please remove it and try again...(char nl)'
+      print -e $'(ansi r)Path ($tmpPath)/($repoName) already exists(ansi rst), Please remove it and try again...(char nl)'
       exit $ECODE.CONDITION_NOT_SATISFIED
     }
   } else {
-    print $'Cloning code to: (ansi g)($tmpPath)/($repoName)(ansi reset)(char nl)'
+    print $'Cloning code to: (ansi g)($tmpPath)/($repoName)(ansi rst)(char nl)'
     git clone --mirror $source $repoName; cd $repoName
     git remote set-url origin --push $dest
     do-push $dest
@@ -48,16 +48,16 @@ export def 'git repo-transfer' [
 def do-push [
   dest: string      # The dest repo git url
 ] {
-  print $'(ansi g)Push code to the remote dest:(ansi reset)(char nl)'
+  print $'(ansi g)Push code to the remote dest:(ansi rst)(char nl)'
   # 当仓库不存在的时候截获标准错误流需要 `do -i {}`
   let push = (do -i { git push --mirror } | complete)
   # FIXME: Nu Bug: stdout redirect to stderr
   if not ($push.stderr | is-empty) { print $push.stderr }
   if not ($push.stdout | is-empty) { print $push.stdout }
   if $push.stderr =~ 'not found' {
-    print -e $'(ansi r)Error: The dest repo does not exist, please create it and try again, bye...(ansi reset)(char nl)'
+    print -e $'(ansi r)Error: The dest repo does not exist, please create it and try again, bye...(ansi rst)(char nl)'
   }
   if $push.exit_code == 0 {
-    print $'(ansi g)Bravo! Repo transfer successfully!(ansi reset)(char nl)'
+    print $'(ansi g)Bravo! Repo transfer successfully!(ansi rst)(char nl)'
   }
 }

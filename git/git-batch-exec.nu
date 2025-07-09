@@ -30,7 +30,7 @@ export def 'git batch-exec' [
   let available = (git branch | into string | lines | par-each -k { str substring 2.. })
   let candidates = if ($branches | is-empty) { $available } else { $dest }
 
-  print $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi reset) on branches: (char nl)'
+  print $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi rst) on branches: (char nl)'
   print ($candidates | wrap name)
 
   print $"(char nl)Current branch: ($current)"
@@ -46,7 +46,7 @@ export def 'git batch-exec' [
       nu -n --no-std-lib -c $cmdToExec
       hr-line
     } else {
-      print $'Branch (ansi r)($branch) (ansi reset)not available...(char nl)'
+      print $'Branch (ansi r)($branch) (ansi rst)not available...(char nl)'
     }
   }
   git checkout $current

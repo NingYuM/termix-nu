@@ -40,7 +40,7 @@ export def hr-line [
   --blank-line(-b),
   --with-arrow(-a),
 ] {
-  print $'(ansi $color)('─' | repeat $width | str join)(if $with_arrow {'>'})(ansi reset)'
+  print $'(ansi $color)('─' | repeat $width | str join)(if $with_arrow {'>'})(ansi rst)'
   if $blank_line { char nl }
 }
 
@@ -49,29 +49,29 @@ def main [
   bizType?: string,        # 业务类型: b2c|b2b|sea
 ] {
   if ($bizType == null) {
-    print $'(char nl)Usage: nu clean-locale.nu (ansi r)<bizType>(ansi reset)'; hr-line
-    print $'(ansi g)Description: (ansi reset)根据`业务类型`从本地清除指定业务类型文件夹下多余的国际化文案'
-    print $'(ansi g)Supported bizTypes: (ansi reset)b2c / b2b / sea'
+    print $'(char nl)Usage: nu clean-locale.nu (ansi r)<bizType>(ansi rst)'; hr-line
+    print $'(ansi g)Description: (ansi rst)根据`业务类型`从本地清除指定业务类型文件夹下多余的国际化文案'
+    print $'(ansi g)Supported bizTypes: (ansi rst)b2c / b2b / sea'
     print $'请确保参数输入无误并重试!(char nl)'
     exit $ECODE.INVALID_PARAMETER
   }
 
   let bizCheck = $bizType in ['b2c', 'b2b', 'sea']
   if (not $bizCheck) {
-    print $'(ansi r)You have input the wrong biz type, Please try again!(ansi reset)(char nl)'
+    print $'(ansi r)You have input the wrong biz type, Please try again!(ansi rst)(char nl)'
     exit $ECODE.INVALID_PARAMETER
   }
 
   # Check mall-$bizType dir exists
   if not ($'mall-($bizType)' | path exists) {
-    print $'[ERR] This directory: (ansi r)mall-($bizType) does not exist!(ansi reset) Bye~~'
+    print $'[ERR] This directory: (ansi r)mall-($bizType) does not exist!(ansi rst) Bye~~'
     exit $ECODE.MISSING_DEPENDENCY
   }
 
   if (is-installed 'termix') {
-    print $'Current termix version: (ansi g)(termix --version | str trim)(ansi reset)'; hr-line
+    print $'Current termix version: (ansi g)(termix --version | str trim)(ansi rst)'; hr-line
   } else {
-    print $'(ansi r)Command `termix` could not be found, Please install it by `npm i -g @terminus/termix@latest`, and try again!(ansi reset)'
+    print $'(ansi r)Command `termix` could not be found, Please install it by `npm i -g @terminus/termix@latest`, and try again!(ansi rst)'
     exit $ECODE.MISSING_BINARY
   }
 
@@ -80,7 +80,7 @@ def main [
     exit $ECODE.MISSING_DEPENDENCY
   }
 
-  print $'Running clean locale for (ansi p)($bizType)(ansi reset)...'
+  print $'Running clean locale for (ansi p)($bizType)(ansi rst)...'
   let PID = ($I18 | get $bizType).PID
   let DESIGN_PID = ($I18 | get $bizType).DESIGN_PID
   termix locale-clean $'--pid=($PID)' --strict $'mall-common,mall-($bizType)'

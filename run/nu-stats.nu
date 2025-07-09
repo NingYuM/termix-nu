@@ -8,6 +8,6 @@ let downloads = (
         | sort-by download_count -r
 )
 
-print $'(char nl)(ansi g)Current Star Count:(ansi reset) ($starCount)'
+print $'(char nl)(ansi g)Current Star Count:(ansi rst) ($starCount)'
 print $'(char nl)Current Download Stats(char nl)'
 $downloads

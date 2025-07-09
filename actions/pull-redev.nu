@@ -20,13 +20,13 @@ export def 'git pull-redev' [
   let redevRepos = (open $_TERMIX_CONF | get redevRepos)
   let filteredRepos = ($redevRepos | where $',($group),' =~ $it.group)
   if ($filteredRepos | length) > 0 {
-    print $'(ansi p)Found the following matched repos:(ansi reset)(char nl)(char nl)'
+    print $'(ansi p)Found the following matched repos:(ansi rst)(char nl)(char nl)'
     print $filteredRepos
   } else {
-    print -e $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'
+    print -e $'(ansi r)Can not find any matched repos, bye...(ansi rst)(char nl)'
     exit $ECODE.MISSING_DEPENDENCY
   }
-  print $'Pull remote redevelop repos in directory (ansi g)($repoPath)(ansi reset):(char nl)'
+  print $'Pull remote redevelop repos in directory (ansi g)($repoPath)(ansi rst):(char nl)'
 
   # 此处迭代变量不要采用默认的 `$it`, 否则会出错，坑爹啊……
   # It's better to have a named param on blocks because $it can be consumed and lost.
@@ -41,7 +41,7 @@ export def 'git pull-redev' [
       cd $repoPath; git clone -b $branch $repo.url
     }
     hr-line
-    print $'(char nl)Pull repo (ansi gb)($repoName)(ansi reset): (char nl)'
+    print $'(char nl)Pull repo (ansi gb)($repoName)(ansi rst): (char nl)'
 
     cd $destRepoPath;
     if not ((has-ref $branch) or (has-ref origin/($branch))) {
@@ -51,7 +51,7 @@ export def 'git pull-redev' [
     git checkout $branch; git pull
     # 强制更新远程的Tag到本地
     git fetch origin --tags --force
-    print $'(char nl)Last commit of (ansi gb)($repoName)(ansi reset): (char nl)'
+    print $'(char nl)Last commit of (ansi gb)($repoName)(ansi rst): (char nl)'
     git show --abbrev-commit --no-patch
 
     # 先从环境变量里面查找待比较的上一个标签的完整名称
@@ -65,7 +65,7 @@ export def 'git pull-redev' [
     } else {
       if $show_diff {
         # 使用原生 echo 命令
-        print $'(char nl) (ansi r)Tag: ($prevTagName) does not exist in repo: ($repoName) (ansi reset)(char nl)'
+        print $'(char nl) (ansi r)Tag: ($prevTagName) does not exist in repo: ($repoName) (ansi rst)(char nl)'
       }
     }
   }

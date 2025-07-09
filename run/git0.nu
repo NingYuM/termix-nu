@@ -28,7 +28,7 @@ def 'git clean-remote' [] {
       if $keep {
         $"($remote) ---> ($branch) keep: ($keep)"
       } else {
-        $"(ansi rb)($remote) ---> ($branch) keep: ($keep)(ansi reset)"
+        $"(ansi rb)($remote) ---> ($branch) keep: ($keep)(ansi rst)"
       }
     }
   }

@@ -31,7 +31,7 @@ export def 'git trigger-sync' [
   let ignored = get-env SYNC_IGNORE_ALIAS ''
   let invalid = $branches | where {|it| not (has-ref $it)}
   if ($invalid | is-not-empty) {
-    print -e $'Branch (ansi r)($invalid | str join ,)(ansi reset) does not exist, please check it again.'
+    print -e $'Branch (ansi r)($invalid | str join ,)(ansi rst) does not exist, please check it again.'
     exit $ECODE.INVALID_PARAMETER
   }
 
@@ -63,8 +63,8 @@ def show-available-syncs [
   --ignored(-i): string,  # 代码同步需要忽略推送的仓库简称，多个仓库用英文逗号分隔
 ] {
   mut results = []
-  let cross = $'(ansi light_gray)  x(ansi reset)'
-  let mark = $'(ansi g)  √(ansi reset)'
+  let cross = $'(ansi light_gray)  x(ansi rst)'
+  let mark = $'(ansi g)  √(ansi rst)'
   if ($syncs | is-empty) { print $'No available syncing config found, Bye...'; exit $ECODE.SUCCESS }
 
   print $'(char nl)The following branches have code syncing config:'; hr-line -b
@@ -122,7 +122,7 @@ def get-push-config [
   let CONF_BRANCH = if $all { 'i' } else { $confBr }
 
   if not (has-ref origin/($CONF_BRANCH)) {
-    print $'Branch (ansi r)($CONF_BRANCH) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
+    print $'Branch (ansi r)($CONF_BRANCH) does not exist in `origin` remote, ignore syncing(ansi rst)...(char nl)'
     exit $ECODE.SUCCESS
   }
 
@@ -158,9 +158,9 @@ def sync-branch [
   # 如果没有找到对应分支的 push hook 配置则直接退出
   if ($syncDests | length) > 0 {
     if not ($repo | is-empty) {
-      print $'(char nl)Going to sync to (ansi g)($repo)(ansi reset) specified by `--repo`:(char nl)'
+      print $'(char nl)Going to sync to (ansi g)($repo)(ansi rst) specified by `--repo`:(char nl)'
     } else {
-      print $'(char nl)Found the following matched dests from (ansi g)`origin/($confBr):.termixrc`(ansi reset):(char nl)'
+      print $'(char nl)Found the following matched dests from (ansi g)`origin/($confBr):.termixrc`(ansi rst):(char nl)'
     }
     print ($syncDests | upsert lock {|it| if ('lock' in $it) { $it.lock } else { '-' }} | move lock --before SYNC)
   } else { exit $ECODE.SUCCESS }
@@ -172,7 +172,7 @@ def sync-branch [
 
     if not ($syncFrom | is-empty) { do-sync $syncFrom $gitUrl $iter --force-sync $force }
     if ($navUrl != '' and $syncFrom != null) {
-      print $'You can check the result from: (ansi g)($navUrl)(ansi reset)'
+      print $'You can check the result from: (ansi g)($navUrl)(ansi rst)'
       hr-line
     }
   } | ignore # FIXME: remove ignore after `each` bug fixed

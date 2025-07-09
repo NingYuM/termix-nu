@@ -50,8 +50,8 @@ def main [
 # Check if the .termixrc file exists.
 def file-exists [file: string] {
   if ($file | path exists) { return true }
-  print -e $'The config file (ansi r)($file)(ansi reset) does not exist. '
-  print -e $'Please copy the (ansi g).termixrc.example(ansi reset) file to create a new one.'
+  print -e $'The config file (ansi r)($file)(ansi rst) does not exist. '
+  print -e $'Please copy the (ansi g).termixrc.example(ansi rst) file to create a new one.'
   exit $ECODE.MISSING_DEPENDENCY
 }
 
@@ -66,14 +66,14 @@ def check-prompts [options: record] {
 def check-prompt [options: record, type: string] {
   let prompt_key = $options.settings | get -i $'($type)-prompt' | default ''
   if ($prompt_key | is-empty) {
-    print -e $'(ansi r)The ($type) prompt key is missing in `settings.($type)-prompt` .termixrc file.(ansi reset)'
+    print -e $'(ansi r)The ($type) prompt key is missing in `settings.($type)-prompt` .termixrc file.(ansi rst)'
     exit $ECODE.INVALID_PARAMETER
   }
   let prompt = $options.prompts | get -i $type
     | get -i $prompt_key
     | get -i prompt
   if ($prompt | is-empty) {
-    print -e $'The ($type) prompt (ansi r)($prompt_key)(ansi reset) is missing in `prompts.($type)` of .termixrc file.'
+    print -e $'The ($type) prompt (ansi r)($prompt_key)(ansi rst) is missing in `prompts.($type)` of .termixrc file.'
     exit $ECODE.INVALID_PARAMETER
   }
 }
@@ -83,21 +83,21 @@ def check-providers [options: record] {
   # settings.provider correctly configured and related provider exists
   let provider_name = $options.settings.provider
   if ($provider_name | is-empty) {
-    print -e $'(ansi r)The provider name is missing in `cr.settings.provider` of .termixrc file.(ansi reset)'
+    print -e $'(ansi r)The provider name is missing in `cr.settings.provider` of .termixrc file.(ansi rst)'
     exit $ECODE.INVALID_PARAMETER
   }
   let provider_exists = $options.providers
     | where name == $provider_name
     | is-not-empty
   if not $provider_exists {
-    print -e $'(ansi r)The provider ($provider_name) does not exist in `providers` of .termixrc file.(ansi reset)'
+    print -e $'(ansi r)The provider ($provider_name) does not exist in `providers` of .termixrc file.(ansi rst)'
     exit $ECODE.INVALID_PARAMETER
   }
   # Each provider should have name, token and models field
   $options.providers | each {|p|
     let empties = [name token models] | where { |field| $p | get -i $field | is-empty }
     if ($empties | is-not-empty) {
-      print -e $'Field (ansi r)`($empties | str join ,)`(ansi reset) should not be empty for provider:'
+      print -e $'Field (ansi r)`($empties | str join ,)`(ansi rst) should not be empty for provider:'
       $p | table -e -t psql | print
       exit $ECODE.INVALID_PARAMETER
     }
@@ -110,7 +110,7 @@ def check-models [options: record] {
   $options.providers | each {|provider|
     let enabled_models = $provider.models | default false enabled | where enabled | length
     if ($enabled_models != 1) {
-      print -e $'Model group (ansi r)`($provider.name)`(ansi reset) should have one and only one enabled model.'
+      print -e $'Model group (ansi r)`($provider.name)`(ansi rst) should have one and only one enabled model.'
       exit $ECODE.INVALID_PARAMETER
     }
   }
@@ -118,7 +118,7 @@ def check-models [options: record] {
   $options.providers | each {|provider|
     $provider.models | enumerate | each {|e|
       if ($e.item.name? | is-empty) {
-        print -e $'Model name is missing for provider (ansi r)`($provider.name)` model #($e.index)(ansi reset)...'
+        print -e $'Model name is missing for provider (ansi r)`($provider.name)` model #($e.index)(ansi rst)...'
         exit $ECODE.INVALID_PARAMETER
       }
     }

@@ -36,7 +36,7 @@ use ../utils/common.nu [ECODE, HTTP_HEADERS, hr-line, ellie, is-installed, is-lo
 
 const POLL_TICK_CHAR = '*'
 const QUERY_INTERVAL = 1sec
-const KEY_MAPPING = $"(ansi grey66)\(Space: Select, a: Select All, ESC/q: Quit, Enter: Confirm\)(ansi reset)"
+const KEY_MAPPING = $"(ansi grey66)\(Space: Select, a: Select All, ESC/q: Quit, Enter: Confirm\)(ansi rst)"
 # Versions that doesn't support SnapshotTask API
 const LEGACY_L0_VERSIONS = [2.5.24.0430 2.5.24.0530 2.5.24.0630 2.5.24.0730]
 # Versions that doesn't support DIR based meta data import
@@ -68,13 +68,13 @@ export def 'meta sync' [
   let modules = if $all { [] } else { get-selected-modules --from $source --selected=$selected }
   mut securityCode = ''
   if ($modules | is-empty) {
-    print $'You have selected to sync (ansi p)ALL(ansi reset) the modules...'
-    $securityCode = (input $'(ansi g)Please input the security code to continue: (ansi reset)')
+    print $'You have selected to sync (ansi p)ALL(ansi rst) the modules...'
+    $securityCode = (input $'(ansi g)Please input the security code to continue: (ansi rst)')
   } else {
-    print $'You have selected the following modules to import: (ansi p)($modules | str join ",")(ansi reset)'
+    print $'You have selected the following modules to import: (ansi p)($modules | str join ",")(ansi rst)'
   }
   if ($source.path? | is-not-empty) {
-    print $'You are going to import meta data from path: (ansi p)($source.path)(ansi reset)'
+    print $'You are going to import meta data from path: (ansi p)($source.path)(ansi rst)'
   }
   print -n (char nl)
   let destAuth = get-user-auth ($confMeta.settings? | default {} | merge $dest)
@@ -85,13 +85,13 @@ export def 'meta sync' [
   let start = date now
   let snapshotOid = handle-create-snapshot $source $sourceAuth
   hr-line
-  print $'Snapshot created successfully with RootOID: (ansi p)($snapshotOid)(ansi reset)'
+  print $'Snapshot created successfully with RootOID: (ansi p)($snapshotOid)(ansi rst)'
   let downloadUrl = handle-upload-snapshot $source $snapshotOid $sourceAuth --install=$install
   print $'Snapshot uploaded successfully with download Url:'
-  print $'(ansi p)($downloadUrl)(ansi reset)'
+  print $'(ansi p)($downloadUrl)(ansi rst)'
   handle-import-metadata $dest $snapshotOid $downloadUrl $destAuth --modules $modules --code $securityCode --install=$install --path=$source.path?
   let end = date now
-  print $'Total time consumed: (ansi p)($end - $start)(ansi reset)'
+  print $'Total time consumed: (ansi p)($end - $start)(ansi rst)'
 }
 
 # Tab complete for sources
@@ -152,12 +152,12 @@ def create-and-upload-snapshot [
   let authentication = get-user-auth $source
   let snapshotOid = handle-create-snapshot $source $authentication --snapshot-only
   hr-line
-  print $'Snapshot created successfully with RootOID: (ansi p)($snapshotOid)(ansi reset)'
+  print $'Snapshot created successfully with RootOID: (ansi p)($snapshotOid)(ansi rst)'
   let downloadUrl = handle-upload-snapshot $source $snapshotOid $authentication --snapshot-only --install=$install
   print $'Snapshot uploaded successfully with download Url:'
-  print $'(ansi p)($downloadUrl)(ansi reset)'
+  print $'(ansi p)($downloadUrl)(ansi rst)'
   let end = date now
-  print $'Total time consumed: (ansi p)($end - $start)(ansi reset)'
+  print $'Total time consumed: (ansi p)($end - $start)(ansi rst)'
 }
 
 # Make sure you know what you are doing
@@ -173,10 +173,10 @@ def confirm-snapshot [
   # Theme: ascii_rounded,basic_compact,dots,psql,reinforced
   print ($setting | table -e --theme psql -i false)
   print $'Are you sure to continue? '
-  let confirm = input $'Please press (ansi p)y(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
+  let confirm = input $'Please press (ansi p)y(ansi rst) to continue and (ansi p)q(ansi rst) to quit: '
   if $confirm == 'q' { print $'Snapshot creating cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $confirm != 'y' {
-    print -e $'Your input (ansi p)($confirm)(ansi reset) does not match (ansi p)y(ansi reset), bye...'
+    print -e $'Your input (ansi p)($confirm)(ansi rst) does not match (ansi p)y(ansi rst), bye...'
     exit $ECODE.INVALID_PARAMETER
   }
   print -n (char nl)
@@ -204,12 +204,12 @@ def get-meta-setting [
   if $selected {
     # CHECK: Make sure the selected and available modules was set in the source config
     if ([selectedModules availableModules] | any {|| $in not-in $source }) {
-      print -e $'The (ansi p)($from | default default)(ansi reset) source must have (ansi p)selectedModules & availableModules(ansi reset) config.'
+      print -e $'The (ansi p)($from | default default)(ansi rst) source must have (ansi p)selectedModules & availableModules(ansi rst) config.'
       exit $ECODE.INVALID_PARAMETER
     }
     # CHECK: Make sure the selected modules was all in the available modules
     $source.selectedModules | each {|it| if $it not-in $source.availableModules {
-      print -e $'The (ansi p)($from | default default)(ansi reset) source`s selectedModules ($it) must be one of ($source.availableModules | str join ",")'
+      print -e $'The (ansi p)($from | default default)(ansi rst) source`s selectedModules ($it) must be one of ($source.availableModules | str join ",")'
       exit $ECODE.INVALID_PARAMETER
     }}
     return { source: $source, dest: $destination, selectedModules: $source.selectedModules }
@@ -231,7 +231,7 @@ def check-required [name: string] {
   for provider in ($metaConf | get $name | columns) {
     let keys = $metaConf | get $name | get $provider | columns
     [teamId teamCode host] | each {|it| if $it not-in $keys {
-      print -e $'The ($name) (ansi p)($provider)(ansi reset) must have (ansi p)($it)(ansi reset) config.'
+      print -e $'The ($name) (ansi p)($provider)(ansi rst) must have (ansi p)($it)(ansi rst) config.'
       exit $ECODE.INVALID_PARAMETER
     }}
   }
@@ -241,7 +241,7 @@ def check-required [name: string] {
 def check-user-auth [settings: record] {
   let authEmpty = [username password] | any {|it| $settings | get -i $it | is-empty }
   if $authEmpty {
-    print -e $'(ansi r)Please config your username and password for the following setting:(ansi reset)'
+    print -e $'(ansi r)Please config your username and password for the following setting:(ansi rst)'
     $settings | table -e | print
     exit $ECODE.INVALID_PARAMETER
   }
@@ -260,7 +260,7 @@ def provider-check [type, value, --from: string, --to: string] {
     exit $ECODE.INVALID_PARAMETER
   }
   if (not ($check | is-empty)) and ($check not-in ($metaConf | get $type)) {
-    print -e $'The ($type) name (ansi p)($check)(ansi reset) does`t exists in the meta.($type) config, please check it again.'
+    print -e $'The ($type) name (ansi p)($check)(ansi rst) does`t exists in the meta.($type) config, please check it again.'
     exit $ECODE.INVALID_PARAMETER
   }
 }
@@ -275,7 +275,7 @@ def install-check [
   let isLegacy = ($auth.version | is-empty) or ($auth.version | str replace -a . '' | str replace 'DEV' '' | into int) < 25240930
   let shouldInstall = (not $isLegacy) and ($dest | get -i resetModuleForInstall | default false)
   if $shouldInstall {
-    print -e $'You are going to INSTALL modules to the dest project, please add (ansi g)`--install` / `-i`(ansi reset) flag and try again.(char nl)'
+    print -e $'You are going to INSTALL modules to the dest project, please add (ansi g)`--install` / `-i`(ansi rst) flag and try again.(char nl)'
     exit $ECODE.INVALID_PARAMETER
   }
 }
@@ -300,10 +300,10 @@ def confirm-check [
   print ($setting | table -e --theme psql -i false)
   print $'Are you sure to continue?'
   let check = $'($from.teamId)-to-($to.teamId)'
-  let confirm = input $'Please confirm by typing (ansi r)($check)(ansi reset) to continue or (ansi p)q(ansi reset) to quit: '
+  let confirm = input $'Please confirm by typing (ansi r)($check)(ansi rst) to continue or (ansi p)q(ansi rst) to quit: '
   if $confirm == 'q' { print $'Syncing cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $confirm != $check {
-    print -e $'Your input (ansi p)($confirm)(ansi reset) does not match (ansi p)($check)(ansi reset), bye...'
+    print -e $'Your input (ansi p)($confirm)(ansi rst) does not match (ansi p)($check)(ansi rst), bye...'
     exit $ECODE.INVALID_PARAMETER
   }
   print -n (char nl)
@@ -339,11 +339,11 @@ def handle-create-snapshot [
   let start = date now
   let total = if $snapshot_only { 2 } else { 3 }
   let taskId = create-snapshot $source $auth
-  print $'(ansi pr) STEP 1/($total): (ansi reset) Snapshot creating task started, id: (ansi p)(get-detail-link $source.host $taskId)(ansi reset)'
+  print $'(ansi pr) STEP 1/($total): (ansi rst) Snapshot creating task started, id: (ansi p)(get-detail-link $source.host $taskId)(ansi rst)'
   mut detail = fetch-task-detail $taskId $source.host $auth
   print 'Task running detail:'; hr-line
   mut stats = $detail.progress
-  print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi reset) is ($detail.status): [Total: ($stats.total), Success: ($stats.success), Failed: ($stats.failed)]'
+  print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi rst) is ($detail.status): [Total: ($stats.total), Success: ($stats.success), Failed: ($stats.failed)]'
   while $stats.success + $stats.failed < $stats.total {
     $detail = (fetch-task-detail $taskId $source.host $auth)
     $stats = $detail.progress
@@ -352,7 +352,7 @@ def handle-create-snapshot [
   }
   let end = date now
   print -n (char nl)
-  print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi reset) is ($detail.status): [Total: ($stats.total), Success: ($stats.success), Failed: ($stats.failed)]'
+  print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi rst) is ($detail.status): [Total: ($stats.total), Success: ($stats.success), Failed: ($stats.failed)]'
   print 'Task output:'; hr-line
   print ($detail.outputs | table -e)
   print $'Time consumed for 1st step: ($end - $start)'
@@ -375,11 +375,11 @@ def handle-upload-snapshot [
   let total = if $snapshot_only { 2 } else { 3 }
   let taskId = upload-snapshot $source $rootOid $auth --install=$install
   print -n (char nl)
-  print $'(ansi pr) STEP 2/($total): (ansi reset) Snapshot uploading task started, id: (ansi p)(get-detail-link $source.host $taskId)(ansi reset)'
+  print $'(ansi pr) STEP 2/($total): (ansi rst) Snapshot uploading task started, id: (ansi p)(get-detail-link $source.host $taskId)(ansi rst)'
   mut detail = fetch-task-detail $taskId $source.host $auth
   print 'Task running detail:'; hr-line
   mut stats = $detail.progress
-  print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi reset) is ($detail.status): [Total: ($stats.total), Success: ($stats.success), Failed: ($stats.failed)]'
+  print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi rst) is ($detail.status): [Total: ($stats.total), Success: ($stats.success), Failed: ($stats.failed)]'
   while $stats.success + $stats.failed < $stats.total {
     $detail = (fetch-task-detail $taskId $source.host $auth)
     $stats = $detail.progress
@@ -388,7 +388,7 @@ def handle-upload-snapshot [
   }
   let end = date now
   print -n (char nl)
-  print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi reset) is ($detail.status): [Total: ($stats.total), Success: ($stats.success), Failed: ($stats.failed)]'
+  print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi rst) is ($detail.status): [Total: ($stats.total), Success: ($stats.success), Failed: ($stats.failed)]'
   # print 'Task output:'; hr-line
   # print ($detail.outputs | table -e)
   print $'Time consumed for 2nd step: ($end - $start)'
@@ -418,14 +418,14 @@ def handle-import-metadata [
   }
   print -n (char nl)
   let type = if $install { 'installing' } else { 'importing' }
-  print $'(ansi pr) STEP 3/3: (ansi reset) Meta data ($type) task started, id: (ansi p)(get-detail-link $dest.host $taskId)(ansi reset)'
+  print $'(ansi pr) STEP 3/3: (ansi rst) Meta data ($type) task started, id: (ansi p)(get-detail-link $dest.host $taskId)(ansi rst)'
   mut detail = fetch-task-detail $taskId $dest.host $auth
   print 'Task running detail:'; hr-line
   mut stats = $detail.progress
-  print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi reset) is ($detail.status):'
+  print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi rst) is ($detail.status):'
 
   let webDetailUrl = $'($dest.host)/api/trantor/task/run-detail-page?taskRunId=($detail.taskRunId)'
-  print $'For more detail please visit: (ansi p)($webDetailUrl)(ansi reset)'
+  print $'For more detail please visit: (ansi p)($webDetailUrl)(ansi rst)'
   print $'Task Status: Total: ($stats.total), Success: ($stats.success), Failed: ($stats.failed)'
   hr-line 60 --color lcd
 
@@ -446,16 +446,16 @@ def handle-import-metadata [
   }
   let end = date now
   print -n (char nl)
-  print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi reset) is ($detail.status)...'
+  print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi rst) is ($detail.status)...'
   # print 'Sub tasks detail output:'; hr-line
   # print ($detail.subTasks | table -e)
   print $'Time consumed for 3rd step: ($end - $start)'
   if ($stats.failed > 0) {
-    print -e $'(ansi r)Failed to import metadata with the following outputs:(ansi reset)'
+    print -e $'(ansi r)Failed to import metadata with the following outputs:(ansi rst)'
     hr-line; print $detail.outputs
     exit $ECODE.SERVER_ERROR
   }
-  print $'(ansi p)Bravo! Meta data synchronized successfully.(ansi reset)'
+  print $'(ansi p)Bravo! Meta data synchronized successfully.(ansi rst)'
 }
 
 # Create meta data snapshot
@@ -469,7 +469,7 @@ def create-snapshot [
   let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team $source.teamCode, ...$HTTP_HEADERS]
   let resp = http post --content-type application/json --headers $headers -e $'($source.host)($snapShotApi)?($query)' {}
   if $resp.status? == 401 {
-    print -e $'Create snapshot failed with error: (ansi r)($resp.error)(ansi reset)'
+    print -e $'Create snapshot failed with error: (ansi r)($resp.error)(ansi rst)'
     print -e $'Make sure you have set the username and password correctly and try again...'
     exit $ECODE.AUTH_FAILED
   }
@@ -524,11 +524,11 @@ def import-metadata [
   }
   if ($path | is-not-empty) {
     if $dirImportNotSupported {
-      print $'(ansi r)The destination Trantor does not support DIR based meta data import, min version required (ansi g)2.5.24.1130.(ansi reset)'
+      print $'(ansi r)The destination Trantor does not support DIR based meta data import, min version required (ansi g)2.5.24.1130.(ansi rst)'
       exit $ECODE.INVALID_PARAMETER
     }
     if ($modules | length) > 1 {
-      print -e $'(ansi r)You can only import one module at a time when specifying the `--path` option, please check it again.(ansi reset)'
+      print -e $'(ansi r)You can only import one module at a time when specifying the `--path` option, please check it again.(ansi rst)'
       exit $ECODE.INVALID_PARAMETER
     }
     $importPayload.path = $path
@@ -584,7 +584,7 @@ def fetch-task-detail [
   let headers = [Cookie $auth.cookie Referer $auth.iamHost]
   let resp = try { http get --headers $headers $DETAIL_URL } catch { http get -e --headers $headers $DETAIL_URL }
   if ($resp | describe) == 'string' {
-    print -e $'Task query failed with message: (ansi r)($resp)(ansi reset)'
+    print -e $'Task query failed with message: (ansi r)($resp)(ansi rst)'
     exit $ECODE.SERVER_ERROR
   }
   if not $resp.success {
@@ -609,7 +609,7 @@ def get-user-auth [
   let platformApi = $'($settings.host)/api/trantor/platform'
   let platform = try { http get -e $platformApi } catch { http get -e $platformApi }
   if ($platform | describe) == 'string' {
-    print -e $'Get user auth failed with message: (ansi r)($platform)(ansi reset)'
+    print -e $'Get user auth failed with message: (ansi r)($platform)(ansi rst)'
     exit $ECODE.SERVER_ERROR
   }
   if $platform.status? in [401 404] {
@@ -617,12 +617,12 @@ def get-user-auth [
   }
   # OpenSSL Check
   if not (is-installed openssl) {
-    print -e $'(ansi r)Please install openssl@3 first by `brew install openssl@3` and try again...(ansi reset)'
+    print -e $'(ansi r)Please install openssl@3 first by `brew install openssl@3` and try again...(ansi rst)'
     exit $ECODE.MISSING_BINARY
   }
   let opensslVer = openssl version | detect columns -n | rename bin ver | get ver.0
   if (is-lower-ver $opensslVer '3.0.0') {
-    print -e $'(ansi r)Openssl v3 or above is required, please install it by `brew install openssl@3` and try again...(ansi reset)'
+    print -e $'(ansi r)Openssl v3 or above is required, please install it by `brew install openssl@3` and try again...(ansi rst)'
     exit $ECODE.MISSING_BINARY
   }
 
@@ -642,8 +642,8 @@ def get-user-auth [
 
   let resp = http post --headers $IAM_HEADER --full --content-type application/json -e $'($iamHost)/iam/api/v1/user/login/account' $payload
   if not $resp.body.success {
-    print -e $'Login failed with error: (ansi r)($resp.body.message)(ansi reset)'
-    print -e $'Please check your auth info at (ansi g)($iamHost)/login(ansi reset)'
+    print -e $'Login failed with error: (ansi r)($resp.body.message)(ansi rst)'
+    print -e $'Please check your auth info at (ansi g)($iamHost)/login(ansi rst)'
     exit $ECODE.AUTH_FAILED
   }
   let user = $resp.body.data.user

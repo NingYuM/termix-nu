@@ -42,13 +42,13 @@ export def termix-doctor [
   check-bin 'Checking dependency version ...' --fix=$fix --debug=$debug | show-result
   check-termix 'Checking termix version ...'  --fix=$fix --debug=$debug | show-result
   check-pkg-tool 'Checking package-tools ...' --fix=$fix --debug=$debug | show-result
-  if $fix { print -n (char nl); print $'(ansi g)如果执行 `--fix` 后仍有问题可以尝试重启终端(ansi reset)' }
+  if $fix { print -n (char nl); print $'(ansi g)如果执行 `--fix` 后仍有问题可以尝试重启终端(ansi rst)' }
   # check-alias 'Checking `t` alias ...'      --fix=$fix --debug=$debug | show-result
 }
 
 # Check TERMIX_DIR environment variable
 def check-env [description: string, --fix, --debug] {
-  const FIX_TIP = $'请确保 (ansi g).env(ansi reset) 文件存在并且其中的 (ansi g)TERMIX_DIR(ansi reset) 指向 termix-nu 根目录'
+  const FIX_TIP = $'请确保 (ansi g).env(ansi rst) 文件存在并且其中的 (ansi g)TERMIX_DIR(ansi rst) 指向 termix-nu 根目录'
   print -n $description
   mut result = { tip: $FIX_TIP, status: $STATUS.ERROR }
   if $debug { show-debug ($env.TERMIX_DIR? | default '') }
@@ -66,7 +66,7 @@ def check-env [description: string, --fix, --debug] {
 
 # Checking Nushell config file existence
 def check-config [description: string, --fix, --debug] {
-  const FIX_TIP = $"请通过(ansi g) t doctor --fix (ansi reset)修复, 并重启终端"
+  const FIX_TIP = $"请通过(ansi g) t doctor --fix (ansi rst)修复, 并重启终端"
   print -n $description
   mut result = { tip: $FIX_TIP, status: $STATUS.ERROR }
   if $debug { show-debug $nu.default-config-dir }
@@ -78,7 +78,7 @@ def check-config [description: string, --fix, --debug] {
 
 # Check Nushell plugins
 def check-plugins [description: string, --fix, --debug] {
-  const FIX_TIP = $"请通过(ansi g) nu -c 'rm $nu.plugin-path' (ansi reset)或(ansi g) t doctor --fix (ansi reset)修复, 并重启终端"
+  const FIX_TIP = $"请通过(ansi g) nu -c 'rm $nu.plugin-path' (ansi rst)或(ansi g) t doctor --fix (ansi rst)修复, 并重启终端"
   print -n $description
   mut result = { tip: $FIX_TIP, status: $STATUS.ERROR }
   if not ($nu.plugin-path | path exists) { register-plugins }
@@ -114,7 +114,7 @@ def check-macOS [description: string, --fix, --debug] {
 
 # Check binary dependencies versions, such as nu, just, fzf, etc.
 def check-bin [description: string, --fix, --debug] {
-  const FIX_TIP = $"请通过(ansi g) t upgrade -a (ansi reset)进行升级, 并重启终端"
+  const FIX_TIP = $"请通过(ansi g) t upgrade -a (ansi rst)进行升级, 并重启终端"
   print -n $description
   mut result = { tip: $FIX_TIP, status: $STATUS.WARN }
   let current = get-versions
@@ -135,7 +135,7 @@ def check-bin [description: string, --fix, --debug] {
 # Check termix-nu version
 def check-termix [description: string, --fix, --debug] {
   cd $env.TERMIX_DIR
-  const FIX_TIP = $'请通过(ansi g) t upgrade -a (ansi reset)进行升级, 并重启终端'
+  const FIX_TIP = $'请通过(ansi g) t upgrade -a (ansi rst)进行升级, 并重启终端'
   print -n $description
   mut result = { tip: $FIX_TIP, status: $STATUS.WARN }
   let current = get-conf version
@@ -152,7 +152,7 @@ def check-termix [description: string, --fix, --debug] {
 # Check package-tools version
 def check-pkg-tool [description: string, --fix, --debug] {
   if not (is-installed package-tools) { return }
-  const FIX_TIP = $'请通过(ansi g) npm i -g @terminus/t-package-tools@latest --registry ($REGISTRY) (ansi reset)进行升级'
+  const FIX_TIP = $'请通过(ansi g) npm i -g @terminus/t-package-tools@latest --registry ($REGISTRY) (ansi rst)进行升级'
   print -n $description
   mut result = { tip: $FIX_TIP, status: $STATUS.WARN }
   let current = package-tools --version
@@ -214,7 +214,7 @@ def upgrade-package-tools [] {
 def show-result [] {
   if ($in | is-empty) { return }
   if $in.status == $STATUS.OK {
-    print -n $'(ansi g)OK(ansi reset)(char nl)'; return
+    print -n $'(ansi g)OK(ansi rst)(char nl)'; return
   }
   print -n (char nl); hr-line 80
   $in | select status message? tip | print

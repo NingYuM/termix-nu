@@ -23,7 +23,7 @@ export def hr-line [
   --with-arrow(-a),
   --color(-c): string = 'g',
 ] {
-  print $'(ansi $color)('─' | repeat $width | str join)(if $with_arrow {'>'})(ansi reset)'
+  print $'(ansi $color)('─' | repeat $width | str join)(if $with_arrow {'>'})(ansi rst)'
   if $blank_line { char nl }
 }
 
@@ -42,7 +42,7 @@ def main [
   if not (is-installed 'termix') {
     npm i -g @terminus/termix@latest
   }
-  print $'(ansi pr) Termix version: (termix --version | str trim) (ansi reset)'; hr-line
+  print $'(ansi pr) Termix version: (termix --version | str trim) (ansi rst)'; hr-line
   # Disable `initial branch name` hints from git
   git config --global init.defaultBranch master
   if (git config --global --get user.name | is-empty) {
@@ -55,7 +55,7 @@ def main [
   let action = (termix redevelop redev-app --template $template --checkout $checkRef --user='git' --access-token $token | complete)
   print $action.stdout; if 'stderr' in $action { print $action.stderr }
   if ('redev-app/origin' | path exists) == false or $action.exit_code != 0  {
-    print $'(ansi r)Redevelop repo generating failed! Bye...(ansi reset)'
+    print $'(ansi r)Redevelop repo generating failed! Bye...(ansi rst)'
     exit 1
   }
   # 切换到一个空的 orphan 分支，用于保存生成的全量二开代码，方便后续排查问题
@@ -73,8 +73,8 @@ def main [
   } else { $deploy_repo }
   git remote add deploy $repoUrl
   let current = (git branch --show-current | str trim)
-  print $'(ansi g)Redevelop repo git status:(ansi reset)'; git status; hr-line
+  print $'(ansi g)Redevelop repo git status:(ansi rst)'; git status; hr-line
   git remote -v
-  print $'Current branch: (ansi g)($current)(ansi reset)'
+  print $'Current branch: (ansi g)($current)(ansi rst)'
   git push deploy $current -f
 }

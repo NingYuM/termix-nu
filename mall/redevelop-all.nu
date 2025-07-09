@@ -28,7 +28,7 @@ export def hr-line [
   --with-arrow(-a),
   --color(-c): string = 'g',
 ] {
-  print $'(ansi $color)('─' | repeat $width | str join)(if $with_arrow {'>'})(ansi reset)'
+  print $'(ansi $color)('─' | repeat $width | str join)(if $with_arrow {'>'})(ansi rst)'
   if $blank_line { char nl }
 }
 
@@ -48,7 +48,7 @@ def main [
   if not (is-installed 'termix') {
     npm i -g @terminus/termix@latest
   }
-  print $'(ansi pr) Termix version: (termix --version | str trim) (ansi reset)'; hr-line
+  print $'(ansi pr) Termix version: (termix --version | str trim) (ansi rst)'; hr-line
   # Disable `initial branch name` hints from git
   git config --global init.defaultBranch master
   if (git config --global --get user.name | is-empty) {
@@ -60,7 +60,7 @@ def main [
   print $action.stdout
   if 'stderr' in $action { print $action.stderr }
   if ('redev-app/origin' | path exists) == false or $action.exit_code != 0 {
-    print $'(ansi r)Redevelop repo generating failed! Bye...(ansi reset)'
+    print $'(ansi r)Redevelop repo generating failed! Bye...(ansi rst)'
     exit 1
   }
   # 清除生成的二开仓库里面的git信息
@@ -88,7 +88,7 @@ def main [
   if (git diff-index --quiet HEAD | complete | get exit_code) == 1 {
     git commit -am $commit_msg
   }
-  print $'(ansi g)Redevelop origin repo git status:(ansi reset)'; git status; hr-line
+  print $'(ansi g)Redevelop origin repo git status:(ansi rst)'; git status; hr-line
   # 推送可升级部分增量代码到另外仓库
   git remote add gaia $redev_origin_git; git push gaia $dest_branch --force
 
@@ -99,6 +99,6 @@ def main [
   if (git diff-index --quiet HEAD | complete | get exit_code) == 1 {
     git commit -am $commit_msg
   }
-  print $'(ansi g)Redevelop repo git status:(ansi reset)'; git status; hr-line
+  print $'(ansi g)Redevelop repo git status:(ansi rst)'; git status; hr-line
   git push gaia $dest_branch --force
 }
