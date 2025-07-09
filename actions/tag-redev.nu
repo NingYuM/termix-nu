@@ -32,14 +32,14 @@ export def 'git tag-redev' [
   let redevRepos = ($actionConf | get redevRepos)
   let filteredRepos = ($redevRepos | where $',($group),' =~ $it.group | where enable == true)
   if ($filteredRepos | length) > 0 {
-    print $'(ansi p)Found the following matched repos:(ansi reset)(char nl)(char nl)'
+    print $'(ansi p)Found the following matched repos:(ansi rst)(char nl)(char nl)'
     print $filteredRepos
   } else {
-    print -e $'(ansi r)Can not find any matched repos, bye...(ansi reset)(char nl)'
+    print -e $'(ansi r)Can not find any matched repos, bye...(ansi rst)(char nl)'
     exit $ECODE.MISSING_DEPENDENCY
   }
 
-  print $'Delete tag ($tagName) ---> (ansi r)($delete_tag)(ansi reset)(char nl)'
+  print $'Delete tag ($tagName) ---> (ansi r)($delete_tag)(ansi rst)(char nl)'
   # 不存在则创建临时路径
   if not ($repoPath | path exists) { mkdir $repoPath }
   # 保存当前路径方便后期跳回
@@ -65,13 +65,13 @@ export def 'git tag-redev' [
     # Check the tag status, if exists just recreate it.
     if (has-ref $'refs/tags/($tagName)') {
       git tag -d $tagName; git push origin --delete $tagName
-      print $'Tag: (ansi p)($tagName)(ansi reset) delete successfully!(char nl)'
+      print $'Tag: (ansi p)($tagName)(ansi rst) delete successfully!(char nl)'
     }
 
     if (not $delete_tag) {
       # Add a tag and push it to the remote repo
       git checkout $branch; git tag $tagName -am $TAG_COMMENT; git push origin --tags
-      print $'Tag: (ansi p)($tagName)(ansi reset) created successfully!'
+      print $'Tag: (ansi p)($tagName)(ansi rst) created successfully!'
     }
     hr-line
   }

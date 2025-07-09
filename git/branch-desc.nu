@@ -19,7 +19,7 @@ export def main [
   let localIExists = has-ref i
   let remoteIExists = has-ref origin/i
   if not ($localIExists or $remoteIExists) {
-    print -e $'You do not have an (ansi r)i(ansi reset) branch, branch description query failed, bye...(char nl)'
+    print -e $'You do not have an (ansi r)i(ansi rst) branch, branch description query failed, bye...(char nl)'
     exit $ECODE.MISSING_DEPENDENCY
   }
 
@@ -34,13 +34,13 @@ export def main [
 
   let queryBranch = if ($branch | is-empty) { (git branch --show-current | str trim) } else { $branch }
   let desc = $descriptions | get descriptions? | get -i $queryBranch
-  print $'(char nl)(ansi p)($queryBranch) (ansi reset)分支描述：(char nl)'
+  print $'(char nl)(ansi p)($queryBranch) (ansi rst)分支描述：(char nl)'
   hr-line
-  print $'(char nl)($desc | default $"(ansi grey66)-- No Description --(ansi reset)")(char nl)'
+  print $'(char nl)($desc | default $"(ansi grey66)-- No Description --(ansi rst)")(char nl)'
 
   if ($show_notes) {
     $descriptions.rules | enumerate | each {|rule|
-      print $'(ansi g)($rule.index + 1 | fill --alignment right -w 2)(ansi reset). ($rule.item)'
+      print $'(ansi g)($rule.index + 1 | fill --alignment right -w 2)(ansi rst). ($rule.item)'
     } | str join (char nl)
   }
 }

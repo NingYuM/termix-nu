@@ -33,12 +33,12 @@ export def 'git pull-all' [
       let stat = (gstat --no-tag)
       # Just pull if local repo is behind remote
       if ($stat.behind > 0 and $stat.ahead == 0) {
-        print $'(ansi p)Start pulling ($br) branch...(ansi reset)'
+        print $'(ansi p)Start pulling ($br) branch...(ansi rst)'
         git pull; hr-line
       }
       # If local is behind remote and have commits at the same time, do a reset, may be DANGEROUS
       if ($stat.behind > 0 and $stat.ahead > 0) {
-        print $'(ansi p)Start resetting ($alias)/($br) branch...(ansi reset)'
+        print $'(ansi p)Start resetting ($alias)/($br) branch...(ansi rst)'
         git reset --hard $'($alias)/($br)'; hr-line
       }
     }

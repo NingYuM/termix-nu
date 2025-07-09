@@ -32,9 +32,9 @@ export def main [] {
   let allDescribed = ($remoteBranches | where (no-desc $descriptions $it) | str join | str trim | is-empty)
 
   if ($allDescribed) {
-    print $'(char nl) Well done! All Branches have been described in (ansi g)($repo)(ansi reset).(char nl)(char nl)'
+    print $'(char nl) Well done! All Branches have been described in (ansi g)($repo)(ansi rst).(char nl)(char nl)'
   } else {
-    print $'(ansi p)(char nl)  Branches that do not have a description in (ansi g)($repo)(ansi reset): (char nl)(ansi reset)'
+    print $'(ansi p)(char nl)  Branches that do not have a description in (ansi g)($repo)(ansi rst): (char nl)(ansi rst)'
     print ($remoteBranches
       | where (no-desc $descriptions $it)
       | wrap name
@@ -54,7 +54,7 @@ export def main [] {
   )
 
   if ($gone | length) > 0 {
-    print $'(ansi p)(char nl)  Branches that have a description but were(ansi r) removed from remote(ansi reset):(char nl)(ansi reset)'
+    print $'(ansi p)(char nl)  Branches that have a description but were(ansi r) removed from remote(ansi rst):(char nl)(ansi rst)'
     print ($gone | wrap 'name')
   }
 
@@ -70,7 +70,7 @@ export def main [] {
       | reject sync
   )
   if ($gone | length) > 0 {
-    print $'(ansi p)(char nl)  Branches that have sync configs but were(ansi r) removed from remote(ansi reset):(char nl)(ansi reset)'
+    print $'(ansi p)(char nl)  Branches that have sync configs but were(ansi r) removed from remote(ansi rst):(char nl)(ansi rst)'
     print $gone
   }
 

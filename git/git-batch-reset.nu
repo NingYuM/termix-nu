@@ -25,7 +25,7 @@ export def 'git batch-reset' [
   let available = (git branch | into string | lines | par-each -k { str substring 2.. })
   let candidates = if ($branches | is-empty) { $available } else { $dest }
 
-  print $'(char nl)Start to (ansi r)reset ($count) commits(ansi reset) on branches: (char nl)'
+  print $'(char nl)Start to (ansi r)reset ($count) commits(ansi rst) on branches: (char nl)'
   print ($candidates | wrap name)
 
   print $"(char nl)Current branch: ($current)"
@@ -41,7 +41,7 @@ export def 'git batch-reset' [
       git checkout $br
       print (do { (nu -n --no-std-lib -c $'^git reset --hard HEAD~($count)') })
     } else {
-      print $'Branch (ansi r)($br) (ansi reset)not available...(char nl)'
+      print $'Branch (ansi r)($br) (ansi rst)not available...(char nl)'
     }
   }
   git checkout $current

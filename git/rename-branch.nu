@@ -31,15 +31,15 @@ export def 'git branch-rename' [
   let remoteDestExists = has-ref $'($remoteAlias)/($to)'
   # Check if remote dest already exists.
   if ($remoteDestExists) {
-    print -e $'Dest branch (ansi r)($remote)/($to)(ansi reset) already exists in the remote, please use another new name...(char nl)'
+    print -e $'Dest branch (ansi r)($remote)/($to)(ansi rst) already exists in the remote, please use another new name...(char nl)'
     exit $ECODE.CONDITION_NOT_SATISFIED
   }
   if ($localDestExists) {
-    print -e $'Dest branch (ansi r)($to)(ansi reset) already exists in local, please use another new name...(char nl)'
+    print -e $'Dest branch (ansi r)($to)(ansi rst) already exists in local, please use another new name...(char nl)'
     exit $ECODE.CONDITION_NOT_SATISFIED
   }
   if not ($remoteSrcExists or $localSrcExists) {
-    print -e $'Branch (ansi r)($from) (ansi reset)does not exist in both remote and local, bye...(char nl)'
+    print -e $'Branch (ansi r)($from) (ansi rst)does not exist in both remote and local, bye...(char nl)'
     exit $ECODE.CONDITION_NOT_SATISFIED
   }
 
@@ -49,12 +49,12 @@ export def 'git branch-rename' [
     git stash save 'Stash before running git-batch-exec'
   }
 
-  print $'(ansi g)Going to rename branch from ($from) to ($to)(ansi reset)'; hr-line
+  print $'(ansi g)Going to rename branch from ($from) to ($to)(ansi rst)'; hr-line
   # Pull the branch to local if not exist
   if ($localSrcExists) {
     git checkout $from
   } else {
-    print $'Branch (ansi r)($from) (ansi reset)not exist in local, will pull from remote...(char nl)'
+    print $'Branch (ansi r)($from) (ansi rst)not exist in local, will pull from remote...(char nl)'
     git checkout $'($remoteAlias)/($from)' -b $from
   }
   # Rename, push to remote and ...

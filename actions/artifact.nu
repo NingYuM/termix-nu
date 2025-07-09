@@ -70,14 +70,14 @@ export def artifacts [
   let checkEnv = {|did|
       if ($'($did)' != '0') { return }
       if ($dest_env | is-empty) {
-        print -e $'(ansi r)Please specify the dest environment to deploy the artifact by --dest-env/-e, such as DEV,TEST,STAGING,PROD, etc.(ansi reset)'
+        print -e $'(ansi r)Please specify the dest environment to deploy the artifact by --dest-env/-e, such as DEV,TEST,STAGING,PROD, etc.(ansi rst)'
         exit $ECODE.INVALID_PARAMETER
       }
     }
 
   let checkVersion = {
       if ($version | is-empty) {
-        print -e $'(ansi r)Please specify the version of the artifact to process by --version/-v...(ansi reset)'
+        print -e $'(ansi r)Please specify the version of the artifact to process by --version/-v...(ansi rst)'
         exit $ECODE.INVALID_PARAMETER
       }
     }
@@ -95,7 +95,7 @@ export def artifacts [
                        --version $version --to $to --deploy-group $deploy_group --no-deploy=$no_deploy)
     }
     _ => {
-      print -e $'Unsupported action: (ansi r)($action)(ansi reset), supported actions are: (ansi g)($SUPPORTED_ACTIONS | str join ", ")(ansi reset)'
+      print -e $'Unsupported action: (ansi r)($action)(ansi rst), supported actions are: (ansi g)($SUPPORTED_ACTIONS | str join ", ")(ansi rst)'
       exit $ECODE.INVALID_PARAMETER
     }
   }
@@ -146,7 +146,7 @@ export def fzf-preview [
     artifact => { preview-artifact $selected }
     release => { preview-trantor-release $selected }
     group => { preview-group $selected --options $options }
-    _ => { print -e $'Unsupported preview type: (ansi r)($type)(ansi reset)' }
+    _ => { print -e $'Unsupported preview type: (ansi r)($type)(ansi rst)' }
   }
 }
 
@@ -155,7 +155,7 @@ def preview-group [
   mode: string,         # The selected deploy mode or group to preview
   --options: string,    # The extra options to preview the selected item, each option is separated by `+++`
 ] {
-  print $'You are going to deploy the application group: (ansi g)($mode)(ansi reset).'; hr-line
+  print $'You are going to deploy the application group: (ansi g)($mode)(ansi rst).'; hr-line
   let previewOptions = $options | split column '+++' | rename projectId releaseID workspace orgAlias host | into record
   let host = $previewOptions.host
   let query = $previewOptions | reject host | merge { mode: $mode } | url build-query
@@ -202,7 +202,7 @@ def --env load-art-conf [] {
   # TODO: Validate the artifact settings
   let checkUniqDefault = {|type|
     if ($artConf | get $type | values | default false default | where default == true | length) > 1 {
-      print -e $'(ansi r)Multiple default ($type) found, make sure that you have at most one default ($type) in .termixrc.(ansi reset)'
+      print -e $'(ansi r)Multiple default ($type) found, make sure that you have at most one default ($type) in .termixrc.(ansi rst)'
       exit $ECODE.INVALID_PARAMETER
     }
   }
@@ -222,10 +222,10 @@ def pack-artifact [
   if $need_confirm { confirm-pack $version $setting }
   let matches = query-release-by-version $version $setting --is-app
   if ($matches | is-empty) {
-    print $'No artifact found with version (ansi g)($version)(ansi reset) in project ID ($setting.projectId), please check it and try again...'
+    print $'No artifact found with version (ansi g)($version)(ansi rst) in project ID ($setting.projectId), please check it and try again...'
     return
   }
-  print $'Found the following (ansi g)APP(ansi reset) artifact to pack:'; hr-line
+  print $'Found the following (ansi g)APP(ansi rst) artifact to pack:'; hr-line
   $matches | print
 
   let projectArtifactVer = get-project-artifact-version $version
@@ -233,7 +233,7 @@ def pack-artifact [
   if ($destMatches | is-empty) {
     create-project-artifact $projectArtifactVer $matches.0 $setting; return
   } else {
-    print $'Artifact of version (ansi g)($projectArtifactVer)(ansi reset) already exists in dest project ID (ansi g)($setting.projectId)(ansi reset):(char nl)'
+    print $'Artifact of version (ansi g)($projectArtifactVer)(ansi rst) already exists in dest project ID (ansi g)($setting.projectId)(ansi rst):(char nl)'
     print $destMatches
   }
 }
@@ -268,7 +268,7 @@ def validate-pack-setting [
   }
 
   if ($setting | compact | is-empty) {
-    print -e $'(ansi r)No source config found to pack the app artifact, bye...(ansi reset)'
+    print -e $'(ansi r)No source config found to pack the app artifact, bye...(ansi rst)'
     exit $ECODE.INVALID_PARAMETER
   }
   mut setting = ($artConf.settings | merge $setting.0 | default $ERDA_HOST erdaHost)
@@ -286,10 +286,10 @@ def confirm-pack [
   let option = ($setting | select -i ...$SELECT_FIELDS)
   hr-line 60 -c grey66; print $option; hr-line 60 -c grey66
   print $'Are you sure to continue? '
-  let confirm = input $'Please input (ansi p)($version)(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
+  let confirm = input $'Please input (ansi p)($version)(ansi rst) to continue and (ansi p)q(ansi rst) to quit: '
   if $confirm == 'q' { print $'Artifact packing cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $confirm != $version {
-    print -e $'Your input (ansi p)($confirm)(ansi reset) does not match (ansi p)($version)(ansi reset), bye...'
+    print -e $'Your input (ansi p)($confirm)(ansi rst) does not match (ansi p)($version)(ansi rst), bye...'
     exit $ECODE.INVALID_PARAMETER
   }
 }
@@ -316,10 +316,10 @@ def confirm-produce [
   let option = ($setting | reject -i username password)
   hr-line 60 -c grey66; print $option; hr-line 60 -c grey66
   print $'Are you sure to continue? '
-  let confirm = input $'Please input (ansi p)($setting.branch)(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
+  let confirm = input $'Please input (ansi p)($setting.branch)(ansi rst) to continue and (ansi p)q(ansi rst) to quit: '
   if $confirm == 'q' { print $'Artifacts creating cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $confirm != $setting.branch {
-    print -e $'Your input (ansi p)($confirm)(ansi reset) does not match (ansi p)($setting.branch)(ansi reset), bye...'
+    print -e $'Your input (ansi p)($confirm)(ansi rst) does not match (ansi p)($setting.branch)(ansi rst), bye...'
     exit $ECODE.INVALID_PARAMETER
   }
 }
@@ -334,7 +334,7 @@ def confirm-consume [
   let msg = if $no_deploy {
       $'You are going to fetch the artifacts and create deploy order with the following config:'
     } else {
-      $'You are going to fetch the artifacts and (ansi r)DEPLOY(ansi reset) them with the following config:'
+      $'You are going to fetch the artifacts and (ansi r)DEPLOY(ansi rst) them with the following config:'
     }
   print $msg
   let setting = {
@@ -343,10 +343,10 @@ def confirm-consume [
     }
   hr-line 60 -c grey66; print ($setting | table -e); hr-line 60 -c grey66
   print $'Are you sure to continue? '
-  let confirm = input $'Please input (ansi p)($version)(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
+  let confirm = input $'Please input (ansi p)($version)(ansi rst) to continue and (ansi p)q(ansi rst) to quit: '
   if $confirm == 'q' { print $'Operation cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $confirm != $version {
-    print -e $'Your input (ansi p)($confirm)(ansi reset) does not match (ansi p)($version)(ansi reset), bye...'
+    print -e $'Your input (ansi p)($confirm)(ansi rst) does not match (ansi p)($version)(ansi rst), bye...'
     exit $ECODE.INVALID_PARAMETER
   }
 }
@@ -363,7 +363,7 @@ def confirm-deploy [
   let msg = if $no_deploy {
       $'You are going to create deploy order from ($version) at ($destEnv) with the following config:'
     } else {
-      $'You are going to (ansi r)DEPLOY ($version) to ($destEnv)(ansi reset) with the following config:'
+      $'You are going to (ansi r)DEPLOY ($version) to ($destEnv)(ansi rst) with the following config:'
     }
   print $msg
   let setting = {
@@ -372,10 +372,10 @@ def confirm-deploy [
     }
   hr-line 60 -c grey66; print ($setting | table -e); hr-line 60 -c grey66
   print $'Are you sure to continue? '
-  let confirm = input $'Please input (ansi p)($version)(ansi reset) to continue and (ansi p)q(ansi reset) to quit: '
+  let confirm = input $'Please input (ansi p)($version)(ansi rst) to continue and (ansi p)q(ansi rst) to quit: '
   if $confirm == 'q' { print $'Operation cancelled, Bye...'; exit $ECODE.SUCCESS }
   if $confirm != $version {
-    print -e $'Your input (ansi p)($confirm)(ansi reset) does not match (ansi p)($version)(ansi reset), bye...'
+    print -e $'Your input (ansi p)($confirm)(ansi rst) does not match (ansi p)($version)(ansi rst), bye...'
     exit $ECODE.INVALID_PARAMETER
   }
 }
@@ -393,7 +393,7 @@ def validate-produce-setting [
   }
 
   if ($setting | compact | is-empty) {
-    print $'(ansi r)No source config found to build or download the artifact, bye...(ansi reset)'
+    print $'(ansi r)No source config found to build or download the artifact, bye...(ansi rst)'
     exit $ECODE.INVALID_PARAMETER
   }
   mut setting = ($artConf.settings | merge $setting.0 | default $ERDA_HOST erdaHost)
@@ -443,7 +443,7 @@ def consume-artifact [
   if ($destMatches | is-empty) {
     upload-artifact $version $dest $destSetting
   } else {
-    print $'Artifact of version (ansi g)($version)(ansi reset) already exists in dest project ID (ansi g)($destPID)(ansi reset):(char nl)'
+    print $'Artifact of version (ansi g)($version)(ansi rst) already exists in dest project ID (ansi g)($destPID)(ansi rst):(char nl)'
     print $destMatches
   }
   let selectedRelease = query-release-by-version $version $destSetting
@@ -463,7 +463,7 @@ def consume-trantor-artifact [
   let metaPath = $'(get-tmp-path)/($RELEASE_META_PATH)/releases.json'
   let auth = get-erda-auth $destSetting.erdaHost | str replace 'cookie: ' ''
   let selected = open $metaPath | where metadata?.erda_release_version? == $version | get 0
-  print $'You are going to consume the Trantor artifact: (ansi g)($version)(ansi reset)'; hr-line
+  print $'You are going to consume the Trantor artifact: (ansi g)($version)(ansi rst)'; hr-line
   $selected | reject -i metadata.file_hashes metadata.changelog | table -e | print
   let preCheck = query-release-by-version $version $destSetting
   if ($preCheck | is-empty) {
@@ -477,7 +477,7 @@ def consume-trantor-artifact [
         --non-interactive --output-format json
       ) | complete
     let pipelineId = $pipeline.stdout | from json | get pipeline_id
-    print $'(char nl)Building artifact with pipeline ID: (ansi g)($pipelineId)(ansi reset)'
+    print $'(char nl)Building artifact with pipeline ID: (ansi g)($pipelineId)(ansi rst)'
     query-cicd-by-id ($pipelineId | into int) --watch --host $destSetting.erdaHost
   }
   let selectedRelease = query-release-by-version $version $destSetting
@@ -498,7 +498,7 @@ def validate-consume-setting [
   if not ($deploy and ($doid | is-not-empty)) {
     let destEnv = $destEnv | str upcase
     if $destEnv not-in $VALID_ENV {
-      print -e $'Invalid dest environment: (ansi r)($destEnv)(ansi reset), supported environments are: ($VALID_ENV | str join ", ")'
+      print -e $'Invalid dest environment: (ansi r)($destEnv)(ansi rst), supported environments are: ($VALID_ENV | str join ", ")'
       exit $ECODE.INVALID_PARAMETER
     }
   }
@@ -510,7 +510,7 @@ def validate-consume-setting [
   }
 
   if ($setting | compact | is-empty) {
-    print -e $'(ansi r)No destination config found to deploy the artifact, bye...(ansi reset)'
+    print -e $'(ansi r)No destination config found to deploy the artifact, bye...(ansi rst)'
     exit $ECODE.INVALID_PARAMETER
   }
   mut setting = ($artConf.settings | merge $setting.0 | default $ERDA_HOST erdaHost)
@@ -531,7 +531,7 @@ def deploy-artifact [
   --deploy-group(-g): string, # The app group to deploy for the specified artifact, `all` by default
 ] {
   let destEnv = $dest_env | default '' | str upcase
-  if ($destEnv | is-not-empty) { print $'Deploy artifact to (ansi g)($destEnv)(ansi reset)'; hr-line }
+  if ($destEnv | is-not-empty) { print $'Deploy artifact to (ansi g)($destEnv)(ansi rst)'; hr-line }
   let srcSetting = validate-produce-setting --from $from
   mut version = $version
   if $combine {
@@ -540,13 +540,13 @@ def deploy-artifact [
   }
   let destSetting = validate-consume-setting $destEnv --to $to --deploy-group $deploy_group --no-deploy=$no_deploy --deploy --doid $doid
   if (not ($doid | is-empty)) and (not $no_deploy) {
-    print $'You are going to deploy the artifact with deploy order ID: (ansi g)($doid)(ansi reset)'
+    print $'You are going to deploy the artifact with deploy order ID: (ansi g)($doid)(ansi rst)'
     polling-artifact-deploy $doid $destSetting
     return
   }
   let version = if ($version | is-empty) { select-artifact-by-fzf $destSetting } else { $version }
   if ($version | is-empty) {
-    print -e $'(ansi grey66)No artifact version selected, deploy cancelled, bye...(ansi reset)'
+    print -e $'(ansi grey66)No artifact version selected, deploy cancelled, bye...(ansi rst)'
     exit $ECODE.SUCCESS
   }
   if $combine {
@@ -627,7 +627,7 @@ def polling-artifact-deploy [
   load-erda-credentials $destSetting
   let deploy = http post -e --headers (get-erda-auth $host --type nu) --content-type application/json $deployUrl {}
   if not ($deploy.success) {
-    print $'Deployment started failed with error: (ansi r)($deploy.err.msg)(ansi reset)'
+    print $'Deployment started failed with error: (ansi r)($deploy.err.msg)(ansi rst)'
     return
   }
   print 'Deployment has been started successfully!'
@@ -647,15 +647,15 @@ def polling-artifact-deploy [
     let groupCancelled = $groupStatus | any {|it| $it == 'CANCELED' }
     let groupUnfinished = $groupStatus | any {|it| $it in $UNFINISHED_STATUS }
     let indicator = if $groupSuccess {
-        $'(ansi g)✓(ansi reset)  Deploy (ansi g)($apps)(ansi reset) Finished Successfully!'
+        $'(ansi g)✓(ansi rst)  Deploy (ansi g)($apps)(ansi rst) Finished Successfully!'
       } else if $groupFailed {
-        $'(ansi y)⚠(ansi reset)  Deploy (ansi y)($apps)(ansi reset) Failed!'
+        $'(ansi y)⚠(ansi rst)  Deploy (ansi y)($apps)(ansi rst) Failed!'
       } else if $groupCancelled {
-        $'(ansi y)👻(ansi reset) Deploy (ansi y)($apps)(ansi reset) Was cancelled!'
+        $'(ansi y)👻(ansi rst) Deploy (ansi y)($apps)(ansi rst) Was cancelled!'
       } else if $groupUnfinished {
-        $'(ansi pb)🪄(ansi reset) Artifact group (ansi g)[($apps)](ansi reset) is being deployed ...'
+        $'(ansi pb)🪄(ansi rst) Artifact group (ansi g)[($apps)](ansi rst) is being deployed ...'
       } else {
-        $'(ansi r)✗(ansi reset) Unknown Status: ($groupStatus | str join ",")'
+        $'(ansi r)✗(ansi rst) Unknown Status: ($groupStatus | str join ",")'
       }
 
     print $'Group ($g.index + 1)/($total): ($indicator)'
@@ -673,7 +673,7 @@ def polling-artifact-deploy [
         $keepPolling = true
       } else {
         $keepPolling = false
-        print $'(char nl)Artifact group deploy finished with status: (ansi g)($status | str join ",")(ansi reset).'
+        print $'(char nl)Artifact group deploy finished with status: (ansi g)($status | str join ",")(ansi rst).'
         hr-line 60 -c grey66
       }
       sleep $DEPLOY_POLLING_INTERVAL
@@ -690,7 +690,7 @@ def polling-artifact-deploy [
   # Refresh the query result and print the final time cost
   let detail = get-artifact-deploy-detail $doid $destSetting
   let duration = ($detail.data.updatedAt | into datetime) - ($detail.data.startedAt | into datetime)
-  print $'(char nl)Artifacts deploy finished with status: (ansi p)($detail.data.status)(ansi reset)! Total time cost: ($duration)'
+  print $'(char nl)Artifacts deploy finished with status: (ansi p)($detail.data.status)(ansi rst)! Total time cost: ($duration)'
 }
 
 # Get artifact deploy detail by deploy order ID
@@ -716,7 +716,7 @@ def select-deploy-mode-by-fzf [
   modes: record,            # The deploy modes to select
   previewOptions: record,   # The preview options to query and render the preview detail panel
 ] {
-  print $'(ansi g)Tip: Use `Tab` and `Shift + Tab` to toggle select items, and `Enter` to confirm(ansi reset)'
+  print $'(ansi g)Tip: Use `Tab` and `Shift + Tab` to toggle select items, and `Enter` to confirm(ansi rst)'
   let title = $'Select the application group to deploy:'
   let options = $previewOptions | get -i projectId releaseID workspace orgAlias host | str join '+++'
   let PREVIEW_CMD = $"nu actions/artifact.nu {} group --options ($options)"
@@ -748,18 +748,18 @@ def create-deploy-order [
   let inexistGroup = $deployGroup | where {|it| $it not-in ($modes | columns) }
   # Use specified deploy group or select the deploy mode
   mut selectedMode = if ($inexistGroup | is-empty) { $deployGroup } else {
-      print $'You are trying to deploy APP group ($deployGroup), however, (ansi r)($inexistGroup)(ansi reset) does NOT exist, Please select the group manually.(char nl)'
+      print $'You are trying to deploy APP group ($deployGroup), however, (ansi r)($inexistGroup)(ansi rst) does NOT exist, Please select the group manually.(char nl)'
       select-deploy-mode-by-fzf $modes $previewOptions
     }
 
   if ($selectedMode | is-empty) {
-    print $"(ansi grey66)You didn't select anything, deploy cancelled, bye...(ansi reset)"; exit $ECODE.SUCCESS
+    print $"(ansi grey66)You didn't select anything, deploy cancelled, bye...(ansi rst)"; exit $ECODE.SUCCESS
   }
   if ($selectedMode | length) > 1 and ('All' in $selectedMode) {
-    print $'You have selected (ansi g)`All`(ansi reset) group with other groups, and (ansi r)`All` will be ignored!(ansi reset)'
+    print $'You have selected (ansi g)`All`(ansi rst) group with other groups, and (ansi r)`All` will be ignored!(ansi rst)'
     $selectedMode = ($selectedMode | where {|it| $it != 'All' })
   }
-  print $'You are going to deploy the APP group: (ansi g)($selectedMode)(ansi reset).'
+  print $'You are going to deploy the APP group: (ansi g)($selectedMode)(ansi rst).'
   print $'The following applications will be deployed:(char nl)'
   mut apps = []
   let columns = [applicationName createdAt releaseName version]
@@ -778,9 +778,9 @@ def create-deploy-order [
   let do = http post -e --headers (get-erda-auth $host --type nu) --content-type application/json $doCreateUrl $doPayload
   if not $do.success {
     print -e $'Failed to create deploy order with error message:'
-    print -e $'(ansi r)($do.err.msg)(ansi reset)'
+    print -e $'(ansi r)($do.err.msg)(ansi rst)'
   } else {
-    print $'Deploy order has been created successfully with ID (ansi g)($do.data.id)(ansi reset)'
+    print $'Deploy order has been created successfully with ID (ansi g)($do.data.id)(ansi rst)'
     return $do.data.id
   }
 }
@@ -857,7 +857,7 @@ def query-release-by-version [
   }
 
   if ($filtered | describe) == 'string' and $filtered =~ 'Unauthorized' {
-    print -e $'Failed to query release with error message: (ansi r)($filtered)(ansi reset)'
+    print -e $'Failed to query release with error message: (ansi r)($filtered)(ansi rst)'
     exit $ECODE.AUTH_FAILED
   }
   let matches = if $filtered.success {
@@ -870,9 +870,9 @@ def query-release-by-version [
 
   let releaseType = if $is_app { 'APP Artifact' } else { 'PROJECT Artifact' }
   if ($matches | is-empty) {
-    print $'(char nl)No ($releaseType) found of version (ansi g)($version)(ansi reset) in project (ansi g)($setting.projectName? | default "")@($setting.projectId)(ansi reset)'
+    print $'(char nl)No ($releaseType) found of version (ansi g)($version)(ansi rst) in project (ansi g)($setting.projectName? | default "")@($setting.projectId)(ansi rst)'
   } else {
-    let suffix = if ($setting.projectName | is-empty) { '' } else { $' in (ansi g)($setting.projectName)(ansi reset)' }
+    let suffix = if ($setting.projectName | is-empty) { '' } else { $' in (ansi g)($setting.projectName)(ansi rst)' }
     print $'Found matched artifact release($suffix):(char nl)'; print $matches
   }
   $matches
@@ -891,7 +891,7 @@ def download-artifact-from-release [
   let downloadUrl = $'($host)/api/($srcSetting.orgAlias)/releases/($releaseId)/actions/download'
   let dest = $'($tmp)/($version).zip'
   load-erda-credentials $srcSetting
-  print $'Downloading artifact of version (ansi g)($version)(ansi reset) and releaseId (ansi g)($releaseId)(ansi reset) ...'
+  print $'Downloading artifact of version (ansi g)($version)(ansi rst) and releaseId (ansi g)($releaseId)(ansi rst) ...'
   curl --silent -H (get-erda-auth $host) $downloadUrl -o $dest
   print $'Artifact has been downloaded to ($dest)(char nl)'
   $dest
@@ -918,10 +918,10 @@ def upload-artifact [
   load-erda-credentials $destSetting
   let release = http post -e --headers (get-erda-auth $host --type nu) --content-type application/json $'($releaseUploadUrl)' $payload
   if $release.success {
-    print $'Artifact has been uploaded successfully with version (ansi g)($version)(ansi reset)'
+    print $'Artifact has been uploaded successfully with version (ansi g)($version)(ansi rst)'
   } else {
     print -e $'Failed to upload artifact of version ($version) with error message:'
-    print -e $'(ansi r)($release.err.msg)(ansi reset)'
+    print -e $'(ansi r)($release.err.msg)(ansi rst)'
   }
 }
 
@@ -948,13 +948,13 @@ def create-project-artifact [
 
   let resp = http post -e --headers (get-erda-auth $host --type nu) --content-type application/json $'($artifactCreateUrl)' $payload
   if $resp.success {
-    print $'Project artifact has been created successfully with version (ansi g)($version)(ansi reset)'; hr-line
+    print $'Project artifact has been created successfully with version (ansi g)($version)(ansi rst)'; hr-line
     let matches = query-release-by-version $version $destSetting
     $matches | print
     return $matches
   }
   print -e $'Failed to create project artifact of version ($version) with error message:'
-  print -e $'(ansi r)($resp.err.msg)(ansi reset)'
+  print -e $'(ansi r)($resp.err.msg)(ansi rst)'
   exit $ECODE.SERVER_ERROR
 }
 
@@ -968,7 +968,7 @@ def upload-file [
   load-erda-credentials $destSetting
   let upload = curl --silent -H (get-erda-auth $host) -F $'file=@($file)' $uploadUrl | from json
   if $upload.success {
-    print $'File (ansi g)($file)(ansi reset) has been uploaded successfully to Erda Cloud'
+    print $'File (ansi g)($file)(ansi rst) has been uploaded successfully to Erda Cloud'
     return { fileID: $upload.data.uuid, url: $upload.data.url, creator: $upload.data.creator }
   }
   print -e $'Failed to upload file ($file) to Erda Cloud with error message:'

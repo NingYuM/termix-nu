@@ -48,7 +48,7 @@ export def --wrapped fast-brew [
   ...rest,    # Other brew commands and options
 ] {
   if not (is-installed brew) {
-    print $'(ansi p)Homebrew is not installed, please install it by running:(ansi reset)'; hr-line
+    print $'(ansi p)Homebrew is not installed, please install it by running:(ansi rst)'; hr-line
     print '/bin/bash -c "$(curl -fsSL https://mirrors.ustc.edu.cn/misc/brew-install.sh)"'
     print -n (char nl)
     exit $ECODE.MISSING_BINARY

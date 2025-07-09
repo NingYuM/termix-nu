@@ -21,7 +21,7 @@ export def 'git stat' [
   $env.config.table.mode = 'light'
 
   if not $summary_only {
-    print $'(ansi p)(char nl)Modification stat info for each commit: (ansi reset)(char nl)'
+    print $'(ansi p)(char nl)Modification stat info for each commit: (ansi rst)(char nl)'
   }
   cd $env.JUST_INVOKE_DIR
   mut args = ['--pretty=%h %aN' '--no-merges']

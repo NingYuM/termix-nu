@@ -20,7 +20,7 @@ def main [
     let filtered = $prs | where ($it.mergedAt | into datetime) >= $startPRMergedAt
     $filtered | drop | each {|it|
         if ($it.milestone | is-empty) {
-            print $'Try to add milestone (ansi p)($milestone)(ansi reset) to PR (ansi p)($it.url)(ansi reset) ...'
+            print $'Try to add milestone (ansi p)($milestone)(ansi rst) to PR (ansi p)($it.url)(ansi rst) ...'
             gh pr edit $it.url --milestone $milestone
         }
     } | ignore

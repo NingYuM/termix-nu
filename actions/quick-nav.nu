@@ -23,16 +23,16 @@ export def go [
   let navKey = ($matches | get key).0
   let url = $allNavs | get $navKey
   if ($url | str starts-with 'http') {
-    print $'Going to open matched url: (ansi g)($url)(ansi reset) in default browser...(char nl)'
+    print $'Going to open matched url: (ansi g)($url)(ansi rst) in default browser...(char nl)'
     # Use powershell command to open url in default browser for Windows
     if (windows?) { ^powershell -c $'Start-Process ($url)' } else { ^open $url }
   } else {
-    print -e $'(ansi r)Invalid nav url, bye...(char nl)(ansi reset)'
+    print -e $'(ansi r)Invalid nav url, bye...(char nl)(ansi rst)'
   }
 }
 
 export def show-navs [] {
-  print $'(ansi pb)(char nl)Available Nav Items:(char nl)(char nl)(ansi reset)'
+  print $'(ansi pb)(char nl)Available Nav Items:(char nl)(char nl)(ansi rst)'
   print (merge-navs | transpose | rename key url)
   exit $ECODE.SUCCESS
 }

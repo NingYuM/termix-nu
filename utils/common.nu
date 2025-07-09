@@ -57,7 +57,7 @@ export def ellie [] {
     " !_-(_\\",
   ]
 
-  $ellie | str join "\n" | $"(ansi green)($in)(ansi reset)"
+  $ellie | str join "\n" | $"(ansi green)($in)(ansi rst)"
 }
 
 # Termix.toml config file path
@@ -294,10 +294,10 @@ export def get-tmp-path [] {
     $DEFAULT_TMP
   } else { $tmpDir }
   if not ($tmpPath | path exists) {
-    print $'(ansi r)Path ($tmpPath) does not exist, please create it and try again...(ansi reset)(char nl)(char nl)'
+    print $'(ansi r)Path ($tmpPath) does not exist, please create it and try again...(ansi rst)(char nl)(char nl)'
     exit $ECODE.MISSING_DEPENDENCY
   }
-  # print $'Using (ansi g)($tmpPath)(ansi reset) as the temporary directory...(char nl)'
+  # print $'Using (ansi g)($tmpPath)(ansi rst) as the temporary directory...(char nl)'
   $tmpPath
 }
 
@@ -403,14 +403,14 @@ export def git-check [
   cd $dest
   let isGitInstalled = (which git | length) > 0
   if (not $isGitInstalled) {
-    print $'You should (ansi r)INSTALL git(ansi reset) first to run this command, bye...'
+    print $'You should (ansi r)INSTALL git(ansi rst) first to run this command, bye...'
     exit $ECODE.MISSING_BINARY
   }
   # If we don't need repo check just quit now
   if ($check_repo != 0) {
     let checkRepo = (do -i { git rev-parse --is-inside-work-tree } | complete)
     if not ($checkRepo.stdout =~ 'true') {
-      print $'Current directory is (ansi r)NOT(ansi reset) a git repo, bye...(char nl)'
+      print $'Current directory is (ansi r)NOT(ansi rst) a git repo, bye...(char nl)'
       exit $ECODE.CONDITION_NOT_SATISFIED
     }
   }
@@ -430,9 +430,9 @@ export def log [
   name: string,
   var: any,
 ] {
-  print $'(ansi g)(build-line 18)> Debug Begin: ($name) <(build-line 18)(ansi reset)'
+  print $'(ansi g)(build-line 18)> Debug Begin: ($name) <(build-line 18)(ansi rst)'
   print $var
-  print $'(ansi g)(build-line 20)>  Debug End <(build-line 20)(char nl)(ansi reset)'
+  print $'(ansi g)(build-line 20)>  Debug End <(build-line 20)(char nl)(ansi rst)'
 }
 
 export def hr-line [
@@ -441,7 +441,7 @@ export def hr-line [
   --with-arrow(-a),
   --color(-c): string = 'g',
 ] {
-  print $'(ansi $color)(build-line $width)(if $with_arrow {'>'})(ansi reset)'
+  print $'(ansi $color)(build-line $width)(if $with_arrow {'>'})(ansi rst)'
   if $blank_line { print -n (char nl) }
 }
 

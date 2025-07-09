@@ -57,7 +57,7 @@ let poshTheme = if (isWindows) { $'($poshDir)/themes/' } else { $'($poshDir)/sha
 # Recommend themes: zash*/space/robbyrussel/powerline/powerlevel10k_lean*/material/half-life/lambda
 # Recommend double lines: amro/pure/spaceship
 $env.PROMPT_COMMAND = { oh-my-posh prompt print primary --config $'($poshTheme)/zash.omp.json' }
-$env.PROMPT_INDICATOR = $"(ansi y)$> (ansi reset)"
+$env.PROMPT_INDICATOR = $"(ansi y)$> (ansi rst)"
 
 
 # -------------------- Custom Commands -------------------------
@@ -107,8 +107,8 @@ def q-deps [] {
       let html = http get $'https://github.com/hustcer/($it)/network/dependents'
       print -n (char nl)
       let count = $html | query web --query '#dependents a.selected' | get 0.3 | str trim | lines | first
-      print $'($it) (ansi g)($count)(ansi reset) deps:'
-      print $'(ansi g)-------------------------(ansi reset)'
+      print $'($it) (ansi g)($count)(ansi rst) deps:'
+      print $'(ansi g)-------------------------(ansi rst)'
       $html
         | query web --query '#dependents a[data-hovercard-url]'
         | each { get 0 }
@@ -164,7 +164,7 @@ def 'get help' [] {
     | each {|c|
       let search_terms = if ($c.search_terms == "") {""} else {$"\(($c.search_terms))"}
       let category = if ($c.category == "") {""} else {$"\(Category: ($c.category))"}
-      $"(ansi default)($c.name?):(ansi light_blue) ($c.description?) (ansi cyan)($search_terms) ($category)(ansi reset)" }
+      $"(ansi default)($c.name?):(ansi light_blue) ($c.description?) (ansi cyan)($search_terms) ($category)(ansi rst)" }
     | to text
     | fzf --ansi --tiebreak=begin,end,chunk --exact --preview="echo -n {} | nu --stdin -c 'help ($in | parse \"{c}:{u}\" | get c.0)'" --bind 'ctrl-/:change-preview-window(right,70%|right)'
   }
@@ -177,7 +177,7 @@ export def hr-line [
   --blank-line(-b),
   --with-arrow(-a),
 ] {
-  print $'(ansi $color)('─' | repeat $width | str join)(if $with_arrow {'>'})(ansi reset)'
+  print $'(ansi $color)('─' | repeat $width | str join)(if $with_arrow {'>'})(ansi rst)'
   if $blank_line { char nl }
 }
 
@@ -208,7 +208,7 @@ def ua [] {
   ]
   for p in $repos {
     z $p;
-    print $'Pull all from (ansi p)($env.PWD)(ansi reset):'
+    print $'Pull all from (ansi p)($env.PWD)(ansi rst):'
     hr-line; t pull-all; print (char nl)
   }
 }
@@ -256,14 +256,14 @@ def pretty-oss [
 
   let path = $raw | sort-by oname | first
   let totalSize = $raw | reduce -f 0mb {|it, acc| $it.size + $acc }
-  print $'(char nl)Total Size: (ansi p)($totalSize)(ansi reset) of (ansi p)($path.oname)(ansi reset)'; hr-line
+  print $'(char nl)Total Size: (ansi p)($totalSize)(ansi rst) of (ansi p)($path.oname)(ansi rst)'; hr-line
   $raw
       | select name size modified
       | sort-by -r ([$sort_by] | into cell-path)
       | print
 
   if ($name | is-not-empty) {
-    print $'(char nl)Details of (ansi p)($name)(ansi reset):'; hr-line
+    print $'(char nl)Details of (ansi p)($name)(ansi rst):'; hr-line
     $raw | where name == $name
       | select name oname size modified
       | upsert url {|it| $it.oname | oname-to-url }
@@ -342,7 +342,7 @@ def nu-fetch-latest [] {
     | aria2c -i -
   mkdir nu-latest; tar xvf nu-*.tar.gz --directory=nu-latest
   cp -r nu-latest/**/* .; rm -rf nu-*
-  print $'(char nl)Update to Nu: (ansi g)(./nu --version)(ansi reset)'
+  print $'(char nl)Update to Nu: (ansi g)(./nu --version)(ansi rst)'
 }
 
 # 将每日構建发布的最新版 Nu 二进制文件下载到本地并安装到 ~/Applications/nu-nightly/ 目录
@@ -359,7 +359,7 @@ def nu-fetch-nightly [] {
     | aria2c -i -
   mkdir nu-nightly; tar xvf nu-*.tar.gz --directory=nu-nightly
   cp -r nu-nightly/**/* .; rm -rf nu-*
-  print $'(char nl)Update to Nu: (ansi g)(./nu --version)(ansi reset)'
+  print $'(char nl)Update to Nu: (ansi g)(./nu --version)(ansi rst)'
 }
 
 # Show Nu changed configs
@@ -532,10 +532,10 @@ def --env menv [
     } else { $profile }
   if ($profile | is-empty) { return }
   let setting = $envs | get -i $profile
-  if ($setting | is-empty) { print $'Environment Profile (ansi r)($profile)(ansi reset) not found.'; return }
+  if ($setting | is-empty) { print $'Environment Profile (ansi r)($profile)(ansi rst) not found.'; return }
   if not $silent { print $setting }
   load-env $setting; cd $currentDir
-  print $'Eniroment of (ansi g)($profile)(ansi reset) loaded.'
+  print $'Eniroment of (ansi g)($profile)(ansi rst) loaded.'
 }
 
 # Load environment variables from envio profile.
@@ -587,7 +587,7 @@ def nu-sloc [] {
   let total = ($stats | length)
   let avg = ($lines / $total | math round)
 
-  print $'(char nl)(ansi pr) SLOC Summary for Nushell (ansi reset)(char nl)'
+  print $'(char nl)(ansi pr) SLOC Summary for Nushell (ansi rst)(char nl)'
   print { 'Total Lines': $lines, 'Blank Lines': $blank, Comments: $comments, 'Total Nu Scripts': $total, 'Avg Lines/Script': $avg }
   print $'(char nl)Source file stat detail:'
   print $stats

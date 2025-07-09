@@ -24,7 +24,7 @@ export def main [
   let cmdToExec = compose-command $cmd
   for d in ($destDirs | where ($it | path exists)) {
     cd $d
-    print $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi reset) in dir ($d):(char nl)'
+    print $'(char nl)Start to run (ansi r)“($cmdToExec)”(ansi rst) in dir ($d):(char nl)'
     nu --no-std-lib -n -c $cmdToExec
     hr-line
   }

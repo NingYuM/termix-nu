@@ -31,7 +31,7 @@ export def 'git sync-branch' [
   let confBr = if $useConfBr == '_current_' { $destBranch } else { 'i' }
 
   if not (has-ref $'origin/($confBr)') {
-    print $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi reset)...(char nl)'
+    print $'Branch (ansi r)($confBr) does not exist in `origin` remote, ignore syncing(ansi rst)...(char nl)'
     exit $ECODE.SUCCESS
   }
 
@@ -53,7 +53,7 @@ export def 'git sync-branch' [
 
   # 如果没有找到对应分支的 push hook 配置则直接退出
   if ($syncDests | length) > 0 {
-    print $'(char nl)Found the following matched dests from (ansi g)`origin/($confBr):.termixrc`(ansi reset):(char nl)'
+    print $'(char nl)Found the following matched dests from (ansi g)`origin/($confBr):.termixrc`(ansi rst):(char nl)'
     print ($syncDests | upsert lock {|it| if ('lock' in $it) { $it.lock } else { '-' }} | move lock --before SYNC)
   } else { exit $ECODE.SUCCESS }
 
@@ -62,14 +62,14 @@ export def 'git sync-branch' [
     let gitUrl = ($pushConf | query json $'repos.($iter.repo).git')
     let navUrl = ($pushConf | query json $'repos.($iter.repo).url')
     if $localOid == $zero {
-      print $'Remove remote branch (ansi p)($iter.dest) of repo ($iter.repo)(ansi reset) -->(char nl)'
+      print $'Remove remote branch (ansi p)($iter.dest) of repo ($iter.repo)(ansi rst) -->(char nl)'
       # You MUST use '--no-verify' to prevent infinite loops!!!
       git push --no-verify $gitUrl $':($iter.dest)'
     } else {
       if not ($syncFrom == null) { do-sync $syncFrom $gitUrl $iter }
     }
     if ($navUrl != '' and $syncFrom != null) {
-      print $'You can check the result from: (ansi g)($navUrl)(ansi reset)'
+      print $'You can check the result from: (ansi g)($navUrl)(ansi rst)'
       hr-line
     }
   } | str join

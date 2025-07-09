@@ -17,9 +17,9 @@ export def git-branch [
   $env.config.table.mode = 'light'
   let path = if ($path | is-empty) { $env.JUST_INVOKE_DIR } else { $path }
   let title = if ($contains | is-empty) {
-      $'(ansi p)(char nl)Last commit info of local branches: (ansi reset)(char nl)'
+      $'(ansi p)(char nl)Last commit info of local branches: (ansi rst)(char nl)'
     } else {
-      $'(char nl)Local branches contain (ansi p)($contains)(ansi reset) in commit messages: (char nl)'
+      $'(char nl)Local branches contain (ansi p)($contains)(ansi rst) in commit messages: (char nl)'
     }
   print $title
   cd $path

@@ -61,7 +61,7 @@ export def working-hours-daily-checking [--debug(-d)] {
   }
   # 非周五、六、日、一直接返回
   if not (($weekday in $messages) or $isMonthEnd or $isLastDay) {
-    print $'Skip notify at (ansi p)($weekday)(ansi reset)...';
+    print $'Skip notify at (ansi p)($weekday)(ansi rst)...';
     exit $ECODE.SUCCESS
   }
   if $isLastDay {
@@ -91,7 +91,7 @@ export def query-hours-by-team-codes [
   mut teams = $confEMP.teams | values | default false ignore | where ignore != true
   if $no_ignore { $teams = ($confEMP.teams | values | default false ignore) }
   if ($teams | get code | is-empty) {
-    print -e $'(ansi r)Please set the `code` field in all `emp.teams`, bye...(char nl)(ansi reset)'
+    print -e $'(ansi r)Please set the `code` field in all `emp.teams`, bye...(char nl)(ansi rst)'
     exit $ECODE.INVALID_PARAMETER
   }
 
@@ -126,7 +126,7 @@ export def query-hours-by-team-codes [
 def --env load-emp-conf [] {
   let empConf = open $'($env.TERMIX_DIR)/.termixrc' | from toml | get -i emp | default null
   if ($empConf | is-empty) {
-    print -e $'(ansi r)Please set `emp` related configs in `($env.TERMIX_DIR)/.termixrc`, bye...(char nl)(ansi reset)'
+    print -e $'(ansi r)Please set `emp` related configs in `($env.TERMIX_DIR)/.termixrc`, bye...(char nl)(ansi rst)'
     exit $ECODE.INVALID_PARAMETER
   }
   $env.EMP_CONF = $empConf
@@ -142,12 +142,12 @@ export def query-monthly-hours-by-team [
   --token(-t): string,  # Token for EMP Portal
 ] {
   if ($month > 12) or ($month < 1) {
-    print -e $'The specified month (ansi r)($month)(ansi reset) should lay in (ansi p)1 ~ 12(char nl)(ansi reset)'
+    print -e $'The specified month (ansi r)($month)(ansi rst) should lay in (ansi p)1 ~ 12(char nl)(ansi rst)'
     exit $ECODE.INVALID_PARAMETER
   }
   # let currentMonth = date now | format date %m | into int
   # if ($month > $currentMonth) {
-  #   print $'(ansi r)The specified month ($month) is greater than the current month ($currentMonth), bye...(char nl)(ansi reset)'
+  #   print $'(ansi r)The specified month ($month) is greater than the current month ($currentMonth), bye...(char nl)(ansi rst)'
   #   exit $ECODE.INVALID_PARAMETER
   # }
   let monday = get-monday
@@ -160,9 +160,9 @@ export def query-monthly-hours-by-team [
   let monthStart = (date now) | format date $'%Y-($iptMonth)-01 00:00:00'
   let monthEnd = if ($month + 1) == 13 { ($monthStart | into datetime) + 31day } else { ((date now) | format date $'%Y-($nextMonth)-01 00:00:00' | into datetime) }
   let monthEnd = $monthEnd - 1sec | format date $_TIME_FMT
-  print $'Query working hours from ($monthStart) to ($monthEnd) for team (ansi p)($team.name)(ansi reset)'
-  let title = $"($team.name) (ansi g)($month)(ansi reset) 月工时填报\(人/天\)"
-  print $"\n-------------------------> (ansi p)($title) <-------------------------(ansi reset)\n"
+  print $'Query working hours from ($monthStart) to ($monthEnd) for team (ansi p)($team.name)(ansi rst)'
+  let title = $"($team.name) (ansi g)($month)(ansi rst) 月工时填报\(人/天\)"
+  print $"\n-------------------------> (ansi p)($title) <-------------------------(ansi rst)\n"
 
   let timeSummaryPayload = {
       params: {
@@ -184,14 +184,14 @@ export def query-monthly-hours-by-team [
         })
       | upsert 剩余应填 { |it| $it.baseProjectWorkTimeSummaryList | where name == '剩余应填' | get 0 | get percentage }
       | upsert 空闲人天 { |it| $it.baseProjectWorkTimeSummaryList | where name == '空闲工时' | get 0 | get percentage }
-      | upsert Name { |it| if $it.空闲人天 > 0 { $'(ansi r)($it.staffBO.name)(ansi reset)' } else { $it.staffBO.name } }
+      | upsert Name { |it| if $it.空闲人天 > 0 { $'(ansi r)($it.staffBO.name)(ansi rst)' } else { $it.staffBO.name } }
       | select Name 理论人天 实际人天 请假人天 剩余应填 空闲人天
       | sort-by -r 空闲人天 Name
     )
 
   if $show_all { $hourSummary | print } else {
     if ($hourSummary | where 空闲人天 > 0 | is-empty) {
-      print $'(ansi g)All filled! (char nl)(ansi reset)'
+      print $'(ansi g)All filled! (char nl)(ansi rst)'
     } else {
       $hourSummary | where 空闲人天 > 0 | print; print (char nl)
     }
@@ -236,7 +236,7 @@ export def query-hours-by-team [
   let sunday = get-sunday --prev=$show_prev
 
   if $silent {
-    print $'Query working hours from ($monday) to ($sunday) for team (ansi p)($team.name)(ansi reset)'
+    print $'Query working hours from ($monday) to ($sunday) for team (ansi p)($team.name)(ansi rst)'
   } else {
     print $'(char nl)Query working hours from ($monday) to ($sunday) --->'
   }
@@ -326,7 +326,7 @@ def handle-working-hours [
   if not $silent {
     print $'(char nl)  (ansi p)'
     print $'-------------------------> ($title) <-------------------------'
-    print $'(ansi reset)(char nl)'
+    print $'(ansi rst)(char nl)'
   }
   let week = [Mon, Tue, Wen, Thu, Fri, Sat, Sun]
   # 当前是一年中的第几周
@@ -368,18 +368,18 @@ def handle-working-hours [
           let calcRemain = ($totalDays - $staffDetail.actual - $staffDetail.leave) * 8
           if $isMonthEnd { $calcRemain } else { $staffDetail.surplus * 8 }
         }
-      | upsert WARN { |it| if ($it.Gap > 0) { $'(ansi r)('*' | fill -a r -w 6 -c $'(char sp)')(ansi reset)' } }
+      | upsert WARN { |it| if ($it.Gap > 0) { $'(ansi r)('*' | fill -a r -w 6 -c $'(char sp)')(ansi rst)' } }
       | sort-by WARN Gap Name
       | reject id
 
   let result = if $show_all { $allMembers } else { $allMembers | where Gap > 0 }
 
-  if ($result | is-empty) { print $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi reset)'; return true }
+  if ($result | is-empty) { print $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi rst)'; return true }
 
   if not $silent { print $result }
   let empSwitchEnv = $env.EMP_WORKING_HOURS_NOTIFY? | default 'off'
   if $notify and $empSwitchEnv == 'off' {
-    print $'WARN: `EMP_WORKING_HOURS_NOTIFY` is (ansi p)off(ansi reset), stop sending notifications...(char nl)'
+    print $'WARN: `EMP_WORKING_HOURS_NOTIFY` is (ansi p)off(ansi rst), stop sending notifications...(char nl)'
     return false
   }
   if $notify and $empSwitchEnv == 'on' {
@@ -422,25 +422,25 @@ def notify-filling-hours [hours: any, --team: record, --debug] {
   let isLastDay = $env.LAST_DAY? == 'on'
   # 非周五、六、日、一直接返回
   if not (($weekday in $messages) or $isMonthEnd or $isLastDay) {
-    print $'Skip notify at (ansi p)($weekday)(ansi reset)...';
+    print $'Skip notify at (ansi p)($weekday)(ansi rst)...';
     return $ECODE.SUCCESS
   }
   let users = $team.users? | default []
   valid-user-mobiles $users
 
   if ($users | is-empty) {
-    print $'(ansi y)No users found in team ($team.name), fallback to get users from API...(char nl)(ansi reset)'
+    print $'(ansi y)No users found in team ($team.name), fallback to get users from API...(char nl)(ansi rst)'
   }
   let DINGTALK_KEY = $'($team.alias | str upcase | str replace -a '-' '_')_DINGTALK'
   if $DINGTALK_KEY not-in $env {
-    print $'(ansi r)Please set the ($DINGTALK_KEY) in environment variable to send DingTalk notifications...(char nl)(ansi reset)'
+    print $'(ansi r)Please set the ($DINGTALK_KEY) in environment variable to send DingTalk notifications...(char nl)(ansi rst)'
     return
   }
   let DINGTALK_AK_SK = $env | get $DINGTALK_KEY | split row ','
   let notifyCandidates = $hours | where Gap > 0
   if $debug { log 'Notify Candidates' $notifyCandidates }
   if ($notifyCandidates | is-empty) {
-    print $'(ansi g) All filled! Skip notify...(char nl)(ansi reset)'
+    print $'(ansi g) All filled! Skip notify...(char nl)(ansi rst)'
     return
   }
 
@@ -467,7 +467,7 @@ def valid-user-mobiles [users: any] {
   for user in $users {
     let valid = $user.mobile | str replace -r '1\d{10}' '' | is-empty
     if not $valid {
-      print $'WARNING: (ansi r)($user.name)(ansi reset) has invalid mobile number (ansi r)($user.mobile)(ansi reset), please check it again...'
+      print $'WARNING: (ansi r)($user.name)(ansi rst) has invalid mobile number (ansi r)($user.mobile)(ansi rst), please check it again...'
     }
   }
 }
@@ -513,12 +513,12 @@ def get-user-auth [
 ] {
   # OpenSSL Check
   if not (is-installed openssl) {
-    print -e $'(ansi r)Please install openssl@3 first by `brew install openssl@3` and try again...(ansi reset)'
+    print -e $'(ansi r)Please install openssl@3 first by `brew install openssl@3` and try again...(ansi rst)'
     exit $ECODE.MISSING_BINARY
   }
   let opensslVer = openssl version | detect columns -n | rename bin ver | get ver.0
   if (is-lower-ver $opensslVer '3.0.0') {
-    print -e $'(ansi r)Openssl v3 or above is required, please install it by `brew install openssl@3` and try again...(ansi reset)'
+    print -e $'(ansi r)Openssl v3 or above is required, please install it by `brew install openssl@3` and try again...(ansi rst)'
     exit $ECODE.MISSING_BINARY
   }
 
@@ -538,8 +538,8 @@ def get-user-auth [
 
   let resp = http post --headers $IAM_HEADER --full --content-type application/json -e $'($iamHost)/iam/api/v1/user/login/account' $payload
   if not $resp.body.success {
-    print -e $'Login failed with error: (ansi r)($resp.body.message)(ansi reset)'
-    print -e $'Please check your auth info at (ansi g)($iamHost)/login(ansi reset)'
+    print -e $'Login failed with error: (ansi r)($resp.body.message)(ansi rst)'
+    print -e $'Please check your auth info at (ansi g)($iamHost)/login(ansi rst)'
     exit $ECODE.AUTH_FAILED
   }
   let user = $resp.body.data.user
@@ -555,11 +555,11 @@ def handle-exception [
   # 未登录或者Cookie过期提示, use `do -i` to ignore 'error: Coercion error'
   do -i {
     if ($res | is-empty) or ($res | get status) == 401 {
-      print -e $'(ansi r)You did`t have permission to call this API !(char nl)(ansi reset)'
+      print -e $'(ansi r)You did`t have permission to call this API !(char nl)(ansi rst)'
       exit $ECODE.AUTH_FAILED
     }
     if (($res | get status) == 500) {
-      print -e $'(ansi r)Backend internal server error，please try again later!(char nl)(ansi reset)'
+      print -e $'(ansi r)Backend internal server error，please try again later!(char nl)(ansi rst)'
       exit $ECODE.SERVER_ERROR
     }
   }

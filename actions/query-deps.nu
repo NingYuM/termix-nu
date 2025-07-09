@@ -35,9 +35,9 @@ export def 'query deps' [
     }
   }
   let end = date now
-  print $'(char nl)Query node dependencies for (ansi p)($dep)(ansi reset) from all `package.json` files:'; hr-line
+  print $'(char nl)Query node dependencies for (ansi p)($dep)(ansi rst) from all `package.json` files:'; hr-line
   if ($result | is-empty) {
-    print $'(ansi grey58)-- Nothing found --(ansi reset)(char nl)'
+    print $'(ansi grey58)-- Nothing found --(ansi rst)(char nl)'
   } else {
     $result | sort-by -r commitAt | print
   }

@@ -32,7 +32,7 @@ def --env git-proxy [
       }
     })
     if ($proxy | is-empty) {
-      print -e $'(ansi r)(char nl)Can not find Ali, ClashX or v2ray proxy, please start it and try again, bye...(ansi reset)(char nl)(char nl)'
+      print -e $'(ansi r)(char nl)Can not find Ali, ClashX or v2ray proxy, please start it and try again, bye...(ansi rst)(char nl)(char nl)'
       exit $ECODE.MISSING_DEPENDENCY
     }
 
@@ -49,36 +49,36 @@ def --env git-proxy [
       git config --global http.proxy $'http://($proxy)'
       git config --global https.proxy $'http://($proxy)'
       git config --global socks.proxy $'http://($proxy)'
-      print $'(ansi g)Proxy turned on at: ($proxy)(ansi reset)(char nl)'
+      print $'(ansi g)Proxy turned on at: ($proxy)(ansi rst)(char nl)'
       print $'If you want to set proxy for the terminal, please run the following line in NuShell:'
-      print $"(ansi g)load-env {http_proxy: 'http://($proxy)', https_proxy: 'http://($proxy)', ALL_PROXY: 'http://($proxy)'}(ansi reset)(char nl)"
+      print $"(ansi g)load-env {http_proxy: 'http://($proxy)', https_proxy: 'http://($proxy)', ALL_PROXY: 'http://($proxy)'}(ansi rst)(char nl)"
       if not $isWindows {
         print $'If you want to set proxy for the terminal, please run the following line in bash, zsh, sh, etc.:'
-        print $"(ansi g)export http_proxy=http://($proxy) https_proxy=http://($proxy) ALL_PROXY=http://($proxy)(ansi reset)(char nl)"
+        print $"(ansi g)export http_proxy=http://($proxy) https_proxy=http://($proxy) ALL_PROXY=http://($proxy)(ansi rst)(char nl)"
 
         print $'To share the proxy to other device, run the following command in terminal:'
         let shareProxy = $proxy | str replace '127.0.0.1' $LAN_IP
-        print $"(ansi g)export http_proxy=http://($shareProxy) https_proxy=http://($shareProxy) ALL_PROXY=http://($shareProxy)(ansi reset)(char nl)"
+        print $"(ansi g)export http_proxy=http://($shareProxy) https_proxy=http://($shareProxy) ALL_PROXY=http://($shareProxy)(ansi rst)(char nl)"
       }
       exit $ECODE.SUCCESS
     }
     git config --global http.proxy $'socks5://($proxy)'
     git config --global https.proxy $'socks5://($proxy)'
     git config --global socks.proxy $'socks5h://($proxy)'
-    print $'(ansi g)Proxy turned on at: ($proxy)(ansi reset)(char nl)'
-    print $'(ansi g)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+    print $'(ansi g)Proxy turned on at: ($proxy)(ansi rst)(char nl)'
+    print $'(ansi g)──────────────────────────────────────────────────────────────(ansi rst)(char nl)'
     print $'If you want to set proxy for the terminal, please run: (char nl)'
     print $'export http_proxy=socks5://($proxy) https_proxy=socks5://($proxy) ALL_PROXY=socks://($proxy)(char nl)'
     print $'Set proxy for Nu:'
-    print $"(ansi g)load-env {http_proxy: 'http://($proxy)', https_proxy: 'http://($proxy)', ALL_PROXY: 'http://($proxy)'}(ansi reset)(char nl)"
+    print $"(ansi g)load-env {http_proxy: 'http://($proxy)', https_proxy: 'http://($proxy)', ALL_PROXY: 'http://($proxy)'}(ansi rst)(char nl)"
     return
   }
 
   unset-git-conf http.proxy
   unset-git-conf https.proxy
   unset-git-conf socks.proxy
-  print $'(ansi p)Proxy turned off(ansi reset)(char nl)'
-  print $'(ansi p)──────────────────────────────────────────────────────────────(ansi reset)(char nl)'
+  print $'(ansi p)Proxy turned off(ansi rst)(char nl)'
+  print $'(ansi p)──────────────────────────────────────────────────────────────(ansi rst)(char nl)'
   print $'If you want to unset proxy for the terminal, please run: (char nl)'
   const HIDE_CMD = '[http_proxy https_proxy ALL_PROXY] | each { do -i { hide-env $in } }'
 
@@ -86,8 +86,8 @@ def --env git-proxy [
     print $'($HIDE_CMD)(char nl)(char nl)'
     print $'($HIDE_CMD)' | clip
   } else {
-    print $'For NuShell: (ansi g)($HIDE_CMD)(ansi reset)(char nl)'
-    print $'For bash, zsh, sh, etc.: (ansi g)unset http_proxy https_proxy ALL_PROXY(ansi reset)(char nl)'
+    print $'For NuShell: (ansi g)($HIDE_CMD)(ansi rst)(char nl)'
+    print $'For bash, zsh, sh, etc.: (ansi g)unset http_proxy https_proxy ALL_PROXY(ansi rst)(char nl)'
   }
 }
 

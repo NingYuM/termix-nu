@@ -20,7 +20,7 @@ export def main [
   let _TERMIX_CONF = get-termix-conf
   let repoPath = get-tmp-path
   let gaiaSrcRepos = (open $_TERMIX_CONF | get gaiaSrcRepos)
-  print $'Using global repo path: (ansi p)($repoPath)(ansi reset)(char nl)'
+  print $'Using global repo path: (ansi p)($repoPath)(ansi rst)(char nl)'
 
   $gaiaSrcRepos
     | find name --regex ($repos | str replace -a ',' '|')
@@ -51,12 +51,12 @@ export def main [
       if $tagExists { git tag -d $tagName; git push origin --delete $tagName }
 
       if $delete_tag {
-        print $'(ansi g)Tag delete successfully!(ansi reset)'
+        print $'(ansi g)Tag delete successfully!(ansi rst)'
       } else {
         let tagComment = $'A new release for version: ($tagName) created by gaia-release command of termix-nu'
         # Add a tag and push it to the remote repo
         git checkout $repo.branch; git tag $tagName -am $tagComment; git push origin --tags
-        print $'(ansi g)New tag created successfully!(ansi reset)'
+        print $'(ansi g)New tag created successfully!(ansi rst)'
       }
       hr-line
     }

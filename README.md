@@ -1197,9 +1197,9 @@ export def 'dingtalk notify' [
   --at-mobiles: string = '',    # 被@人的手机号,多个手机号用 `,` 分隔, 不支持 'link' 类型消息
 ] {
   let enableNotify = (get-env DINGTALK_NOTIFY 'off' | str trim | str downcase) == 'on'
-  let notifyTip = $'DingTalk notification is (ansi r)disabled(ansi reset), to enable it (ansi g)set `DINGTALK_NOTIFY` to `on`(ansi reset) in pipeline environment. Bye~'
+  let notifyTip = $'DingTalk notification is (ansi r)disabled(ansi rst), to enable it (ansi g)set `DINGTALK_NOTIFY` to `on`(ansi rst) in pipeline environment. Bye~'
   if not $enableNotify { echo $notifyTip; exit 0 }
-  if $type not-in ['text', 'link', 'markdown'] { echo $'(ansi r)Invalid message type. Bye~(ansi reset)'; exit 7 }
+  if $type not-in ['text', 'link', 'markdown'] { echo $'(ansi r)Invalid message type. Bye~(ansi rst)'; exit 7 }
 
   check-envs
   let tokens = $env.DINGTALK_ROBOT_AK | str trim | split row ','
@@ -1276,7 +1276,7 @@ def check-envs [] {
   let envs = ['DINGTALK_ROBOT_AK' 'DINGTALK_ROBOT_SECRET']
   let empties = ($envs | filter {|it| $env | get -i $it | is-empty })
   if ($empties | length) > 0 {
-    print -e $'Please set (ansi r)($empties | str join ',')(ansi reset) in your environment first...'
+    print -e $'Please set (ansi r)($empties | str join ',')(ansi rst) in your environment first...'
     exit 5
   }
 }

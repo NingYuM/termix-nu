@@ -30,9 +30,9 @@ export def git-remote-branch [
   let mainBranch = if (has-ref master) { 'master' } else if (has-ref main) { 'main' } else { 'develop' }
   let mainBranch = if ($main_branch | is-empty) { $mainBranch } else { $main_branch }
   if $clean {
-    print $'Delete the branches that have been merged to (ansi gb)($mainBranch)(ansi reset) from remote (ansi gb)($remote)(ansi reset):'
+    print $'Delete the branches that have been merged to (ansi gb)($mainBranch)(ansi rst) from remote (ansi gb)($remote)(ansi rst):'
   } else {
-    print $'(char nl)Branches of (ansi gb)($repoName)(ansi reset) for remote ($remote)(char nl)'
+    print $'(char nl)Branches of (ansi gb)($repoName)(ansi rst) for remote ($remote)(char nl)'
   }
 
   mut basic = git ls-remote --heads --refs $remote | lines | par-each -k { str substring 52.. } | wrap name
@@ -57,7 +57,7 @@ export def git-remote-branch [
   print $'(char nl)Total time cost: ($end - $start)'
   if (not $show_tags) { exit $ECODE.SUCCESS }
 
-  print $'Tags of (ansi gb)($repoName)(ansi reset) for remote ($remote)'; hr-line
+  print $'Tags of (ansi gb)($repoName)(ansi rst) for remote ($remote)'; hr-line
   git ls-remote --tags -q --sort="-v:refname"
     | lines
     | where $it !~ '{}'
@@ -87,12 +87,12 @@ def is-merged [
 
 # Select the branches to remove from remote repo
 def remove-remote-branches [branches: list, remote: string = 'origin'] {
-  if ($branches | is-empty) { print $'(ansi grey66)No branch to remove, Bye...(ansi reset)'; return }
-  let prompt = $'Press (ansi g)`a`(ansi reset) to toggle all selections, Abort with (ansi g)`esc`(ansi reset) or (ansi g)`q`(ansi reset)'
+  if ($branches | is-empty) { print $'(ansi grey66)No branch to remove, Bye...(ansi rst)'; return }
+  let prompt = $'Press (ansi g)`a`(ansi rst) to toggle all selections, Abort with (ansi g)`esc`(ansi rst) or (ansi g)`q`(ansi rst)'
   let selected = $branches | input list --multi $prompt
-  if ($selected | is-empty) { print $'(ansi grey66)Operation cancelled...(ansi reset)' }
+  if ($selected | is-empty) { print $'(ansi grey66)Operation cancelled...(ansi rst)' }
   for b in $selected {
-    print $'Removing branch (ansi gb)($b)(ansi reset)...'
+    print $'Removing branch (ansi gb)($b)(ansi rst)...'
     git push $remote --delete $b
   }
 }

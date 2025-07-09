@@ -46,7 +46,7 @@ export def get-latest-nightly-build [
     0 => {
       let span = metadata $target | get span
       error make {
-        msg: $'(ansi red_bold)No_Match_Found(ansi reset)'
+        msg: $'(ansi red_bold)No_Match_Found(ansi rst)'
         label: {
           span: $span
           text: $'No architecture matching this in ($latest.html_url)'
@@ -55,7 +55,7 @@ export def get-latest-nightly-build [
     },
     1 => { $matches.0 },
     _ => {
-      let choice = $matches | input list --fuzzy $'Please (ansi cyan)choose one architecture(ansi reset):'
+      let choice = $matches | input list --fuzzy $'Please (ansi cyan)choose one architecture(ansi rst):'
       if ($choice | is-empty) {
         print 'User chose to exit, bye...'
         return
@@ -69,7 +69,7 @@ export def get-latest-nightly-build [
   if ($target | length) != 1 {
     error make --unspanned {
       msg: (
-          $"(ansi red_bold)unexpected_internal_error(ansi reset):\n"
+          $"(ansi red_bold)unexpected_internal_error(ansi rst):\n"
         + $"expected one match, found ($target | length)\n"
         + $"matches: ($target.name)"
       )
@@ -92,7 +92,7 @@ export def get-latest-nightly-build [
     http get $target.browser_download_url | save --progress --force $'($destDir)/($target.name)'
   }
 
-  print $"Latest nightly build \(version: ($build.version), hash: ($build.hash)\) saved as `(ansi default_dimmed)($target.name)(ansi reset)`\n"
+  print $"Latest nightly build \(version: ($build.version), hash: ($build.hash)\) saved as `(ansi default_dimmed)($target.name)(ansi rst)`\n"
   print (ls $destDir)
 
   match $build.extension {
@@ -101,7 +101,7 @@ export def get-latest-nightly-build [
       tar xvf nu-*.tar.gz
       rm nu-*.tar*gz; cd ..
       let binDir = (which nu).path.0 | path dirname
-      print $'Nu will be installed to (ansi g)($binDir)(ansi reset)'
+      print $'Nu will be installed to (ansi g)($binDir)(ansi rst)'
       # `sudo` is required to move the files to `/usr/local/bin` on macOS
       if (can-write $binDir) {
         mv nu-nightly/nu-*/nu* $binDir
@@ -110,7 +110,7 @@ export def get-latest-nightly-build [
         sudo mv nu-nightly/nu-*/nu* $binDir
       }
       rm -rf $destDir; cd $binDir
-      print $'(char nl)Update to Nu: (ansi g)(./nu --version) - (./nu -n --no-std-lib -c "version | get commit_hash")(ansi reset)'
+      print $'(char nl)Update to Nu: (ansi g)(./nu --version) - (./nu -n --no-std-lib -c "version | get commit_hash")(ansi rst)'
       print $'Please restart Nu session to use the latest nightly release...'
     },
     'zip' => {
@@ -122,8 +122,8 @@ export def get-latest-nightly-build [
       mv nu-nightly/nu_plugin_* $binDir
       mv nu-nightly/nu.exe $'($binDir)/nu-nightly.exe'
       rm -rf $destDir
-      print $'(char nl)Please replace (ansi g)nu.exe(ansi reset) with (ansi g)nu-nightly.exe(ansi reset) manually and restart Nu session:'
-      print $'(ansi g)mv -force ($binDir)/nu-nightly.exe ($binDir)/nu.exe(ansi reset)'
+      print $'(char nl)Please replace (ansi g)nu.exe(ansi rst) with (ansi g)nu-nightly.exe(ansi rst) manually and restart Nu session:'
+      print $'(ansi g)mv -force ($binDir)/nu-nightly.exe ($binDir)/nu.exe(ansi rst)'
     },
     _ => {
       print -e $"Unknown extension ($build.extension), you'll have to figure out how to extract this archive ;)"

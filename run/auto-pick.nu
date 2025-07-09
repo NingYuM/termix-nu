@@ -9,7 +9,7 @@ def main [
   let list = if $list_only { '--list-only' } else { '' }
   if $repo =~ 'terp' {
     z $repo; t pull-all
-    print $'(char nl)Start to auto pick commits in (ansi g)($repo)(ansi reset) ...'
+    print $'(char nl)Start to auto pick commits in (ansi g)($repo)(ansi rst) ...'
     t git-pick 0330 --from release/2.5.24.0330 --to develop $list
     t git-pick 0330 --from develop --to release/2.5.24.0330 $list
     t git-pick 0330 --from release/latest --to develop $list
@@ -17,7 +17,7 @@ def main [
   }
   if $repo =~ 'service' {
     z $repo; t pull-all
-    print $'(char nl)Start to auto pick commits in (ansi g)($repo)(ansi reset) ...'
+    print $'(char nl)Start to auto pick commits in (ansi g)($repo)(ansi rst) ...'
     t git-pick 0330 --from release/2.5.24.0330 --to develop $list
     t git-pick 0415 --from release/2.5.24.0415 --to develop $list
     t git-pick 0330 --from release/2.5.24.0330 --to release/latest $list

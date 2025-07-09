@@ -33,15 +33,15 @@ export def 'git pick' [
   let diffCount = git rev-list --left-right --count $'($options.to)...($remoteBranch)' | detect columns -n | rename ahead behind | get -i 0
   let countTip = if ($diffCount.ahead? | into int) > 0 { $'[AHEAD: ($diffCount.ahead)]' } else { '' }
   if $list_only and ($options.matches | length) > 0 {
-    print $'(char nl)The following commits from (ansi g)($options.from)(ansi reset) need to be picked to (ansi g)($options.to) ($countTip)(ansi reset)'
+    print $'(char nl)The following commits from (ansi g)($options.from)(ansi rst) need to be picked to (ansi g)($options.to) ($countTip)(ansi rst)'
     hr-line
     get-commits $options.matches | reject error | print; exit $ECODE.SUCCESS
   }
   if ($options.matches | is-empty) and $verbose {
-    print $'No. matched commits of (ansi g)($match)(ansi reset) found from (ansi g)($options.from)(ansi reset) need to be picked to (ansi g)($options.to) ($countTip)(ansi reset)'
+    print $'No. matched commits of (ansi g)($match)(ansi rst) found from (ansi g)($options.from)(ansi rst) need to be picked to (ansi g)($options.to) ($countTip)(ansi rst)'
   }
   if ($options.matches | is-not-empty) and $verbose {
-    print $'All matched commits of (ansi g)($match)(ansi reset) found from (ansi g)($options.from)(ansi reset) have been  picked to (ansi g)($options.to)(ansi reset)'
+    print $'All matched commits of (ansi g)($match)(ansi rst) found from (ansi g)($options.from)(ansi rst) have been  picked to (ansi g)($options.to)(ansi rst)'
   }
 
   git checkout $options.to --quiet
@@ -73,10 +73,10 @@ export def 'git pick' [
   }
 
   if $pickedCount > 0 {
-    print $'(char nl)Successfully picked (ansi g)($pickedCount)(ansi reset) commits from (ansi g)($options.from)(ansi reset) to (ansi g)($options.to)(ansi reset)'
+    print $'(char nl)Successfully picked (ansi g)($pickedCount)(ansi rst) commits from (ansi g)($options.from)(ansi rst) to (ansi g)($options.to)(ansi rst)'
   }
   if ($failedPick | is-empty) { return }
-  print $'(char nl)Failed to pick the following commits from (ansi g)($options.from)(ansi reset) to (ansi g)($options.to) ($countTip)(ansi reset)'; hr-line
+  print $'(char nl)Failed to pick the following commits from (ansi g)($options.from)(ansi rst) to (ansi g)($options.to) ($countTip)(ansi rst)'; hr-line
   get-commits $failedPick | print
 }
 
@@ -108,11 +108,11 @@ def get-valid-options [
   let to = if ($to | is-empty) { git branch --show-current | str trim } else { $to }
   let from = if ($from | is-empty) { git branch --show-current | str trim } else { $from }
   if ($from | is-not-empty) and ($from not-in $branches) {
-    print -e $'Source branch (ansi r)($from)(ansi reset) not found, make sure you have checked out it from the remote.'
+    print -e $'Source branch (ansi r)($from)(ansi rst) not found, make sure you have checked out it from the remote.'
     exit $ECODE.INVALID_PARAMETER
   }
   if ($to | is-not-empty) and ($to not-in $branches) {
-    print -e $'Dest branch (ansi r)($to)(ansi reset) not found, make sure you have checked out it from the remote.'
+    print -e $'Dest branch (ansi r)($to)(ansi rst) not found, make sure you have checked out it from the remote.'
     exit $ECODE.INVALID_PARAMETER
   }
   # 只有输入的字符串长度大于 7 的时候才会尝试判断是不是 commit SHA

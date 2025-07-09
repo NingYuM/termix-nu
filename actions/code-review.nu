@@ -95,7 +95,7 @@ export def --env deepseek-review [
   }
 
   if ($token | is-empty) {
-    print -e $'(ansi r)Please provide your DeepSeek API token by setting `CHAT_TOKEN` or passing it as an argument.(ansi reset)'
+    print -e $'(ansi r)Please provide your DeepSeek API token by setting `CHAT_TOKEN` or passing it as an argument.(ansi rst)'
     exit $ECODE.INVALID_PARAMETER
   }
   let hint = $'🚀 Initiate the code review by DeepSeek AI for local changes ...'
@@ -106,10 +106,10 @@ export def --env deepseek-review [
   let content = get-diff --paths $paths --diff-to $diff_to --diff-from $diff_from --include $include --exclude $exclude --patch-cmd $patch_cmd
   let length = $content | str stats | get unicode-width
   if ($max_length != 0) and ($length > $max_length) {
-    print $'(char nl)(ansi r)The content length ($length) exceeds the maximum limit ($max_length), review skipped.(ansi reset)'
+    print $'(char nl)(ansi r)The content length ($length) exceeds the maximum limit ($max_length), review skipped.(ansi rst)'
     exit $ECODE.SUCCESS
   }
-  print $'Review content length: (ansi g)($length)(ansi reset), current max length: (ansi g)($max_length)(ansi reset)'
+  print $'Review content length: (ansi g)($length)(ansi rst), current max length: (ansi g)($max_length)(ansi rst)'
   mut messages = if ($sys_prompt | is-empty) { [] } else { [{ role: 'system', content: $sys_prompt }] }
   $messages = $messages | append { role: 'user', content: $"($user_prompt)\n($content)" }
   let payload = {
@@ -119,12 +119,12 @@ export def --env deepseek-review [
     temperature: $temperature,
   }
   if $debug { print $'(char nl)Code Changes:'; hr-line; print $content }
-  print $'(char nl)Waiting for response from (ansi g)($url)(ansi reset) ...'
+  print $'(char nl)Waiting for response from (ansi g)($url)(ansi rst) ...'
   if $stream { streaming-output $url $payload --headers $CHAT_HEADER --debug=$debug; return }
 
   let response = http post -e -H $CHAT_HEADER -t application/json $url $payload
   if ($response | is-empty) {
-    print -e $'(ansi r)Oops, No response returned from ($url) ...(ansi reset)'
+    print -e $'(ansi r)Oops, No response returned from ($url) ...(ansi rst)'
     exit $ECODE.SERVER_ERROR
   }
   if $debug { print $'DeepSeek Model Response:'; hr-line; $response | table -e | print }
@@ -173,9 +173,9 @@ def write-review-to-file [
   ]
   try {
     $content_sections | str join (char nl) | save --force $file
-    print $'Code Review Result saved to (ansi g)($file)(ansi reset)'
+    print $'Code Review Result saved to (ansi g)($file)(ansi rst)'
   } catch {|err|
-    print -e $'(ansi r)Failed to save review result: (ansi reset)'
+    print -e $'(ansi r)Failed to save review result: (ansi rst)'
     $err | table -e | print
   }
 }
@@ -183,7 +183,7 @@ def write-review-to-file [
 # Validate the temperature value
 def validate-temperature [temp: float] {
   if ($temp < 0) or ($temp > 2) {
-    print -e $'(ansi r)Invalid temperature value, should be in the range of 0 to 2.(ansi reset)'
+    print -e $'(ansi r)Invalid temperature value, should be in the range of 0 to 2.(ansi rst)'
     exit $ECODE.INVALID_PARAMETER
   }
   $temp
@@ -210,7 +210,7 @@ def streaming-output [
           exit $ECODE.SERVER_ERROR
         }
       }
-    | try { lines } catch { print -e $'(ansi r)Error Happened ...(ansi reset)'; exit $ECODE.SERVER_ERROR }
+    | try { lines } catch { print -e $'(ansi r)Error Happened ...(ansi rst)'; exit $ECODE.SERVER_ERROR }
     | each {|line|
         if ($line | is-empty) { return }
         if ($IGNORED_MESSAGES | get -i $line | default false) { return }
@@ -243,7 +243,7 @@ def parse-line [] {
       $line | from json
     }
   } catch {
-    print -e $'(ansi r)Unrecognized content:(ansi reset) ($line)'
+    print -e $'(ansi r)Unrecognized content:(ansi rst) ($line)'
     exit $ECODE.SERVER_ERROR
   }
 }
@@ -282,7 +282,7 @@ export def get-diff [
         --include $include --exclude $exclude)
 
   if ($content | is-empty) {
-    print $'(ansi g)Nothing to review.(ansi reset)'
+    print $'(ansi g)Nothing to review.(ansi rst)'
     exit $ECODE.SUCCESS
   }
   $content
@@ -303,7 +303,7 @@ def get-diff-content [
   if ($diff_from | is-not-empty) {
     get-ref-diff $diff_from --diff-to $diff_to --include $include --exclude $exclude
   } else if not (git-check $local_repo --check-repo=1) {
-    print -e $'Current directory ($local_repo) is (ansi r)NOT(ansi reset) a git repo, bye...(char nl)'
+    print -e $'Current directory ($local_repo) is (ansi r)NOT(ansi rst) a git repo, bye...(char nl)'
     exit $ECODE.CONDITION_NOT_SATISFIED
   } else if ($patch_cmd | is-not-empty) {
     get-patch-diff $patch_cmd
@@ -318,7 +318,7 @@ def get-diff-by-paths [paths: string] {
     | reduce -f '' {|it, acc|
         let initial_commit = git log --diff-filter=A --format=%H -- $it | lines | last
         if ($initial_commit | is-empty) {
-          print -e $'(ansi r)The file ($it) does not exist in the git history.(ansi reset)'
+          print -e $'(ansi r)The file ($it) does not exist in the git history.(ansi rst)'
           exit $ECODE.INVALID_PARAMETER
         }
         $acc  + (char nl) + (git diff $'($initial_commit)^' HEAD -- $it)
@@ -334,12 +334,12 @@ def get-ref-diff [
 ] {
   # Validate the git refs
   if not (has-ref $diff_from) {
-    print -e $'(ansi r)The specified git ref ($diff_from) does not exist, please check it again.(ansi reset)'
+    print -e $'(ansi r)The specified git ref ($diff_from) does not exist, please check it again.(ansi rst)'
     exit $ECODE.INVALID_PARAMETER
   }
 
   if ($diff_to | is-not-empty) and not (has-ref $diff_to) {
-    print -e $'(ansi r)The specified git ref ($diff_to) does not exist, please check it again.(ansi reset)'
+    print -e $'(ansi r)The specified git ref ($diff_to) does not exist, please check it again.(ansi rst)'
     exit $ECODE.INVALID_PARAMETER
   }
 
@@ -391,7 +391,7 @@ export def is-safe-git [cmd: string] {
   let git_cmd_pattern = '^git\s+(show|diff)(?:\s+(?:[a-zA-Z0-9_\-\.~/]+(?::[a-zA-Z0-9_\-\.\*\/]+)?)){0,3}(?:\s+(?::[!]?)?[a-zA-Z0-9_\-\.\*\/]+){0,2}$'
 
   if ($normalized_cmd | find -r $git_cmd_pattern | is-empty) {
-    print -e $'(ansi r)Invalid git command format. (ansi g)Only simple `git show` or `git diff` commands are allowed.(ansi reset)'
+    print -e $'(ansi r)Invalid git command format. (ansi g)Only simple `git show` or `git diff` commands are allowed.(ansi rst)'
     return false
   }
   true
