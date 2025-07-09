@@ -1,0 +1,9 @@
+tmp
+casts
+.zed/
+.env
+.idea
+.termixrc
+.snapshot
+review*.md
+.fzf-preview.nuon
