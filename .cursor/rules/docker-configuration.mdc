@@ -1,0 +1,57 @@
+---
+globs: "Dockerfile*,docker-compose.yml"
+---
+
+# Docker 配置规范
+
+## 镜像构建约定
+
+### 基础镜像选择
+- 主要基于 `hustcer/debian-nu:0.105-node.20.19-extra` 构建
+- 支持多架构构建 (linux/amd64, linux/arm64)
+- 使用 debian 作为基础系统
+
+### 关键文件说明
+
+- [Dockerfile](mdc:Dockerfile): 标准版本镜像
+- [Dockerfile.extra](mdc:Dockerfile.extra): 扩展版本镜像，包含更多工具
+- [docker-compose.yml](mdc:docker-compose.yml): 开发环境编排
+
+### 构建命令模式
+
+参考 [Dockerfile.extra](mdc:Dockerfile.extra) 中的构建命令：
+```bash
+# 单架构构建
+docker build --no-cache . -t hustcer/termix:latest-extra -f Dockerfile.extra
+
+# 多架构构建
+docker buildx build --platform linux/amd64,linux/arm64 . -t hustcer/termix:bleeding-extra --no-cache
+```
+
+## 环境配置
+
+### 用户和权限
+- 创建 `termix` 用户，使用 Nushell 作为默认 shell
+- 工作目录: `/home/termix`
+- 项目目录: `/home/termix/termix-nu`
+
+### 环境变量
+- `DISABLE_VERSION_CHECK=true`: 禁用版本检查
+- `NPM_REGISTRY`: 使用内部 npm 仓库镜像
+
+### 配置文件映射
+- `.termixrc-example` → `~/.termixrc`
+- `.env-example` → `~/.env`
+- 创建符号链接确保配置同步
+
+## 软件包管理
+
+### 必装工具
+- neovim: 编辑器
+- Node.js + npm + pnpm: JavaScript 运行时
+- @terminus/t-package-tools: 内部工具包
+
+### 清理策略
+- 清理 apt 缓存和临时文件
+- 清理 npm 缓存
+- 删除构建依赖
