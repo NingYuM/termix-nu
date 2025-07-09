@@ -73,7 +73,7 @@ export def 'meta sync' [
   } else {
     print $'You have selected the following modules to import: (ansi p)($modules | str join ",")(ansi reset)'
   }
-  if ($source.path | is-not-empty) {
+  if ($source.path? | is-not-empty) {
     print $'You are going to import meta data from path: (ansi p)($source.path)(ansi reset)'
   }
   print -n (char nl)
