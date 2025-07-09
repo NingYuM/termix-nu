@@ -89,7 +89,7 @@ def check-plugins [description: string, --fix, --debug] {
   let versionMatch = $allPlugins | all {|it| ($it | get 'metadata.version') == $nuVersion }
   let pluginExists = $allPlugins | all {|it| $it.filename | path exists }
   if $debug {
-    show-debug { version: $actualVer, registerd: $nuVersion, allPlugins: $allPlugins }
+    show-debug { version: $actualVer, registered: $nuVersion, allPlugins: $allPlugins }
   }
   if $versionMatch and $pluginExists and ($actualVer == $nuVersion) { return { status: $STATUS.OK } }
   if $fix { nu -c 'rm $nu.plugin-path'; register-plugins; check-plugins 'Recheck .. ' | show-result; return }

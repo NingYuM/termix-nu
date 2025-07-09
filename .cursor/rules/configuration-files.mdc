@@ -1,0 +1,50 @@
+---
+globs: "*.toml,*.yml,*.yaml,Justfile,*rc,*.conf"
+---
+
+# 配置文件规范
+
+## 主要配置文件
+
+### 项目配置
+- [termix.toml](mdc:termix.toml): 项目主配置文件
+- [Justfile](mdc:Justfile): 任务运行器配置，定义了所有可用的开发任务
+- [cliff.toml](mdc:cliff.toml): 变更日志生成配置
+
+### CI/CD 配置
+- [pipeline.yml](mdc:pipeline.yml): CI/CD 管道配置
+- [erda.yml](mdc:erda.yml): Erda平台部署配置
+
+### 开发工具配置
+- [cspell.yml](mdc:cspell.yml): 代码拼写检查配置
+- dotfiles/ 目录包含各种开发工具的配置模板
+
+## 配置文件约定
+
+### TOML 格式规范
+- 使用标准 TOML 语法
+- 配置项按功能分组
+- 添加适当的注释说明
+
+### YAML 格式规范
+- 使用2空格缩进
+- 字符串值优先使用双引号
+- 复杂配置使用多行格式提高可读性
+
+### Justfile 规范
+- 任务名使用 kebab-case
+- 重要任务添加描述注释
+- 使用环境变量进行配置传递
+- 任务依赖关系要清晰明确
+
+## dotfiles 配置模板
+
+dotfiles/ 目录包含的配置模板：
+- [nu/config.nu](mdc:dotfiles/nu/config.nu): Nushell 配置
+- [nu/env.nu](mdc:dotfiles/nu/env.nu): Nushell 环境变量
+- 其他开发工具的配置文件模板
+
+### 使用方式
+- 配置文件作为模板提供
+- 用户根据需要自定义修改
+- 通过符号链接或复制的方式应用配置

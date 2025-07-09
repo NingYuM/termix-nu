@@ -1,0 +1,28 @@
+---
+alwaysApply: true
+---
+
+# Termix-Nu 项目概述
+
+这是一个基于 Nushell 的开发工具集项目，提供了丰富的自动化脚本和开发环境配置。
+
+## 项目结构
+
+- **actions/**: 核心自动化脚本，包含各种开发和部署任务
+- **git/**: Git相关的辅助脚本和工具
+- **mall/**: 商城相关的开发工具和脚本
+- **run/**: 运行时脚本和实用工具
+- **utils/**: 通用工具库，包含[common.nu](mdc:utils/common.nu)等基础模块
+- **dotfiles/**: 各种工具的配置文件模板
+- **tests/**: 测试脚本
+- **casts/**: 演示和教程文件
+
+## 主要入口文件
+
+- [Justfile](mdc:Justfile): 主要的任务运行器配置
+- [termix.toml](mdc:termix.toml): 项目配置文件
+- [Dockerfile](mdc:Dockerfile) / [Dockerfile.extra](mdc:Dockerfile.extra): Docker 镜像构建配置
+
+## 核心理念
+
+项目使用 Nushell 作为主要脚本语言，提供跨平台的开发环境和自动化工具。所有脚本都遵循 Nushell 的函数式编程范式。

@@ -17,7 +17,7 @@ All notable changes to this project will be documented in this file.
 
 - Update `fnm` config for Nu
 - Add `with-progress` for nu config
-- Add `simpe-pv` helper
+- Add `simple-pv` helper
 
 ## v1.89.1 - 2025-06-16
 
@@ -36,7 +36,7 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
-- Set defalut `temperature` to **0.3** for code review
+- Set default `temperature` to **0.3** for code review
 - Add new Trantor artifact consume support by `t art consume` command
 
 **Miscellaneous Tasks**
