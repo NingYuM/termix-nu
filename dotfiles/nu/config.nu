@@ -218,7 +218,8 @@ def ua [] {
 # Show Nu nightly builds information
 def nun [] {
   let current = nu --version
-  let nightly = http get https://api.github.com/repos/nushell/nightly/releases
+  let headers = if ($env.GITHUB_TOKEN? | is-empty) { [] } else { [Authorization $'Bearer ($env.GITHUB_TOKEN)'] }
+  let nightly = http get -H $headers https://api.github.com/repos/nushell/nightly/releases
     | sort-by -r created_at
     | select name created_at assets.name.0
   let match = $nightly | where name =~ $current
