@@ -17,7 +17,8 @@ export def get-latest-nightly-build [
 ]: nothing -> nothing {
 
   mut target = $target
-  let latest = http get https://api.github.com/repos/nushell/nightly/releases
+  let headers = if ($env.GITHUB_TOKEN? | is-empty) { [] } else { [Authorization $'Bearer ($env.GITHUB_TOKEN)'] }
+  let latest = http get -H $headers https://api.github.com/repos/nushell/nightly/releases
   let latest = if ($tag | is-empty) { $latest } else {
       $latest | where { $in.tag_name | str contains $tag }
     } | sort-by published_at --reverse | first
