@@ -16,12 +16,12 @@ fi
 
 # Check if command exists
 function is_installed() {
-  command -v $1 &> /dev/null
+  command -v "$1" &> /dev/null
 }
 
 # Check if first version is lower than second version
 function is_lower_ver() {
-  [ "$(printf '%s\n' $1 $2 | sort -V | head -n1)" != $2 ]
+  [ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" != "$2" ]
 }
 
 # Get current version of nu, or 0.0.0 if not installed
@@ -32,7 +32,7 @@ function get_versions() {
   else
     version=$(nu --version)
   fi
-  echo $version
+  echo "$version"
 }
 
 # Use wget or curl to get the latest binary version
@@ -46,7 +46,7 @@ function get_latest_version() {
     echo "Error: Neither wget nor curl is installed. Please install one of them and try again."
     exit 1
   fi
-  echo $latest
+  echo "$latest"
 }
 
 # Get target package name keyword for the specified platform
@@ -67,14 +67,14 @@ function install_or_update() {
   local platform=$2
   local version=$3
   echo "Installing or updating $bin for $platform ..."
-  local targetArch=$(get_target_arch $platform)
+  local targetArch=$(get_target_arch "$platform")
 
   # Use wget or curl to get the latest release asset name for the specified platform
   local assetName
   if is_installed curl; then
-    assetName=$(curl -s $BASE_URL/latest.json | grep name | cut -d '"' -f 4 | grep ${targetArch})
+    assetName=$(curl -s $BASE_URL/latest.json | grep name | cut -d '"' -f 4 | grep "${targetArch}")
   elif is_installed wget; then
-    assetName=$(wget -qO - $BASE_URL/latest.json | grep name | cut -d '"' -f 4 | grep ${targetArch})
+    assetName=$(wget -qO - $BASE_URL/latest.json | grep name | cut -d '"' -f 4 | grep "${targetArch}")
   else
     echo "Error: Neither wget nor curl is installed. Please install one of them and try again."
     exit 1
@@ -84,27 +84,27 @@ function install_or_update() {
 
   # Use wget or curl to download the package for installation
   if is_installed wget; then
-    wget -O $pkg $BASE_URL/$assetName
+    wget -O "$pkg" $BASE_URL/"$assetName"
   else
-    curl -L -o $pkg $BASE_URL/$assetName
+    curl -L -o "$pkg" $BASE_URL/"$assetName"
   fi
 
-  if [ -w $DEST_DIR ]; then
-    tar xzf $pkg -C $DEST_DIR
-    mv $DEST_DIR/nu-*/nu* $DEST_DIR/
-    rm -rf $DEST_DIR/nu-*
+  if [ -w "$DEST_DIR" ]; then
+    tar xzf "$pkg" -C "$DEST_DIR"
+    mv "$DEST_DIR"/nu-*/nu* "$DEST_DIR"/
+    rm -rf "$DEST_DIR"/nu-*
   else
     if is_installed sudo; then
-      sudo tar xzf $pkg -C $DEST_DIR
-      sudo mv $DEST_DIR/nu-*/nu* $DEST_DIR/
-      sudo rm -rf $DEST_DIR/nu-*
+      sudo tar xzf "$pkg" -C "$DEST_DIR"
+      sudo mv "$DEST_DIR"/nu-*/nu* "$DEST_DIR"/
+      sudo rm -rf "$DEST_DIR"/nu-*
     else
       echo "Error: No write permission for $DEST_DIR and sudo is not available."
       exit 1
     fi
   fi
-  rm $pkg
-  rm $DEST_DIR/nu_*cust* $DEST_DIR/nu_*exam* $DEST_DIR/nu_*str*
+  rm "$pkg"
+  rm "$DEST_DIR"/nu_*cust* "$DEST_DIR"/nu_*exam* "$DEST_DIR"/nu_*str*
   echo "Successfully installed $bin with version $version"
 }
 
@@ -120,8 +120,8 @@ function main() {
   echo " Install Directory: $DEST_DIR"
 
   for bin in nu; do
-    if is_lower_ver $current $latest; then
-      install_or_update $bin $platform $latest
+    if is_lower_ver "$current" "$latest"; then
+      install_or_update $bin "$platform" "$latest"
     else
       echo "$bin is already updated ..."
     fi
@@ -132,7 +132,7 @@ function main() {
   # Get the directory where the script is located
   SCRIPT_DIR="$(dirname "$0")"
   # Call the nu script with the correct path
-  nu "$SCRIPT_DIR/../actions/setup.nu" $DEST_DIR --in-place-update
+  nu "$SCRIPT_DIR/../actions/setup.nu" "$DEST_DIR" --in-place-update
 }
 
 main
