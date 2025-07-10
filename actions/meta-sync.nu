@@ -32,11 +32,11 @@
 #   t msync --selected
 #   t msync --all --from a --to b
 
-use ../utils/common.nu [ECODE, HTTP_HEADERS, hr-line, ellie, is-installed, is-lower-ver]
+use ../utils/common.nu [ECODE, HTTP_HEADERS, FZF_DEFAULT_OPTS, FZF_THEME, hr-line, ellie, is-installed, is-lower-ver]
 
 const POLL_TICK_CHAR = '*'
 const QUERY_INTERVAL = 1sec
-const KEY_MAPPING = $"(ansi grey66)\(Space: Select, a: Select All, ESC/q: Quit, Enter: Confirm\)(ansi rst)"
+const KEY_MAPPING = $"(ansi grey66)\(Tab: Select, Ctrl-a: Select All, Ctrl-d: Deselect All, ESC: Quit, Enter: Confirm\)(ansi rst)"
 # Versions that doesn't support SnapshotTask API
 const LEGACY_L0_VERSIONS = [2.5.24.0430 2.5.24.0530 2.5.24.0630 2.5.24.0730]
 # Versions that doesn't support DIR based meta data import
@@ -320,9 +320,11 @@ def get-selected-modules [
   --selected(-s),       # Sync the selected modules from config file of the specified source
 ] {
   print -n (char nl)
+  let FZF_ARGS = [--bind, 'ctrl-a:select-all,ctrl-d:deselect-all', --header, $'Select the modules to sync ($KEY_MAPPING)']
+  $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) ($FZF_THEME)'
   if $selected { return $from.selectedModules }
-  let selected = $from.availableModules
-    | input list --multi $'Please select the modules to sync ($KEY_MAPPING)'
+  let selected = $from.availableModules | str join "\n"
+      | fzf --multi ...$FZF_ARGS | complete | get stdout | str trim | lines
   if ($selected | is-empty) {
     print $'You have not selected any modules, bye...'
     exit $ECODE.SUCCESS
