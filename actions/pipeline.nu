@@ -79,7 +79,7 @@ def get-pipeline-conf [
   let useRc = ($LOCAL_CONFIG | path exists)
   let configFile = if $useI { 'origin/i:.termixrc' } else { $LOCAL_CONFIG }
   if not ($useI or $useRc) {
-    print -e $'No (ansi r)origin/i branch or ($LOCAL_CONFIG)(ansi rst) exits, please create it before running this command...'
+    print -e $'No (ansi r)origin/i branch or ($LOCAL_CONFIG)(ansi rst) exists, please create it before running this command...'
     exit $ECODE.MISSING_DEPENDENCY
   }
 
@@ -97,7 +97,7 @@ def get-pipeline-conf [
   }
   # 批量处理模式必须指定 App
   if (not $useI) and ($apps | str trim | is-empty) {
-    print -e $'You are running the command in (ansi p)batch mode(ansi rst), Please specify the apps to handle by (ansi r)`--apps` or `-a`(ansi rst) flag(ansi rst)...'
+    print -e $'You are running the command in (ansi p)batch mode(ansi rst), please specify the apps to handle by (ansi r)`--apps` or `-a`(ansi rst) flag(ansi rst)...'
     exit $ECODE.INVALID_PARAMETER
   }
   let batchMode = ($pipeline | describe -d).type == 'list'
@@ -233,7 +233,7 @@ def query-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
     exit $ECODE.SERVER_ERROR
   }
   if not $ci.success {
-    print -e $'(ansi r)Query CICD failed, Please try again ...(ansi rst)'
+    print -e $'(ansi r)Query CICD failed, please try again ...(ansi rst)'
     print -e ($ci | table -e)
     exit $ECODE.SERVER_ERROR
   }
@@ -317,7 +317,7 @@ def check-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
   # 没有正在部署的流水线，也未曾部署过则直接返回以执行下一步
   if $nRunning == 0 and $nDeployed == 0 { return true }
   if $nRunning > 0 {
-    print $'There are running pipelines, please wait with patience or re-run with `-f` flag.'
+    print $'There are running pipelines, please wait patiently or re-run with `-f` flag.'
   } else if $nDeployed > 0 {
     print $'The commit (ansi p)($commitID | str substring 0..<9)@($branch)(ansi rst) has been deployed, re-run with `-f` flag to deploy it again.'
   }
@@ -347,7 +347,7 @@ export def create-cicd [aid: int, appName: string, branch: string, pipeline: str
     exit $ECODE.SERVER_ERROR
   }
   if $ci.success { print $'(ansi g)Initialize CICD successfully...(ansi rst)'; return $ci.data.id }
-  print -e $'(ansi r)Initialize CICD failed, Please try again ...(ansi rst)'
+  print -e $'(ansi r)Initialize CICD failed, please try again ...(ansi rst)'
   print -e ($ci | table -e)
   exit $ECODE.SERVER_ERROR
 }
@@ -528,7 +528,7 @@ def select-target [candidates: record, --multiple] {
   rm -f $FZF_PREVIEW_FILE
   if ($selection | is-empty) { print $'(ansi grey66)Operation cancelled...(ansi rst)'; return }
   print $'You selected: (ansi pb)($selection | str join ,)(ansi rst)'
-  let confirm = input  $'Please input (ansi g)y(ansi rst) to confirm or (ansi g)other keys(ansi rst) to cancel: '
+  let confirm = input $'Please confirm by typing (ansi r)y(ansi rst) to continue or (ansi p)q(ansi rst) to quit: '
   if $confirm != 'y' { print $'(ansi grey66)Operation cancelled...(ansi rst)'; return }
   $candidates | select ...$selection | values
 }

@@ -8,13 +8,13 @@
 # [√] Support download assets for specified end, multi ends separated by `,`
 # [√] `--from` support full latest.json url
 # [√] Handle assets for t-material-ui and t-mobile-ui
-# [√] Transfer 命令执行前需要确认，减少误操作的可能性
+# [√] Transfer command requires confirmation before execution to reduce misoperation
 # [√] Sync modules by full name
 # [√] Validate module names from latest.json support
 # [√] Ignore new modules while transferring `all` assets support
 # [√] Get available modules from latest.json if sync all is selected
-# [√] Display front end module meta data
-# [√] Display module status statistics info in meta data view
+# [√] Display frontend module metadata
+# [√] Display module status statistics info in metadata view
 # [√] Revert frontend module to a selected version, ossutil or mc required
 # [√] Add Revert metadata to latest.json
 # Ref:
@@ -40,7 +40,7 @@ const VALIDATE_MODULES = '0'
 
 const KEY_MAPPING = $"(ansi grey66)\(Space: Select, a: Select All, ESC/q: Quit, Enter: Confirm\)(ansi rst)"
 
-# Front end module and descriptions
+# Frontend module and descriptions
 const MOD_DESC = {
     b2b: 'b2b: B2B & SRM 自定义业务组件'
     base: 'base: PC 端设计器基础组件'
@@ -85,7 +85,7 @@ const TOOL_INSTALL_TIP = {
 export def 'terp assets' [
   action: string,             # Available actions: download, transfer, detect and revert
   modules?: string,           # Available values: pc/mobile/mat/mmat/iam/dors/mdors/all. Multiple modules separated by `,`
-  --from(-f): string,         # Source mount point or source URL. Note: Only `detect` action support multiple sources separated by `,`
+  --from(-f): string,         # Source mount point or source URL. Note: Only `detect` action supports multiple sources separated by `,`
   --to(-t): string,           # Destination mount point
   --quiet(-q),                # Show less info
   --dest-store(-d): string,   # Destination store, should be configured in .termixrc
@@ -98,10 +98,10 @@ export def 'terp assets' [
     }
     # If you want to revert module from MINIO the `--to` option should be in the format of `mount-point@mc-alias`
     if ($to | is-empty) {
-      print $'Please specify the dest mount point to revert by `(ansi p)-t(ansi rst)` or `(ansi p)--to(ansi rst)` option'
-      print $'To revert module in MINIO the `-t` option should like `(ansi p)test@mc-alias(ansi rst)`'
+      print $'Please specify the destination mount point to revert by `(ansi p)-t(ansi rst)` or `(ansi p)--to(ansi rst)` option'
+      print $'To revert module in MINIO the `-t` option should be like `(ansi p)test@mc-alias(ansi rst)`'
     }
-    if ($dest_store | is-empty) { print $'Please specify the dest store to revert the FE module by `(ansi p)-d(ansi rst)` option' }
+    if ($dest_store | is-empty) { print $'Please specify the destination store to revert the frontend module by `(ansi p)-d(ansi rst)` option' }
     if ([$modules $to $dest_store] | any { $in | is-empty }) { exit $ECODE.INVALID_PARAMETER }
     revert-module $modules $to $dest_store; return
   }
@@ -119,7 +119,7 @@ export def 'terp assets' [
   }
 }
 
-# Preview the module revision meta info in fzf preview window
+# Preview the module revision metadata in fzf preview window
 export def fzf-preview [revision: string, localPath: string, remoteURI: string, destStore: string] {
   let dest = $'($localPath)/($revision)/namespace.json'
   let ossConf = get-dest-oss $destStore
@@ -148,7 +148,7 @@ alias main = fzf-preview
 # ------------------------------------- Core Logic --------------------------------------
 # ***************************************************************************************
 
-# Detect multiple static assets and display the meta info
+# Detect multiple static assets and display the metadata
 def detect-multiple-assets [from: string] {
   let mountPoints = $from | split row , | compact -e
   for mp in $mountPoints {
@@ -185,7 +185,7 @@ def revert-module [module: string, to: string, destStore: string] {
 # Download static assets from OSS to specified directory
 def download [
   modules: list,        # End point, available values: pc, mobile, all
-  latestMeta: record,   # Latest meta info
+  latestMeta: record,   # Latest metadata
   to?: string,          # Destination dir
   --quiet(-q),          # Show less info
 ] {
@@ -209,7 +209,7 @@ def download [
     let dirname = $entryConf | get $e | get dirname
     print $'Download assets from (ansi p)($mount)/($JSON_ENTRY)(ansi rst) to (ansi p)($dest)(ansi rst) for (ansi pb)($e)(ansi rst)...'
 
-    # 保存 manifest.json 以便后续通过 package-tools 上传
+    # Save manifest.json for subsequent upload via package-tools
     http get -r $'($assetUrlPrefix)/($prefix)/($dirname)/manifest.json'
       | save -rf $'($assetsDir)/manifest.json'
 
@@ -235,7 +235,7 @@ def download [
 # Transfer static assets from OSS to OSS or Minio's other path
 def transfer [
   modules: list,              # Module name or alias available values: pc, mobile, all, etc.
-  latestMeta: record,         # Latest meta info
+  latestMeta: record,         # Latest metadata
   to: string,
   --quiet(-q),                # Show less info
   --dest-store(-d): string,   # Destination store, should be configured in .termixrc
@@ -292,7 +292,7 @@ def transfer [
 # Display front end module meta data
 def detect [latestMeta: record] {
   const TIME_FMT = '%m/%d %H:%M:%S'
-  print $'Latest meta of (ansi g)($latestMeta.latestUrl)(ansi rst)'; hr-line 108
+  print $'Latest metadata of (ansi g)($latestMeta.latestUrl)(ansi rst)'; hr-line 108
   let modules = $latestMeta.latest
     | values
     | select namespace deprecated? metadata?
@@ -336,7 +336,7 @@ def revert-precheck [module: string, to: string, ossConf: record] {
   let isMinio = $type == 'minio'
   if $module =~ ',' { print $'Revert frontend module is not supported for multiple modules yet'; exit $ECODE.INVALID_PARAMETER }
   if $isMinio and ($to !~ '@') {
-    print $'To revert module in MINIO the `-t` option should like `(ansi p)test@mc-alias(ansi rst)`'; exit $ECODE.INVALID_PARAMETER
+    print $'To revert module in MINIO the `-t` option should be like `(ansi p)test@mc-alias(ansi rst)`'; exit $ECODE.INVALID_PARAMETER
   }
   if $to =~ '@' {
     if not $isMinio { print '`@` should not be used in `-t` / `--to` option for OSS storage'; exit $ECODE.INVALID_PARAMETER }
@@ -347,7 +347,7 @@ def revert-precheck [module: string, to: string, ossConf: record] {
     # Minio AK/SK/Endpoint check
     let mconf = mc alias ls --json | from json -o | where alias == $mcAlias | get 0
     if $mconf.accessKey != $ossConf.OSS_AK or $mconf.secretKey != $ossConf.OSS_SK or $mconf.URL != $ossConf.OSS_ENDPOINT {
-      print -e $'The specified mc alias (ansi p)($mcAlias)(ansi rst) does not match the oss config, please check your mc config'
+      print -e $'The specified mc alias (ansi p)($mcAlias)(ansi rst) does not match the OSS config, please check your mc config'
       exit $ECODE.INVALID_PARAMETER
     }
   }
@@ -393,7 +393,7 @@ def execute-revert [
 ] {
   # Are you sure to revert to revision (ansi p)($revision)(ansi rst)? (y/n)
   print $'Attention: You are going to REVERT (ansi p)($module)(ansi rst) module to (ansi p)($revision) for ($target)@($destStore)(ansi rst)'
-  hr-line; print $'(ansi grey66)Meta Data Detail:(ansi rst)'
+  hr-line; print $'(ansi grey66)Metadata Detail:(ansi rst)'
   mut meta = open $'($localPath)/($revision)/namespace.json' | get metadata
   if ($meta.syncBy? | is-not-empty) { $meta = $meta | upsert syncBy {|it| $it.syncBy? | show } }
   $meta | print; print -n (char nl)
@@ -421,7 +421,7 @@ def execute-revert [
 
   let sync = do-storage-cp $'($localPath)/latest.json' $'($remoteURI)/latest.json' $ossConf --force
   if $sync.exit_code == 0 {
-    print $'Revert (ansi p)($module)(ansi rst) module to (ansi p)($revision) for ($target)@($destStore)(ansi rst) success!'; exit $ECODE.SUCCESS
+    print $'Revert (ansi p)($module)(ansi rst) module to (ansi p)($revision) for ($target)@($destStore)(ansi rst) successful!'; exit $ECODE.SUCCESS
   }
   print -e $'Revert (ansi p)($module)(ansi rst) module to (ansi p)($revision) for ($target)@($destStore)(ansi rst) failed:'
   print $sync.stderr
@@ -487,7 +487,7 @@ def get-modules [modules?: string, --latest-meta: record, --action: string] {
   if ($splits | length) > 0 {
     let inexists = $splits | where {|it| $it not-in ($allModules | get mod) }
     if ($inexists | length) > 0 {
-      print -e $'Invalid modules (ansi r)($inexists | str join ",")(ansi rst), the module you specified does not exists in latest.json(ansi rst)'
+      print -e $'Invalid modules (ansi r)($inexists | str join ",")(ansi rst), the modules you specified do not exist in latest.json(ansi rst)'
       exit $ECODE.INVALID_PARAMETER
     }
   }
@@ -525,7 +525,7 @@ def update-transfer-meta [latestMeta: record] {
   $ns | save -f namespace.json
 }
 
-# Get dest OSS settings
+# Get destination OSS settings
 def --env get-dest-oss [destStore: string] {
   let LOCAL_CONFIG = if ('.termixrc' | path exists) { '.termixrc' } else { $'($env.TERMIX_DIR)/.termixrc' }
   let ossConf = open $LOCAL_CONFIG | from toml | get -i $destStore
@@ -564,10 +564,10 @@ def pre-check [
   }
   if $action == 'transfer' and (($to | is-empty) or ($dest_store | is-empty)) {
     if ($to | is-empty) {
-      print -e $'Please specify the dest to transfer by (ansi p)--to(ansi rst) option.'
+      print -e $'Please specify the destination to transfer by (ansi p)--to(ansi rst) option.'
     }
     if ($dest_store | is-empty) {
-      print -e $'Please specify the dest store to transfer by (ansi p)--dest-store(ansi rst) option.'
+      print -e $'Please specify the destination store to transfer by (ansi p)--dest-store(ansi rst) option.'
     }
     exit $ECODE.INVALID_PARAMETER
   }

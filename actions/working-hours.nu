@@ -56,7 +56,7 @@ export def working-hours-daily-checking [--debug(-d)] {
   let weekday = $checkPoint | format date $_WEEK_FMT | str downcase
   # Skip notify until the specified time
   if (not ($env.SKIP_UNTIL? | is-empty)) and $checkPoint < ($env.SKIP_UNTIL | into datetime) {
-    print $'Skip notify until ($env.SKIP_UNTIL)...'
+    print $'Skip notification until ($env.SKIP_UNTIL)...'
     exit $ECODE.SUCCESS
   }
   # 非周五、六、日、一直接返回
