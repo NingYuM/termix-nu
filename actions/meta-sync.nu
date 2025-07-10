@@ -260,7 +260,7 @@ def provider-check [type, value, --from: string, --to: string] {
     exit $ECODE.INVALID_PARAMETER
   }
   if (not ($check | is-empty)) and ($check not-in ($metaConf | get $type)) {
-    print -e $'The ($type) name (ansi p)($check)(ansi rst) does`t exists in the meta.($type) config, please check it again.'
+    print -e $'The ($type) name (ansi p)($check)(ansi rst) does not exist in the meta.($type) config, please check it again.'
     exit $ECODE.INVALID_PARAMETER
   }
 }
@@ -524,7 +524,7 @@ def import-metadata [
   }
   if ($path | is-not-empty) {
     if $dirImportNotSupported {
-      print $'(ansi r)The destination Trantor does not support DIR based meta data import, min version required (ansi g)2.5.24.1130.(ansi rst)'
+      print $'(ansi r)The destination Trantor does not support DIR-based metadata import, minimum version required (ansi g)2.5.24.1130.(ansi rst)'
       exit $ECODE.INVALID_PARAMETER
     }
     if ($modules | length) > 1 {
