@@ -1414,21 +1414,21 @@ t ta transfer all --from http://minio.terp.terminus.com/terminus-trantor/fe-reso
 - 除 `Nushell` 之外不依赖其他二进制文件或者 `Node` 模块(`Just` 只提供一个命令入口，没有 `Just`仍然可以正常工作);
 - 后续会持续对接 `Trantor` 元数据团队，及时跟进最新的变化，确保工具一直可用；
 
-**命令格式**: `msync *OPTIONS`
+**命令格式**: `msync *OPTIONS (modules)`
 
 **参数说明**:
 
+- `modules`: 可选，需要同步元数据的模块标识，多个模块之间用英文逗号分隔
 - `-f`, `--from <String>` - 指定同步源名称，可以从配置文件的 `meta.source` Key 值中获取，不传则使用默认同步源
 - `-t`, `--to <String>` - 指定同步目标名称，可以从配置文件的 `meta.destination` Key 值中获取，不传则使用默认同步目标
 - `-a`, `--all` - 加上这个开关就表示同步所有模块
-- `-s`, `--selected` - 加了这个开关就表示同步指定同步源中的 `selectedModules` 配置项所包含的模块
 - `-l`, `--list` - 列出所有的同步源和同步目标
 - `-i`, `--install` - 安装或者升级标准模块的元数据到目标项目，支持 Trantor 2.5.24.0930 及以后版本，表示安装为非原生模块
 - `-S`, `--snapshot` - 只创建并上传元数据的 SnapShot 不做导入元数据的操作
 - `-h`, `--help` - 查看帮助信息
-- 如果在调用命令的时候没有传 `--all` 或 `--selected` 参数会让你选择需要同步的模块, 如下图所示，在这个交互中可以使用的快捷键: `Space` 选择某一项，`a` 选择所有或取消全部选择，`q` 或 `ESC` 取消并退出，上下箭头切换模块, `Enter` 确认选择；
+- 如果在调用命令的时候没有传 `--all` 或 `modules` 参数会让你选择需要同步的模块, 如下图所示，在这个交互中可以使用的快捷键: `Tab` 选择某一项，`Ctrl+a` 选择所有, `Ctrl+d` 取消全部选择，`ESC` 取消并退出，上下箭头切换模块, `Enter` 确认选择, 也可以输入模块标识或名称进行过滤 & 模糊匹配；
 
-![Select Modules To Import](https://img.alicdn.com/imgextra/i4/O1CN01es0Yhx1HPXxh2YFq2_!!6000000000750-2-tps-1090-283.png)
+![Select Modules To Import](https://fe-docs.app.terminus.io/img/select-modules.png)
 
 **配置说明**:
 
@@ -1454,10 +1454,6 @@ username = 'your-username'
 password = 'your-password'
 # 同步源 Console 地址，后面不要加 `/`
 host = 'https://abc-console-dev.app.terminus.io'
-# 预定义的待导入模块, 如果通过 --selected 参数调用命令则同步这些模块
-selectedModules = ['ERP_HR', 'ERP_GEN', 'TERP_PORTAL']
-# 所有可选择模块，如果调用命令的时候既没有使用 --selected 参数，也没有使用 --all 参数则会出现模块选择界面，可以手工选择需要导入的模块
-availableModules = ['ERP_HR', 'ERP_PRD', 'ERP_PLN', 'ERP_GEN', 'ERP_SCM', 'ERP_FI', 'ERP_FIN', 'ERP_CO', 'TERP_PORTAL']
 # 此描述信息会在使用 --list Flag 时展示
 description = '标品 TERP 开发环境'
 
@@ -1466,12 +1462,8 @@ teamId = 666
 teamCode = 'TERP'
 # 同步源 Console 地址，后面不要加 `/`
 host = 'https://abc-console-dev.app.terminus.io'
-# 预定义的待导入模块, 如果通过 --selected 参数调用命令则同步该模块
-selectedModules = ['ERP_GEN']
 # 按目录导入元数据，在该模式下只能选择一个模块
 path = '通用管理/打印'
-# 所有可选择模块，如果调用命令的时候既没有使用 --selected 参数，也没有使用 --all 参数则会出现模块选择界面，可以手工选择需要导入的模块
-availableModules = ['ERP_HR', 'ERP_PRD', 'ERP_PLN', 'ERP_GEN', 'ERP_SCM', 'ERP_FI', 'ERP_FIN', 'ERP_CO', 'TERP_PORTAL']
 # 此描述信息会在使用 --list Flag时展示
 description = 'Trantor TERP 开发环境按目录导入元数据'
 
@@ -1508,12 +1500,12 @@ description = '标品 TERP 测试环境'
 **使用举例**:
 
 ```bash
-# 从默认同步源同步到默认同步目标，由于没有使用--all 或 --selected 参数在命令执行过程中会让你手工选择同步模块
+# 从默认同步源同步到默认同步目标，由于没有使用--all 或位置参数指定模块在命令执行过程中会让你手工选择要同步的模块
 t msync
 # 从默认同步源同步到默认同步目标，导入所有模块
 t msync -a
-# 从默认同步源同步到默认同步目标，导入 selectedModules 中指定的模块
-t msync -s
+# 从默认同步源同步到默认同步目标，导入 HR_ATT,HR_PER,HR_REC 模块的元数据
+t msync HR_ATT,HR_PER,HR_REC
 # 可以通过 --from --to 参数分别指定同步的源和目标，建议始终同步所有模块，因为同步指定模块功能未来可能废弃
 t msync -a --from dev0 --to test0
 # 从 dev 源创建元数据 SnapShot 并上传到 OSS，不做元数据导入操作

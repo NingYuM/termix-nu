@@ -310,7 +310,8 @@ def get-available-source-modules [
     print -e $'Failed to get available modules, error: ($resp.err)'
     exit $ECODE.SERVER_ERROR
   }
-  $resp | get data | select key name
+  # sys_common is a system module, and it is not syncable
+  $resp | get data | select key name | where key not-in [sys_common]
 }
 
 # Get the selected modules to sync by user selection or `modules` flag
