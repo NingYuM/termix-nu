@@ -46,10 +46,10 @@ const LEGACY_L1_VERSIONS = [2.5.24.0830 2.5.24.0930 2.5.24.1030]
 # meta data snapshot to the dest Console for all modules or selected modules.
 # User manual: https://fe-docs.app.terminus.io/termix/termix-nu#meta-data-syncing
 export def 'meta sync' [
+  modules?: string,      # Specify the modules to sync, multiple modules separated by commas
   --from(-f): string@'nu-complete source',  # Specify the source meta data provider name from meta.source config
   --to(-t): string@'nu-complete dest',      # Specify the destination meta data provider name from meta.destination config
   --all(-a),            # Specify whether to sync all the modules
-  --selected(-s),       # Sync the selected modules from config file of the specified source
   --list(-l),           # List all the available sources and destinations
   --install(-i),        # Install or upgrade the standard modules to the dest project, for 2.5.24.0930 or later
   --snapshot(-S),       # Only create and upload snapshot for meta data
@@ -62,10 +62,11 @@ export def 'meta sync' [
   let confMeta = load-meta-conf
   if $list { show-available-providers $confMeta; exit $ECODE.SUCCESS }
   if $snapshot { create-and-upload-snapshot --from $from --install=$install; exit $ECODE.SUCCESS }
-  let usedSetting = get-meta-setting --from $from --to $to --all=$all --selected=$selected
+  let usedSetting = get-meta-setting --from $from --to $to
   let dest = $usedSetting.dest
   let source = $usedSetting.source
-  let modules = if $all { [] } else { get-selected-modules --from $source --selected=$selected }
+  let sourceAuth = get-user-auth ($confMeta.settings? | default {} | merge $source)
+  let modules = if $all { [] } else { get-selected-modules --from $source --auth $sourceAuth --modules $modules }
   mut securityCode = ''
   if ($modules | is-empty) {
     print $'You have selected to sync (ansi p)ALL(ansi rst) the modules...'
@@ -78,7 +79,6 @@ export def 'meta sync' [
   }
   print -n (char nl)
   let destAuth = get-user-auth ($confMeta.settings? | default {} | merge $dest)
-  let sourceAuth = get-user-auth ($confMeta.settings? | default {} | merge $source)
   confirm-check --from $source --to $dest --src-auth $sourceAuth --dest-auth $destAuth
   install-check $dest $destAuth --install=$install
 
@@ -186,8 +186,6 @@ def confirm-snapshot [
 def get-meta-setting [
   --from(-f): string,   # Specify the source meta data provider name from meta.source config
   --to(-t): string,     # Specify the destination meta data provider name from meta.destination config
-  --all(-a),            # Specify whether to sync all the modules
-  --selected(-s),       # Sync the selected modules in config file
 ] {
   let metaConf = $env.META_CONF
   # print ($metaConf | table -e)
@@ -201,19 +199,6 @@ def get-meta-setting [
   provider-check 'destination' $defaultDest --to $to
   let source = if ($from | is-empty) { $defaultSource | get 0 } else { $metaConf.source | get $from }
   let destination = if ($to | is-empty) { $defaultDest | get 0 } else { $metaConf.destination | get $to }
-  if $selected {
-    # CHECK: Make sure the selected and available modules was set in the source config
-    if ([selectedModules availableModules] | any {|| $in not-in $source }) {
-      print -e $'The (ansi p)($from | default default)(ansi rst) source must have (ansi p)selectedModules & availableModules(ansi rst) config.'
-      exit $ECODE.INVALID_PARAMETER
-    }
-    # CHECK: Make sure the selected modules was all in the available modules
-    $source.selectedModules | each {|it| if $it not-in $source.availableModules {
-      print -e $'The (ansi p)($from | default default)(ansi rst) source`s selectedModules ($it) must be one of ($source.availableModules | str join ",")'
-      exit $ECODE.INVALID_PARAMETER
-    }}
-    return { source: $source, dest: $destination, selectedModules: $source.selectedModules }
-  }
   let $source = ($source
     | upsert username {|it| $it.username? | default $metaConf.settings?.username? }
     | upsert password {|it| $it.password? | default $metaConf.settings?.password? })
@@ -314,22 +299,47 @@ def trim-host [] {
   $in | str replace 'http://' '' | str replace 'https://' ''
 }
 
-# Get the selected modules to sync by user selection or config file
+# Get all the available modules from Trantor2 Console
+def get-available-source-modules [
+  source: record,       # Specify the meta source config
+  auth: record,         # A authentication record contains user and cookie info
+] {
+  let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team $source.teamCode ...$HTTP_HEADERS]
+  let resp = http get -H $headers $'($source.host)/api/trantor/console/module/query?type=Module'
+  if not $resp.success {
+    print -e $'Failed to get available modules, error: ($resp.err)'
+    exit $ECODE.SERVER_ERROR
+  }
+  $resp | get data | select key name
+}
+
+# Get the selected modules to sync by user selection or `modules` flag
 def get-selected-modules [
-  --from(-f): record,   # Specify the meta data source config
-  --selected(-s),       # Sync the selected modules from config file of the specified source
+  --from: record,       # Specify the meta data source config
+  --auth: record,       # A authentication record contains user and cookie info
+  --modules: string,    # Specify the modules to sync, multiple modules separated by commas
 ] {
   print -n (char nl)
+  let availableModules = get-available-source-modules $from $auth
   let FZF_ARGS = [--bind, 'ctrl-a:select-all,ctrl-d:deselect-all', --header, $'Select the modules to sync ($KEY_MAPPING)']
   $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) ($FZF_THEME)'
-  if $selected { return $from.selectedModules }
-  let selected = $from.availableModules | str join "\n"
-      | fzf --multi ...$FZF_ARGS | complete | get stdout | str trim | lines
+  if ($modules | is-not-empty) {
+    let invalidModules = $modules | split row , | where {|it| $it not-in $availableModules.key }
+    if ($invalidModules | is-empty) { return ($modules | split row ,) }
+    print -e $'The following modules are invalid: (ansi r)($invalidModules | str join ,)(ansi rst)'
+    exit $ECODE.INVALID_PARAMETER
+  }
+  let selected = $availableModules
+      | each {|it| $it.key | fill -w 16 | append $it.name | str join }
+      | str join "\n"
+      | fzf --multi ...$FZF_ARGS
+      | complete | get stdout | str trim | lines
+      | each {|it| $it | split row ' ' | first }
   if ($selected | is-empty) {
     print $'You have not selected any modules, bye...'
     exit $ECODE.SUCCESS
   }
-  return $selected
+  $selected
 }
 
 # Create meta data snapshot and wait for the task to finish, return the snapshot SHA if success

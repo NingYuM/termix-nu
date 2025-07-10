@@ -105,7 +105,7 @@ go nav=('list'): _setup
 
 # TERP Meta data synchronization tool
 [group('-- Backend --')]
-msync *OPTIONS: _setup
+msync *OPTIONS: _setup _setup_fzf
   @overlay use {{ join(_termix, 'actions', 'meta-sync.nu') }}; \
     meta sync {{OPTIONS}}
 
