@@ -466,6 +466,16 @@ export def unpack [
   }
 }
 
+# Watch command output and display it in a table
+def monitor [
+  command: closure
+  --duration (-d): duration = 1sec
+] {
+  generate {|i=true| sleep $duration; {out: (do $command | table), next: true} }
+    | flatten
+    | each { clear; $in }
+}
+
 def gh-pr [repo: string = 'nushell/nushell'] {
   gh -R $repo pr list --json url,number,author,title
     | from json
