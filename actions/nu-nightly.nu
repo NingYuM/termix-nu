@@ -100,7 +100,7 @@ export def get-latest-nightly-build [
       cd $destDir
       tar xvf nu-*.tar.gz
       rm nu-*.tar*gz; cd ..
-      let binDir = (which nu).path.0 | path dirname
+      let binDir = $nu.current-exe | path dirname
       print $'Nu will be installed to (ansi g)($binDir)(ansi rst)'
       # `sudo` is required to move the files to `/usr/local/bin` on macOS
       if (can-write $binDir) {
@@ -118,7 +118,7 @@ export def get-latest-nightly-build [
       cd $destDir
       tar xvf nu-*.zip
       rm nu-*.zip; cd ..
-      let binDir = (which nu).path.0 | path dirname
+      let binDir = $nu.current-exe | path dirname
       mv nu-nightly/nu_plugin_* $binDir
       mv nu-nightly/nu.exe $'($binDir)/nu-nightly.exe'
       rm -rf $destDir
