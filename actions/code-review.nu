@@ -228,7 +228,7 @@ def streaming-output [
 
   if $debug and (kv get last-reply | is-not-empty) {
     print $'(char nl)(char nl)Model & Token Usage:'; hr-line
-    kv get last-reply | from json | select -i model usage | table -e | print
+    kv get last-reply | from json | select -o model usage | table -e | print
   }
 }
 

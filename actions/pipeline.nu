@@ -245,7 +245,7 @@ def format-pipeline-data [pipelines: any, orgName: string] {
   const NA = 'N/A'
   return (
     $pipelines
-      | select -i id commit status normalLabels extra timeBegin timeUpdated filterLabels
+      | select -o id commit status normalLabels extra timeBegin timeUpdated filterLabels
       | upsert id {|it| $it | get-pipeline-url $orgName }
       | upsert timeBegin {|it| if ($it | get -o timeBegin | is-empty) { $NA } else { $it.timeBegin } }
       | update commit {|it| $it.commit | str substring 0..<9 }
@@ -255,7 +255,7 @@ def format-pipeline-data [pipelines: any, orgName: string] {
       | upsert Runner {|it| $it.extra | get -o runUser | default {name: $NA} | get name? }
       | upsert Begin {|it| if $it.timeBegin == $NA { $it.timeBegin } else { $it.timeBegin | into datetime | date humanize } }
       | upsert Updated {|it| $it.timeUpdated | into datetime | date humanize }
-      | reject -i extra timeBegin timeUpdated normalLabels filterLabels
+      | reject -o extra timeBegin timeUpdated normalLabels filterLabels
       | rename ID Commit Status
   )
 }
