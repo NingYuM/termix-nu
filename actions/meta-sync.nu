@@ -224,7 +224,7 @@ def check-required [name: string] {
 
 # Make sure user has configured username and password
 def check-user-auth [settings: record] {
-  let authEmpty = [username password] | any {|it| $settings | get -i $it | is-empty }
+  let authEmpty = [username password] | any {|it| $settings | get -o $it | is-empty }
   if $authEmpty {
     print -e $'(ansi r)Please config your username and password for the following setting:(ansi rst)'
     $settings | table -e | print
@@ -258,7 +258,7 @@ def install-check [
 ] {
   if $install { return }
   let isLegacy = ($auth.version | is-empty) or ($auth.version | str replace -a . '' | str replace 'DEV' '' | into int) < 25240930
-  let shouldInstall = (not $isLegacy) and ($dest | get -i resetModuleForInstall | default false)
+  let shouldInstall = (not $isLegacy) and ($dest | get -o resetModuleForInstall | default false)
   if $shouldInstall {
     print -e $'You are going to INSTALL modules to the dest project, please add (ansi g)`--install` / `-i`(ansi rst) flag and try again.(char nl)'
     exit $ECODE.INVALID_PARAMETER
@@ -528,8 +528,8 @@ def import-metadata [
     rootOid: $rootOid,
     securityCode: $code,
     downloadUrl: $metaUrl,
-    ddlAutoUpdate: ($dest | get -i ddlAutoUpdate | default true),
-    resetModuleForInstall: ($dest | get -i resetModuleForInstall | default false),
+    ddlAutoUpdate: ($dest | get -o ddlAutoUpdate | default true),
+    resetModuleForInstall: ($dest | get -o resetModuleForInstall | default false),
   }
   if not ($modules | is-empty) {
     $importPayload.resetModuleKeys = $modules
@@ -566,7 +566,7 @@ def install-metadata [
   const destInstallApi = '/api/trantor/task/exec/InstallAndUpgradeAppTask'
   mut installPayload = {
     downloadUrl: $metaUrl,
-    autoDDL: ($dest | get -i ddlAutoUpdate | default true),
+    autoDDL: ($dest | get -o ddlAutoUpdate | default true),
   }
   if not ($modules | is-empty) {
     $installPayload.moduleKeys = $modules

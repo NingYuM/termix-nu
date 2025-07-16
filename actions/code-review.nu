@@ -132,9 +132,9 @@ export def --env deepseek-review [
     print -e $'✖️ Code review failed！Error: '; hr-line; print $response
     exit $ECODE.SERVER_ERROR
   }
-  let message = $response | get -i choices.0.message
+  let message = $response | get -o choices.0.message
   let reason = $message | coalesce-reasoning
-  let review = $message.content? | default ($response | get -i message.content)
+  let review = $message.content? | default ($response | get -o message.content)
   let result = ['<details>' '<summary> Reasoning Details</summary>' $reason "</details>\n" $review] | str join "\n"
   if ($review | is-empty) {
     print -e $'✖️ Code review failed！No review result returned from ($base_url) ...'
@@ -213,10 +213,10 @@ def streaming-output [
     | try { lines } catch { print -e $'(ansi r)Error Happened ...(ansi rst)'; exit $ECODE.SERVER_ERROR }
     | each {|line|
         if ($line | is-empty) { return }
-        if ($IGNORED_MESSAGES | get -i $line | default false) { return }
+        if ($IGNORED_MESSAGES | get -o $line | default false) { return }
         let $last = $line | parse-line
         if $debug { $last | to json | kv set last-reply }
-        $last | get -i choices.0.delta | default ($last | get -i message) | if ($in | is-not-empty) {
+        $last | get -o choices.0.delta | default ($last | get -o message) | if ($in | is-not-empty) {
           let delta = $in
           if ($delta | coalesce-reasoning | is-not-empty) { kv set reasoning ((kv get reasoning) + 1) }
           if (kv get reasoning) == 1 { print $'(char nl)Reasoning Details:'; hr-line }

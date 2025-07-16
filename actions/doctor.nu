@@ -173,7 +173,7 @@ def check-alias [description: string, --fix, --debug] {
       # FIXME: This command may not work due to the shell haven't sourced yet.
       ^$env.SHELL -c 'type -t t 2>/dev/null || echo "NOT_EXIST"'
     } catch {
-      which t | get -i type?.0? | default 'NOT_EXIST'
+      which t | get -o type?.0? | default 'NOT_EXIST'
     }
   if $debug { show-debug $'Type of `t`: ($typeT)' }
   if $typeT == 'NOT_EXIST' {
@@ -203,7 +203,7 @@ def upgrade-package-tools [] {
     npm i -g @terminus/t-package-tools@latest --registry $REGISTRY
     return
   }
-  if (is-installed pnpm) and (pnpm ls -g @terminus/t-package-tools --json | from json | get -i dependencies.0 | is-not-empty) {
+  if (is-installed pnpm) and (pnpm ls -g @terminus/t-package-tools --json | from json | get -o dependencies.0 | is-not-empty) {
     pnpm i -g @terminus/t-package-tools@latest --registry $REGISTRY
     return
   }

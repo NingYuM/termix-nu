@@ -71,7 +71,7 @@ def show-available-syncs [
   for branch in ($syncs | columns) {
     for dest in ($syncs | get $branch) {
       mut sync = { Source: $branch, Dest: $'--->  ($dest.dest)', Repo: $dest.repo }
-      $sync.Lock = ($dest | get -i lock | default '-')
+      $sync.Lock = ($dest | get -o lock | default '-')
       if ($',($ignored),' =~ $',($dest.repo),') { $sync.SYNC = $cross } else { $sync.SYNC = $mark }
       $sync.Local = if (has-ref $branch) { $mark } else { $cross }
       $sync.Remote = if (has-ref origin/($branch)) { $mark } else { $cross }

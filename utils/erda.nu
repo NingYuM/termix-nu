@@ -11,7 +11,7 @@ export const VALID_ENV = [DEV TEST STAGING PROD]
 export def check-erda-envs [] {
   # 部署/查询 Pipeline 操作需要先配置 ERDA_USERNAME & ERDA_PASSWORD
   let envs = ['ERDA_USERNAME' 'ERDA_PASSWORD']
-  let empties = ($envs | where {|it| $env | get -i $it | is-empty })
+  let empties = ($envs | where {|it| $env | get -o $it | is-empty })
   if ($empties | length) > 0 {
     print -e $'Please set (ansi r)($empties | str join ',')(ansi rst) in your environment first...'
     exit $ECODE.INVALID_PARAMETER
@@ -23,7 +23,7 @@ export def get-erda-auth [host: string = $ERDA_HOST, --type: string = 'curl'] {
   const NA = 'N/A'
   let sessionKey = if $host == $ERDA_HOST { 'erdaSession' } else { $host | encode base64 }
   let TERMIX_CONF = $'(get-tmp-path)/.termix-conf'
-  let erdaSession = open $TERMIX_CONF | from json | get -i $sessionKey | default $NA
+  let erdaSession = open $TERMIX_CONF | from json | get -o $sessionKey | default $NA
   if $type == 'nu' {
     return ['cookie' $'OPENAPISESSION=($erdaSession)' ...$HTTP_HEADERS]
   }

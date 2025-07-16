@@ -468,7 +468,7 @@ def get-modules [modules?: string, --latest-meta: record, --action: string] {
 
   # Choose modules from latest.json if modules is empty
   let allModules = $latest_meta.latest | columns | wrap mod
-    | upsert desc {|it| $descriptions | get -i $it.mod | default $it.mod }
+    | upsert desc {|it| $descriptions | get -o $it.mod | default $it.mod }
     | sort-by mod
   if $action == 'detect' { return $allModules }
   if ($modules | is-empty) {
@@ -528,7 +528,7 @@ def update-transfer-meta [latestMeta: record] {
 # Get destination OSS settings
 def --env get-dest-oss [destStore: string] {
   let LOCAL_CONFIG = if ('.termixrc' | path exists) { '.termixrc' } else { $'($env.TERMIX_DIR)/.termixrc' }
-  let ossConf = open $LOCAL_CONFIG | from toml | get -i $destStore
+  let ossConf = open $LOCAL_CONFIG | from toml | get -o $destStore
   if ($ossConf | is-empty) {
     print -e $'The storage you specified (ansi p)($destStore)(ansi rst) does not exist in (ansi p)($LOCAL_CONFIG)(ansi rst).'
     exit $ECODE.INVALID_PARAMETER

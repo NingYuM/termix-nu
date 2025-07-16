@@ -72,7 +72,7 @@ def action [action?: string, --list(-l)] {
   }
   if $list { print ($actionMap | columns | str join ', '); return }
   mut counter = 0
-  let chars = $actionMap | get -i $action | default 'Unknown Action' | split row ''
+  let chars = $actionMap | get -o $action | default 'Unknown Action' | split row ''
   let total = $chars | length
   loop {
     if $counter == $total { break }
@@ -541,7 +541,7 @@ def --env menv [
       $envs | columns | sort | str join (char nl) | fzf --layout=reverse --height=50%
     } else { $profile }
   if ($profile | is-empty) { return }
-  let setting = $envs | get -i $profile
+  let setting = $envs | get -o $profile
   if ($setting | is-empty) { print $'Environment Profile (ansi r)($profile)(ansi rst) not found.'; return }
   if not $silent { print $setting }
   load-env $setting; cd $currentDir

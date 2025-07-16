@@ -12,7 +12,7 @@ const FZF_DEFAULT_OPTS = $'--multi --height 80% --layout=reverse --highlight-lin
 
 export def 'check assets' [] {
   cd $env.TERMIX_DIR
-  let MOUNT_POINTS = open .termixrc | from toml | get -i terp.assets | default {}
+  let MOUNT_POINTS = open .termixrc | from toml | get -o terp.assets | default {}
   let title = $'Select assets:'
   let PREVIEW_CMD = $"nu actions/check-assets.nu {}"
   let FZF_PREVIEW_CONF = $'--preview "($PREVIEW_CMD)"'
@@ -29,6 +29,6 @@ def main [selected: string] {
   $env.config.table.mode = 'light'
   $env.config.table.index_mode = 'never'
   $env.config.table.padding = { left: 0, right: 0 }
-  let MOUNT_POINTS = open .termixrc | from toml | get -i terp.assets
+  let MOUNT_POINTS = open .termixrc | from toml | get -o terp.assets
   terp assets detect -f ($MOUNT_POINTS | get $selected)
 }
