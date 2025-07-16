@@ -106,7 +106,7 @@ def show-settings [
   conf: record,    # The artifact settings to display
 ] {
   print $'Global artifact settings:(char nl)'
-  $conf.settings | select -i orgId orgAlias erdaHost | transpose | transpose --header-row | print
+  $conf.settings | select -o orgId orgAlias erdaHost | transpose | transpose --header-row | print
   print $'(char nl)Available source settings:(char nl)'
   mut sourceTable = []
   let sources = $conf.source | columns
@@ -115,7 +115,7 @@ def show-settings [
   }
   $sourceTable
     | upsert project {|it| $'($it.projectId) @ ($it.projectName)' }
-    | select -i alias project appName env branch default | print
+    | select -o alias project appName env branch default | print
 
   print $'(char nl)Available destination settings:(char nl)'
   mut destTable = []
@@ -125,7 +125,7 @@ def show-settings [
   }
   $destTable
     | upsert project {|it| $'($it.projectId) @ ($it.projectName)' }
-    | select -i alias project erdaHost deployGroup default | print
+    | select -o alias project erdaHost deployGroup default | print
   exit $ECODE.SUCCESS
 }
 
@@ -283,7 +283,7 @@ def confirm-pack [
 ] {
   print $'You are going to pack the APP artifact into a PROJECT artifact with the following config:'
   const SELECT_FIELDS = [projectId projectName default orgId orgAlias erdaHost]
-  let option = ($setting | select -i ...$SELECT_FIELDS)
+  let option = ($setting | select -o ...$SELECT_FIELDS)
   hr-line 60 -c grey66; print $option; hr-line 60 -c grey66
   print $'Are you sure to continue? '
   let confirm = input $'Please input (ansi p)($version)(ansi rst) to continue and (ansi p)q(ansi rst) to quit: '
@@ -313,7 +313,7 @@ def confirm-produce [
   setting: record,    # Source setting to produce the artifact
 ] {
   print $'You are going to produce artifacts with the following config:'
-  let option = ($setting | reject -i username password)
+  let option = ($setting | reject -o username password)
   hr-line 60 -c grey66; print $option; hr-line 60 -c grey66
   print $'Are you sure to continue? '
   let confirm = input $'Please input (ansi p)($setting.branch)(ansi rst) to continue and (ansi p)q(ansi rst) to quit: '
@@ -339,7 +339,7 @@ def confirm-consume [
   print $msg
   let setting = {
       version: $version, destEnv: $destEnv,
-      destSetting: ($destSetting | reject -i username password)
+      destSetting: ($destSetting | reject -o username password)
     }
   hr-line 60 -c grey66; print ($setting | table -e); hr-line 60 -c grey66
   print $'Are you sure to continue? '
@@ -368,7 +368,7 @@ def confirm-deploy [
   print $msg
   let setting = {
       version: $version, destEnv: $destEnv,
-      destSetting: ($destSetting | reject -i username password)
+      destSetting: ($destSetting | reject -o username password)
     }
   hr-line 60 -c grey66; print ($setting | table -e); hr-line 60 -c grey66
   print $'Are you sure to continue? '
@@ -464,7 +464,7 @@ def consume-trantor-artifact [
   let auth = get-erda-auth $destSetting.erdaHost | str replace 'cookie: ' ''
   let selected = open $metaPath | where metadata?.erda_release_version? == $version | get 0
   print $'You are going to consume the Trantor artifact: (ansi g)($version)(ansi rst)'; hr-line
-  $selected | reject -i metadata.file_hashes metadata.changelog | table -e | print
+  $selected | reject -o metadata.file_hashes metadata.changelog | table -e | print
   let preCheck = query-release-by-version $version $destSetting
   if ($preCheck | is-empty) {
     let artifactUrl = $'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/($selected.path)'

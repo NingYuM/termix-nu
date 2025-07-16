@@ -302,7 +302,7 @@ def detect [latestMeta: record] {
     | upsert syncBy {|it| $it.metadata?.syncBy? | show }
     | upsert syncFrom {|it| $it.metadata?.syncFrom? | default '-' }
     | upsert syncAt {|it| if ($it.metadata?.syncAt? | is-empty) { '-' } else { $it.metadata.syncAt | format date $TIME_FMT } }
-    | reject -i metadata
+    | reject -o metadata
     | sort-by namespace
     | rename module
 

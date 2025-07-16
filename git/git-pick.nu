@@ -82,7 +82,7 @@ export def 'git pick' [
 
 # Get the commits information from a list of commit SHAs.
 def get-commits [commits: list] {
-  $commits | upsert commit {|it| get-commit-meta $it.sha } | select -i commit error | flatten
+  $commits | upsert commit {|it| get-commit-meta $it.sha } | select -o commit error | flatten
 }
 
 # Get the commit meta information from a commit SHA.
