@@ -30,7 +30,7 @@ export def 'git pick' [
   $env.config.table.mode = 'light'
   let options = get-valid-options $match --from $from --to $to --since $since --until $until --ignore-file $ignore_file
   let remoteBranch = git for-each-ref --format='%(upstream:short)' refs/heads/($options.to)
-  let diffCount = git rev-list --left-right --count $'($options.to)...($remoteBranch)' | detect columns -n | rename ahead behind | get -i 0
+  let diffCount = git rev-list --left-right --count $'($options.to)...($remoteBranch)' | detect columns -n | rename ahead behind | get -o 0
   let countTip = if ($diffCount.ahead? | into int) > 0 { $'[AHEAD: ($diffCount.ahead)]' } else { '' }
   if $list_only and ($options.matches | length) > 0 {
     print $'(char nl)The following commits from (ansi g)($options.from)(ansi rst) need to be picked to (ansi g)($options.to) ($countTip)(ansi rst)'

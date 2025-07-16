@@ -52,7 +52,7 @@ export-env {
 def check-pipeline-conf [pipeline: any] {
   let keys = ['pid', 'appid', 'branch', 'env', 'appName', 'pipeline']
   $pipeline | each {|conf|
-    let empties = ($keys | where {|it| $conf | get -i $it | is-empty })
+    let empties = ($keys | where {|it| $conf | get -o $it | is-empty })
     if ($empties | length) > 0 {
       print -e $'Please set (ansi r)($empties | str join ',')(ansi rst) in the following pipeline config:'
       print -e $conf; exit $ECODE.INVALID_PARAMETER
@@ -90,7 +90,7 @@ def get-pipeline-conf [
   if $list { get-available-targets $configFile $repoConf --grep $grep }
   if $interactive { return (get-available-targets $configFile $repoConf --grep $grep --quiet) }
 
-  let pipeline = ($repoConf.erda | get -i $dest)
+  let pipeline = ($repoConf.erda | get -o $dest)
   if ($pipeline | is-empty) {
     print -e $'Please set the App configs for (ansi r)erda.($dest)(ansi rst) in (ansi r)($configFile)(ansi rst) first...'
     exit $ECODE.INVALID_PARAMETER
@@ -114,7 +114,7 @@ def get-pipeline-conf [
   check-pipeline-conf $merged
   if not $batchMode { return $merged }
   # The condition to filter the matched apps
-  let cond = {|x| $apps | split row ',' | any {|it| $it in [$x.appName ($x | get -i alias)] }}
+  let cond = {|x| $apps | split row ',' | any {|it| $it in [$x.appName ($x | get -o alias)] }}
   let matched = if $apps == 'all' { $merged } else if not ($apps | is-empty) { $merged | where $cond }
   return $matched
 }
@@ -247,12 +247,12 @@ def format-pipeline-data [pipelines: any, orgName: string] {
     $pipelines
       | select -i id commit status normalLabels extra timeBegin timeUpdated filterLabels
       | upsert id {|it| $it | get-pipeline-url $orgName }
-      | upsert timeBegin {|it| if ($it | get -i timeBegin | is-empty) { $NA } else { $it.timeBegin } }
+      | upsert timeBegin {|it| if ($it | get -o timeBegin | is-empty) { $NA } else { $it.timeBegin } }
       | update commit {|it| $it.commit | str substring 0..<9 }
-      | upsert Comment {|it| $it.normalLabels.commitDetail | from json | get -i comment | str trim }
-      | upsert Author {|it| $it.normalLabels.commitDetail | from json | get -i author }
+      | upsert Comment {|it| $it.normalLabels.commitDetail | from json | get -o comment | str trim }
+      | upsert Author {|it| $it.normalLabels.commitDetail | from json | get -o author }
       | update status {|it| $'(ansi pb)($it.status)(ansi rst)' }
-      | upsert Runner {|it| $it.extra | get -i runUser | default {name: $NA} | get name? }
+      | upsert Runner {|it| $it.extra | get -o runUser | default {name: $NA} | get name? }
       | upsert Begin {|it| if $it.timeBegin == $NA { $it.timeBegin } else { $it.timeBegin | into datetime | date humanize } }
       | upsert Updated {|it| $it.timeUpdated | into datetime | date humanize }
       | reject -i extra timeBegin timeUpdated normalLabels filterLabels

@@ -106,7 +106,7 @@ def get-sign [secret: string] {
 # Check if the required environment variable was set, quit if not
 def check-envs [] {
   let envs = ['DINGTALK_ROBOT_AK' 'DINGTALK_ROBOT_SECRET']
-  let empties = ($envs | where {|it| $env | get -i $it | is-empty })
+  let empties = ($envs | where {|it| $env | get -o $it | is-empty })
   if ($empties | length) > 0 {
     print -e $'Please set (ansi r)($empties | str join ',')(ansi rst) in your environment first...'
     exit $ECODE.CONDITION_NOT_SATISFIED

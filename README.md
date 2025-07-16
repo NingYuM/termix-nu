@@ -1223,7 +1223,7 @@ def get-env [
   key: string,       # The key to get it's env value
   default?: string,  # The default value for an empty env
 ] {
-  $env | get -i $key | default $default
+  $env | get -o $key | default $default
 }
 
 # Check if some command available in current shell
@@ -1274,7 +1274,7 @@ def get-sign [secret: string] {
 # Check if the required environment variable was set, quit if not
 def check-envs [] {
   let envs = ['DINGTALK_ROBOT_AK' 'DINGTALK_ROBOT_SECRET']
-  let empties = ($envs | filter {|it| $env | get -i $it | is-empty })
+  let empties = ($envs | filter {|it| $env | get -o $it | is-empty })
   if ($empties | length) > 0 {
     print -e $'Please set (ansi r)($empties | str join ',')(ansi rst) in your environment first...'
     exit 5

@@ -178,7 +178,7 @@ def preview-artifact [
   let selected = $releases.data.list | where version == $version | get 0
   mut meta = $selected | select ...$SELECT_COLUMN
   $meta.modes = (($meta.modes | from json | columns) | str join ', ')
-  $meta.createdBy = ($releases.userInfo? | get -i $meta.userId).nick?
+  $meta.createdBy = ($releases.userInfo? | get -o $meta.userId).nick?
   print $'Version: ($version) by ($meta.createdBy)'; hr-line
   $meta | select ...($SELECT_COLUMN | update 2 createdBy) | print; hr-line
   print $selected.changelog
@@ -264,7 +264,7 @@ def validate-pack-setting [
   let setting = if ($from | is-empty) {
     $artConf.source | values | default false default | where default == true
   } else {
-    [($artConf.source | get -i $from)]
+    [($artConf.source | get -o $from)]
   }
 
   if ($setting | compact | is-empty) {
@@ -389,7 +389,7 @@ def validate-produce-setting [
   let setting = if ($from | is-empty) {
     $artConf.source | values | default false default | where default == true
   } else {
-    [($artConf.source | get -i $from)]
+    [($artConf.source | get -o $from)]
   }
 
   if ($setting | compact | is-empty) {
@@ -506,7 +506,7 @@ def validate-consume-setting [
   let setting = if ($to | is-empty) {
     $artConf.destination | values | default false default | where default == true
   } else {
-    [($artConf.destination | get -i $to)]
+    [($artConf.destination | get -o $to)]
   }
 
   if ($setting | compact | is-empty) {
@@ -718,7 +718,7 @@ def select-deploy-mode-by-fzf [
 ] {
   print $'(ansi g)Tip: Use `Tab` and `Shift + Tab` to toggle select items, and `Enter` to confirm(ansi rst)'
   let title = $'Select the application group to deploy:'
-  let options = $previewOptions | get -i projectId releaseID workspace orgAlias host | str join '+++'
+  let options = $previewOptions | get -o projectId releaseID workspace orgAlias host | str join '+++'
   let PREVIEW_CMD = $"nu actions/artifact.nu {} group --options ($options)"
   let FZF_PREVIEW_CONF = $'--preview "($PREVIEW_CMD)"'
   $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --multi --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'

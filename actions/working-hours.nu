@@ -124,7 +124,7 @@ export def query-hours-by-team-codes [
 
 # Load emp settings and store them to environment variable
 def --env load-emp-conf [] {
-  let empConf = open $'($env.TERMIX_DIR)/.termixrc' | from toml | get -i emp | default null
+  let empConf = open $'($env.TERMIX_DIR)/.termixrc' | from toml | get -o emp | default null
   if ($empConf | is-empty) {
     print -e $'(ansi r)Please set `emp` related configs in `($env.TERMIX_DIR)/.termixrc`, bye...(char nl)(ansi rst)'
     exit $ECODE.INVALID_PARAMETER
@@ -444,7 +444,7 @@ def notify-filling-hours [hours: any, --team: record, --debug] {
     return
   }
 
-  let message = $messages | get -i $weekday | default $messages.monthEnd
+  let message = $messages | get -o $weekday | default $messages.monthEnd
   let message = if $isLastDay { $env.LASTDAY_MSG? | default $DEFAULT_LASTDAY_MSG } else { $message }
   let notifyCount = $notifyCandidates | length
   load-env { DINGTALK_ROBOT_AK: $DINGTALK_AK_SK.0, DINGTALK_ROBOT_SECRET: $DINGTALK_AK_SK.1, DINGTALK_NOTIFY: 'on' }
@@ -453,7 +453,7 @@ def notify-filling-hours [hours: any, --team: record, --debug] {
   }
   let mentions = $notifyCandidates | upsert Mobile {|m|
     let mobileFetched = open $STAFFS_FILE | where name == $m.Name | get phone
-    let mobileFilled = $users | where name == $m.Name | get -i 0 | get -i mobile
+    let mobileFilled = $users | where name == $m.Name | get -o 0 | get -o mobile
     ($mobileFilled | default $mobileFetched)
   }
   if $debug { log 'mentions' $mentions }

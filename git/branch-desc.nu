@@ -33,7 +33,7 @@ export def main [
   }
 
   let queryBranch = if ($branch | is-empty) { (git branch --show-current | str trim) } else { $branch }
-  let desc = $descriptions | get descriptions? | get -i $queryBranch
+  let desc = $descriptions | get descriptions? | get -o $queryBranch
   print $'(char nl)(ansi p)($queryBranch) (ansi rst)分支描述：(char nl)'
   hr-line
   print $'(char nl)($desc | default $"(ansi grey66)-- No Description --(ansi rst)")(char nl)'
