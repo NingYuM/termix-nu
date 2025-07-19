@@ -614,6 +614,33 @@ def nudown [] {
     # | update created_at {|it| $it | format date '%m/%d/%Y %H:%M:%S' }
 }
 
+# Download file with nu
+def nu-get [
+  url: string
+  --directory (-d): directory # Base dir
+  --output (-o): path         # File name
+  --force (-f)                # Overwrite file
+  --silent (-s)               # Don't print anything
+] {
+  if ($directory | is-not-empty) { cd $directory }
+  let $file_name = $output | default { $url | url parse | get path | split row '/' | last }
+
+  if not $force and ($file_name | path exists) { error make -u { msg: 'File already exists' } }
+
+  let $time = timeit { http get $url | save --progress --force=$force $file_name }
+
+  if not $silent {
+    print 'Download results:'
+    {
+      url: $url
+      file: ($file_name | path basename)
+      cwd: ($file_name | path expand | path dirname)
+      time: $time
+      speed: $'((ls $file_name | get 0.size) / ($time | into int | $in / 10 ** 9))/s'
+    } | print
+  }
+}
+
 const FZF_THEME = '--color=bg+:#3c3836,bg:#32302f,spinner:#fb4934,hl:#928374,fg:#ebdbb2,header:#928374,info:#8ec07c,pointer:#fb4934,marker:#fb4934,fg+:#ebdbb2,prompt:#fb4934,hl+:#fb4934'
 
 # -------------------------- Custom Configs ------------------------
