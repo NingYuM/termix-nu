@@ -16,7 +16,7 @@ use open-tools.nu [upgrade-latest-tool]
 
 use ../utils/common.nu [ECODE, hr-line, is-installed, get-dot-conf]
 
-const VALID_TOOLS = ['just', 'nu', 'nushell', 'termix-nu']
+const VALID_TOOLS = ['just', 'nu', 'nushell', 'fzf', 's5cmd', 'termix-nu']
 
 # Upgrade termix-nu, just or nushell
 export def upgrade-tool [

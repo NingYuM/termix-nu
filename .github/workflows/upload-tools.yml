@@ -27,6 +27,7 @@ jobs:
       - name: Setup Nu
         uses: hustcer/setup-nu@v3
         with:
+          version: nightly
           check-latest: true
 
       - name: Handle Upload
@@ -40,6 +41,7 @@ jobs:
           setup-oss-util --ak-id $ak --ak-secret $sk --endpoint $endpoint
           oss-assets-upload fzf --bucket ${{ vars.OSS_BUCKET }}
           oss-assets-upload just --bucket ${{ vars.OSS_BUCKET }}
+          oss-assets-upload s5cmd --bucket ${{ vars.OSS_BUCKET }}
           oss-assets-upload nushell --bucket ${{ vars.OSS_BUCKET }}
 
 

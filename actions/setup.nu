@@ -16,21 +16,25 @@ const ASSETS = {
     just: 'aarch64-darwin',
     fzf: 'aarch64-apple-darwin',
     nu: 'aarch64-apple-darwin',
+    s5cmd: 'aarch64-apple-darwin',
   },
   macos_x86_64: {
     just: 'x86_64-darwin',
     fzf: 'x86_64-apple-darwin',
     nu: 'x86_64-apple-darwin',
+    s5cmd: 'x86_64-apple-darwin',
   },
   linux_aarch64: {
     just: 'aarch64-linux-musl',
     fzf: 'aarch64-unknown-linux',
     nu: 'aarch64-unknown-linux-musl',
+    s5cmd: 'aarch64-unknown-linux',
   },
   linux_x86_64: {
     just: 'x86_64-linux-musl',
     fzf: 'x86_64-unknown-linux',
     nu: 'x86_64-unknown-linux-musl',
+    s5cmd: 'x86_64-unknown-linux',
   },
 }
 
@@ -39,6 +43,7 @@ const LATEST_META = {
   nu: 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/open-tools/nushell/latest.json',
   fzf: 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/open-tools/fzf/latest.json',
   just: 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/open-tools/just/latest.json',
+  s5cmd: 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/open-tools/s5cmd/latest.json',
 }
 
 # Install or update nushell, fzf, and just to $DEST_DIR
@@ -84,6 +89,7 @@ export def get-versions [] {
       let version = match $bin {
         fzf => { fzf --version | split row ' ' | first }
         just => { just --version | split row ' ' | last }
+        s5cmd => { s5cmd version | split row - | first | str trim -c v },
         _ => { ^$'($bin)' --version }
       }
       $versions = $versions | upsert $bin $version
@@ -104,7 +110,7 @@ export def get-latest-versions [] {
 
 # Install or update a binary to $DEST_DIR
 export def install-or-update [
-  bin: string,           # Binary name, e.g. 'nu', 'fzf', 'just'
+  bin: string,           # Binary name, e.g. 'nu', 'fzf', 'just', 's5cmd'
   platform: string,      # Platform name, e.g. 'macos_x86_64', 'linux_aarch64'
   dest: string,          # Installation directory, default to $DEST_DIR
   --in-place-update,     # Replace the current binary(if installed) with the latest version
