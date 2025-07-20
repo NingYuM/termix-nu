@@ -31,9 +31,11 @@ use ../utils/common.nu [is-installed, hr-line, get-conf, get-tmp-path, compare-v
 # --------------------------------- Constants and Configs ---------------------------------
 const JSON_ENTRY = 'latest.json'
 const STORE_TYPES = [aliyun, minio, volc, ifly]
-const VALID_ACTIONS = [download, transfer, detect, revert]
+const VALID_ACTIONS = [init, download, transfer, detect, revert]
 const VALID_MODULES = [terp-mobile terp service service-mobile iam dors dors-mobile base base-mobile b2b emp]
 const ENDPOINT = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com'
+const DEFAULT_ENDPOINT = 'https://oss-cn-hangzhou.aliyuncs.com'
+const ASSETS_URL = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/fe-resources/assets/terp-assets.tar.gz'
 
 # Don't validate module names by default
 const VALIDATE_MODULES = '0'
@@ -60,6 +62,7 @@ const MOD_DESC = {
 const TOOL_INSTALL_TIP = {
   fzf: 'Please install fzf by `brew install fzf` first'
   mc: 'Please install mc by `brew install minio/stable/mc`'
+  s5cmd: 'Please install s5cmd by `brew install s5cmd` first'
   ossutil: 'Please install `ossutil`, see https://alibabacloud.com/help/zh/oss/developer-reference/install-ossutil'
 }
 # -----------------------------------------------------------------------------------------
@@ -83,8 +86,8 @@ const TOOL_INSTALL_TIP = {
 
 # Download TERP static assets or transfer assets to other path of the specified cloud storage
 export def 'terp assets' [
-  action: string,             # Available actions: download, transfer, detect and revert
-  modules?: string,           # Available values: pc/mobile/mat/mmat/iam/dors/mdors/all. Multiple modules separated by `,`
+  action: string,             # Available actions: init, download, transfer, detect and revert
+  modules?: string,           # Available values: base/base-mobile/terp/terp-mobile/iam/charts/service/all. Multiple modules separated by `,`
   --from(-f): string,         # Source mount point or source URL. Note: Only `detect` action supports multiple sources separated by `,`
   --to(-t): string,           # Destination mount point
   --quiet(-q),                # Show less info
@@ -106,7 +109,12 @@ export def 'terp assets' [
     revert-module $modules $to $dest_store; return
   }
 
-  if ($from =~ ',') and ($action == 'detect') { detect-multiple-assets $from; return }
+  if $action == 'init' {
+    init-assets --dest-store $dest_store --quiet=$quiet
+    return
+  }
+
+  if ($from | default '') =~ ',' and ($action == 'detect') { detect-multiple-assets $from; return }
   pre-check $action --to $to --dest-store $dest_store
   let latestMeta = get-latest-meta $from
   let modules = get-modules $modules --latest-meta $latestMeta --action $action
@@ -180,6 +188,54 @@ def revert-module [module: string, to: string, destStore: string] {
 
   # Confirm and execute revert
   execute-revert $module $target $destStore $revision $localPath $remoteURI $ossConf
+}
+
+# Download static assets from OSS and sync to destination store by s5cmd
+def init-assets [
+  --dest-store(-d): string,   # Destination store, should be configured in .termixrc
+  --quiet(-q),                # Show less info
+] {
+  const ASSETS = [js/ fonts/ monaco-editor/]
+  let tmp = $'(get-tmp-path)/static'
+  if not ($tmp | path exists) { mkdir $tmp }
+  rm -rf ($'($tmp)/*' | into glob)
+  let ossConf = get-dest-oss $dest_store
+  $env.AWS_REGION = $ossConf.OSS_REGION | default 'us-east-1'
+  $env.AWS_ACCESS_KEY_ID = $ossConf.OSS_AK | default ''
+  $env.AWS_SECRET_ACCESS_KEY = $ossConf.OSS_SK | default ''
+  $env.S3_ENDPOINT_URL = $ossConf.OSS_ENDPOINT | default $DEFAULT_ENDPOINT
+  let s3_dest = $'s3://($ossConf.OSS_BUCKET)/terp-assets'
+  let required = [OSS_AK OSS_SK OSS_BUCKET]
+  let missing = $required | where {|it| $ossConf | get -o $it | is-empty }
+  if ($missing | length) > 0 {
+    print -e $'The following required config is missing: (ansi r)($missing | str join ", ")(ansi rst)'
+    exit $ECODE.INVALID_PARAMETER
+  }
+  print $'Downloading assets from (ansi g)($ASSETS_URL)(ansi rst)...'
+  http get $ASSETS_URL | save -rpf $'($tmp)/terp-assets.tar.gz'
+  cd $tmp; tar -xzf terp-assets.tar.gz
+  print $'Assets downloaded successfully to ($tmp)!'
+  if (s5cmd --json ls $s3_dest | complete | get stderr | from json | get -o error | default '') =~ 'no object' {
+    print $'Updating assets to (ansi p)($dest_store)(ansi rst)...'
+    $ASSETS | each {|it| s5cmd sync $it $'($s3_dest)/($it)' }
+  }
+  let dry_run = $ASSETS | reduce -f '' {|it, acc|
+    [$acc (s5cmd --dry-run sync $it $'($s3_dest)/($it)')] | str join "\n"
+  } | str trim
+
+  if ($dry_run | is-empty) {
+    print $'(ansi g)Assets have already been uploaded to (ansi p)($dest_store)(ansi rst) (ansi g)successfully!(ansi rst)'
+    exit $ECODE.SUCCESS
+  }
+  let dry_run = if ($dry_run | lines | length) > 5 {
+      $'($dry_run | lines | take 5 | str join "\n")(char nl)...'
+    } else { $dry_run }
+  print $'Actions to be performed:(char nl)(ansi g)($dry_run)(ansi rst)'
+  let confirm = input $'Are you sure to sync the assets? (ansi g)[y/n](ansi rst) '
+  if ($confirm | str upcase) != 'Y' { exit $ECODE.SUCCESS }
+  print $'Syncing assets...'
+  $ASSETS | each {|it| s5cmd sync $it $'($s3_dest)/($it)' }
+  print $'Assets have been synced successfully!'
 }
 
 # Download static assets from OSS to specified directory
@@ -570,6 +626,16 @@ def pre-check [
       print -e $'Please specify the destination store to transfer by (ansi p)--dest-store(ansi rst) option.'
     }
     exit $ECODE.INVALID_PARAMETER
+  }
+  if $action == 'init' {
+    if not (is-installed s5cmd) {
+      print -e $TOOL_INSTALL_TIP.s5cmd
+      exit $ECODE.MISSING_BINARY
+    }
+    if ($dest_store | is-empty) {
+      print -e $'Please specify the destination store to init static assets by (ansi p)--dest-store(ansi rst) option.'
+      exit $ECODE.INVALID_PARAMETER
+    }
   }
 }
 
