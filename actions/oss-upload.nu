@@ -16,6 +16,7 @@ const ASSET_PREFIX = 'open-tools'
 const TOOL_MAP = {
   just: 'casey/just',
   fzf: 'junegunn/fzf',
+  s5cmd: 'peak/s5cmd',
   nushell: 'nushell/nushell',
   # nushell: 'nushell/nightly',
 }
@@ -38,7 +39,15 @@ const NAME_MAP = {
     'darwin_arm64': 'aarch64-apple-darwin',
     'windows_amd64': 'x86_64-pc-windows-msvc',
     'windows_arm64': 'aarch64-pc-windows-msvc',
-  }
+  },
+  s5cmd: {
+    'Linux-64bit': 'x86_64-unknown-linux',
+    'Linux-arm64': 'aarch64-unknown-linux',
+    'macOS-64bit': 'x86_64-apple-darwin',
+    'macOS-arm64': 'aarch64-apple-darwin',
+    'Windows-64bit': 'x86_64-pc-windows-msvc',
+    'Windows-arm64': 'aarch64-pc-windows-msvc',
+  },
 }
 
 export def setup-oss-util [
@@ -56,7 +65,7 @@ export def setup-oss-util [
 }
 
 export def oss-assets-upload [
-  name: string,           # The name of the asset, currently support: nushell, just, fzf
+  name: string,           # The name of the asset, currently support: nushell, just, fzf, s5cmd
   --bucket(-b): string,   # The bucket name of OSS to store the asset
 ] {
   let rootPath = $'oss://($bucket)/($ASSET_PREFIX)'

@@ -18,6 +18,7 @@ const BIN_MAP = {
   fzf: 'fzf',
   just: 'just',
   nushell: 'nu',
+  s5cmd: 's5cmd',
 }
 
 # Install tools from USTC mirror
@@ -186,6 +187,7 @@ def should-upgrade [name: string, latest: record, --force] {
     nushell: { nu --version | str trim },
     fzf: { fzf --version | split row ' ' | get 0 }
     just: { just --version | str replace 'just' '' | str trim },
+    s5cmd: { s5cmd version | split row - | first | str trim -c v },
   }
 
   let currentVer = do -i ($VERSION_CHECK | get $name) | default 0.0.0

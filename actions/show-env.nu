@@ -22,6 +22,7 @@ export def main [] {
   let fnmVer = (get-ver fnm "fnm --version | str trim | str substring 4..")
   let justVer = (get-ver just "just --version | str trim | str substring 5..")
   let gitVer = (get-ver git "git --version | str trim | str substring 12..")
+  let s5cmdVer = (get-ver s5cmd 's5cmd version | split row - | first | str trim -c v')
   let time = (date now | format date '%Y/%m/%d %H:%M:%S')
   let gitProxy = if (git config --global --list | grep proxy | is-empty) { 'Off' } else { 'On' }
 
@@ -41,6 +42,7 @@ export def main [] {
     ['Npm', $npmVer]
     ['Pnpm', $pnpmVer]
     ['fzf', (get-ver fzf 'fzf --version')]
+    ['s5cmd', $s5cmdVer]
     ['.OS.', (sys host | get long_os_version | str trim)]
     ['Herd', $herdVer]
     ['Termix', $termixVer]
