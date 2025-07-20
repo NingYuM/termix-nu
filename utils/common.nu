@@ -112,7 +112,7 @@ export def get-env [
 }
 
 # Show a progress spinner while running a command
-def with-progress [
+export def with-progress [
   message: string,         # Message to display
   action: closure,         # Action to perform
   --success: string,       # Success message

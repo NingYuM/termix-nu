@@ -26,7 +26,7 @@
 #   - https://www.alibabacloud.com/help/zh/oss/developer-reference/install-ossutil#dda54a7096xfh
 
 use ../utils/common.nu [ECODE, FZF_DEFAULT_OPTS, FZF_THEME, _TIME_FMT]
-use ../utils/common.nu [is-installed, hr-line, get-conf, get-tmp-path, compare-ver]
+use ../utils/common.nu [is-installed, hr-line, get-conf, get-tmp-path, compare-ver, with-progress]
 
 # --------------------------------- Constants and Configs ---------------------------------
 const JSON_ENTRY = 'latest.json'
@@ -216,8 +216,10 @@ def init-assets [
   cd $tmp; tar -xzf terp-assets.tar.gz
   print $'Assets downloaded successfully to ($tmp)!'
   if (s5cmd --json ls $s3_dest | complete | get stderr | from json | get -o error | default '') =~ 'no object' {
-    print $'Updating assets to (ansi p)($dest_store)(ansi rst)...'
-    $ASSETS | each {|it| s5cmd sync $it $'($s3_dest)/($it)' }
+    let msg = $'Uploading assets to (ansi p)($dest_store)(ansi rst)...'
+    with-progress $msg {
+      $ASSETS | each {|it| s5cmd sync $it $'($s3_dest)/($it)' }
+    }
   }
   let dry_run = $ASSETS | reduce -f '' {|it, acc|
     [$acc (s5cmd --dry-run sync $it $'($s3_dest)/($it)')] | str join "\n"
