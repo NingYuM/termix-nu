@@ -24,7 +24,7 @@ const BIN_MAP = {
 # Install tools from USTC mirror
 export def install-from-brew [name: string, --force(-f), --post-install: closure] {
   if (sys host | get name) != 'Darwin' {
-    print '(ansi r)Only macOS is supported to install by brew for now...(ansi rst)'; exit $ECODE.INVALID_PARAMETER
+    print $'(ansi r)Only macOS is supported to install by brew for now...(ansi rst)'; exit $ECODE.INVALID_PARAMETER
   }
 
   let latest = get-version-from-brew $name
