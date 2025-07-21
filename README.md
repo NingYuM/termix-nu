@@ -1331,11 +1331,12 @@ alias main = dingtalk notify
 
 **命令格式**: `terp-assets {flags} <action> <modules>`
 
-其中 `action` 目前只支持三种 `detect`, `download` & `transfer`:
+其中 `action` 目前支持 `init`, `detect`, `download` & `transfer`:
 
 - 资源摘要查看：`terp-assets detect --from <from>`
 - 资源下载：`terp-assets download <modules> --from <from> --to <to>`
-- 资源同步：`terp-assets transfer <modules> --from <from> --to <to> --dest-store <store>`，资源同步时会先下载然后再上传，实际同步操作的时候不需要单独执行下载操作。资源上传需要在本机安装 `@terminus/t-package-tools`, 执行 `npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io` 即可(Node.js 建议 v18 或者以上版本)，版本不低于 `0.5.2`;
+- 低修改频率公共静态资源初始化：`terp-assets init --dest-store <store>` （支持 Aliyun OSS 和 minio）有些静态资源比如 PDF 和富文本字体，XSLX & PDF 文件解析类库，函数编辑器依赖的 `monaco-editor` 等这些资源体积比较大而且基本不会修改，所以适合在应用部署的时候直接初始化传输过去，然后配置网关转发即可，没有必要走打包或每次发布都要同步一次的流程以节省时间。而且这个静态资源的初始化是 Bucket 级别的，跟环境无关，每个 Bucket 里面初始化一份然后配置好网关转发就可以了，所以初始化参数里面只有 `--dest-store` 或者 `-d`。初始化成功后在对应 Bucket 的 **terp-assets** 目录下可以找到对应的静态资源；
+- 资源同步：`terp-assets transfer <modules> --from <from> --to <to> --dest-store <store>`，资源同步时会先下载然后再上传，实际同步操作的时候不需要单独执行下载操作。资源上传需要在本机安装 `@terminus/t-package-tools`, 执行 `npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io` 即可(Node.js 建议 v20 或者以上版本)，版本不低于 `0.5.5`;
 
 **命令别名**: `terp-assets` 的别名为 `ta`
 
@@ -1369,6 +1370,8 @@ minio.OSS_ENDPOINT = 'https://oss-cn-hangzhou.aliyuncs.com'
 **使用举例**:
 
 ```bash
+# 将 terp-assets 公共静态资源同步到上面配置的 minio 存储里面
+t ta init --dest-store minio
 # 从 OSS 上 dev 目录（即 https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/fe-resources/dev/latest.json）
 # 下载所有 TERP 依赖的静态资源到本地，注：实际资源同步的过程中是不需要单独执行该命令的，只需要执行后面的两条命令之一即可
 t ta download all -f dev
