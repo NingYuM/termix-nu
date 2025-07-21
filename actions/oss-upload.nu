@@ -86,11 +86,12 @@ def compare-tools-ver [
   name: string,
   toolPath: string,
 ] {
+  let header = if ($env.GITHUB_TOKEN? | is-empty) { [] } else { [Authorization $'Bearer ($env.GITHUB_TOKEN)'] }
   let latestPath = $'($toolPath)/latest.json'
   let latest = ossutil cat $latestPath | lines | where $it !~ 'elapsed' | str join | from json
   let ossVersion = $latest.version
   let repo = $TOOL_MAP | get $name
-  let assetMeta = http get $'https://api.github.com/repos/($repo)/releases/latest'
+  let assetMeta = http get -H $header $'https://api.github.com/repos/($repo)/releases/latest'
   compare-ver $ossVersion $assetMeta.tag_name
 }
 
@@ -98,9 +99,9 @@ def sync-latest-assets [
   name: string,
   toolPath: string,
 ] {
-
   let repo = $TOOL_MAP | get $name
-  let assetMeta = http get $'https://api.github.com/repos/($repo)/releases/latest'
+  let header = if ($env.GITHUB_TOKEN? | is-empty) { [] } else { [Authorization $'Bearer ($env.GITHUB_TOKEN)'] }
+  let assetMeta = http get -H $header $'https://api.github.com/repos/($repo)/releases/latest'
   mut assets = $assetMeta | get assets.browser_download_url
   if ($name == 'nushell') {
     $assets = ($assets | where $it !~ 'msi')

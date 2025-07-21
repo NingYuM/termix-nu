@@ -32,6 +32,8 @@ jobs:
 
       - name: Handle Upload
         shell: nu {0}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           use ${{ github.workspace }}/actions/oss-upload.nu *
 
