@@ -109,13 +109,10 @@ export def 'terp assets' [
     revert-module $modules $to $dest_store; return
   }
 
-  if $action == 'init' {
-    init-assets --dest-store $dest_store --quiet=$quiet
-    return
-  }
-
   if ($from | default '') =~ ',' and ($action == 'detect') { detect-multiple-assets $from; return }
   pre-check $action --to $to --dest-store $dest_store
+
+  if $action == 'init' { init-assets --dest-store $dest_store --quiet=$quiet; return }
   let latestMeta = get-latest-meta $from
   let modules = get-modules $modules --latest-meta $latestMeta --action $action
   confirm-action $action $modules --to $to --dest-store $dest_store
