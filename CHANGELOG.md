@@ -1,6 +1,49 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.90.0 - 2025-07-21
+
+**Bug Fixes**
+
+- Fix `t dp -i` add `srcBranch` if differs from syncing source branch
+- Update type checks to use `describe -d` for erda-pipeline ops
+- Fix `t doctor` for Nu plugins checking
+- Add GitHub token header for fetching nightly release
+- Fix `t go` command for url finding
+- Fix `t msync` command and make `path` optional
+- Trim empty mount point or module for `t ta` command
+- Improve `run/setup-termix.sh` by `shellcheck`
+- Fix getting Nu binary path for Nushell 0.106
+- Fix `get-latest-nightly-build` for Nu 0.106
+
+**Features**
+
+- Try using **debian** as the base image of termix-extra
+- Install latest version of `neovim` to termix extra image
+- Add `run/img-check.nu` script
+- Use `erdaOpenApiHost` or fallback to `erdaHost` for session renewing of `t art` command
+- Use `fzf` to select modules for `t msync` command
+- Query available backend modules from Trantor Console for `t msync` command
+- Add `monitor` custom command to Nu config
+- Try to add `s5cmd` install and upgrade support
+- Add `t ta init` command to init static assets for TERP
+- Add progress indicator for `t ta init` command
+
+**Miscellaneous Tasks**
+
+- Add acl control to object
+- Use latest Nu for uploading of binary denpendencies
+- Try to add a docker image for runtime
+- Fix `fnm` setup for bash
+- Use `ansi rst` instead of `ansi reset` for Nu 0.106.0
+- Replace `get -i` to `get -o` for Nu 0.106
+- Replace `select -i` & `reject -i` for Nu 0.106
+
+**Refactor**
+
+- Extract `enrich-target-data` helper function for `t dp -i` command
+- Refactor `t ta` command by cursor
+
 ## v1.89.2 - 2025-06-24
 
 **Bug Fixes**
