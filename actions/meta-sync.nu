@@ -616,7 +616,7 @@ def fetch-task-detail [
 }
 
 # Get user authentication info by settings
-def get-user-auth [
+export def get-user-auth [
   settings: record,
 ] {
   let platformApi = $'($settings.host)/api/trantor/platform'
