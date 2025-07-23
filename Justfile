@@ -152,6 +152,12 @@ deploy-query *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'pipeline.nu') }}; \
     erda-query {{OPTIONS}}
 
+# Query TERP menus and save to local file
+[group('-- Common  --')]
+menu *OPTIONS: _setup
+  @overlay use {{ join(_termix, 'actions', 'menu.nu') }}; \
+    query-menu {{OPTIONS}}
+
 # Send a message to DingTalk Group by a custom robot
 [group('-- Common  --')]
 ding-msg *OPTIONS: _setup
