@@ -65,6 +65,7 @@ export def upgrade-latest-tool [
 ]: nothing -> nothing {
 
   # $nu.os-info.arch == 'aarch64'
+  let post_install = $post_install | default {||}
   if (sys host | get name) == 'Darwin' { install-from-brew $name --force=$force --post-install $post_install; return }
   mut target = $target
   let latest = http get $'($TOOL_PREFIX)/($name)/latest.json'
