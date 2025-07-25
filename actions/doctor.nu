@@ -18,6 +18,7 @@
 #   [x] `t` alias check
 
 use upgrade.nu [upgrade-tool]
+use terp-doctor.nu [terp-diagnose]
 use setup.nu [get-versions, get-latest-versions]
 use ../utils/common.nu [hr-line, windows?, is-lower-ver, get-conf, is-installed]
 
@@ -30,16 +31,13 @@ const STATUS = {
 # Terminus npm registry
 const REGISTRY = 'https://registry.npm.terminus.io'
 
-# Try to diagnose and fix common problems of termix-nu
+# Try to diagnose and fix common problems for termix-nu and TERP Apps
 export def termix-doctor [
-  --fix(-f),    # Try to fix the problem automatically
-  --debug(-d),  # Show debug information
-  --fix-nu,     # 修复 Nushell 配置问题，通常情况下使用 --fix 即可, 若无效再试试这个
+  host?: string,  # The host of TERP App, if provided, will diagnose TERP App settings
+  --fix(-f),      # Try to fix the problem automatically
+  --debug(-d),    # Show debug information
 ] {
-  if $fix_nu {
-    print 'Try to fix Nushell config ...'
-    nu -c 'rm $nu.plugin-path'; register-plugins
-  }
+  if ($host | is-not-empty) { terp-diagnose $host; return }
   check-env 'Checking $TERMIX_DIR ...'        --fix=$fix --debug=$debug | show-result
   check-config 'Checking Nu config ...'       --fix=$fix --debug=$debug | show-result
   check-plugins 'Checking plugins ...'        --fix=$fix --debug=$debug | show-result

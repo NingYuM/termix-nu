@@ -134,7 +134,7 @@ art *OPTIONS: _setup _setup_fzf
   @overlay use {{ join(_termix, 'actions', 'artifact.nu') }}; \
     artifacts {{OPTIONS}}
 
-# 检查 termix-nu 的配置问题，并尝试修复
+# 检查 termix-nu 的配置问题，并尝试修复; 诊断 TERP App 的配置问题，并给出修复建议
 [group('-- Common  --')]
 doctor *OPTIONS: _termix_check
   @overlay use {{ join(_termix, 'actions', 'doctor.nu') }}; \

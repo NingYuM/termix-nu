@@ -6,6 +6,7 @@
 # TODO:
 #   [√] Make sure host alive
 #   [√] Checking terp-assets forwarding configured correctly
+#   [ ] Test if it's a valid host URL before checking
 #   [ ] Checking latest.json forwarding configured correctly
 #   [ ] Nginx forwarding policy check
 #   [ ] Make sure base,base-mobile,service,service-mobile,iam,terp,terp-mobile available in latest.json
@@ -13,7 +14,10 @@
 #   [ ] 0330以及以后版本必须要有蓝色主题
 # Usage:
 #   t doctor https://portal-test.app.terminus.io
+#   t doctor https://norhor-erp-portal.norhorerp.cn
 #   t doctor https://t-erp-portal-test.app.terminus.io
+#   t doctor https://terp-poc-portal-dev.poc.erda.cloud
+#   t doctor https://sanlux-runtime-portal-test.sanlux.net
 
 use ../utils/common.nu [ECODE, HTTP_HEADERS, hr-line]
 
@@ -30,11 +34,13 @@ const FIXING_TIPS = {
   terp-assets-missing-some: '[ERROR] terp-assets 目录存在，但缺少部分文件，请重新初始化配置静态资源',
 }
 
+# Diagnose TERP app settings and try to figure out the problems
 export def terp-diagnose [host: string] {
   let host = $host | str trim -c '/'
   check-terp-assets $host
 }
 
+# Check terp-assets and gateway forwarding policy
 def check-terp-assets [host: string] {
   print 'Checking terp-assets... '
   mut result = []
