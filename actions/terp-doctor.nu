@@ -5,8 +5,8 @@
 #   Doctor for TERP, Try to diagnose and show TERP app's problems.
 # TODO:
 #   [√] Make sure host alive
+#   [√] Checking terp-assets forwarding configured correctly
 #   [ ] Checking latest.json forwarding configured correctly
-#   [ ] Checking terp-assets forwarding configured correctly
 #   [ ] Nginx forwarding policy check
 #   [ ] Make sure base,base-mobile,service,service-mobile,iam,terp,terp-mobile available in latest.json
 #   [ ] Trantor version and static assets version match
@@ -18,17 +18,20 @@
 use ../utils/common.nu [ECODE, HTTP_HEADERS, hr-line]
 
 const ASSETS = [
+  { path: 'terp-assets/fonts/msyh/f0adcba202.woff2', type: 'font/woff2' },
   { path: 'terp-assets/js/xlsx-0.20.0.full.min.js', type: 'text/javascript' },
   # { path: 'terp-assets/js/xlsx-0.20.0.full.min.jsx', type: 'text/javascript' },
+  { path: 'terp-assets/fonts/UniGB-UTF32-V.bcmap', type: 'application/octet-stream' },
   { path: 'terp-assets/monaco-editor/0.52.2/min/vs/loader.js', type: 'text/javascript' },
 ]
 
 const FIXING_TIPS = {
-  terp-assets-missing: 'terp-assets 目录不存在，请确保该静态资源已经初始化并且添加了网关配置',
-  terp-assets-missing-some: 'terp-assets 目录存在，但缺少部分文件，请重新初始化配置静态资源',
+  terp-assets-missing: '[ERROR] terp-assets 目录不存在，请确保该静态资源已经初始化并且添加了网关转发配置',
+  terp-assets-missing-some: '[ERROR] terp-assets 目录存在，但缺少部分文件，请重新初始化配置静态资源',
 }
 
 export def terp-diagnose [host: string] {
+  let host = $host | str trim -c '/'
   check-terp-assets $host
 }
 
