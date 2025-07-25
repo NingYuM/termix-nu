@@ -48,6 +48,7 @@ export def main [] {
     ['Termix', $termixVer]
     ['Package Tools', (get-ver package-tools 'package-tools --version')]
     ['------------', '-------------']
+    ['Brew Managed', (get-brew-installed-bins | str join ', ')]
     ['Git Proxy', $gitProxy]
     ['SHELL_TO_RUN_CMD', $shell]
     ['SYNC_IGNORE_ALIAS', $syncIgnore]
@@ -57,4 +58,11 @@ export def main [] {
     ['JUST_INVOKE_DIR', $justInvokeDir]
     ['Current Time', $time]
   ]
+}
+
+# Get brew managed tools that are required by termix-nu
+def get-brew-installed-bins [] {
+  [fzf s5cmd nushell just]
+    | where {|bin| (brew list $bin | complete | get exit_code) == 0 }
+    | default -e [N/A]
 }
