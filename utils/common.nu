@@ -22,6 +22,8 @@
 export const _DATE_FMT  = '%Y.%m.%d'
 export const _TIME_FMT =  '%Y/%m/%d %H:%M:%S'
 export const _UPGRADE_TAG = '$-FORCE-UPGRADE-$'
+# Host pattern for http url
+export const HOST_PATTERN = '^(https?://)(([a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?\.)*[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?|(([0-9]{1,3}\.){3}[0-9]{1,3}))(:[1-9][0-9]{0,4})?$'
 
 # It takes longer to respond to requests made with unknown/rare user agents.
 # When make http post pretend to be curl, it gets a response just as quickly as curl.
