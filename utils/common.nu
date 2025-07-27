@@ -328,12 +328,10 @@ def is-semver [version?: string] {
   let version = if ($version | is-empty) { $in } else { $version }
   if ($version | is-empty) { return false }
   # Use regex pattern to match the SemVer version string
-  # The `v` prefix is not supported, add `v?` at the beginning of the regex if needed
-  # ^v?(0|[1-9]\d*)\.(0|[1-9]\d*)... Keep the reset of the pattern the same
+  # The `v` prefix is optional.
   let semver_pattern = '^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
   # Check if the version string matches the SemVer pattern
-  if $version =~ $semver_pattern { true } else { false }
-  # $version | str replace --regex $semver_pattern 'match' | $in == 'match'
+  $version =~ $semver_pattern
 }
 
 # Parse a SemVer version string into its components
@@ -345,48 +343,95 @@ def parse-semver [version: string] {
     error make {
       msg: 'Invalid SemVer format',
       label: {
-        text: 'It is not a SemVer',
+        text: $'It is not a SemVer: ($version)',
         span: (metadata $version).span
       }
     }
   }
 
-  let cleaned = $version | str replace -r '^v' '' | split row - | split row +
-  let core = $cleaned.0 | split row . | each { into int }
-  let pre = $cleaned.1? | default ''
-  let build = $cleaned.2? | default ''
+  let cleaned = $version | str replace -r '^v' ''
+
+  # Split by + to separate build metadata
+  let build_parts = $cleaned | split row '+'
+  let version_part = $build_parts.0
+  let build = $build_parts.1? | default ''
+
+  # Split by - to separate pre-release
+  let pre_parts = $version_part | split row '-'
+  let core_version = $pre_parts.0
+  let pre = if ($pre_parts | length) > 1 { $pre_parts | skip 1 | str join '-' } else { '' }
+
+  # Parse core version numbers
+  let core = $core_version | split row '.' | each { into int }
   { major: $core.0, minor: $core.1, patch: $core.2, pre: $pre, build: $build }
 }
 
-# Compare two version number, return `1` if first one is higher than second one,
-# Return `0` if they are equal, otherwise return `-1`
-# Examples:
-#   compare-ver 1.2.3 1.2.0    # Returns 1
-#   compare-ver 2.0.0 2.0.0    # Returns 0
-#   compare-ver 1.9.9 2.0.0    # Returns -1
-# Format: Expects semantic version strings (major.minor.patch)
-#   - Optional 'v' prefix
-#   - Pre-release suffixes (-beta, -rc, etc.) are ignored
-#   - Missing segments default to 0
+# Compare two version numbers according to SemVer rules
+# Returns: 1 (v1 > v2), 0 (v1 = v2), -1 (v1 < v2)
 export def compare-ver [v1: string, v2: string] {
-  # Parse the version number: remove pre-release and build information,
-  # only take the main version part, and convert it to a list of numbers
-  def parse-ver [v: string] {
-    $v | str replace -r '^v' '' | str trim | split row -
-       | first | split row . | each { into int }
+  # Parse version string into structured data, adding pre-release flag.
+  def parse [version: string] {
+    let parsed = parse-semver $version
+    { ...$parsed, is_prerelease: ($parsed.pre | is-not-empty) }
   }
-  let a = parse-ver $v1
-  let b = parse-ver $v2
-  # Compare the major, minor, and patch parts; fill in the missing parts with 0
-  # If you want to compare more parts use the following code:
-  # for i in 0..([2 ($a | length) ($b | length)] | math max)
-  for i in 0..2 {
-    let x = $a | get -o $i | default 0
-    let y = $b | get -o $i | default 0
-    if $x > $y { return 1    }
-    if $x < $y { return (-1) }
+
+  # Compare two pre-release version parts
+  def compare-prerelease-part [p1: string, p2: string] {
+    # Try numeric comparison first
+    let n1 = try { $p1 | into int } catch { null }
+    let n2 = try { $p2 | into int } catch { null }
+
+    match [$n1, $n2] {
+      # Both text
+      [null, null] => { if $p1 > $p2 { 1 } else if $p1 < $p2 { (-1) } else { 0 } },
+      # Numeric < text
+      [$n1, null]  => { (-1) },
+      # Text > numeric
+      [null, $n2]  => { 1 },
+      # Both numeric
+      [$n1, $n2]   => { if $n1 > $n2 { 1 } else if $n1 < $n2 { (-1) } else { 0 } }
+    }
   }
-  0
+
+    # Compare pre-release versions
+  def compare-prerelease [pre1: string, pre2: string, is_pre1: bool, is_pre2: bool] {
+    # Release > pre-release
+    if (not $is_pre1) and $is_pre2 { return 1 }
+    if $is_pre1 and (not $is_pre2) { return (-1) }
+    if (not $is_pre1) and (not $is_pre2) { return 0 }
+
+    # Both are pre-release, compare their parts.
+    let parts1 = $pre1 | split row '.'
+    let parts2 = $pre2 | split row '.'
+    let max_len = [($parts1 | length), ($parts2 | length)] | math max
+
+    for i in 0..<$max_len {
+      let p1 = $parts1 | get -o $i
+      let p2 = $parts2 | get -o $i
+
+      # Shorter version < longer version (e.g., 1.0.0-alpha < 1.0.0-alpha.1)
+      if ($p1 == null) { return (-1) }
+      if ($p2 == null) { return 1 }
+
+      let result = compare-prerelease-part $p1 $p2
+      if $result != 0 { return $result }
+    }
+    0
+  }
+
+  let ver1 = parse $v1
+  let ver2 = parse $v2
+
+  # Compare core version numbers
+  for field in ['major', 'minor', 'patch'] {
+    let a = $ver1 | get $field
+    let b = $ver2 | get $field
+    if $a > $b { return 1 }
+    if $a < $b { return (-1) }
+  }
+
+  # Compare pre-release (build metadata ignored per SemVer spec)
+  compare-prerelease $ver1.pre $ver2.pre $ver1.is_prerelease $ver2.is_prerelease
 }
 
 # Compare two version number, return true if first one is lower then second one
