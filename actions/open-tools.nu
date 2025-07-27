@@ -23,7 +23,6 @@ const BIN_MAP = {
 
 # Install tools from USTC mirror
 export def install-from-brew [name: string, --force(-f), --post-install: closure] {
-  let is_nothing = ($post_install | describe -d).type == 'nothing'
   if (sys host | get name) != 'Darwin' {
     print $'(ansi r)Only macOS is supported to install by brew for now...(ansi rst)'; exit $ECODE.INVALID_PARAMETER
   }
@@ -36,11 +35,11 @@ export def install-from-brew [name: string, --force(-f), --post-install: closure
   print $message; hr-line
   if $force and $installed {
     fast-brew reinstall $name
-    do (if $is_nothing { {||} } else { $post_install })
+    do ($post_install | default {|| {||} })
     return
   }
   fast-brew install $name
-  do (if $is_nothing { {||} } else { $post_install })
+  do ($post_install | default {|| {||} })
 }
 
 # Get latest version of tools from USTC mirror
