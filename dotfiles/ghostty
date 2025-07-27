@@ -64,12 +64,25 @@ window-width = 80
 window-height = 20
 window-theme = dark
 
+cursor-style = bar
+# cursor-color = #eec36d
+# cursor-color = #a8357a
+adjust-cursor-height = 60
+adjust-cursor-thickness = 3
+
 copy-on-select = clipboard
+selection-foreground = #ffffff
+selection-background = #7D717F
 clipboard-paste-protection = true
 clipboard-trim-trailing-spaces = true
 
 mouse-hide-while-typing = true
+macos-titlebar-style = transparent
 macos-non-native-fullscreen = false
+
+background-image-fit = cover
+background-image-opacity = 0.05
+background-image = ~/Documents/term-bg.png
 
 keybind = command+right=next_tab
 keybind = command+left=previous_tab
