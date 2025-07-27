@@ -11,8 +11,8 @@
 #   t upgrade just
 #   t upgrade nushell
 
-use setup.nu [setup-termix]
 use open-tools.nu [upgrade-latest-tool]
+use setup.nu [setup-termix, upgrade-termix-nu]
 
 use ../utils/common.nu [ECODE, hr-line, is-installed, get-dot-conf]
 
@@ -51,11 +51,3 @@ export def upgrade-tool [
   upgrade-latest-tool $tool --no-aria2c --force=$force
 }
 
-# Upgrade termix-nu script source repo
-def upgrade-termix-nu [] {
-  print $'Upgrading termix-nu...'; hr-line
-  cd $env.TERMIX_DIR
-  git checkout master
-  git pull --tags --force
-  git pull origin (git tag -l --sort=-v:refname | lines | select 0).0 --ff-only
-}
