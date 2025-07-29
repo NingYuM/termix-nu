@@ -48,11 +48,16 @@ export def 'git stat' [
     | split column ' ' commit name
     | upsert changes { |c|
       let args = [$'($c.commit)^!' --numstat ...$excludes]
-      let diff = git diff ...$args
-                        | detect columns -n
-                        | rename insertions deletions file
-                        | default 0 deletions
-                        | default 0 insertions
+      let diff_output = git diff ...$args
+      let diff = if ($diff_output | str length) == 0 {
+        []
+      } else {
+        $diff_output
+          | detect columns -n
+          | rename insertions deletions file
+          | default 0 deletions
+          | default 0 insertions
+      }
 
       if ($diff | is-empty) {
         { fileChanged: 0, insertions: 0, deletions: 0, file: [] }
@@ -73,7 +78,7 @@ export def 'git stat' [
       }
     } | flatten -a
 
-  if not $summary_only { $stat | reject file | print }
+  if not $summary_only { $stat | reject -o file | print }
 
   if not ($summary or $summary_only) { return }
   mut total = $stat
