@@ -39,6 +39,7 @@ const FIXING_TIPS = {
 # Diagnose TERP app settings and try to figure out the problems
 export def terp-diagnose [host: string] {
   let host = $host | str trim -c '/'
+  let host = if ($host =~ 'https?://') { $host } else { $'https://($host)' }
   if $host !~ $HOST_PATTERN {
     print $'(ansi r)($FIXING_TIPS.invalid-host)(ansi reset)'; return
   }
