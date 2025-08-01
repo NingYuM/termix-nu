@@ -30,19 +30,17 @@ const ASSETS = [
 ]
 
 const FIXING_TIPS = {
-  invalid-host: '[ERROR] 无效的 host，请确保 host 输入正确',
-  terp-assets-missing: '[ERROR] terp-assets 目录不存在，请确保该静态资源已经初始化并且添加了网关转发配置',
-  terp-assets-missing-some: '[ERROR] terp-assets 目录存在，但缺少部分文件，请重新初始化配置静态资源',
-  local-latest-json: '[WARN] 当前应用使用本地 latest.json 文件，静态资源发布可能不会生效，建议通过网关转发',
+  invalid-host: $'(ansi r)[ERROR] 无效的 host，请确保 host 输入正确(ansi rst)',
+  terp-assets-missing-some: $'(ansi y)[WARN] terp-assets 目录存在，但缺少部分文件，请核查确认是否正常(ansi rst)',
+  terp-assets-missing: $'(ansi r)[ERROR] terp-assets 目录不存在，请确保该静态资源已经初始化并且添加了网关转发配置(ansi rst)',
+  local-latest-json: $'(ansi y)[WARN] 当前应用使用本地 latest.json 文件，静态资源发布可能不会生效，建议通过网关转发(ansi rst)',
 }
 
 # Diagnose TERP app settings and try to figure out the problems
 export def terp-diagnose [host: string] {
   let host = $host | str trim -c '/'
   let host = if ($host =~ 'https?://') { $host } else { $'https://($host)' }
-  if $host !~ $HOST_PATTERN {
-    print $'(ansi r)($FIXING_TIPS.invalid-host)(ansi reset)'; return
-  }
+  if $host !~ $HOST_PATTERN { print $FIXING_TIPS.invalid-host; return }
   check-terp-assets $host
 }
 
@@ -68,10 +66,10 @@ def check-terp-assets [host: string] {
     print $'(ansi g)Ok(ansi reset)'; return
   }
   if ($result | any {|r| $r.status == 'Ok' }) {
-    print $'(char nl)(ansi r)($FIXING_TIPS.terp-assets-missing-some)(ansi reset)'; hr-line
+    print (char nl)($FIXING_TIPS.terp-assets-missing-some); hr-line
     $result | where status != 'Ok' | table -t light | print; return
   }
-  print $'(char nl)(ansi r)($FIXING_TIPS.terp-assets-missing)(ansi reset)'
+  print (char nl)($FIXING_TIPS.terp-assets-missing)
 }
 
 def parse-response [resp: record] {
