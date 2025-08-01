@@ -24,6 +24,8 @@
 #   - https://min.io/docs/minio/linux/reference/minio-mc.html?ref=docs#install-mc
 #   - https://docs.erda.cloud/2.2/manual/dop/guides/reference/pipeline.html
 #   - https://www.alibabacloud.com/help/zh/oss/developer-reference/install-ossutil#dda54a7096xfh
+# Errors:
+#   - 无权限: StatusCode=403, ErrorCode=AccessDenied, ErrorMessage="The bucket you access does not belong to you."
 
 use ../utils/common.nu [ECODE, FZF_DEFAULT_OPTS, FZF_THEME, _TIME_FMT]
 use ../utils/common.nu [is-installed, hr-line, get-conf, get-tmp-path, compare-ver, with-progress]
