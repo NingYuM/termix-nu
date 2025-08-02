@@ -47,13 +47,13 @@ grapheme-width-method = unicode
 # font-family = Hack Nerd Font Mono
 # font-family = Source Code Pro
 # font-family = Fira Code
-font-family = Maple Mono NF CN
+font-family = Google Sans Code
 # font-family = Lilex Regular
 window-title-font-family = Fira Code
 # 中文字体
 font-codepoint-map = U+4e00-U+9fa5=Maple Mono NF CN
 # Use Fira Code for char g
-font-codepoint-map = U+0067-U+0067=Fira Code
+# font-codepoint-map = U+0067-U+0067=Fira Code
 # font-codepoint-map = U+4e00-U+9fa5=Sarasa Term SC
 
 # window-decoration = false
