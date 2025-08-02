@@ -7,7 +7,9 @@
 #   [√] Checking TERMIX_DIR environment variable
 #   [√] Checking Nushell plugin path and version
 #   [√] Registering Nushell plugins if plugin register file not found
+#   [√] Checking Nushell plugin version mismatch with nu --version
 #   [√] Checking Nu config file existence
+#   [√] Checking Nu config file syntax and reset if error
 #   [√] Checking macOS version
 #   [√] Checking nu --version
 #   [√] Checking just --version
@@ -67,16 +69,44 @@ def check-env [description: string, --fix, --debug] {
   $result
 }
 
-# Checking Nushell config file existence
-def check-config [description: string, --fix, --debug] {
+# Checking Nushell config file existence and syntax
+def check-config [description: string, --fix, --debug, --recheck = false] {
   const FIX_TIP = $"请通过(ansi g) t doctor --fix (ansi rst)修复, 并重启终端"
   print -n $description
   mut result = { tip: $FIX_TIP, status: $STATUS.ERROR }
   if $debug { show-debug $nu.default-config-dir }
-  if ($nu.default-config-dir | path exists) { return { status: $STATUS.OK } }
-  if $fix { mkdir $nu.default-config-dir; check-config 'Recheck .. ' | show-result; return }
-  $result.message = $'($nu.default-config-dir) dir does not exist'
-  $result
+
+  # Create config dir if not exists
+  if not ($nu.default-config-dir | path exists) {
+    if $fix { mkdir $nu.default-config-dir } else {
+      $result.message = $'($nu.default-config-dir) dir does not exist'
+      return $result
+    }
+  }
+
+  # Check config file syntax
+  try { source $nu.config-path; return { status: $STATUS.OK } } catch {|err|
+    if not $fix {
+      print $err.msg
+      return { status: $STATUS.ERROR, tip: $FIX_TIP, message: $err.msg }
+    }
+    # Prevent infinite recursion
+    if $recheck {
+      print $err.msg
+      return { status: $STATUS.ERROR, tip: "配置重置后仍有错误，请手动检查", message: $err.msg }
+    }
+
+    # Try to fix by resetting config
+    print $err.msg; print 'Resetting nu config ...'
+    try {
+      config reset -n
+      check-config 'Recheck .. ' --fix=$fix --debug=$debug --recheck=true | show-result
+      return
+    } catch {|reset_err|
+      print $reset_err.msg
+      return { status: $STATUS.ERROR, tip: "配置重置失败，请手动修复", message: $reset_err.msg }
+    }
+  }
 }
 
 # Check Nushell plugins
