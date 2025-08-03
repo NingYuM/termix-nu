@@ -240,16 +240,11 @@ ls-node *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'ls-node.nu') }}; \
     ls-node-remote {{OPTIONS}}
 
-# 按时间顺序列出所有的 git tags, 默认按 `time` 排序，可选按 `tag` 排序：ls-tags tag
+# 按时间顺序列出所有的 git tags, 默认按 `time` 排序，可选按 Tag 名称排序：ls-tags -s tag
 [group('-- Git --')]
-ls-tags by=('time'): _setup
-  @let sort = if ('{{by}}' != 'time') { '--sort=-v:refname' } else { '--sort=-creatordate' }; \
-    if (git tag -l | is-empty) { exit 0 }; print (char nl); \
-    git tag --format='%(refname:strip=2)%09%(creatordate:iso)' $sort \
-      | detect columns -n \
-      | rename tag date time \
-      | upsert time {|e| $'($e.date) ($e.time)' } \
-      | select tag time
+ls-tags *OPTIONS: _setup
+  @overlay use {{ join(_termix, 'git', 'ls-tags.nu') }}; \
+    list-tags {{OPTIONS}}
 
 # 通过 Brew 国内镜像加速执行 brew 相关命令
 [group('-- Common  --')]
