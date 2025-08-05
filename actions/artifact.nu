@@ -476,7 +476,9 @@ def consume-trantor-artifact [
         --project-id $destSetting.projectId
         --non-interactive --output-format json
       ) | complete
-    let pipelineId = $pipeline.stdout | from json | get pipeline_id
+    let shellResp = $pipeline.stdout | from json
+    print $'(char nl)Shell response:'; $shellResp | table -e | print
+    let pipelineId = $shellResp.pipeline_id?
     print $'(char nl)Building artifact with pipeline ID: (ansi g)($pipelineId)(ansi rst)'
     query-cicd-by-id ($pipelineId | into int) --watch --host $destSetting.erdaHost
   }
