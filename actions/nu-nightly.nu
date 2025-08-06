@@ -7,7 +7,7 @@
 # - download the archive
 # - give some hints about the version and the hash and how to extract the archive
 
-use ../utils/common.nu [ECODE, is-installed, hr-line, can-write]
+use ../utils/common.nu [ECODE, is-installed, hr-line, can-write, linux?]
 
 export def get-latest-nightly-build [
   --list(-l),           # list all the available binary packages
@@ -29,7 +29,7 @@ export def get-latest-nightly-build [
   }
 
   if ($target | is-empty) and (not $interactive) {
-    let platform = (sys host | get name | str downcase)
+    let platform = if (linux?) { 'linux' } else { (sys host | get name | str downcase) }
     const PLATFORM_MAP = {
       windows: 'pc-windows',
       darwin: 'apple-darwin',
