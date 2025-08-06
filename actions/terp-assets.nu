@@ -275,6 +275,8 @@ def download [
     for a in $assets {
       let url = $'($assetUrlPrefix)/($prefix)/($dirname)/($a)'
       let assetPath = $'/($prefix)/($dirname)/($a)'
+      let dir = $'($assetsDir)/($a)' | path dirname
+      if not ($dir | path exists) { mkdir $dir }
       if $quiet {
         http get -r $url | save -rfp $'($assetsDir)/($a)'
       } else {
