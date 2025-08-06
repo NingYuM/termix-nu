@@ -77,6 +77,12 @@ export def mac? [] {
   (sys host | get name) == 'Darwin'
 }
 
+# If current host is Linux
+# This is a workaround for the issue that `sys host` may return 'Ubuntu', etc.
+export def linux? [] {
+  $nu.os-info.name == 'linux' or (sys host | get name | str downcase) =~ 'linux'
+}
+
 # Compact the record by removing empty columns
 export def compact-record []: record -> record {
   let record = $in

@@ -8,7 +8,7 @@
 # - extract the archive and replace the old binary
 
 use brew-speed-up.nu [fast-brew]
-use ../utils/common.nu [ECODE, is-installed, hr-line, compare-ver]
+use ../utils/common.nu [ECODE, is-installed, hr-line, compare-ver, linux?]
 
 const BREW_BOTTLES = 'https://mirrors.ustc.edu.cn/homebrew-bottles/bottles/'
 const TOOL_PREFIX = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/open-tools'
@@ -78,10 +78,14 @@ export def upgrade-latest-tool [
     $latest.assets | get name | print; exit $ECODE.SUCCESS
   }
 
+  let os = if (linux?) { 'linux' } else { (sys host | get name | str downcase) }
   if ($target | is-empty) and (not $interactive) {
-    $target = $'($nu.os-info.arch)-(sys host | get name | str downcase)'
+    $target = $'($nu.os-info.arch)-($os)'
   }
   let matches = $latest.assets | get name | where $it =~ $target
+  let matches = if ($matches | is-empty) {
+    $latest.assets | get name | where $it =~ $'($nu.os-info.arch)-unknown-($os)'
+  } else { $matches }
 
   let arch = match ($matches | length) {
     0 => {
