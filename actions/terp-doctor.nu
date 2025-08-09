@@ -9,9 +9,10 @@
 #   [√] Test if it's a valid host URL before checking
 #   [√] Checking latest.json forwarding configured correctly
 #   [√] Nginx forwarding policy check
-#   [ ] Make sure base,base-mobile,service,service-mobile,iam,terp,terp-mobile available in latest.json
-#   [ ] Trantor version and static assets version match
-#   [ ] 0330以及以后版本必须要有蓝色主题
+#   [√] Make sure base,base-mobile,service,service-mobile,iam,terp,terp-mobile available in latest.json
+#   [ ] Trantor version and static assets version match: http get https://console-staging.app.terminus.io/api/trantor/platform
+#   [ ] 元数据静态化是否开启？
+#   [ ] 丰富提示信息，附带修复指南
 # Usage:
 #   t doctor portal-dev.poc.erda.cloud
 #   t doctor https://portal-test.app.terminus.io
@@ -37,12 +38,15 @@ const ESSENTIAL_RULES = [
   { key: 'content-type', value: 'application/json' },
 ]
 
+# Essential modules for latest.json
+const ESSENTIAL_MODULES = [base, base-mobile, service, service-mobile, iam, terp, terp-mobile]
+
 # Storage provider identification rules
 const STORAGE_PROVIDERS = [
   { name: 'AliyunOSS', headers: [{ key: 'x-oss-request-id', type: 'exists' }] },
   { name: 'VolcEngine', headers: [{ key: 'server', type: 'equals', value: 'volcclb' }] },
-  { name: 'Minio', headers: [{ key: 'x-amz-id-2', type: 'exists' }, { key: 'x-amz-request-id', type: 'exists' }] },
   { name: 'Local', headers: [{ key: 'x-trantor-endpoint', type: 'equals', value: 'local' }] },
+  { name: 'Minio', headers: [{ key: 'x-amz-id-2', type: 'exists' }, { key: 'x-amz-request-id', type: 'exists' }] },
 ]
 
 # Warning rules for latest.json response
@@ -87,18 +91,26 @@ def check-latest-json [host: string] {
 
   if $resp.status != 200 { print $FIXING_TIPS.latest-resp-error; return }
 
-  print $'(ansi y)Storage Provider: (ansi rst)(guess-storage-provider $resp)'
+  print $'(ansi y)云存储: (ansi rst)(guess-storage-provider $resp) (ansi grey66)（推测，仅供参考）(ansi rst)'
 
   # Check essential rules first
   if not (check-essential-rules $resp) { print $FIXING_TIPS.latest-resp-error; return }
 
   # Check warning rules
-  let warnings = check-warning-rules $resp
+  let warnings = check-warning-rules $resp | append (check-latest-modules $resp)
   if ($warnings | is-empty) {
     print $'(ansi g)Ok(ansi rst)'
   } else {
     $warnings | each { |w| print $w } | ignore
   }
+}
+
+# Check latest.json response
+def check-latest-modules [resp: record] {
+  let modules = $resp.body | columns
+  let missing_modules = $ESSENTIAL_MODULES | where $it not-in $modules
+  if ($missing_modules | is-empty) { return [] }
+  [$'(ansi y)[WARN](ansi rst) latest.json 缺少模块: (ansi r)($missing_modules | str join ,)(ansi rst)']
 }
 
 # Check essential rules for latest.json response
@@ -160,7 +172,7 @@ def check-provider-headers [resp: record, headers: list] {
 
 # Check terp-assets and gateway forwarding policy
 def check-terp-assets [host: string] {
-  print 'Checking terp-assets... '; hr-line
+  print $'(char nl)Checking terp-assets... '; hr-line
 
   let results = $ASSETS | each { |asset| check-single-asset $host $asset }
   let ok_count = $results | where status == 'Ok' | length
