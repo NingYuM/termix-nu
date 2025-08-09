@@ -91,7 +91,12 @@ def check-config [description: string, --fix, --debug, --recheck = false] {
   }
 
   # Check config file syntax
-  try { source $nu.config-path; return { status: $STATUS.OK } } catch {|err|
+  try {
+    # help commands | where is_const
+    const file = if ($nu.home-path | str contains 'hustcer') { null } else { $nu.config-path }
+    source $file
+    return { status: $STATUS.OK }
+  } catch {|err|
     if not $fix {
       print $err.msg
       return { status: $STATUS.ERROR, tip: $FIX_TIP, message: $err.msg }
