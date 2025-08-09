@@ -37,12 +37,19 @@ const ESSENTIAL_RULES = [
   { key: 'content-type', value: 'application/json' },
 ]
 
-const STORAGE_IDENTIFIER = {
-  aliyun: [ 'x-oss-request-id' ],
-  minio: [ 'x-amz-id-2', 'x-amz-request-id' ],
-  volc: [ { key: 'server', value: 'volcclb' } ],
-  local: [ { key: 'x-trantor-endpoint', value: 'local' } ],
-}
+# Storage provider identification rules
+const STORAGE_PROVIDERS = [
+  { name: 'AliyunOSS', headers: [{ key: 'x-oss-request-id', type: 'exists' }] },
+  { name: 'VolcEngine', headers: [{ key: 'server', type: 'equals', value: 'volcclb' }] },
+  { name: 'Minio', headers: [{ key: 'x-amz-id-2', type: 'exists' }, { key: 'x-amz-request-id', type: 'exists' }] },
+  { name: 'Local', headers: [{ key: 'x-trantor-endpoint', type: 'equals', value: 'local' }] },
+]
+
+# Warning rules for latest.json response
+const WARNING_RULES = [
+  { key: 'x-trantor-endpoint', condition: 'equals', value: 'local', message: 'latest-local-warning' },
+  { key: 'x-trantor-endpoint', condition: 'empty', value: '', message: 'missing-nginx-endpoint' },
+]
 
 const FIXING_TIPS = {
   invalid-host: $'(ansi r)[ERROR](ansi rst) 无效的 host，请确保 host 输入正确',
@@ -54,10 +61,20 @@ const FIXING_TIPS = {
 }
 
 # Diagnose TERP app settings and try to figure out the problems
+#
+# This function performs comprehensive checks on a TERP application:
+# 1. Validates the host URL format
+# 2. Checks latest.json response and headers
+# 3. Validates terp-assets availability and forwarding
 export def terp-diagnose [host: string] {
+  # Normalize the host URL
   let host = $host | str trim -c '/'
   let host = if ($host =~ 'https?://') { $host } else { $'https://($host)' }
+
+  # Validate host format
   if $host !~ $HOST_PATTERN { print $FIXING_TIPS.invalid-host; return }
+
+  # Perform diagnostic checks
   check-latest-json $host
   check-terp-assets $host
 }
@@ -67,94 +84,146 @@ def check-latest-json [host: string] {
   print 'Checking latest.json... '; hr-line
   let url = ($host)/latest.json
   let resp = http get -ef $url -H $HTTP_HEADERS
+
   if $resp.status != 200 { print $FIXING_TIPS.latest-resp-error; return }
 
-  print $'(ansi y)Guess Storage Provider: (ansi rst)(guess-storage-provider $resp)'
-  mut essential_matched = true
-  # Check ESSENTIAL_RULES
+  print $'(ansi y)Storage Provider: (ansi rst)(guess-storage-provider $resp)'
+
+  # Check essential rules first
+  if not (check-essential-rules $resp) { print $FIXING_TIPS.latest-resp-error; return }
+
+  # Check warning rules
+  let warnings = check-warning-rules $resp
+  if ($warnings | is-empty) {
+    print $'(ansi g)Ok(ansi rst)'
+  } else {
+    $warnings | each { |w| print $w } | ignore
+  }
+}
+
+# Check essential rules for latest.json response
+def check-essential-rules [resp: record] {
+  mut all_passed = true
   for rule in $ESSENTIAL_RULES {
     let value = get-header-value $resp $rule.key
     if $value != $rule.value {
-      $essential_matched = false
+      $all_passed = false
       print $'Response header `($rule.key)` expected: (ansi g)($rule.value)(ansi rst), actual: (ansi r)($value)(ansi rst)'
     }
   }
-  if not $essential_matched { print $FIXING_TIPS.latest-resp-error; return }
-
-  # Check WARNING_RULES
-  mut warning_matched = false
-  let WARNING_RULES = [
-    { key: 'x-trantor-endpoint', value: {|v| $v == 'local' }, msg: $FIXING_TIPS.latest-local-warning },
-    { key: 'x-trantor-endpoint', value: {|v| $v | is-empty }, msg: $FIXING_TIPS.missing-nginx-endpoint },
-  ]
-  for rule in $WARNING_RULES {
-    let value = get-header-value $resp $rule.key
-    if (do $rule.value $value) {
-      $warning_matched = true
-      print ($rule.msg)(char nl)
-    }
-  }
-
-  if not $warning_matched { print $'(ansi g)Ok(ansi rst)' }
+  $all_passed
 }
 
-# Guess storage provider from response headers
+# Check warning rules for latest.json response
+def check-warning-rules [resp: record] {
+  mut warnings = []
+  for rule in $WARNING_RULES {
+    let value = get-header-value $resp $rule.key
+    if (check-condition $value $rule.condition $rule.value) {
+      $warnings = $warnings | append ($FIXING_TIPS | get $rule.message)
+    }
+  }
+  $warnings
+}
+
+# Check condition based on type
+def check-condition [value: string, condition: string, expected: string] {
+  match $condition {
+    'equals' => ($value == $expected),
+    'empty' => ($value | is-empty),
+    'not-empty' => ($value | is-not-empty),
+    _ => false
+  }
+}
+
+# Guess storage provider from response headers using unified logic
 def guess-storage-provider [resp: record] {
-  let aliyun = get-header-value $resp $STORAGE_IDENTIFIER.aliyun.0
-  if ($aliyun | is-not-empty) { return 'AliyunOSS' }
-  let volc = get-header-value $resp $STORAGE_IDENTIFIER.volc.0.key
-  if ($volc == $STORAGE_IDENTIFIER.volc.0.value) { return 'VolcEngine' }
-  let m0 = get-header-value $resp $STORAGE_IDENTIFIER.minio.0
-  let m1 = get-header-value $resp $STORAGE_IDENTIFIER.minio.1
-  if ($m0 | is-not-empty) and ($m1 | is-not-empty) { return 'Minio' }
-  let local = get-header-value $resp $STORAGE_IDENTIFIER.local.0.key
-  if ($local == $STORAGE_IDENTIFIER.local.0.value) { return 'Local' }
+  for provider in $STORAGE_PROVIDERS {
+    if (check-provider-headers $resp $provider.headers) {
+      return $provider.name
+    }
+  }
   'Unknown'
+}
+
+# Check if all headers match for a storage provider
+def check-provider-headers [resp: record, headers: list] {
+  $headers | all { |header|
+    let value = get-header-value $resp $header.key
+    match $header.type {
+      'exists' => ($value | is-not-empty),
+      'equals' => ($value == $header.value),
+      _ => false
+    }
+  }
 }
 
 # Check terp-assets and gateway forwarding policy
 def check-terp-assets [host: string] {
   print 'Checking terp-assets... '; hr-line
-  mut result = []
-  for asset in $ASSETS {
-    let url = $'($host)/($asset.path)'
-    let resp = http get -ef $url -H $HTTP_HEADERS
-    let content_type = get-header-value $resp content-type
-    if $resp.status == 200 and $content_type =~ $asset.type {
-      $result = $result | append { asset: $asset.path, status: 'Ok' }
-    } else if $resp.status == 404 {
-      let error = parse-response $resp
-      $result = $result | append { asset: $asset.path, status: 'Not Found', ...$error }
-    } else {
-      $result = $result | append { asset: $asset.path, status: 'Error' }
-    }
-  }
 
-  if ($result | all {|r| $r.status == 'Ok' }) {
-    print $'(ansi g)Ok(ansi reset)'; return
-  }
-  if ($result | any {|r| $r.status == 'Ok' }) {
-    print (char nl)($FIXING_TIPS.terp-assets-missing-some); hr-line
-    $result | where status != 'Ok' | table -t light | print; return
-  }
-  print ($FIXING_TIPS.terp-assets-missing)(char nl)
+  let results = $ASSETS | each { |asset| check-single-asset $host $asset }
+  let ok_count = $results | where status == 'Ok' | length
+  let total_count = $results | length
+
+  display-asset-results $results $ok_count $total_count
 }
 
+# Check a single asset
+def check-single-asset [host: string, asset: record] {
+  let url = $'($host)/($asset.path)'
+  let resp = http get -ef $url -H $HTTP_HEADERS
+  let content_type = get-header-value $resp content-type
+
+  match [$resp.status, ($content_type =~ $asset.type)] {
+    [200, true] => { asset: $asset.path, status: 'Ok' },
+    [404, _] => {
+      let error_info = parse-response $resp
+      { asset: $asset.path, status: 'Not Found', ...$error_info }
+    },
+    _ => { asset: $asset.path, status: 'Error', http_status: $resp.status }
+  }
+}
+
+# Display asset checking results
+def display-asset-results [results: list, ok_count: int, total_count: int] {
+  match [$ok_count, $total_count] {
+    [$count, $total] if $count == $total => {
+      print $'(ansi g)Ok(ansi rst)'
+    },
+    [$count, _] if $count > 0 => {
+      print (char nl)($FIXING_TIPS.terp-assets-missing-some); hr-line
+      $results | where status != 'Ok' | table -t light | print
+    },
+    _ => {
+      print ($FIXING_TIPS.terp-assets-missing)(char nl)
+    }
+  }
+}
+
+# Parse error response from storage providers
 def parse-response [resp: record] {
   let content_type = get-header-value $resp content-type
   if $content_type =~ 'application/xml' {
-    let code = $resp.body.content | where tag == Code | get content.content | get 0.0
-    let bucket = $resp.body.content | where tag == HostId | get content.content | get 0.0
-    return { code: $code, bucket: $bucket }
+    try {
+      let code = $resp.body.content | where tag == Code | get content.content.0? | default ''
+      let bucket = $resp.body.content | where tag == HostId | get content.content.0? | default ''
+      { code: $code, bucket: $bucket }
+    } catch {
+      { error: 'Failed to parse XML response' }
+    }
+  } else {
+    {}
   }
-  {}
 }
 
 # Get header value from response
 def get-header-value [resp: record, name: string] {
   let matches = $resp.headers.response | where name == $name
-  if ($matches | is-empty) { return '' }
-  $matches | first | get value
+  match $matches {
+    [] => '',
+    $m => ($m | first | get value)
+  }
 }
 
 alias main = terp-diagnose
