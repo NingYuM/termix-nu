@@ -112,7 +112,7 @@ oss.OSS_ENDPOINT = 'https://oss-cn-hangzhou.aliyuncs.com'(ansi rst)
 注意：对于 Toml 文件来说配置项的位置是很重要的，不要随意移动，否则会导致配置项失效
 
 初始化成功后在对应 Bucket 的 terp-assets 目录下可以找到对应的静态资源。然后需要配置网关转发,
-以下是阿里云存储配置示例(以 TERP 标品举例，其他按需调整)：
+开发、测试、预发、生产都要配置, 以下是阿里云存储配置示例(以 TERP 标品举例，其他按需调整)：
 
 URL 路径前缀: (ansi y)/terp-assets(ansi rst)
     转发方式: 选择 (ansi y)按地址转发(ansi rst)
