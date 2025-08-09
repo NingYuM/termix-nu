@@ -498,6 +498,19 @@ export def hr-line [
   if $blank_line { print -n (char nl) }
 }
 
+# 渲染 ANSI 颜色代码
+export def render-ansi [text: string] {
+  $text
+    | str replace -a '(ansi g)' $'(ansi g)'
+    | str replace -a '(ansi r)' $'(ansi r)'
+    | str replace -a '(ansi y)' $'(ansi y)'
+    | str replace -a '(ansi cb)' $'(ansi cb)'
+    | str replace -a '(ansi p)' $'(ansi p)'
+    | str replace -a '(ansi gr)' $'(ansi grey66)'
+    | str replace -a '(ansi rst)' $'(ansi reset)'
+    | str replace -a '(ansi reset)' $'(ansi reset)'
+}
+
 # Check if a path can be written
 export def can-write [path: string] {
   try {
