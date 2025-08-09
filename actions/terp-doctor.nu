@@ -7,8 +7,8 @@
 #   [√] Make sure host alive
 #   [√] Checking terp-assets forwarding configured correctly
 #   [√] Test if it's a valid host URL before checking
-#   [ ] Checking latest.json forwarding configured correctly
-#   [ ] Nginx forwarding policy check
+#   [√] Checking latest.json forwarding configured correctly
+#   [√] Nginx forwarding policy check
 #   [ ] Make sure base,base-mobile,service,service-mobile,iam,terp,terp-mobile available in latest.json
 #   [ ] Trantor version and static assets version match
 #   [ ] 0330以及以后版本必须要有蓝色主题
@@ -205,16 +205,11 @@ def display-asset-results [results: list, ok_count: int, total_count: int] {
 def parse-response [resp: record] {
   let content_type = get-header-value $resp content-type
   if $content_type =~ 'application/xml' {
-    try {
-      let code = $resp.body.content | where tag == Code | get content.content.0? | default ''
-      let bucket = $resp.body.content | where tag == HostId | get content.content.0? | default ''
-      { code: $code, bucket: $bucket }
-    } catch {
-      { error: 'Failed to parse XML response' }
-    }
-  } else {
-    {}
+    let code = $resp.body.content | where tag == Code | get content.content | get 0.0
+    let bucket = $resp.body.content | where tag == HostId | get content.content | get 0.0
+    return { code: $code, bucket: $bucket }
   }
+  {}
 }
 
 # Get header value from response
