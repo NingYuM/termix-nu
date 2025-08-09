@@ -14,7 +14,9 @@
 #   [ ] 0330以及以后版本必须要有蓝色主题
 # Usage:
 #   t doctor https://portal-test.app.terminus.io
+#   t doctor https://portal-staging.app.terminus.io
 #   t doctor https://norhor-erp-portal.norhorerp.cn
+#   t doctor https://portal-staging.go1688.terminus.io
 #   t doctor https://t-erp-portal-test.app.terminus.io
 #   t doctor https://terp-poc-portal-dev.poc.erda.cloud
 #   t doctor https://sanlux-runtime-portal-test.sanlux.net
@@ -29,11 +31,24 @@ const ASSETS = [
   { path: 'terp-assets/monaco-editor/0.52.2/min/vs/loader.js', type: 'text/javascript' },
 ]
 
+# Essential rules for the response of latest.json
+const ESSENTIAL_RULES = [
+  { key: 'cache-control', value: 'no-cache' },
+  { key: 'content-type', value: 'application/json' },
+]
+
+const STORAGE_IDENTIFIER = {
+  aliyun: [ 'x-oss-request-id' ],
+  minio: [ 'x-amz-id-2', 'x-amz-request-id' ],
+}
+
 const FIXING_TIPS = {
-  invalid-host: $'(ansi r)[ERROR] 无效的 host，请确保 host 输入正确(ansi rst)',
-  terp-assets-missing-some: $'(ansi y)[WARN] terp-assets 目录存在，但缺少部分文件，请核查确认是否正常(ansi rst)',
-  terp-assets-missing: $'(ansi r)[ERROR] terp-assets 目录不存在，请确保该静态资源已经初始化并且添加了网关转发配置(ansi rst)',
-  local-latest-json: $'(ansi y)[WARN] 当前应用使用本地 latest.json 文件，静态资源发布可能不会生效，建议通过网关转发(ansi rst)',
+  invalid-host: $'(ansi r)[ERROR](ansi rst) 无效的 host，请确保 host 输入正确',
+  terp-assets-missing-some: $'(ansi y)[WARN](ansi rst) terp-assets 目录存在，但缺少部分文件，请核查确认是否正常',
+  terp-assets-missing: $'(ansi r)[ERROR](ansi rst) terp-assets 目录不存在，请确保该静态资源包已经初始化并且添加了网关转发配置',
+  latest-local-warning: $'(ansi y)[WARN](ansi rst) 当前应用使用本地 latest.json 文件，静态资源发布可能不会生效，建议通过网关转发',
+  latest-resp-error: $'(ansi r)[ERROR](ansi rst) latest.json 响应错误，请检查网关转发配置',
+  missing-nginx-endpoint: $'(ansi r)[ERROR](ansi rst) 缺少 `x-trantor-endpoint` Nginx 自定义配置，请检查网关 latest.json 的业务策略',
 }
 
 # Diagnose TERP app settings and try to figure out the problems
@@ -41,12 +56,45 @@ export def terp-diagnose [host: string] {
   let host = $host | str trim -c '/'
   let host = if ($host =~ 'https?://') { $host } else { $'https://($host)' }
   if $host !~ $HOST_PATTERN { print $FIXING_TIPS.invalid-host; return }
+  check-latest-json $host
   check-terp-assets $host
+}
+
+def check-latest-json [host: string] {
+  print 'Checking latest.json... '; hr-line
+  let url = ($host)/latest.json
+  let resp = http get -ef $url -H $HTTP_HEADERS
+  if $resp.status != 200 { print $FIXING_TIPS.latest-resp-error; return }
+  mut essential_matched = true
+  # Check ESSENTIAL_RULES
+  for rule in $ESSENTIAL_RULES {
+    let value = get-header-value $resp $rule.key
+    if $value != $rule.value {
+      $essential_matched = false
+      print $'Response header `($rule.key)` expected: (ansi g)($rule.value)(ansi rst), actual: (ansi r)($value)(ansi rst)'
+    }
+  }
+  if not $essential_matched { print $FIXING_TIPS.latest-resp-error; return }
+
+  # Check WARNING_RULES
+  mut warning_matched = false
+  let WARNING_RULES = [
+    { key: 'x-trantor-endpoint', value: {|v| $v == 'local' }, msg: $FIXING_TIPS.latest-local-warning },
+    { key: 'x-trantor-endpoint', value: {|v| $v | is-empty }, msg: $FIXING_TIPS.missing-nginx-endpoint },
+  ]
+  for rule in $WARNING_RULES {
+    let value = get-header-value $resp $rule.key
+    if (do $rule.value $value) {
+      $warning_matched = true
+      print ($rule.msg)(char nl)
+    }
+  }
+  if not $warning_matched { print $'(ansi g)Ok(ansi rst)' }
 }
 
 # Check terp-assets and gateway forwarding policy
 def check-terp-assets [host: string] {
-  print 'Checking terp-assets... '
+  print 'Checking terp-assets... '; hr-line
   mut result = []
   for asset in $ASSETS {
     let url = $'($host)/($asset.path)'
@@ -69,7 +117,7 @@ def check-terp-assets [host: string] {
     print (char nl)($FIXING_TIPS.terp-assets-missing-some); hr-line
     $result | where status != 'Ok' | table -t light | print; return
   }
-  print (char nl)($FIXING_TIPS.terp-assets-missing)
+  print ($FIXING_TIPS.terp-assets-missing)(char nl)
 }
 
 def parse-response [resp: record] {
@@ -84,7 +132,9 @@ def parse-response [resp: record] {
 
 # Get header value from response
 def get-header-value [resp: record, name: string] {
-  $resp.headers.response | where name == $name | first | get value
+  let matches = $resp.headers.response | where name == $name
+  if ($matches | is-empty) { return '' }
+  $matches | first | get value
 }
 
 alias main = terp-diagnose
