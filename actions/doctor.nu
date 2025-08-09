@@ -34,6 +34,12 @@ const STATUS = {
 const REGISTRY = 'https://registry.npm.terminus.io'
 
 # Try to diagnose and fix common problems for termix-nu and TERP Apps
+@example '检查 termix-nu 配置问题，并显示检查结果' {
+  t doctor
+} --result ''
+@example '修复 termix-nu 配置问题(假如执行一次不行就再执行一次吧 O(∩_∩)O)' {
+  t doctor --fix
+} --result '如果执行 `t doctor --fix` 后仍有问题可以尝试重启终端没准儿就好了'
 export def termix-doctor [
   host?: string,  # The host of TERP App, if provided, will diagnose TERP App settings
   --fix(-f),      # Try to fix the problem automatically
