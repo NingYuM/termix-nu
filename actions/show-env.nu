@@ -4,10 +4,16 @@
 # Usage:
 #   t show-env
 
-use ../utils/common.nu [get-tmp-path get-env get-ver]
+use ../utils/common.nu [get-tmp-path get-env get-ver windows?]
 
 # Show locally installed cli app's version and env information
+@example '显示本机安装应用及其版本信息' {
+  t show-env
+} --result ''
 export def main [] {
+  $env.config.table.mode = 'light'
+  $env.config.color_config.leading_trailing_space_bg = { attr: n }
+
   let termixDir = (get-env TERMIX_DIR '(empty)')
   let shell = (get-env SHELL_TO_RUN_CMD '(empty)')
   let justFile = (get-env JUST_FILE_PATH '(empty)')
@@ -27,8 +33,15 @@ export def main [] {
   let gitProxy = if (git config --global --list | grep proxy | is-empty) { 'Off' } else { 'On' }
 
   print -n (char nl)
-  version | select version commit_hash installed_plugins
+  version | select version commit_hash build_time installed_plugins
     | upsert commit_hash { $in | str substring 0..7 }
+    | update installed_plugins {
+        $in | split row , | str trim
+            | str join "\n"
+            | detect columns -n
+            | rename plugin version
+            | table -et psql -i false
+      }
     | transpose | rename Nu value | print
 
   char nl | print -n
@@ -62,6 +75,7 @@ export def main [] {
 
 # Get brew managed tools that are required by termix-nu
 def get-brew-installed-bins [] {
+  if (windows?) { return [N/A] }
   [fzf s5cmd nushell just]
     | where {|bin| (brew list $bin | complete | get exit_code) == 0 }
     | default -e [N/A]

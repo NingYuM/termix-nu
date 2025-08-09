@@ -7,6 +7,12 @@
 use ../utils/common.nu [hr-line]
 
 # Pull all local branches from remote repo
+@example '从远程 origin 仓库更新所有本地分支到最新的提交' {
+  t pull-all
+} --result '本地有修改的时候会先 stash 保存，pull 完成后恢复'
+@example '从远程 upstream 仓库更新所有本地分支到最新的提交' {
+  t pull-all upstream
+} --result 'Note: `git remote -v` 中需要有 upstream 仓库'
 export def 'git pull-all' [
   alias: string = 'origin',     # The remote alias of git repo to pull from
 ] {
