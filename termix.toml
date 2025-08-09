@@ -89,6 +89,73 @@ gaiaSrcRepos = [
   { name = 'gaia-picker', branch = 'release/redevelop', suffix = '', enable = false, url = 'https://erda.cloud/terminus/dop/gaia-app/gaia-picker' },
 ]
 
+[TERP_CONFIG_TIPS]
+terp-assets = """
+                    (ansi r)客户项目务必处理此问题 ！！！(ansi rst)
+TERP Assets 低修改频率静态资源初始化配置方法(上传一次，后续几乎不会再变):
+
+静态资源初始化可以使用 termix-nu 工具的 (ansi p)`t ta init` (ansi rst)命令，该静态资源的初始化是 Bucket 级别的，
+跟环境无关，每个 Bucket 里面初始化一份然后配置好网关转发就可以了，所以初始化参数里面只有 (ansi p)`-d` (ansi rst)
+OR (ansi p)`--dest-store` (ansi rst), 例如:
+
+(ansi p)`t ta init -d oss`(ansi rst), 其中 oss 在 (ansi g).termixrc(ansi rst) 中配置(可参考 .termixrc-example), 内容大致如下:
+(ansi p)
+```toml
+(ansi gr)# OSS 配置(ansi rst)
+(ansi p)oss.TYPE = 'aliyun'
+oss.OSS_AK = 'YOUR-OSS-AK'
+oss.OSS_SK = 'YOUR-OSS-SK'
+oss.OSS_BUCKET = 'YOUR-BUCKET-NAME'
+oss.OSS_REGION = 'oss-cn-hangzhou'
+oss.OSS_ENDPOINT = 'https://oss-cn-hangzhou.aliyuncs.com'(ansi rst)
+```
+注意：对于 Toml 文件来说配置项的位置是很重要的，不要随意移动，否则会导致配置项失效
+
+初始化成功后在对应 Bucket 的 terp-assets 目录下可以找到对应的静态资源。然后需要配置网关转发,
+以下是阿里云存储配置示例(以 TERP 标品举例，其他按需调整)：
+
+URL 路径前缀: (ansi y)/terp-assets(ansi rst)
+    转发方式: 选择 (ansi y)按地址转发(ansi rst)
+    转发地址: (ansi y)http:// (ansi gr),(ansi rst) (ansi y)terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com(ansi rst)
+    API 前缀: (ansi y)/terp-assets(ansi rst)
+    调用方法: (ansi y)GET(ansi rst)
+        描述: (ansi y)PDF字体、XLSX JS等静态资源转发配置(ansi rst)
+        注意: (ansi g)对应的前端 Console, Portal 应用都需要配置，若有 H5 应用也需要配置 Portal H5(ansi rst)
+              (ansi g)配置完毕后可以通过 `t doctor $host` 命令进行检查(ansi rst)
+"""
+latest-gateway = """
+
+TERP latest.json 网关转发配置方法:
+
+在完成标品静态资源同步后，可以通过 Erda 网关对静态资源进行转发, 配置示例:
+
+URL 路径前缀: (ansi y)/latest.json(ansi rst)
+    转发方式: 选择 (ansi y)按地址转发(ansi rst)
+    转发地址: 在线文件存储地址, 强烈建议配置客户文件存储服务地址
+              比如: (ansi y)http:// (ansi gr),(ansi rst) (ansi y)terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com(ansi rst)
+    API 前缀: (ansi y)/fe-resources/${mount_point}/latest.json(ansi rst)
+    调用方法: (ansi y)GET(ansi rst)
+        描述: (ansi y)latest.json(ansi rst)
+        注意: (ansi g)对应的前端 Console, Portal 应用都需要配置，若有 H5 应用也需要配置 Portal H5(ansi rst)
+              (ansi g)配置完毕后可以通过 `t doctor $host` 命令进行检查(ansi rst)
+"""
+latest-endpoint = """
+
+TERP latest.json Nginx 业务策略配置方法:
+
+在 latest.json 的业务策略配置里开启规则，并在自定义 Nginx 配置里面添加如下内容:
+
+```nginx
+(ansi p)add_header 'x-trantor-endpoint' '${项目的oss}';(ansi rst)
+(ansi gr)# MinIO 示例:
+# add_header 'x-trantor-endpoint' 'https://minio-server.fly.com/fly-prod';
+# AliYun OSS 示例:
+# add_header 'x-trantor-endpoint' 'https://fly-erp.oss-cn-hangzhou.aliyuncs.com';(ansi rst)
+```
+只有静态资源存储在 https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com Bucket 才
+可以不配置，其他 OSS Bucket 或云存储都需要配置, 否则会导致静态资源加载失败。
+"""
+
 [empWorkingHour]
 leaveUrl = 'https://emp-portal.app.terminus.io/api/trantor/service/engine/execute/MD$get_employee_leave_info'
 timeUrl = 'https://emp-portal.app.terminus.io/api/trantor/service/engine/execute/WORKTIME$get_employee_project_hours_within_specified_time'

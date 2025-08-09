@@ -12,7 +12,7 @@
 #   [√] Make sure base,base-mobile,service,service-mobile,iam,terp,terp-mobile available in latest.json
 #   [ ] Trantor version and static assets version match: http get https://console-staging.app.terminus.io/api/trantor/platform
 #   [ ] 元数据静态化是否开启？
-#   [ ] 丰富提示信息，附带修复指南
+#   [√] 丰富提示信息，附带修复指南
 # Usage:
 #   t doctor portal-dev.poc.erda.cloud
 #   t doctor https://portal-test.app.terminus.io
@@ -22,7 +22,8 @@
 #   t doctor https://t-erp-portal-test.app.terminus.io
 #   t doctor https://sanlux-runtime-portal-test.sanlux.net
 
-use ../utils/common.nu [ECODE, HTTP_HEADERS, HOST_PATTERN, hr-line]
+use ../utils/common.nu [ECODE, HTTP_HEADERS, HOST_PATTERN]
+use ../utils/common.nu [hr-line, get-termix-conf, render-ansi]
 
 const ASSETS = [
   { path: 'terp-assets/fonts/msyh/f0adcba202.woff2', type: 'font/woff2' },
@@ -46,13 +47,13 @@ const STORAGE_PROVIDERS = [
   { name: 'AliyunOSS', headers: [{ key: 'x-oss-request-id', type: 'exists' }] },
   { name: 'VolcEngine', headers: [{ key: 'server', type: 'equals', value: 'volcclb' }] },
   { name: 'Local', headers: [{ key: 'x-trantor-endpoint', type: 'equals', value: 'local' }] },
-  { name: 'Minio', headers: [{ key: 'x-amz-id-2', type: 'exists' }, { key: 'x-amz-request-id', type: 'exists' }] },
+  { name: 'MinIO', headers: [{ key: 'x-amz-id-2', type: 'exists' }, { key: 'x-amz-request-id', type: 'exists' }] },
 ]
 
 # Warning rules for latest.json response
 const WARNING_RULES = [
-  { key: 'x-trantor-endpoint', condition: 'equals', value: 'local', message: 'latest-local-warning' },
-  { key: 'x-trantor-endpoint', condition: 'empty', value: '', message: 'missing-nginx-endpoint' },
+  { key: 'x-trantor-endpoint', condition: 'equals', value: 'local', message: 'latest-local-warning', tip: 'latest-gateway' },
+  { key: 'x-trantor-endpoint', condition: 'empty', value: '', message: 'missing-nginx-endpoint', tip: 'latest-endpoint' },
 ]
 
 const FIXING_TIPS = {
@@ -71,6 +72,10 @@ const FIXING_TIPS = {
 # 2. Checks latest.json response and headers
 # 3. Validates terp-assets availability and forwarding
 export def terp-diagnose [host: string] {
+  let _TERMIX_CONF = get-termix-conf
+  $env.config.table.padding = { left: 0, right: 1 }
+  let tips = open $_TERMIX_CONF | get TERP_CONFIG_TIPS
+
   # Normalize the host URL
   let host = $host | str trim -c '/'
   let host = if ($host =~ 'https?://') { $host } else { $'https://($host)' }
@@ -79,29 +84,30 @@ export def terp-diagnose [host: string] {
   if $host !~ $HOST_PATTERN { print $FIXING_TIPS.invalid-host; return }
 
   # Perform diagnostic checks
-  check-latest-json $host
-  check-terp-assets $host
+  check-latest-json $host $tips
+  check-terp-assets $host $tips
 }
 
 # Check latest.json response
-def check-latest-json [host: string] {
+def check-latest-json [host: string, tips: record] {
   print 'Checking latest.json... '; hr-line
   let url = ($host)/latest.json
   let resp = http get -ef $url -H $HTTP_HEADERS
 
   if $resp.status != 200 { print $FIXING_TIPS.latest-resp-error; return }
-
-  print $'(ansi y)云存储: (ansi rst)(guess-storage-provider $resp) (ansi grey66)（推测，仅供参考）(ansi rst)'
+  let provider = guess-storage-provider $resp
+  let ps = if $provider == 'Unknown' { '（我猜不出来）' } else { '（推测，仅供参考）' }
+  print $'(ansi y)云存储: (ansi rst)($provider) (ansi grey66)($ps)(ansi rst)'
 
   # Check essential rules first
   if not (check-essential-rules $resp) { print $FIXING_TIPS.latest-resp-error; return }
 
   # Check warning rules
-  let warnings = check-warning-rules $resp | append (check-latest-modules $resp)
+  let warnings = check-warning-rules $resp $tips | append (check-latest-modules $resp)
   if ($warnings | is-empty) {
     print $'(ansi g)Ok(ansi rst)'
   } else {
-    $warnings | each { |w| print $w } | ignore
+    $warnings | each { |w| print (render-ansi $w) } | ignore
   }
 }
 
@@ -127,12 +133,13 @@ def check-essential-rules [resp: record] {
 }
 
 # Check warning rules for latest.json response
-def check-warning-rules [resp: record] {
+def check-warning-rules [resp: record, tips: record] {
   mut warnings = []
   for rule in $WARNING_RULES {
     let value = get-header-value $resp $rule.key
     if (check-condition $value $rule.condition $rule.value) {
       $warnings = $warnings | append ($FIXING_TIPS | get $rule.message)
+                            | append (render-ansi ($tips | get $rule.tip))
     }
   }
   $warnings
@@ -171,14 +178,12 @@ def check-provider-headers [resp: record, headers: list] {
 }
 
 # Check terp-assets and gateway forwarding policy
-def check-terp-assets [host: string] {
+def check-terp-assets [host: string, tips: record] {
   print $'(char nl)Checking terp-assets... '; hr-line
 
   let results = $ASSETS | each { |asset| check-single-asset $host $asset }
-  let ok_count = $results | where status == 'Ok' | length
-  let total_count = $results | length
 
-  display-asset-results $results $ok_count $total_count
+  display-asset-results $results $tips
 }
 
 # Check a single asset
@@ -198,7 +203,10 @@ def check-single-asset [host: string, asset: record] {
 }
 
 # Display asset checking results
-def display-asset-results [results: list, ok_count: int, total_count: int] {
+def display-asset-results [results: list, tips: record] {
+  let total_count = $results | length
+  let ok_count = $results | where status == 'Ok' | length
+
   match [$ok_count, $total_count] {
     [$count, $total] if $count == $total => {
       print $'(ansi g)Ok(ansi rst)'
@@ -209,6 +217,7 @@ def display-asset-results [results: list, ok_count: int, total_count: int] {
     },
     _ => {
       print ($FIXING_TIPS.terp-assets-missing)(char nl)
+      print (render-ansi $tips.terp-assets)
     }
   }
 }
