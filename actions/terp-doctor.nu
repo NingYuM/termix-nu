@@ -13,12 +13,12 @@
 #   [ ] Trantor version and static assets version match
 #   [ ] 0330以及以后版本必须要有蓝色主题
 # Usage:
+#   t doctor portal-dev.poc.erda.cloud
 #   t doctor https://portal-test.app.terminus.io
 #   t doctor https://portal-staging.app.terminus.io
 #   t doctor https://norhor-erp-portal.norhorerp.cn
 #   t doctor https://portal-staging.go1688.terminus.io
 #   t doctor https://t-erp-portal-test.app.terminus.io
-#   t doctor https://terp-poc-portal-dev.poc.erda.cloud
 #   t doctor https://sanlux-runtime-portal-test.sanlux.net
 
 use ../utils/common.nu [ECODE, HTTP_HEADERS, HOST_PATTERN, hr-line]
@@ -40,6 +40,8 @@ const ESSENTIAL_RULES = [
 const STORAGE_IDENTIFIER = {
   aliyun: [ 'x-oss-request-id' ],
   minio: [ 'x-amz-id-2', 'x-amz-request-id' ],
+  volc: [ { key: 'server', value: 'volcclb' } ],
+  local: [ { key: 'x-trantor-endpoint', value: 'local' } ],
 }
 
 const FIXING_TIPS = {
@@ -60,11 +62,14 @@ export def terp-diagnose [host: string] {
   check-terp-assets $host
 }
 
+# Check latest.json response
 def check-latest-json [host: string] {
   print 'Checking latest.json... '; hr-line
   let url = ($host)/latest.json
   let resp = http get -ef $url -H $HTTP_HEADERS
   if $resp.status != 200 { print $FIXING_TIPS.latest-resp-error; return }
+
+  print $'(ansi y)Guess Storage Provider: (ansi rst)(guess-storage-provider $resp)'
   mut essential_matched = true
   # Check ESSENTIAL_RULES
   for rule in $ESSENTIAL_RULES {
@@ -89,7 +94,22 @@ def check-latest-json [host: string] {
       print ($rule.msg)(char nl)
     }
   }
+
   if not $warning_matched { print $'(ansi g)Ok(ansi rst)' }
+}
+
+# Guess storage provider from response headers
+def guess-storage-provider [resp: record] {
+  let aliyun = get-header-value $resp $STORAGE_IDENTIFIER.aliyun.0
+  if ($aliyun | is-not-empty) { return 'AliyunOSS' }
+  let volc = get-header-value $resp $STORAGE_IDENTIFIER.volc.0.key
+  if ($volc == $STORAGE_IDENTIFIER.volc.0.value) { return 'VolcEngine' }
+  let m0 = get-header-value $resp $STORAGE_IDENTIFIER.minio.0
+  let m1 = get-header-value $resp $STORAGE_IDENTIFIER.minio.1
+  if ($m0 | is-not-empty) and ($m1 | is-not-empty) { return 'Minio' }
+  let local = get-header-value $resp $STORAGE_IDENTIFIER.local.0.key
+  if ($local == $STORAGE_IDENTIFIER.local.0.value) { return 'Local' }
+  'Unknown'
 }
 
 # Check terp-assets and gateway forwarding policy
