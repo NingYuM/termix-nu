@@ -9,7 +9,7 @@ use ../utils/common.nu [get-tmp-path get-env get-ver windows?]
 # Show locally installed cli app's version and env information
 @example '显示本机安装应用及其版本信息' {
   t show-env
-} --result ''
+}
 export def main [] {
   $env.config.table.mode = 'light'
   $env.config.color_config.leading_trailing_space_bg = { attr: n }
