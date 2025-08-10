@@ -9,6 +9,18 @@
 use ../utils/common.nu [hr-line, windows?, _TIME_FMT]
 
 # Query node dependencies in all package.json files from the specified branches
+@example '查询所有本地分支上的 `@terminus/nusi-slim` 的版本及提交信息' {
+  t query-deps @terminus/nusi-slim -l
+}
+@example '查询所有远程分支上的 `@terminus/nusi-slim` 的版本及提交信息' {
+  t query-deps @terminus/nusi-slim -r
+} --result '会自动执行 `git fetch -p` 并在远程分支中检索'
+@example '在本地所有分支上查询 `vite` 版本及提交信息（查询 `devDependencies`）' {
+  t query-deps vite -dl
+}
+@example '在 `develop,feature/latest,master` 分支上查询 `vite` 版本及提交信息（查询 devDependencies）' {
+  t query-deps vite -d -b develop,feature/latest,master
+}
 export def 'query deps' [
   dep: string,                # The node dependency package name
   --dev(-d),                  # Query from `devDependencies`

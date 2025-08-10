@@ -7,6 +7,13 @@
 
 use ../utils/common.nu [ECODE, get-conf, windows?]
 
+# Quickly open the nav url in default browser
+@example '列出所有可用导航项' {
+  t go
+} --result '以表格形式展示 `quickNavs` 的 key 与 url'
+@example '打开 `termix` 快捷链接' {
+  t go termix
+} --result '在默认浏览器中打开 `termix` 对应链接'
 export def go [
   nav_key?: string  # The nav key to go from `quickNavs` config in termix.toml
 ] {
