@@ -7,13 +7,22 @@
 # Ref: https://nodejs.org/dist/index.json
 # Usage:
 #   t ls-node
-#   t ls-node v15
-#   t ls-node v15 --lts
+#   t ls-node v18
+#   t ls-node v18 --lts
 
 use ../utils/common.nu [ECODE]
 
 const RELEASE_SOURCE = 'https://nodejs.org/dist/index.json'
 
+@example '查询已发布 Node 版本，最小主版本默认为 18' {
+  t ls-node
+} --result '输出信息包含版本、LTS 标识、发布时间、内置 npm 与 v8 版本'
+@example '查询 20 及以上的 Node 版本' {
+  t ls-node 20
+} --result ''
+@example '查询 18 及以上的 Node LTS 版本' {
+  t ls-node v18 --lts
+} --result ''
 export def ls-node-remote [
   minVer?: string,    # The min node version you want to query
   --lts,              # Filter the node versions that are LTS
