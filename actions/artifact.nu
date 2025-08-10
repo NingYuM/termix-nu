@@ -49,6 +49,39 @@ const SUPPORTED_ACTIONS = [deploy, produce, consume, pack]
 
 # Build, Download and Upload artifacts, create deploy order then deploy from artifacts
 # Detailed User Manual: https://fe-docs.app.terminus.io/termix/termix-nu#erda-artifacts
+@example '在 TUI 界面选择一个 Trantor 制品然后下载、上传并部署该制品到 `terp` 开发环境' {
+  t art consume -t terp -e DEV
+} --result '会显示候选制品列表，并且可以预览制品信息和 CHANGELOG'
+@example '下载、上传并部署指定版本制品到 `terp` 开发环境' {
+  t art consume -v R.3.0.2506+20250721162706.810 -t terp -e DEV
+} --result '底层基于 Trantor 官方脚本实现'
+@example '列出所有可用的源与目标项目配置' {
+  t art -l
+} --result '显示全局设置、所有源与目标项目配置信息'
+@example '使用指定版本制品部署 `terp` 测试环境' {
+  t art deploy -v R.3.0.2506+20250721162706.810 -t terp -e TEST
+} --result '前提是 `terp` 项目已经存在对应版本的制品'
+@example '交互式选择 `terp` 项目制品后部署测试环境（支持预览版本信息与 CHANGELOG）' {
+  t art deploy -t terp -e TEST
+}
+@example '从 Trantor 构建制品并部署到 `terp` 开发环境（联合部署模式）' {
+  t art deploy -c -f trantor -b release/3.0.2506 -t terp -e DEV
+} --result '包含制品构建、上传到目标项目、创建部署单、部署等步骤'
+@example '仅在 `terp` 项目测试环境创建部署单，不执行部署操作' {
+  t art deploy -v R.3.0.2506+20250721162706.810 -t terp -e TEST -n
+} --result '输出部署单 ID'
+@example '通过部署单 ID 执行部署' {
+  t art deploy -i 1b39da9d-9a7b-4122-9369-7e51a35eab8f
+}
+@example '从 Trantor 项目指定分支构建制品并输出制品信息' {
+  t art produce -f trantor -b release/3.0.2506
+}
+@example '将指定版本应用制品打包为项目制品' {
+  t art pack -v Portal-3.0.2506-f785ce9+250607.213036 -f trantor
+} --result '输出转换后的项目制品信息'
+@example '部署指定应用组 `Dors` 和 `IAM` 到 `terp` 开发环境' {
+  t art deploy -v R.3.0.2506+20250721162706.810 -t terp -e DEV -g Dors,IAM
+}
 export def artifacts [
   action?: string,            # Action to perform, such as `deploy`, `produce`, `consume` and `pack`
   --list(-l),                 # List all available source and destination settings
