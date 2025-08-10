@@ -45,6 +45,27 @@ const LEGACY_L1_VERSIONS = [2.5.24.0830 2.5.24.0930 2.5.24.1030]
 # TERP Meta data synchronization tool: create and upload snapshot to OSS, and import
 # meta data snapshot to the dest Console for all modules or selected modules.
 # User manual: https://fe-docs.app.terminus.io/termix/termix-nu#meta-data-syncing
+@example '从默认源同步 `HR_ATT,HR_PER,HR_REC` 模块的元数据到默认目标' {
+  t msync HR_ATT,HR_PER,HR_REC
+}
+@example '从默认源以交互方式选择模块后导入到默认目标' {
+  t msync
+} --result '在 TUI 中选择模块，可以选择多个模块, 支持模糊搜索'
+@example '从默认源同步所有模块到默认目标' {
+  t msync -a
+} --result '将提示输入安全码(如果有)，并依次执行：创建快照、上传快照、导入元数据'
+@example '从 `dev` 源仅创建并上传元数据快照（不导入）' {
+  t msync --snapshot --from dev
+} --result '输出快照 RootOID 与下载地址，不执行导入步骤'
+@example '指定源与目标，同步所有模块的元数据' {
+  t msync -a --from dev --to test
+}
+@example '列出可用的同步源与目标' {
+  t msync -l
+} --result '以表格形式列出 `meta.source` 与 `meta.destination` 配置'
+@example '安装或者升级标准模块的元数据到目标，支持 Trantor 2.5.24.0930 及以后版本，表示安装为非原生模块' {
+  t msync --install --to test
+} --result '执行安装/升级任务而非普通导入'
 export def 'meta sync' [
   modules?: string,      # Specify the modules to sync, multiple modules separated by commas
   --from(-f): string@'nu-complete source',  # Specify the source meta data provider name from meta.source config
