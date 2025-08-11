@@ -614,6 +614,27 @@ export def main [
 }
 
 # 创建 Erda 流水线并执行，默认情况下会检查是否有流水线正在执行或者是否该 Commit 已经部署过，若有则停止并给予提示
+@example '交互式选择多个目标并部署' {
+  t dp -im
+} --result '通过交互式选择器(可多选，支持模糊搜索)选择应用后创建并执行对应流水线'
+@example '部署应用测试环境(单应用模式)' {
+  t dp test
+} --result '在执行前进行是否有运行中/提交已部署的检查，满足条件后创建并运行流水线'
+@example '根据流水线 ID 停止正在运行的流水线' {
+  t dp -s 988218150879331
+} --result '调用取消接口终止对应流水线并输出当前状态'
+@example '强制部署测试环境(跳过检查)' {
+  t dp test -f
+} --result '跳过运行中/提交已部署检查，直接创建并运行流水线'
+@example '多应用模式部署 `test` 目标里面配置的所有应用' {
+  t dp test -a all
+} --result '批量为该目标下的所有应用创建并执行流水线'
+@example '列出所有可部署目标及应用信息' {
+  t dp -l
+} --result '显示 `.termixrc` 中 erda.* 配置的部署目标清单，含应用/分支/环境/描述等信息'
+@example '基于测试环境部署配置临时覆盖其分支配置项并部署' {
+  t dp test -o {branch: 'release/2.5.24.0330'}
+} --result '该参数在 `sh/bash/fish/nushell` 下可以正常使用，但是 `zsh` 因为 `{}` 解析问题貌似不支持'
 export def erda-deploy [
   dest?: string = 'dev',    # 用于指定流水线执行的目标环境，如 dev, test, staging, prod 等, 默认为 dev
   --interactive(-i),        # 以交互式模式选择部署目标，支持模糊匹配
@@ -634,6 +655,24 @@ export def erda-deploy [
 }
 
 # 根据流水线 ID 或目标环境查询流水线执行结果, 例如: 单应用: t dq 997636681239659; t dq test, 多应用: t dq dev -a all
+@example '根据流水线 ID 查询执行结果' {
+  t dq 988218150879331
+} --result '输出该流水线的应用、分支、状态、提交信息、URL 等详情'
+@example '持续轮询并监控指定流水线的运行详情' {
+  t dq 988218150879331 -w
+} --result '以 2 秒为间隔轮询，分阶段显示任务状态与耗时等信息'
+@example '查询测试环境最近 10 条部署记录(单应用模式)' {
+  t dq test
+} --result '列出最近 10 条流水线的执行记录，并展示可点击的流水线 ID 链接'
+@example '多应用模式查询开发环境名称或者别名为 fe-docs 的应用的最近 10 条部署记录' {
+  t dq dev -a fe-docs
+}
+@example '多应用模式查询开发环境所有应用的最近 10 条部署记录' {
+  t dq dev -a all
+}
+@example '基于测试环境流水线配置临时覆盖其分支配置项并进行查询' {
+  t dq test -o {branch: 'release/2.5.24.0330'}
+} --result '该参数在 `sh/bash/fish/nushell` 下可以正常使用，但是 `zsh` 因为 `{}` 解析问题貌似不支持'
 export def erda-query [
   dest?: string = 'dev',  # 用于指定流水线查询目标环境，如 dev, test, staging, prod 等, 默认为 dev
   --watch(-w),            # 持续轮询并显示指定流水线各个 Stage 的详细执行信息
