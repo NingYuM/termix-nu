@@ -113,7 +113,15 @@ def check-latest-json [host: string, tips: record] {
   let url = ($host)/latest.json
   let resp = http get -ef $url -H $HTTP_HEADERS
 
-  if $resp.status != 200 { print $FIXING_TIPS.latest-resp-error; return }
+  if $resp.status != 200 {
+    print $FIXING_TIPS.latest-resp-error
+    match $resp.status {
+      404 => { print -e $'        Remote response with: (ansi r)404 Not Found(ansi rst)' },
+      502 => { print -e $'        Remote response with: (ansi r)502 Bad Gateway(ansi rst)' },
+      _ => {}
+    }
+    return
+  }
   let provider = guess-storage-provider $resp
   let ps = if $provider == 'Unknown' { '（我猜不出来）' } else { '（推测，仅供参考）' }
   print $'(ansi y)云存储: (ansi rst)($provider) (ansi grey66)($ps)(ansi rst)'
