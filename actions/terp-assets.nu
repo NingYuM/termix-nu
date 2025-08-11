@@ -87,6 +87,27 @@ const TOOL_INSTALL_TIP = {
 #   t ta transfer all --from foran --to fs-test --dest-store fsmio
 
 # Download TERP static assets or transfer assets to other path of the specified cloud storage
+@example '初始化低修改频率的公共静态资源到存储桶，Bucket 级别，跟环境无关' {
+  t ta init --dest-store minio
+} --result '在目标存储的 terp-assets 目录下完成 js/fonts/monaco-editor 等静态资源的初始化'
+@example '将 3.0.2506 的 `base,service` 模块同步到 `toss` 配置对应存储的 `terp-dev` 挂载点' {
+  t ta transfer base,service --from 3.0.2506 --to terp-dev --dest-store toss
+} --result '只同步指定模块，一般建议这么操作既节省时间又减小影响范围'
+@example '交互式选择模块将 3.0.2506 的选中模块同步到 `toss` 配置对应存储的 `terp-dev` 挂载点' {
+  t ta transfer --from 3.0.2506 --to terp-dev --dest-store toss
+} --result '按空格选中或者取消选择，回车确认，按 ESC/q 退出'
+@example '将测试环境的所有模块同步到预发与生产挂载点(多目标逗号分隔)' {
+  t ta transfer all --from test --to staging,prod --dest-store minio
+} --result '先下载再上传，成功后输出各目标 latest.json 访问地址，一般不推荐直接同步 `all`, 影响范围太大'
+@example '查看指定挂载点(如 `dev` & `test`)的资源摘要信息(多目标逗号分隔)' {
+  t ta detect -f dev,test
+} --result '从 dev & test 挂载点读取 latest.json 并显示模块列表及状态, 只有在 terminus-new-trantor OSS Bucket 的时候才能使用简写'
+@example '通过自定义 `latest.json` 完整 URL 查看资源摘要' {
+  t ta detect -f https://portal-test.app.terminus.io/latest.json
+} --result '从指定 URL 读取 latest.json 并显示模块列表及状态'
+@example '从 OSS 下载所有模块静态资源到本地临时目录' {
+  t ta download all -f dev
+} --result '这个命令你一般不会用到，资源同步的时候会自动调用这个命令'
 export def 'terp assets' [
   action: string,             # Available actions: init, download, transfer, detect and revert
   modules?: string,           # Available values: base/base-mobile/terp/terp-mobile/iam/charts/service/all. Multiple modules separated by `,`
