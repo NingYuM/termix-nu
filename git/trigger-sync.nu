@@ -17,6 +17,24 @@ export-env {
 }
 
 # Manually trigger code syncing to all related dests for specified branch
+@example '触发当前分支的代码同步' {
+  t gsync
+} --result '更新当前分支并根据 .termixrc 的 branches 配置同步到各目标仓库'
+@example '触发指定分支的代码同步' {
+  t gsync feature/latest
+} --result '先更新远程最新提交到本地再同步该分支到配置的目的仓库'
+@example '强制同步 feature/sync 分支(等效于 git push -f)' {
+  t gsync feature/sync -f
+} --result '以强制推送策略同步到目标仓库，如果没有指定分支名则代表当前分支'
+@example '列出所有已配置的分支同步信息' {
+  t gsync -l
+} --result '显示 Source/Dest/Repo/Lock 与 SYNC 状态以及其他信息'
+@example '批量同步所有有同步配置的分支' {
+  t gsync -a
+} --result '对所有存在同步配置且本地存在的分支依次执行代码同步，同步前会先更新代码到最新提交'
+@example '将分支同步到指定仓库(忽略分支同步配置)' {
+  t gsync release/2.5.23.1116 -r terp-rls
+} --result '直接将该分支推送到指定仓库的同名分支'
 export def 'git trigger-sync' [
   branch?: string,    # Local git branch/ref to push
   --all(-a),          # Whether to sync all branches that have syncing config
