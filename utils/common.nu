@@ -22,8 +22,23 @@
 export const _DATE_FMT  = '%Y.%m.%d'
 export const _TIME_FMT =  '%Y/%m/%d %H:%M:%S'
 export const _UPGRADE_TAG = '$-FORCE-UPGRADE-$'
+
 # Host pattern for http url
-export const HOST_PATTERN = '^(https?://)(([a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?\.)*[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?|(([0-9]{1,3}\.){3}[0-9]{1,3}))(:[1-9][0-9]{0,4})?$'
+# HTTP/HTTPS host with optional port. Rules:
+# - Scheme must be http or https
+# - Host must be one of:
+#   - a fully-qualified domain name with at least one dot and a valid TLD (letters, length ≥ 2)
+#   - localhost
+#   - an IPv4 address (0-255 per octet)
+# - Optional port, 1-99999 (keep loose upper bound)
+# Note: This intentionally rejects a single label like `https://a`
+export const HOST_PATTERN = [
+  '^(https?://)(?:'
+  '(?:localhost)'
+  '|(?:[A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}'
+  '|(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)'
+  ')(?::[1-9][0-9]{0,4})?$'
+] | str join ''
 
 # It takes longer to respond to requests made with unknown/rare user agents.
 # When make http post pretend to be curl, it gets a response just as quickly as curl.

@@ -111,7 +111,7 @@ oss.OSS_ENDPOINT = 'https://oss-cn-hangzhou.aliyuncs.com'(ansi rst)
 ```
 注意：对于 Toml 文件来说配置项的位置是很重要的，不要随意移动，否则会导致配置项失效
 
-初始化成功后在对应 Bucket 的 terp-assets 目录下可以找到对应的静态资源。然后需要配置网关转发,
+初始化成功后在对应 Bucket 的 (ansi y)terp-assets(ansi rst) 目录下可以找到对应的静态资源。然后需要配置网关转发,
 开发、测试、预发、生产都要配置, 以下是阿里云存储配置示例(以 TERP 标品举例，其他按需调整)：
 
 URL 路径前缀: (ansi y)/terp-assets(ansi rst)
@@ -143,7 +143,7 @@ latest-endpoint = """
 
 TERP latest.json Nginx 业务策略配置方法:
 
-在 latest.json 的业务策略配置里开启规则，并在自定义 Nginx 配置里面添加如下内容:
+在 (ansi g)latest.json(ansi rst) 的业务策略配置里开启规则，并在自定义 Nginx 配置里面添加如下内容:
 
 ```nginx
 (ansi p)add_header 'x-trantor-endpoint' '${项目的oss}';(ansi rst)
