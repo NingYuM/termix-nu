@@ -176,9 +176,8 @@ query-deps *OPTIONS: _setup
 [group('-- Git --')]
 git-branch *OPTIONS: _setup
   @# The following two statement must be written in one line
-  @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
-    overlay use {{ join(_termix, 'git', 'branch.nu') }}; \
-    git-check --check-repo=1 {{JUST_INVOKE_DIR}}; git-branch {{OPTIONS}}
+  @overlay use {{ join(_termix, 'git', 'branch.nu') }}; \
+    git-branch {{OPTIONS}}
 
 # Show insertions/deletions and number of files changed for each commit
 [group('-- Git --')]
