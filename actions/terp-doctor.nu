@@ -5,6 +5,7 @@
 #   Doctor for TERP, Try to diagnose and show TERP app's problems.
 # TODO:
 #   [√] Make sure host alive
+#   [√] Allow checking multiple hosts at once
 #   [√] Checking terp-assets forwarding configured correctly
 #   [√] Test if it's a valid host URL before checking
 #   [√] Checking latest.json forwarding configured correctly
@@ -57,7 +58,7 @@ const WARNING_RULES = [
 ]
 
 const FIXING_TIPS = {
-  invalid-host: $'(ansi r)[ERROR](ansi rst) 无效的 host，请确保 host 输入正确',
+  invalid-host: $'(ansi r)[ERROR](ansi rst) 无效的 host，请检查并确保以下 host 输入正确(char nl)',
   terp-assets-missing-some: $'(ansi y)[WARN](ansi rst) terp-assets 目录存在，但缺少部分文件，请核查确认是否正常',
   terp-assets-missing: $'(ansi r)[ERROR](ansi rst) terp-assets 目录不存在，请确保该静态资源包已经初始化并且添加了网关转发配置',
   latest-local-warning: $'(ansi y)[WARN](ansi rst) 当前应用使用本地 latest.json 文件，静态资源发布可能不会生效，建议通过网关转发',
@@ -76,21 +77,39 @@ export def terp-diagnose [host: string] {
   $env.config.table.padding = { left: 0, right: 1 }
   let tips = open $_TERMIX_CONF | get TERP_CONFIG_TIPS
 
-  # Normalize the host URL
-  let host = $host | str trim -c '/'
-  let host = if ($host =~ 'https?://') { $host } else { $'https://($host)' }
-
-  # Validate host format
-  if $host !~ $HOST_PATTERN { print $FIXING_TIPS.invalid-host; return }
+  let validation = validate-hosts $host
+  if ($validation.invalid | is-not-empty) {
+    print -e $FIXING_TIPS.invalid-host
+    print -e ($validation.invalid | table -t psql)
+    exit $ECODE.INVALID_PARAMETER
+  }
 
   # Perform diagnostic checks
-  check-latest-json $host $tips
-  check-terp-assets $host $tips
+  $validation.valid | each { |h|
+    print $'(char nl)Checking (ansi g)($h)(ansi rst) ...'; hr-line -c p
+    check-latest-json $h $tips
+    check-terp-assets $h $tips
+  }
+}
+
+# Validate hosts
+def validate-hosts [hosts: string] {
+  let candidates = $hosts | split row ','
+  mut valid = []
+  mut invalid = []
+  for h in $candidates {
+    let host = $h | str trim -c '/'
+    let host = if ($host =~ 'https?://') { $host } else { $'https://($host)' }
+
+    # Validate host format
+    if $host =~ $HOST_PATTERN { $valid = ($valid | append $host) } else { $invalid = ($invalid | append $h) }
+  }
+  { valid: $valid, invalid: $invalid }
 }
 
 # Check latest.json response
 def check-latest-json [host: string, tips: record] {
-  print 'Checking latest.json... '; hr-line
+  print 'Checking latest.json... '; hr-line -c grey66
   let url = ($host)/latest.json
   let resp = http get -ef $url -H $HTTP_HEADERS
 
@@ -179,7 +198,7 @@ def check-provider-headers [resp: record, headers: list] {
 
 # Check terp-assets and gateway forwarding policy
 def check-terp-assets [host: string, tips: record] {
-  print $'(char nl)Checking terp-assets... '; hr-line
+  print $'(char nl)Checking terp-assets... '; hr-line -c grey66
 
   let results = $ASSETS | each { |asset| check-single-asset $host $asset }
 
