@@ -98,23 +98,23 @@ def check-config [description: string, --fix, --debug, --recheck = false] {
     return { status: $STATUS.OK }
   } catch {|err|
     if not $fix {
-      print $err.msg
+      print -e $err.msg
       return { status: $STATUS.ERROR, tip: $FIX_TIP, message: $err.msg }
     }
     # Prevent infinite recursion
     if $recheck {
-      print $err.msg
+      print -e $err.msg
       return { status: $STATUS.ERROR, tip: "配置重置后仍有错误，请手动检查", message: $err.msg }
     }
 
     # Try to fix by resetting config
-    print $err.msg; print 'Resetting nu config ...'
+    print -e $err.msg; print 'Resetting nu config ...'
     try {
       config reset -n
       check-config 'Recheck .. ' --fix=$fix --debug=$debug --recheck=true | show-result
       return
     } catch {|reset_err|
-      print $reset_err.msg
+      print -e $reset_err.msg
       return { status: $STATUS.ERROR, tip: "配置重置失败，请手动修复", message: $reset_err.msg }
     }
   }
