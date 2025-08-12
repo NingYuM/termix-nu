@@ -36,8 +36,10 @@ const ASSETS = [
 
 # Essential rules for the response of latest.json
 const ESSENTIAL_RULES = [
-  { key: 'cache-control', value: 'no-cache' },
-  { key: 'content-type', value: 'application/json' },
+  { file: 'latest.json', key: 'cache-control', value: ['no-cache'] },
+  { file: 'latest.json', key: 'content-type', value: ['application/json'] },
+  { file: 'iconpark.js', key: 'cache-control', value: ['no-cache'] },
+  { file: 'iconpark.js', key: 'content-type', value: ['text/javascript' 'application/javascript'] },
 ]
 
 # Essential modules for latest.json
@@ -63,7 +65,7 @@ const FIXING_TIPS = {
   terp-assets-missing: $'(ansi r)[ERROR](ansi rst) terp-assets 目录不存在，请确保该静态资源包已经初始化并且添加了网关转发配置',
   latest-local-warning: $'(ansi y)[WARN](ansi rst) 当前应用使用本地 latest.json 文件，静态资源发布可能不会生效，建议通过网关转发',
   latest-resp-error: $'(ansi r)[ERROR](ansi rst) latest.json 响应错误，请检查网关转发配置',
-  missing-nginx-endpoint: $'(ansi r)[ERROR](ansi rst) 缺少 `x-trantor-endpoint` Nginx 自定义配置，请检查网关 latest.json 的业务策略',
+  missing-nginx-endpoint: $'(ansi y)[WARN](ansi rst) 缺少 `x-trantor-endpoint` Nginx 自定义配置，请检查网关 latest.json 的业务策略',
 }
 
 # Diagnose TERP app settings and try to figure out the problems
@@ -127,7 +129,7 @@ def check-latest-json [host: string, tips: record] {
   print $'(ansi y)云存储: (ansi rst)($provider) (ansi grey66)($ps)(ansi rst)'
 
   # Check essential rules first
-  if not (check-essential-rules $resp) { print $FIXING_TIPS.latest-resp-error; return }
+  if not (check-essential-rules $resp latest.json) { print $FIXING_TIPS.latest-resp-error; return }
 
   # Check warning rules
   let warnings = check-warning-rules $resp $tips | append (check-latest-modules $resp)
@@ -146,14 +148,14 @@ def check-latest-modules [resp: record] {
   [$'(ansi y)[WARN](ansi rst) latest.json 缺少模块: (ansi r)($missing_modules | str join ,)(ansi rst)']
 }
 
-# Check essential rules for latest.json response
-def check-essential-rules [resp: record] {
+# Check essential rules for latest.json or iconpark.js response
+def check-essential-rules [resp: record, file: string] {
   mut all_passed = true
-  for rule in $ESSENTIAL_RULES {
+  for rule in ($ESSENTIAL_RULES | where $it.file == $file) {
     let value = get-header-value $resp $rule.key
-    if $value != $rule.value {
+    if $value not-in $rule.value {
       $all_passed = false
-      print $'Response header `($rule.key)` expected: (ansi g)($rule.value)(ansi rst), actual: (ansi r)($value)(ansi rst)'
+      print -e $'Response header `($rule.key)` expected: (ansi g)($rule.value)(ansi rst), actual: (ansi r)($value)(ansi rst)'
     }
   }
   $all_passed
@@ -239,11 +241,11 @@ def display-asset-results [results: list, tips: record] {
       print $'(ansi g)Ok(ansi rst)'
     },
     [$count, _] if $count > 0 => {
-      print (char nl)($FIXING_TIPS.terp-assets-missing-some); hr-line
+      print -e (char nl)($FIXING_TIPS.terp-assets-missing-some); hr-line
       $results | where status != 'Ok' | table -t light | print
     },
     _ => {
-      print ($FIXING_TIPS.terp-assets-missing)(char nl)
+      print -e ($FIXING_TIPS.terp-assets-missing)(char nl)
       print (render-ansi $tips.terp-assets)
     }
   }

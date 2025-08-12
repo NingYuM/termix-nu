@@ -153,7 +153,8 @@ TERP latest.json Nginx 业务策略配置方法:
 # add_header 'x-trantor-endpoint' 'https://fly-erp.oss-cn-hangzhou.aliyuncs.com';(ansi rst)
 ```
 只有静态资源存储在 https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com Bucket 才
-可以不配置，其他 OSS Bucket 或云存储都需要配置, 否则会导致静态资源加载失败。
+可以不配置，其他 OSS Bucket 或云存储都需要配置, 否则会导致静态资源加载失败。(ansi r)如果访问门
+户的时候发现大量静态资源加载报 404 错误，则务必先检查此配置。(ansi rst)
 """
 
 [empWorkingHour]
