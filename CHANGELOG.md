@@ -1,6 +1,55 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.91.0 - 2025-08-12
+
+**Bug Fixes**
+
+- Attempt to fix termix-nu upgrade when branches have diverged
+- Fix error in the `t git-stat` command
+- Add protocol validation for `t doctor $host`
+- Fix Nushell config checks for the `t doctor` command
+- Fix tool installation and upgrades on Ubuntu
+- Fix `t git-branch` path positional argument and add usage examples
+- Fix bucket validation for the `t doctor $host` command
+- Fix Nu config checks in the `t doctor` command
+
+**Features**
+
+- Show Homebrew-managed tools required by termix-nu
+- Add `terp-doctor` to diagnose `terp-assets`
+- Add `t doctor ${host}` command
+- Add host pattern validation for the `t doctor $host` command
+- Add CLAUDE.md
+- Update `compare-ver` to support comparing semver, including prereleases
+- Add `--filter` flag for `t ls-tags` command
+- Add asset download and transfer for `ai-assets`
+- Add examples for `t msync` command
+- Add examples for `t art` command
+- Add examples for `t go` and `t query-deps` commands
+- Add usage examples for `t ta` command
+- Add examples for `t gsync` command
+- Add examples for `t tp` and `t dq` commands
+- Update `latest.json` checks for the `t doctor $host` command
+- Add storage provider checks for the `t doctor $host` command
+- Add frontend module checks for the `t doctor $host` command
+- Update fix tips for the `t doctor $host` command
+- Add batch URL check support for the `t doctor` command
+- Add `latest.json` response status checks for the `t doctor` command
+
+**Miscellaneous Tasks**
+
+- Update `t doctor` checking tips
+- Show shell responses from `trantor-artifact-transfer.sh`
+- Add usage examples for `t pull-all` and `t doctor`; fix `t show-env`
+- Add examples for `t ls-tags` and `t ls-node` commands
+- Update essential rules and warning tips
+
+**Refactor**
+
+- Fix `open-tools.nu` script for Nu 0.105 and later
+- Refactor code for the `t doctor $host` command
+
 ## v1.90.0 - 2025-07-21
 
 **Bug Fixes**
