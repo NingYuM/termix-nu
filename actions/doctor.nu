@@ -40,6 +40,12 @@ const REGISTRY = 'https://registry.npm.terminus.io'
 @example '修复 termix-nu 配置问题(假如执行一次不行就再执行一次吧 O(∩_∩)O)' {
   t doctor --fix
 } --result '如果执行 `t doctor --fix` 后仍有问题可以尝试重启终端没准儿就好了'
+@example '诊断 Trantor 前端应用配置问题' {
+  t doctor t-erp-portal-test.app.terminus.io
+} --result '如果发现问题会同时给出修复建议'
+@example '同时诊断多个 Trantor 前端应用发现潜在的配置问题' {
+  t doctor t-erp-portal-test.app.terminus.io,t-erp-console-test.app.terminus.io
+}
 export def termix-doctor [
   host?: string,  # The host of TERP App, if provided, will diagnose TERP App settings
   --fix(-f),      # Try to fix the problem automatically

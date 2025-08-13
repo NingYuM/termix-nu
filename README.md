@@ -246,7 +246,18 @@ services:
 
 ### 3. `termix-nu` 自检及问题修复{#doctor}
 
-可以通过 `t doctor` 命令对 `termix-nu` 的常见问题进行自检，自检完毕后会输出当前配置存在的问题及相关修复建议, 甚至可以通过 `--fix` 参数进行自动修复。
+可以通过 `t doctor` 命令对 `termix-nu` 的常见问题进行自检，自检完毕后会输出当前配置存在的问题及相关修复建议, 甚至可以通过 `--fix` 参数对 `termix-nu` 的配置问题进行自动修复。
+
+除了诊断 `termix-nu` 的配置问题之外，还可以诊断 Trantor 前端应用(**Console**, **Portal**, **Portal-H5**)的常见部署配置问题，目前诊断项包括：
+
+- 是否配置了 `latest.json` 网关转发策略，如果没配会给予修复提示；
+- 配置了 `latest.json` 网关情况下是否配置了 `x-trantor-endpoint` Nginx 业务策略，如果没配会给予修复提示；
+- 检查 `latest.json` 的响应类型、状态码和缓存策略是否有问题；
+- 是否缺少 `base`,`base-mobile`,`service`,`service-mobile`,`iam`,`terp`,`terp-mobile` 等必要前端模块；
+- 是否配置了 `terp-assets` 网关转发策略，如果没配会给予修复提示；
+- 是否将 `terp-assets` 静态资源上传到客户云存储的正确位置，如果没有也会给出修复提示；
+
+未来还会增加更多诊断项，并且会针对诊断出来的问题给出修复提示，方便迅速排查应用部署问题，不过这些问题都是需要负责人去手工修复的，无法通过 `--fix` 自动修复。
 
 **命令格式**: `t doctor *OPTIONS`
 
@@ -254,6 +265,7 @@ services:
 
 - `-f, --fix`: 对诊断发现的问题进行自动修复（如果没问题不会执行任何操作）；
 - `-d, --debug`: 显示诊断过程中的 Debug 信息；
+- `host <string>`: 可选，待诊断的 Trantor 前端应用的域名
 
 **使用举例**:
 
@@ -262,6 +274,10 @@ services:
 t doctor
 # 对诊断发现的问题进行自动修复
 t doctor --fix
+# 诊断 Trantor 前端应用配置问题
+t doctor t-erp-portal-test.app.terminus.io
+# 同时诊断多个 Trantor 前端应用发现潜在的配置问题
+t doctor t-erp-portal-test.app.terminus.io,t-erp-console-test.app.terminus.io
 ```
 
 ---
