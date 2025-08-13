@@ -244,7 +244,7 @@ services:
 
 ---
 
-### 3. `termix-nu` 自检及问题修复{#doctor}
+### 3. `termix-nu` 自检、问题修复以及 Trantor 前端应用配置诊断{#doctor}
 
 可以通过 `t doctor` 命令对 `termix-nu` 的常见问题进行自检，自检完毕后会输出当前配置存在的问题及相关修复建议, 甚至可以通过 `--fix` 参数对 `termix-nu` 的配置问题进行自动修复。
 

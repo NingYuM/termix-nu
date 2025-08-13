@@ -158,12 +158,23 @@ words:
 - worktime
 - wqtest
 - yazi
+- vite
+- msyh
+- XSLX
+- bcmap
+- volcclb
+- aliyuncs
+- iconpark
+- syncable
 - zoxide
 - deepseek
 - nutest
 - Ollama
 - OPENROUTER
+- shellcheck
 - initialised
+- internalcall
+- misoperation
 ignorePaths:
 - casts/**
 - config.nu
