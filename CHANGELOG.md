@@ -81,7 +81,7 @@ All notable changes to this project will be documented in this file.
 **Miscellaneous Tasks**
 
 - Add acl control to object
-- Use latest Nu for uploading of binary denpendencies
+- Use latest Nu for uploading of binary dependencies
 - Try to add a docker image for runtime
 - Fix `fnm` setup for bash
 - Use `ansi rst` instead of `ansi reset` for Nu 0.106.0
