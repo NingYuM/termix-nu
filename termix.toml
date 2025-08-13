@@ -7,10 +7,10 @@
 #   3. VS Code 插件推荐: Even Better TOML;
 
 # Termix-nu version
-version = 'v1.91.0'
+version = 'v1.91.1'
 
 # Min nushell version required to run termix-nu commands
-minNuVer = '0.106.0'
+minNuVer = '0.106.1'
 
 # Min just version required to run termix-nu commands
 minJustVer = '1.39.0'
@@ -116,7 +116,7 @@ oss.OSS_ENDPOINT = 'https://oss-cn-hangzhou.aliyuncs.com'(ansi rst)
 
 URL 路径前缀: (ansi y)/terp-assets(ansi rst)
     转发方式: 选择 (ansi y)按地址转发(ansi rst)
-    转发地址: (ansi y)http:// (ansi gr),(ansi rst) (ansi y)xxx.oss-cn-hangzhou.aliyuncs.com(ansi rst)
+    转发地址: (ansi y)http:// (ansi gr),(ansi rst) (ansi y)your-bucket.oss-cn-hangzhou.aliyuncs.com(ansi rst)
     API 前缀: (ansi y)/terp-assets(ansi rst)
     调用方法: (ansi y)GET(ansi rst)
         描述: (ansi y)PDF字体、XLSX JS等静态资源转发配置(ansi rst)
@@ -132,7 +132,7 @@ TERP latest.json 网关转发配置方法:
 URL 路径前缀: (ansi y)/latest.json(ansi rst)
     转发方式: 选择 (ansi y)按地址转发(ansi rst)
     转发地址: 在线文件存储地址, 强烈建议配置客户文件存储服务地址
-              比如: (ansi y)http:// (ansi gr),(ansi rst) (ansi y)xxx.oss-cn-hangzhou.aliyuncs.com(ansi rst)
+              比如: (ansi y)http:// (ansi gr),(ansi rst) (ansi y)your-bucket.oss-cn-hangzhou.aliyuncs.com(ansi rst)
     API 前缀: (ansi y)/fe-resources/${mount_point}/latest.json(ansi rst)
     调用方法: (ansi y)GET(ansi rst)
         描述: (ansi y)latest.json(ansi rst)
