@@ -28,10 +28,10 @@ use ../utils/common.nu [hr-line, get-termix-conf, render-ansi]
 
 const ASSETS = [
   { path: 'terp-assets/fonts/msyh/f0adcba202.woff2', type: 'font/woff2' },
-  { path: 'terp-assets/js/xlsx-0.20.0.full.min.js', type: 'text/javascript' },
   # { path: 'terp-assets/js/xlsx-0.20.0.full.min.jsx', type: 'text/javascript' },
   { path: 'terp-assets/fonts/UniGB-UTF32-V.bcmap', type: 'application/octet-stream' },
-  { path: 'terp-assets/monaco-editor/0.52.2/min/vs/loader.js', type: 'text/javascript' },
+  { path: 'terp-assets/js/xlsx-0.20.0.full.min.js', type: '(?:text|application)/javascript' },
+  { path: 'terp-assets/monaco-editor/0.52.2/min/vs/loader.js', type: '(?:text|application)/javascript' },
 ]
 
 # Essential rules for the response of latest.json
