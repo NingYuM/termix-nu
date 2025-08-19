@@ -14,6 +14,8 @@
 #   [ ] Trantor version and static assets version match: http get https://console-staging.app.terminus.io/api/trantor/platform
 #   [ ] 元数据静态化是否开启？
 #   [√] 丰富提示信息，附带修复指南
+# REF:
+#   https://help.aliyun.com/zh/oss/developer-reference/set-meta
 # Usage:
 #   t doctor portal-dev.poc.erda.cloud
 #   t doctor https://portal-test.app.terminus.io
@@ -22,6 +24,9 @@
 #   t doctor https://portal-staging.go1688.terminus.io
 #   t doctor https://t-erp-portal-test.app.terminus.io
 #   t doctor https://sanlux-runtime-portal-test.sanlux.net
+#   ossutil set-meta -i $env.OSS_AK -k $env.OSS_SK oss://($env.OSS_BUCKET)/terp-assets/js/pdf.worker-3.4.120.min.js "Content-Type:text/javascript; charset=utf-8" -u
+#   ossutil set-meta -i $env.OSS_AK -k $env.OSS_SK oss://($env.OSS_BUCKET)/terp-assets/js/ --include "*.js" "Content-Type:text/javascript; charset=utf-8" -u -r
+#   ossutil set-meta -i $env.OSS_AK -k $env.OSS_SK oss://($env.OSS_BUCKET)/terp-assets/monaco-editor/ --include "*.js" "Content-Type:text/javascript; charset=utf-8" -u -r
 
 use ../utils/common.nu [ECODE, HTTP_HEADERS, HOST_PATTERN]
 use ../utils/common.nu [hr-line, get-termix-conf, render-ansi]
