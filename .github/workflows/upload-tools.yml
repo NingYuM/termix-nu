@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: hustcer/termix-nu
           token: ${{ secrets.GH_PAT }}  # `GH_PAT` is a secret that contains your PAT
