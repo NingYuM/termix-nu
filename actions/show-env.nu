@@ -28,7 +28,7 @@ export def main [] {
   let fnmVer = (get-ver fnm "fnm --version | str trim | str substring 4..")
   let justVer = (get-ver just "just --version | str trim | str substring 5..")
   let gitVer = (get-ver git "git --version | str trim | str substring 12..")
-  let s5cmdVer = (get-ver s5cmd 's5cmd version | split row - | first | str trim -c v')
+  let s5cmdVer = (get-ver s5cmd "s5cmd version | split row - | str trim --left -c v | str join '  (' | append ')' | str join")
   let time = (date now | format date '%Y/%m/%d %H:%M:%S')
   let gitProxy = if (git config --global --list | grep proxy | is-empty) { 'Off' } else { 'On' }
 
