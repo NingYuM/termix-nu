@@ -24,6 +24,8 @@ use terp-doctor.nu [terp-diagnose]
 use setup.nu [get-versions, get-latest-versions]
 use ../utils/common.nu [hr-line, windows?, is-lower-ver, get-conf, is-installed]
 
+const IGNORE_USER = 'hustcer'
+
 const STATUS = {
   OK: 'OK',
   WARN: 'WARN',
@@ -99,7 +101,8 @@ def check-config [description: string, --fix, --debug, --recheck = false] {
   # Check config file syntax
   try {
     # help commands | where is_const
-    const file = if ($nu.home-path | str contains 'hustcer') { null } else { $nu.config-path }
+    const IGNORE = ($nu.home-path | str contains $IGNORE_USER) or not ($nu.config-path | path exists)
+    const file = if $IGNORE { null } else { $nu.config-path }
     source $file
     return { status: $STATUS.OK }
   } catch {|err|
