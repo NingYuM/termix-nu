@@ -374,6 +374,12 @@ dir-batch-exec *OPTIONS: _setup
 test:
   @nu -c "use $'($nu.default-config-dir)/lib/nutest' *; run-tests"
 
+# Syncing trantor-artifact-transfer.sh
+[private]
+sync-sh:
+  @http get http://trantor2-installer.app.terminus.io/scripts/trantor-artifact-transfer.sh \
+    | save -rpf run/trantor-artifact-transfer.sh
+
 # Install fzf if not exists
 _setup_fzf:
   @overlay use {{ join(_termix, 'actions', 'open-tools.nu') }}; \
