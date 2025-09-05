@@ -464,6 +464,9 @@ erda_api_curl() {
   # If original output file was specified, copy response there
   if [ -n "$output_file" ]; then
     cp "$temp_response" "$orig_output"
+  else
+    # If no output file was specified, output the response to stdout
+    cat "$temp_response"
   fi
 
   # Clean up
@@ -733,11 +736,11 @@ manage_erda_credentials() {
 
   # If we have existing credentials, offer them as options
   if [ ${#existing_users[@]} -gt 0 ]; then
-    echo "Found existing credentials for ${base_url} (${org_name}):"
+    log "Found existing credentials for ${base_url} (${org_name}):"
     for i in "${!existing_users[@]}"; do
-      echo "  $((i+1)). ${existing_users[$i]}"
+      log "  $((i+1)). ${existing_users[$i]}"
     done
-    echo "  $((${#existing_users[@]}+1)). Use a new account"
+    log "  $((${#existing_users[@]}+1)). Use a new account"
 
     local choice
     # Set default choice to 1 if existing users are available
@@ -800,9 +803,9 @@ manage_erda_credentials() {
   # If we need password (new user or expired credentials and saved password failed)
   if [ "$need_password" = true ]; then
     # 新增登录方式选择
-    echo "请选择登录方式："
-    echo "  1. 密码登录 (默认)"
-    echo "  2. 短信验证码登录"
+    log "请选择登录方式："
+    log "  1. 密码登录 (默认)"
+    log "  2. 短信验证码登录"
     read -p "输入选项 [1/2] (默认: 1): " login_method
     if [ -z "$login_method" ]; then
       login_method=1
@@ -820,7 +823,7 @@ manage_erda_credentials() {
     else
       # Prompt for password securely (without echoing to terminal)
       read -s -p "Enter password for $username: " password
-      echo  # Add newline after password input
+      log  # Add newline after password input
       # Attempt to login with the provided credentials
       if ! erda_login "$base_url" "$org_name" "$username" "$password" "$creds_output"; then
         log "Error: Authentication failed"
@@ -849,7 +852,7 @@ erda_verify_login() {
   local test_url="{base_url}/api/{org_name}/users/me"
 
   # Check if the API call was successful
-  if ! erda_api_curl --creds $creds_file -s -f -X GET "$test_url"; then
+  if ! erda_api_curl --creds $creds_file -s -f -X GET "$test_url" > /dev/null; then
     log "Error: Failed to verify credentials"
     return 1
   else
@@ -906,7 +909,141 @@ get_build_credentials() {
   return 0
 }
 
-# Start a pipeline build and return the build response
+# Prepare application by updating pipeline YAML directly through Erda API
+prepare_application() {
+  local creds_file="$1"
+  local project_id="$2"
+  local app_name="$3"
+  local branch="$4"
+  local pipeline_yml_name="$5"
+  local server_url="$6"
+
+  log "Preparing application '$app_name' with artifact transfer pipeline..."
+
+  # Get app ID
+  local app_id=""
+  if ! app_id=$(erda_api_curl --creds "$creds_file" -s -f -X GET \
+    "{base_url}/api/{org_name}/applications?pageSize=9999&pageNo=1&projectId=$project_id" | \
+    python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+apps = data.get('data', {}).get('list', [])
+for app in apps:
+    if app.get('name') == '$app_name':
+        print(app.get('id'))
+        break
+"); then
+    log "Error: Failed to get applications or find app ID"
+    return 1
+  fi
+
+  if [ -z "$app_id" ]; then
+    log "Error: Could not find application '$app_name' in project $project_id"
+    return 1
+  fi
+
+  log "Found application ID: $app_id"
+
+  # Get app details to get Git repo info
+  local git_repo_url=""
+  if ! git_repo_url=$(erda_api_curl --creds "$creds_file" -s -f -X GET \
+    "{base_url}/api/{org_name}/applications/$app_id" | \
+    python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+repo = data.get('data', {}).get('gitRepoNew') or data.get('data', {}).get('gitRepo')
+print(repo or '')
+"); then
+    log "Error: Failed to get application details or Git repository URL"
+    return 1
+  fi
+
+  if [ -z "$git_repo_url" ]; then
+    log "Error: Could not get Git repository URL"
+    return 1
+  fi
+
+  # Add auth token to Git URL
+  local git_token=""
+  if ! git_token=$(erda_api_curl --creds "$creds_file" -s -f -X GET \
+    "{base_url}/api/{org_name}/applications/$app_id" | \
+    python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+token = data.get('data', {}).get('token')
+print(token or '')
+"); then
+    log "Error: Failed to get Git token"
+    return 1
+  fi
+
+  if [ -z "$git_token" ]; then
+    log "Error: Could not get Git token"
+    return 1
+  fi
+
+  # Process Git URL to add authentication
+  local auth_git_url=""
+  if [[ "$git_repo_url" == *"://"* ]]; then
+    local protocol=$(echo "$git_repo_url" | cut -d':' -f1)
+    local host_path=$(echo "$git_repo_url" | cut -d'/' -f3-)
+    auth_git_url="$protocol://git:$git_token@$host_path"
+  else
+    auth_git_url="https://git:$git_token@$git_repo_url"
+  fi
+
+  # Clone repo, update pipeline YAML, and push
+  local temp_dir=$(mktemp -d)
+  trap 'rm -rf "$temp_dir"' EXIT
+
+  log "Cloning repository..."
+  if ! git clone -q "$auth_git_url" "$temp_dir"; then
+    log "Error: Failed to clone repository"
+    return 1
+  fi
+
+  cd "$temp_dir"
+
+  # Checkout or create branch
+  if git ls-remote --heads origin "$branch" 2>/dev/null | grep -q "$branch"; then
+    git checkout -q "$branch"
+  else
+    git checkout -q --orphan "$branch"
+    git rm -rf . >/dev/null 2>&1 || true
+  fi
+
+  # Configure git user
+  git config user.email "trantor-installer@erda.cloud"
+  git config user.name "Trantor Installer"
+
+  # Get pipeline template content
+  local pipeline_template_content=""
+  if ! pipeline_template_content=$(curl -s -f "$server_url/scripts/trantor-artifact-transfer.yml"); then
+    log "Error: Failed to get pipeline template content"
+    cd - >/dev/null
+    return 1
+  fi
+
+  # Write pipeline YAML
+  mkdir -p "$(dirname "$pipeline_yml_name")"
+  echo "$pipeline_template_content" > "$pipeline_yml_name"
+
+  # Commit and push
+  git add "$pipeline_yml_name"
+  if [ -n "$(git status --porcelain)" ]; then
+    git commit -q -m "Initialize trantor artifact transfer pipeline" 1>&2
+    git push -q origin "$branch" 1>&2
+  else
+    log "No changes to commit on branch $branch"
+  fi
+
+  cd - >/dev/null
+
+  log "Application prepared successfully"
+  return 0
+}
+
+# Start a pipeline build and return the build response by directly calling Erda API
 start_pipeline_build() {
   local creds_file="$1"
   local server_url="$2"
@@ -916,10 +1053,96 @@ start_pipeline_build() {
   local pipeline_yml_name="$6"
   local build_params_file="$7"
 
-  # Extract the required credentials
-  local erda_cookie=$(cat "$creds_file" | parse_json_field "erda_cookie")
-  local base_url=$(cat "$creds_file" | parse_json_field "base_url")
-  local org_name=$(cat "$creds_file" | parse_json_field "org_name")
+  # Get app ID
+  local apps_response=$(mktemp)
+  if ! erda_api_curl --creds "$creds_file" -s -f -X GET \
+    "{base_url}/api/{org_name}/applications?pageSize=9999&pageNo=1&projectId=$project_id" -o "$apps_response"; then
+    log "Error: Failed to get applications"
+    rm -f "$apps_response"
+    return 1
+  fi
+
+  local app_id=$(cat "$apps_response" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+apps = data.get('data', {}).get('list', [])
+for app in apps:
+    if app.get('name') == '$app_name':
+        print(app.get('id'))
+        break
+")
+
+  if [ -z "$app_id" ]; then
+    log "Error: Could not find application '$app_name' in project $project_id"
+    rm -f "$apps_response"
+    return 1
+  fi
+
+  rm -f "$apps_response"
+
+  # Get branch workspace mapping
+  local workspace_response=$(mktemp)
+  if ! erda_api_curl --creds "$creds_file" -s -f -X GET \
+    "{base_url}/api/{org_name}/cicds/actions/app-all-valid-branch-workspaces?appID=$app_id" -o "$workspace_response"; then
+    log "Error: Failed to get branch workspace mapping"
+    rm -f "$workspace_response"
+    return 1
+  fi
+
+  local workspace_id=$(cat "$workspace_response" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+branches = data.get('data', [])
+for branch in branches:
+    if branch.get('name') == '$branch':
+        print(branch.get('workspace', ''))
+        break
+")
+
+  if [ -z "$workspace_id" ]; then
+    log "Error: Could not find workspace ID for branch '$branch'"
+    rm -f "$workspace_response"
+    return 1
+  fi
+
+  rm -f "$workspace_response"
+
+  # Create pipeline
+  local pipeline_response=$(mktemp)
+  local pipeline_payload=$(cat <<EOF
+{
+  "appID": $app_id,
+  "branch": "$branch",
+  "pipelineYmlSource": "gittar",
+  "pipelineYmlName": "$pipeline_yml_name",
+  "source": "dice",
+  "autoRun": false
+}
+EOF
+  )
+
+  if ! erda_api_curl --creds "$creds_file" -s -f -X POST \
+    -H "Content-Type: application/json" \
+    -d "$pipeline_payload" \
+    "{base_url}/api/{org_name}/cicds" -o "$pipeline_response"; then
+    log "Error: Failed to create pipeline"
+    rm -f "$pipeline_response"
+    return 1
+  fi
+
+  local pipeline_id=$(cat "$pipeline_response" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+print(data.get('data', {}).get('id', ''))
+")
+
+  if [ -z "$pipeline_id" ]; then
+    log "Error: Could not get pipeline ID"
+    rm -f "$pipeline_response"
+    return 1
+  fi
+
+  rm -f "$pipeline_response"
 
   # Prepare build request payload
   log "Preparing build request for pipeline: $pipeline_yml_name"
@@ -933,48 +1156,48 @@ start_pipeline_build() {
     params_json="[]"  # Empty parameters array if no file provided
   fi
 
-  local build_payload=$(cat <<EOF
+  # Run pipeline with parameters
+  local run_payload=$(cat <<EOF
 {
-  "base_url": "$base_url",
-  "org_name": "$org_name",
-  "project_id": $project_id,
-  "app_name": "$app_name",
-  "branch": "$branch",
-  "pipeline_yml_name": "$pipeline_yml_name",
-  "build_params": $params_json
+  "pipelineRunParams": $params_json
 }
 EOF
   )
 
-  # Send the request to start build
-  log "Starting pipeline build for $app_name on branch $branch"
-  local build_response=""
-  if ! build_response=$(curl -s -f -X POST "$server_url/build" \
-           -H "Content-Type: application/json" \
-           -H "Cookie: $erda_cookie" \
-           -d "$build_payload"); then
-    log "Error: Failed to start build pipeline"
+  local run_response=$(mktemp)
+  if ! erda_api_curl --creds "$creds_file" -s -f -X POST \
+    -H "Content-Type: application/json" \
+    -d "$run_payload" \
+    "{base_url}/api/{org_name}/cicds/$pipeline_id/actions/run" -o "$run_response"; then
+    log "Error: Failed to run pipeline"
+    rm -f "$run_response"
     return 1
   fi
 
-  # Extract pipeline ID to verify response is valid
-  local pipeline_id=$(echo "$build_response" | parse_json_field "pipeline_id")
-  if [ -z "$pipeline_id" ]; then
-    log "Error: Failed to extract pipeline ID from response"
-    log "$build_response"
-    return 1
-  fi
+  rm -f "$run_response"
 
-  # Output the full build response
+  log "Pipeline started successfully with ID: $pipeline_id"
+
+  local build_response=$(cat <<EOF
+{
+  "pipeline_id": "$pipeline_id",
+  "app_id": "$app_id",
+  "project_id": $project_id,
+  "app_name": "$app_name"
+}
+EOF
+  )
+
+  # Output the build response
   echo "$build_response"
   return 0
 }
 
-# Monitor pipeline execution until completion or timeout
+# Monitor pipeline execution until completion or timeout by directly calling Erda API
 monitor_pipeline_execution() {
-  local server_url="$1"
-  local build_id="$2"
-  local build_token="$3"
+  local creds_file="$1"
+  local pipeline_id="$2"
+  local project_id="$3"
   local timeout_minutes="${4:-30}"  # Default timeout: 30 minutes
   local check_interval="${5:-10}"   # Default interval: 10 seconds
 
@@ -989,29 +1212,63 @@ monitor_pipeline_execution() {
   log -n "Pipeline progress: "
 
   while [ $check_count -lt $max_checks ]; do
-    local status_response=""
-    if ! status_response=$(curl -s -f -X GET "$server_url/build/$build_id/status?build_token=$build_token"); then
+    local status_response=$(mktemp)
+    if ! erda_api_curl --creds "$creds_file" -s -f -X GET \
+      "{base_url}/api/{org_name}/pipelines/$pipeline_id?projectId=$project_id" -o "$status_response"; then
       log "Error: Failed to get pipeline status"
+      rm -f "$status_response"
       return 1
     fi
 
-    local status=$(echo "$status_response" | parse_json_field "status")
-    local final=$(echo "$status_response" | parse_json_field "final")
-    local success=$(echo "$status_response" | parse_json_field "success")
-    local error=$(echo "$status_response" | parse_json_field "error")
+    local status=$(cat "$status_response" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+print(data.get('data', {}).get('status', 'Unknown'))
+")
+
+    local final=$(cat "$status_response" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+status = data.get('data', {}).get('status', 'Unknown')
+print(str(status in ['Success', 'Failed', 'Cancelled', 'Error']).lower())
+")
+
+    local success=$(cat "$status_response" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+status = data.get('data', {}).get('status', 'Unknown')
+print(str(status == 'Success').lower())
+")
+
+    local error_msg=$(cat "$status_response" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+print(data.get('data', {}).get('errorMessage', ''))
+")
+
+    rm -f "$status_response"
 
     log -n "*"
 
     # Exit if pipeline has reached a final state
-    if [ "$final" != "false" ]; then
+    if [ "$final" = "true" ]; then
       log ""
       if [ "$success" = "true" ]; then
         log "✅ Pipeline completed successfully"
-        # Return the full status response for the caller to extract additional data
-        echo "$status_response"
+        # Return a response similar to the old format
+        local status_response_json=$(cat <<EOF
+{
+  "status": "$status",
+  "final": true,
+  "success": true,
+  "error": "$error_msg"
+}
+EOF
+        )
+        echo "$status_response_json"
         return 0
       else
-        log "❌ Pipeline failed: $error"
+        log "❌ Pipeline failed: $error_msg"
         return 1
       fi
     fi
@@ -1025,25 +1282,242 @@ monitor_pipeline_execution() {
   return 2  # Special return code for timeout
 }
 
-# Function to extract metadata from a specific task in a completed pipeline
-extract_task_metadata() {
-  local server_url="$1"
-  local build_id="$2"
-  local build_token="$3"
+# Function to extract metadata from a specific task in a completed pipeline by directly calling Erda API
+extract_task_metadata_from_pipeline() {
+  local creds_file="$1"
+  local pipeline_id="$2"
+  local project_id="$3"
   local task_name="$4"
 
-  # First try to use the API endpoint
-  local api_url="${server_url}/build/${build_id}/task/${task_name}/metadata?build_token=${build_token}"
-  local metadata_response=""
-
-  if metadata_response=$(curl -s -f -X GET "$api_url"); then
-    # If API call succeeds, return the metadata
-    echo "$metadata_response"
-    return 0
-  else
-    log "Error: Failed to extract metadata from task '$task_name' using API"
+  # Get pipeline details
+  local pipeline_response=$(mktemp)
+  if ! erda_api_curl --creds "$creds_file" -s -f -X GET \
+    "{base_url}/api/{org_name}/pipelines/$pipeline_id?projectId=$project_id" -o "$pipeline_response"; then
+    log "Error: Failed to get pipeline details"
+    rm -f "$pipeline_response"
     return 1
   fi
+
+  # Extract temp_url from the rebuild-artifact task metadata
+  local temp_url=$(python3 -c "
+import sys, json
+data = json.load(open('$pipeline_response'))
+stages = data.get('data', {}).get('pipelineStages', [])
+for stage in stages:
+    for task in stage.get('pipelineTasks', []):
+        if task.get('name') == '$task_name' and task.get('status') == 'Success':
+            metadata = task.get('result', {}).get('metadata', [])
+            for item in metadata:
+                if item.get('name') == 'temp_url':
+                    print(item.get('value', ''))
+                    sys.exit(0)
+print('')
+")
+
+  rm -f "$pipeline_response"
+
+  if [ -n "$temp_url" ]; then
+    # Return metadata in the expected format
+    local metadata_json=$(cat <<EOF
+{
+  "temp_url": "$temp_url"
+}
+EOF
+    )
+    echo "$metadata_json"
+    return 0
+  else
+    log "Error: Could not extract temp_url from pipeline metadata"
+    return 1
+  fi
+}
+
+# Function to upload an artifact file to Erda and create a release
+upload_release() {
+  local creds_file="$1"
+  local org_id="$2"
+  local project_id="$3"
+  local artifact_file="$4"
+  local version="${5:-""}"  # Optional version parameter
+
+  # Check that required parameters are provided
+  if [ -z "$org_id" ]; then
+    log "Error: Organization ID is required!"
+    return 1
+  fi
+
+  if [ -z "$project_id" ]; then
+    log "Error: Project ID is required!"
+    return 1
+  fi
+
+  if [ ! -f "$artifact_file" ]; then
+    log "Error: Artifact file '$artifact_file' does not exist!"
+    return 1
+  fi
+
+  # Extract credentials
+  local erda_cookie=$(cat "$creds_file" | parse_json_field "erda_cookie")
+  local base_url=$(cat "$creds_file" | parse_json_field "base_url")
+  local org_name=$(cat "$creds_file" | parse_json_field "org_name")
+
+  # Create a temporary credentials file for erda_api_curl
+  local temp_creds=$(mktemp)
+  trap "rm -f $temp_creds" EXIT
+
+  cat > "$temp_creds" << EOF
+{
+  "erda_cookie": "$erda_cookie",
+  "org_name": "$org_name",
+  "base_url": "$base_url"
+}
+EOF
+
+  # Get user ID by making an API call
+  local user_info_response=$(mktemp)
+  if ! erda_api_curl --creds "$temp_creds" \
+       "{base_url}/api/{org_name}/users/me" -o "$user_info_response"; then
+    log "Error: Failed to get user information"
+    rm -f "$user_info_response"
+    return 1
+  fi
+
+  local user_id=$(cat "$user_info_response" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+print(data.get('data', {}).get('id', ''))
+")
+
+  if [ -z "$user_id" ]; then
+    log "Error: User ID not found in response"
+    rm -f "$user_info_response"
+    return 1
+  else
+    log "Using user ID: $user_id"
+  fi
+
+  rm -f "$user_info_response"
+
+  # Step 1: Upload the artifact file
+  log "Step 1: Uploading artifact file to Erda..."
+  local temp_response=$(mktemp)
+
+  if ! erda_api_curl --creds "$temp_creds" -X POST \
+       -H "Content-Type: multipart/form-data" \
+       -F "file=@$artifact_file" \
+       "{base_url}/api/files" -o "$temp_response"; then
+    log "Error: Failed to upload artifact file"
+    rm -f "$temp_response"
+    return 1
+  fi
+
+  # Extract the UUID from the response
+  local file_uuid=$(cat "$temp_response" | parse_json_field "data.uuid")
+  if [ -z "$file_uuid" ]; then
+    log "Error: Could not extract file UUID from response"
+    cat "$temp_response"
+    rm -f "$temp_response"
+    return 1
+  fi
+
+  log "File uploaded successfully. UUID: $file_uuid"
+
+  # Step 2: Parse the version if not provided
+  if [ -z "$version" ]; then
+    log "Step 2: Detecting version from the uploaded artifact..."
+
+    if ! erda_api_curl --creds "$temp_creds" \
+         "{base_url}/api/{org_name}/releases/actions/parse-version?diceFileID=$file_uuid" \
+         -o "$temp_response"; then
+      log "Error: Failed to parse version from artifact"
+      rm -f "$temp_response"
+      return 1
+    fi
+
+    version=$(cat "$temp_response" | parse_json_field "data.version")
+    if [ -z "$version" ]; then
+      log "Error: Could not extract version from response"
+      cat "$temp_response"
+      rm -f "$temp_response"
+      return 1
+    fi
+
+    log "Detected version: $version"
+  else
+    log "Step 2: Using provided version: $version"
+  fi
+
+  # Step 3: Check if version is unique
+  log "Step 3: Checking if version is unique..."
+  local encoded_version=$(echo "$version" | sed 's/+/%2B/g')
+
+  if ! erda_api_curl --creds "$temp_creds" \
+       "{base_url}/api/{org_name}/releases/actions/check-version?isProjectRelease=true&orgID=$org_id&projectID=$project_id&version=$encoded_version" \
+       -o "$temp_response"; then
+    log "Error: Failed to check version uniqueness"
+    rm -f "$temp_response"
+    return 1
+  fi
+
+  local is_unique=$(cat "$temp_response" | parse_json_field "data.isUnique")
+  if [ "$is_unique" != "true" ]; then
+    log "Error: Version '$version' already exists"
+    rm -f "$temp_response"
+    return 1
+  fi
+
+  log "Version is unique. Proceeding with release creation."
+
+  # Step 4: Create the release
+  log "Step 4: Creating release..."
+
+  # Prepare the JSON request body
+  local request_body="{\"version\":\"$version\",\"diceFileID\":\"$file_uuid\",\"orgId\":$org_id,\"userId\":\"$user_id\",\"projectID\":$project_id}"
+
+  if ! erda_api_curl --creds "$temp_creds" -X POST \
+       -H "Content-Type: application/json" \
+       -d "$request_body" \
+       "{base_url}/api/{org_name}/releases/actions/upload" \
+       -o "$temp_response"; then
+    log "Error: Failed to create release"
+    rm -f "$temp_response"
+    return 1
+  fi
+
+  # Extract the release ID from the response
+  local release_id=$(cat "$temp_response" | parse_json_field "data.releaseId")
+  if [ -z "$release_id" ]; then
+    log "Error: Could not extract release ID from response"
+    cat "$temp_response"
+    rm -f "$temp_response"
+    return 1
+  fi
+
+  log "Release created successfully!"
+  show_banner "Release Information"
+  echo "File Name:  $(basename "$artifact_file")"
+  echo "Version:    $version"
+  echo "Release ID: $release_id"
+
+  # Output the release ID for potential use in subsequent commands
+  echo "action meta: release_id=$release_id"
+  echo "action meta: release_version=$version"
+  local release_url="${base_url}/${org_name}/dop/projects/${project_id}/release/project/${release_id}"
+  echo "action meta: release_url=$release_url"
+
+  # Create JSON result for backward compatibility
+  local result_json=$(cat <<EOF
+{
+  "release_id": "$release_id",
+  "release_version": "$version",
+  "release_url": "$release_url"
+}
+EOF
+  )
+  echo "$result_json"
+
+  rm -f "$temp_response"
+  return 0
 }
 
 # Verify build credentials are valid
@@ -1051,28 +1525,28 @@ verify_build_credentials() {
   local server_url="$1"
   local build_id="$2"
   local build_token="$3"
-  
+
   local verify_url="${server_url}/build/${build_id}/verify?build_token=${build_token}"
   log "Verifying build credentials..."
-  
+
   local verify_response=""
   if ! verify_response=$(curl -s -f -X GET "$verify_url"); then
     log "Error: Failed to verify build credentials"
     return 1
   fi
-  
+
   # Check if the build is verified
   local verified=$(echo "$verify_response" | parse_json_field "verified")
   if [ "$verified" != "true" ]; then
     log "Error: Build verification failed. This build was not created through the proxy."
     return 1
   fi
-  
+
   log "Build credentials verified successfully."
   return 0
 }
 
-# Run a pipeline from start to finish and wait for results
+# Run a pipeline from start to finish and wait for results by directly calling Erda API
 run_pipeline() {
   local creds_file="$1"
   local server_url="$2"
@@ -1091,18 +1565,11 @@ run_pipeline() {
     return 1
   fi
 
-  # Extract build_id, build_token and pipeline_id from the response
-  local build_id=$(echo "$build_response" | parse_json_field "build_id")
-  local build_token=$(echo "$build_response" | parse_json_field "build_token")
+  # Extract pipeline_id from the response
   local pipeline_id=$(echo "$build_response" | parse_json_field "pipeline_id")
   local app_id=$(echo "$build_response" | parse_json_field "app_id")
 
   # Validate that we have the required parameters
-  if [ -z "$build_id" ] || [ -z "$build_token" ]; then
-    log "Error: Failed to extract build information from response"
-    return 1
-  fi
-
   if [ -z "$pipeline_id" ]; then
     log "Error: Failed to extract pipeline_id from build response"
     return 1
@@ -1119,7 +1586,6 @@ run_pipeline() {
 
   # Display pipeline information
   log "Build pipeline started successfully:"
-  log "  Build ID: $build_id"
   log "  Pipeline ID: $pipeline_id"
   log "  Organization: $org_name"
   log "  Project ID: $project_id"
@@ -1144,10 +1610,8 @@ run_pipeline() {
     # Return JSON with pipeline information
     local pipeline_info=$(cat <<EOF
 {
-  "build_id": "$build_id",
   "pipeline_id": "$pipeline_id",
   "app_id": "$app_id",
-  "build_token": "$build_token",
   "pipeline_url": "$pipeline_url"
 }
 EOF
@@ -1158,7 +1622,7 @@ EOF
 
   # Monitor the pipeline execution
   local result=""
-  if ! result=$(monitor_pipeline_execution "$server_url" "$build_id" "$build_token" "$timeout_minutes"); then
+  if ! result=$(monitor_pipeline_execution "$creds_file" "$pipeline_id" "$project_id" "$timeout_minutes"); then
     return 1
   fi
 
@@ -1166,7 +1630,7 @@ EOF
   if [ -n "$task_name" ]; then
     log "Extracting metadata from task: $task_name"
     local metadata=""
-    if ! metadata=$(extract_task_metadata "$server_url" "$build_id" "$build_token" "$task_name"); then
+    if ! metadata=$(extract_task_metadata_from_pipeline "$creds_file" "$pipeline_id" "$project_id" "$task_name"); then
       log "Warning: Failed to extract metadata from task '$task_name'"
       return 1
     fi
@@ -1176,7 +1640,6 @@ EOF
 
   return 0
 }
-
 # End content from: erda-func-ext.sh
 
 
@@ -1436,7 +1899,7 @@ save_execution_history() {
 
   # Check if this configuration already exists
   # Escape pipe characters in the grep pattern
-  if grep -q "^$ERDA_BASE_URL\|$ORG_NAME\|$PROJECT_ID\|" "$HISTORY_FILE"; then
+  if grep -q "^$ERDA_BASE_URL\\\|$ORG_NAME\\\|$PROJECT_ID\\\|" "$HISTORY_FILE"; then
     # Update the timestamp of the existing entry
     TMP_HISTORY=$(mktemp)
     grep -v "^$ERDA_BASE_URL\|$ORG_NAME\|$PROJECT_ID\|" "$HISTORY_FILE" > "$TMP_HISTORY"
@@ -1524,39 +1987,9 @@ fi
 # Step 1: Prepare the application by creating/updating the pipeline YAML
 log "Step 1: Preparing application '$APP_NAME' with artifact transfer pipeline..."
 
-PREPARE_PAYLOAD=$(cat <<EOF
-{
-  "base_url": "$ERDA_BASE_URL",
-  "org_name": "$ORG_NAME",
-  "project_id": $PROJECT_ID,
-  "app_name": "$APP_NAME",
-  "branch": "$BRANCH",
-  "commit_message": "Initialize trantor artifact transfer pipeline",
-  "files_to_update": [
-    {
-      "path": "$PIPELINE_YML_NAME",
-      "template_name": "$PIPELINE_TEMPLATE"
-    }
-  ]
-}
-EOF
-)
-
-# Make API call to prepare the application
-if ! PREPARE_RESPONSE=$(curl -s -f -X POST \
-       "$SERVER_URL/prepare/app" \
-       -H "Content-Type: application/json" \
-       -H "Cookie: $ERDA_COOKIE" \
-       -d "$PREPARE_PAYLOAD"); then
+# Use the new prepare_application function
+if ! prepare_application "$CREDS_FILE" "$PROJECT_ID" "$APP_NAME" "$BRANCH" "$PIPELINE_YML_NAME" "$SERVER_URL"; then
   log "Error: Failed to prepare application"
-  exit 1
-fi
-
-# Extract information from prepare response
-PREPARE_SUCCESS=$(echo "$PREPARE_RESPONSE" | parse_json_field "success")
-if [ "$PREPARE_SUCCESS" != "true" ]; then
-  log "Error: Application preparation failed"
-  echo "$PREPARE_RESPONSE" | format_json
   exit 1
 fi
 
@@ -1587,11 +2020,15 @@ log "Starting artifact transfer pipeline..."
 if [ "$NON_INTERACTIVE" = true ]; then
   # Non-interactive mode: start pipeline and return immediately
   RESULT_JSON=$(run_pipeline "$CREDS_FILE" "$SERVER_URL" "$PROJECT_ID" "$APP_NAME" "$BRANCH" "$PIPELINE_YML_NAME" "$PARAMS_FILE" "$TIMEOUT_MINUTES" "" "false")
-  
+
   if [ $? -ne 0 ] || [ -z "$RESULT_JSON" ]; then
     log "Error: Failed to start pipeline build"
     exit 1
   fi
+
+  # Output pipeline info JSON and exit without proceeding to Step 3
+  echo "$RESULT_JSON"
+  exit 0
 
 else
   # Interactive mode: run pipeline and wait for completion with metadata extraction
@@ -1604,23 +2041,77 @@ else
   fi
 
   # Extract metadata fields from the JSON response
-  RELEASE_ID=$(echo "$METADATA_JSON" | parse_json_field "release_id")
-  RELEASE_VERSION=$(echo "$METADATA_JSON" | parse_json_field "release_version")
-  RELEASE_URL=$(echo "$METADATA_JSON" | parse_json_field "release_url")
+  TEMP_URL=$(echo "$METADATA_JSON" | parse_json_field "temp_url")
 
   # Check if required fields are present
-  if [ -z "$RELEASE_URL" ]; then
-    log "Warning: No artifact URL found in metadata"
+  if [ -z "$TEMP_URL" ]; then
+    log "Warning: No temp_url found in metadata"
   fi
+fi
+
+# Step 3: Download the artifact from temp storage and upload to Erda release
+log "Step 3: Uploading artifact to Erda release..."
+
+# Create a temporary directory for the downloaded artifact
+TEMP_ARTIFACT_DIR=$(mktemp -d)
+TEMP_ARTIFACT_PATH="$TEMP_ARTIFACT_DIR/artifact.zip"
+trap 'rm -rf "$CREDS_FILE" "$TEMP_ARTIFACT_DIR"' EXIT
+
+# Download the artifact from temp storage
+if ! curl -s -f -L "$TEMP_URL" -o "$TEMP_ARTIFACT_PATH"; then
+  log "Error: Failed to download artifact from temp storage"
+  exit 1
+fi
+
+# Get org ID
+ORG_INFO_RESPONSE=$(mktemp)
+if ! curl -s -f -X GET \
+  -H "Cookie: $ERDA_COOKIE" \
+  "$ERDA_BASE_URL/api/$ORG_NAME/orgs" -o "$ORG_INFO_RESPONSE"; then
+  log "Error: Failed to get organization information"
+  rm -f "$ORG_INFO_RESPONSE"
+  exit 1
+fi
+
+ORG_ID=$(cat "$ORG_INFO_RESPONSE" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+orgs = data.get('data', []).get('list', [])
+for org in orgs:
+    if org.get('name') == '$ORG_NAME':
+        print(org.get('id', ''))
+        break
+")
+
+if [ -z "$ORG_ID" ]; then
+  log "Error: Could not get organization ID"
+  rm -f "$ORG_INFO_RESPONSE"
+  exit 1
+fi
+
+rm -f "$ORG_INFO_RESPONSE"
+
+# Use the new upload_release function and capture the result
+UPLOAD_RESULT=""
+if ! UPLOAD_RESULT=$(upload_release "$CREDS_FILE" "$ORG_ID" "$PROJECT_ID" "$TEMP_ARTIFACT_PATH"); then
+  log "Error: Failed to upload release"
+  exit 1
+fi
+
+# Extract release information from the result
+if [ "$NON_INTERACTIVE" = false ]; then
+  RELEASE_ID=$(echo "$UPLOAD_RESULT" | parse_json_field "release_id")
+  RELEASE_VERSION=$(echo "$UPLOAD_RESULT" | parse_json_field "release_version")
+  RELEASE_URL=$(echo "$UPLOAD_RESULT" | parse_json_field "release_url")
 
   # Display all extracted information
   log "✅ Successfully transferred artifact to application $APP_NAME"
   log "Results:"
   [ -n "$RELEASE_ID" ] && log "  - Release ID:      $RELEASE_ID"
   [ -n "$RELEASE_VERSION" ] && log "  - Release Version: $RELEASE_VERSION"
-  [ -n "$RELEASE_URL" ] && log "  - Release URL:    $RELEASE_URL"
+  [ -n "$RELEASE_URL" ] && log "  - Release URL:     $RELEASE_URL"
 
-  # Create result JSON for interactive mode
+  # Create result JSON for interactive mode with upload results
   RESULT_JSON=$(cat <<EOF
 {
   "release_id": "$RELEASE_ID",
@@ -1629,11 +2120,18 @@ else
 }
 EOF
 )
+
+  # Output JSON result for interactive mode with upload results
+  if [[ "$OUTPUT_FORMAT" == "json" ]]; then
+    echo "$RESULT_JSON"
+  fi
 fi
 
-# Output JSON result
-if [[ "$OUTPUT_FORMAT" == "json" ]]; then
-  echo "$RESULT_JSON"
+# For non-interactive mode, always output the upload result
+if [ "$NON_INTERACTIVE" = true ]; then
+  if [[ "$OUTPUT_FORMAT" == "json" ]]; then
+    echo "$UPLOAD_RESULT"
+  fi
 fi
 
 exit 0
