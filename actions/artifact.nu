@@ -514,6 +514,17 @@ def consume-trantor-artifact [
     let pipelineId = $shellResp.pipeline_id?
     print $'(char nl)Building artifact with pipeline ID: (ansi g)($pipelineId)(ansi rst)'
     query-cicd-by-id ($pipelineId | into int) --watch --host $destSetting.erdaHost
+    let result = fetch-cicd-detail ($pipelineId | into int) --host $destSetting.erdaHost
+    let status = $result | get data.pipelineStages.pipelineTasks | select status | flatten | get status
+    if ('Failed' in $status) {
+      print $'(char nl)(ansi r)Artifact building failed, bye...(ansi rst)'
+      exit $ECODE.SERVER_ERROR
+    }
+    let pkg = $result | get data.pipelineStages.pipelineTasks
+      | last | get result.metadata | first | into record | get value
+    print $'(char nl)Artifact package URL: (ansi g)($pkg)(ansi rst)'
+    let dest = download-artifact-pkg $version $pkg
+    upload-artifact $version $dest $destSetting
   }
   let selectedRelease = query-release-by-version $version $destSetting
   let deployGroup = $deploy_group | default $destSetting.deployGroup | default 'All'
@@ -928,6 +939,21 @@ def download-artifact-from-release [
   load-erda-credentials $srcSetting
   print $'Downloading artifact of version (ansi g)($version)(ansi rst) and releaseId (ansi g)($releaseId)(ansi rst) ...'
   curl --silent -H (get-erda-auth $host) $downloadUrl -o $dest
+  print $'Artifact has been downloaded to ($dest)(char nl)'
+  $dest
+}
+
+# 根据新构建制品的链接下载制品
+def download-artifact-pkg [
+  version: string,      # Version number of the artifact
+  url: string,          # URL of the artifact to download
+] {
+  let tmp = $'(get-tmp-path)/($RELEASE_META_PATH)'
+  if not ($tmp | path exists) { mkdir $tmp }
+  # Download artifact
+  let dest = $'($tmp)/($version).zip'
+  print $'Downloading artifact of version (ansi g)($version)(ansi rst) ...'
+  http get $url | save -rfp $dest
   print $'Artifact has been downloaded to ($dest)(char nl)'
   $dest
 }
