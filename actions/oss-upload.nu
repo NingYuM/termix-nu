@@ -16,7 +16,7 @@ const ASSET_PREFIX = 'open-tools'
 const TOOL_MAP = {
   just: 'casey/just',
   fzf: 'junegunn/fzf',
-  s5cmd: 'peak/s5cmd',
+  s5cmd: 'hustcer/s5cmd',
   nushell: 'nushell/nushell',
   # nushell: 'nushell/nightly',
 }
