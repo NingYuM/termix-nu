@@ -23,6 +23,8 @@ import AsciiPlayer from '../../src/components/asciinema.tsx';
 
 ### Install nushell and just on macOS
 
+**注**：新用户建议通过 termix-nu 里面自带的 `setup-termix.sh` 脚本进行安装以减少后续升级问题，而且速度也更快，见后文**提示**部分。
+
 ```bash
 # 请始终安装以下应用的最新版
 brew update
@@ -49,8 +51,7 @@ winget install Nushell.Nushell
 
 :::info 注意事项
 
-1. 对于初次安装 `nushell` 的用户，由于全新安装的 `nushell` 是没有经过初始化配置的，使用可能有问题，所以需要在命令行里面输入 `nu`，然后会有两个交互式提问，直接输入 `y` 即可。这样就会为 `nu` 创建默认的配置文件，之后就可以正常使用了。
-2. 对于通过 `brew` 安装 `nushell` 的用户在后续升级之后由于 `nushell` 二进制文件存储路径发生了变化(`brew` 安装的版本号会在路径里得到体现)，`nushell` 的插件配置文件会因找不到之前注册的插件而报错，此时直接把插件文件（比如: `/Users/hustcer/Library/Application Support/nushell/plugin.nu`）删掉即可，后续在使用工具的过程中会自动重新注册插件。
+  对于通过 `brew` 安装 `nushell` 的用户在后续升级之后由于 `nushell` 二进制文件存储路径发生了变化(`brew` 安装的版本号会在路径里得到体现)，`nushell` 的插件配置文件会因找不到之前注册的插件而报错，此时直接把插件注册文件（比如: `/Users/hustcer/Library/Application Support/nushell/plugin.nu`）删掉即可，后续在使用工具的过程中会自动重新注册插件。
 
 :::
 
@@ -66,9 +67,10 @@ winget install Nushell.Nushell
 
 1. Clone `termix-nu` 源码:
 
-   Erda 地址: https://erda.cloud/terminus/dop/projects/213/apps/8053/repo
+   Erda Web 访问地址: https://erda.cloud/terminus/dop/projects/213/apps/8053/repo
 
    ```bash
+   # Clone source code to local disk
    git clone https://erda.cloud/terminus/dop/frontend-product/termix-nu
    ```
 
@@ -127,7 +129,7 @@ winget install Nushell.Nushell
     repo-transfer *OPTIONS     # Transfer a git repo from source to the dest
    ```
 
-4. 如果你希望在本机任意位置都可以使用`termix-nu`提供的功能，需要建立软连接:
+4. 如果你希望在本机任意位置都可以使用`termix-nu`提供的功能，需要建立软连接（也强烈建议你这么做）:
 
    ```bash
     # Mac or Linux
