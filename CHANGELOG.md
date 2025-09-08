@@ -1,6 +1,26 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.92.0 - 2025-09-08
+
+**Bug Fixes**
+
+- Relax JS content-type checking using regex for `t doctor $hosts`
+- Fix Nu config checking issue for `t doctor --fix` command
+- Fix Trantor artifact consumption for `t art` command
+- Fix `tests/test-compare-ver.nu`
+- Fix client-copy tests for `s5cmd`
+
+**Features**
+
+- Update `run/trantor-artifact-transfer.sh` to latest version
+- Add `tests/test-s5cmd.nu` tests
+- Using forked version of `hustcer/s5cmd` instead of `peak/s5cmd`
+
+**Deps**
+
+- Upgrade `actions/checkout` to v5
+
 ## v1.91.0 - 2025-08-12
 
 **Bug Fixes**
