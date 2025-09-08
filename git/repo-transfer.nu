@@ -8,8 +8,10 @@
 
 use ../utils/common.nu [ECODE get-tmp-path hr-line]
 
-# Transfer repo from source to dest, eg:
-# t repo-transfer https://erda.cloud/terminus/dop/t-erp/a.git https://erda.cloud/terminus/dop/t-erp/b.git
+# Transfer repo from source to dest
+@example '将 Git 仓库从源仓库同步到新的目标仓库，比如：' {
+  t repo-transfer https://erda.cloud/terminus/dop/t-erp/a.git https://erda.cloud/terminus/dop/t-erp/b.git
+} --result '同步 a.git 仓库到 b.git 内容包括所有分支、Tags, b.git 仓库须事先创建好。该命令可以重复执行,以实现增量同步'
 export def 'git repo-transfer' [
   source: string,   # The source repo git url
   dest: string,     # The dest repo git url
