@@ -35,6 +35,7 @@ export def upgrade-tool [
     if (is-installed fzf) {
       upgrade-latest-tool fzf --no-aria2c --force=$force
     }
+    upgrade-latest-tool s5cmd --no-aria2c --force=$force
     exit $ECODE.SUCCESS
   }
 

@@ -8,7 +8,7 @@
 # - extract the archive and replace the old binary
 
 use brew-speed-up.nu [fast-brew]
-use ../utils/common.nu [ECODE, is-installed, hr-line, compare-ver, linux?]
+use ../utils/common.nu [ECODE, is-installed, hr-line, compare-ver, linux?, windows?]
 
 const BREW_BOTTLES = 'https://mirrors.ustc.edu.cn/homebrew-bottles/bottles/'
 const TOOL_PREFIX = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/open-tools'
@@ -84,7 +84,11 @@ export def upgrade-latest-tool [
   }
   let matches = $latest.assets | get name | where $it =~ $target
   let matches = if ($matches | is-empty) {
-    $latest.assets | get name | where $it =~ $'($nu.os-info.arch)-unknown-($os)'
+    if (windows?) {
+      $latest.assets | get name | where $it =~ $'($nu.os-info.arch)-pc-($os)'
+    } else {
+      $latest.assets | get name | where $it =~ $'($nu.os-info.arch)-unknown-($os)'
+    }
   } else { $matches }
 
   let arch = match ($matches | length) {
@@ -160,8 +164,9 @@ export def upgrade-latest-tool [
     'zip' => {
       print $'Try to unpack the archive...'
       cd $destDir
-      tar xf $'($bin)-*.zip'
-      rm $'($bin)-*.zip'; cd ..
+      tar xf $target.name
+      sleep 5sec
+      rm $target.name; cd ..
       if $name == 'nushell' {
         cp $'($destDir)/nu_plugin_*' .
         print 'Nushell plugins have been upgraded successfully'
