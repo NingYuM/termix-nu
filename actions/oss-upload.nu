@@ -37,16 +37,16 @@ const NAME_MAP = {
     'linux_arm64': 'aarch64-unknown-linux',
     'darwin_amd64': 'x86_64-apple-darwin',
     'darwin_arm64': 'aarch64-apple-darwin',
-    'windows_amd64': 'x86_64-pc-windows-msvc',
-    'windows_arm64': 'aarch64-pc-windows-msvc',
+    'windows_amd64': 'x86_64-windows-msvc',
+    'windows_arm64': 'aarch64-windows-msvc',
   },
   s5cmd: {
     'Linux-64bit': 'x86_64-unknown-linux',
     'Linux-arm64': 'aarch64-unknown-linux',
     'macOS-64bit': 'x86_64-apple-darwin',
     'macOS-arm64': 'aarch64-apple-darwin',
-    'Windows-64bit': 'x86_64-pc-windows-msvc',
-    'Windows-arm64': 'aarch64-pc-windows-msvc',
+    'Windows-64bit': 'x86_64-windows-msvc',
+    'Windows-arm64': 'aarch64-windows-msvc',
   },
 }
 

@@ -72,13 +72,13 @@ export def setup-termix [
 
 # Upgrade termix-nu script source repo
 export def upgrade-termix-nu [] {
-  print $'Upgrading termix-nu...'; hr-line
+  print $'(char nl)Upgrading termix-nu...'; hr-line
   if 'TERMIX_DIR' in $env { cd $env.TERMIX_DIR } else {
     print $'Please set (ansi g)TERMIX_DIR(ansi rst) environment variable in (ansi g).env(ansi rst) to upgrade termix-nu'; return
   }
 
   # Fetch all tags and branches
-  git fetch --all --tags --force
+  git fetch origin --tags --force
   git checkout master
   git reset --hard (git tag -l --sort=-v:refname | lines | select 0).0
 }
