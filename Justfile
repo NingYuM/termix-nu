@@ -284,7 +284,13 @@ gaia-release version=('') repos=('mall,mobile,picker') delete=('false'): _setup
 [group('-- Git --')]
 repo-transfer *OPTIONS: _setup
   @overlay use {{ join(_termix, 'git', 'repo-transfer.nu') }}; \
-    git repo-transfer {{OPTIONS}}
+    git-repo-transfer {{OPTIONS}}
+
+# Transfer Apps between Erda Projects
+[group('-- Common --')]
+erda-transfer *OPTIONS: _setup
+  @overlay use {{ join(_termix, 'actions', 'erda-transfer.nu') }}; \
+    erda transfer {{OPTIONS}}
 
 # t pull-redev true
 # 更新远程二开仓库代码到本地, 可以指定分支和仓库分组多个分组之间用`,`隔开
