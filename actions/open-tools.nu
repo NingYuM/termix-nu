@@ -6,12 +6,16 @@
 # - fuzzy-ask one of them or use the single match
 # - download the archive
 # - extract the archive and replace the old binary
+# REF:
+#   https://mirrors.ustc.edu.cn/help/homebrew-bottles.html
+#
 
 use brew-speed-up.nu [fast-brew]
 use ../utils/common.nu [ECODE, is-installed, hr-line, compare-ver, linux?, windows?]
 
 const BREW_BOTTLES = 'https://mirrors.ustc.edu.cn/homebrew-bottles/bottles/'
 const TOOL_PREFIX = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/open-tools'
+const BREW_API_PREFIX = 'https://mirrors.ustc.edu.cn/homebrew-bottles/api'
 
 # Mapping from package name to executable binary name
 const BIN_MAP = {
@@ -42,15 +46,18 @@ export def install-from-brew [name: string, --force(-f), --post-install: closure
   do ($post_install | default {|| {||} })
 }
 
-# Get latest version of tools from USTC mirror
+# Get latest version of tools from Homebrew API
 export def get-version-from-brew [name: string] {
-  let packages =  http get $BREW_BOTTLES
-    | query web --query a --attribute href
-    | where $it =~ $name
-  let version = $packages
-    | where $it =~ 'arm64' | get 0
-    | split row '-' | last | split row '.arm64' | first
-  { version: $version, packages: $packages }
+  try {
+    let formula = http get $'($BREW_API_PREFIX)/formula/($name).json'
+    let version = $formula.versions.stable
+    let packages = [$'($name)-($version)']
+    { version: $version, packages: $packages }
+  } catch {
+    # Fallback: return a default version if API fails
+    print $'(ansi y)Warning: Homebrew API failed, using fallback version...(ansi rst)'
+    { version: "unknown", packages: [$name] }
+  }
 }
 
 # Upgrade the latest release of a tool from the OSS storage, currently supported: Nushell & Just
