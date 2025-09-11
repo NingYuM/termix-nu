@@ -10,9 +10,9 @@
 # [√] 在新应用里面添加用户，跟源应用保持一致
 # [√] Git 代码仓库批量同步分支及 Tags
 # [√] 增量同步不覆盖目标用户权限: 目标项目或者目标应用的同一用户权限若不一致，则以目标为准
-# [√] 源项目或者源应用删除掉的成员、环境变量在后续增量同步过程中如果目标应用里面有不会被删掉，以目标为准
-# [ ] 同步新应用的流水线及运行时环境变量与源应用保持一致，不含加密环境变量，不含文件类型环境变量
-# [ ] 增量同步不覆盖目标应用已有环境变量: 环境变量如果在目标应用已经存在则跳过，以目标为准
+# [√] 源项目或者源应用删除掉的成员或者环境变量在后续增量同步过程中如果目标应用里面有不会被删掉，以目标为准
+# [√] 同步新应用的流水线及运行时环境变量与源应用保持一致，不含加密环境变量
+# [√] 增量同步不覆盖目标应用已有环境变量: 环境变量如果在目标应用已经存在则跳过，以目标为准
 # [ ] 支持通过 fzf 选择要迁移的应用，可以多选、模糊搜索
 # [?] 提前判断没有权限的应用，可以配置是忽略还是退出
 # 前提：
@@ -30,11 +30,19 @@ use ../git/repo-transfer.nu ['git-repo-transfer']
 use ../utils/erda.nu [ERDA_HOST, check-erda-envs, get-erda-auth]
 
 const PAGE_SIZE = 9999
+# 查询、新增项目或者应用成员
 const MEMBER_API = 'https://erda.cloud/api/terminus/members'
+# 查询应用列表
 const APP_LIST_API = 'https://openapi.erda.cloud/api/applications'
+# 创建新应用
 const APP_CREATE_API = 'https://erda.cloud/api/terminus/applications'
+# 批量添加流水线环境变量
 const PIPELINE_ENV_ADD_API = 'https://erda.cloud/api/terminus/cicds/configs'
+# 批量添加运行时环境变量
+const RUNTIME_ENV_ADD_API = 'https://erda.cloud/api/terminus/configmanage/configs'
+# 查询流水线环境变量
 const PIPELINE_ENV_API = 'https://erda.cloud/api/terminus/cicds/multinamespace/configs'
+# 查询运行时环境变量
 const RUNTIME_ENV_API = 'https://erda.cloud/api/terminus/configmanage/multinamespace/configs'
 
 # Transfer Apps between Erda Projects, the App will be created if not exist in the dest project
@@ -71,35 +79,43 @@ export def 'erda transfer' [
   sync-git-repos $auth $from $to --selected $selected --debug=$debug
 
   print $'(char nl)(ansi pr)STEP E:(ansi rst) Syncing Pipeline Env vars...'; hr-line
-  sync-env-vars $auth $from $to --selected $selected --debug=$debug
+  sync-env-vars $auth $from $to --selected $selected --debug=$debug --type pipeline
+
+  print $'(char nl)(ansi pr)STEP F:(ansi rst) Syncing Runtime Env vars...'; hr-line
+  sync-env-vars $auth $from $to --selected $selected --debug=$debug --type runtime
 }
 
-def sync-env-vars [auth: list, sid: int, tid: int, --selected: list, --debug] {
+def sync-env-vars [auth: list, sid: int, tid: int, --selected: list, --debug, --type: string] {
   let dest_apps = get-app-list $auth --from $tid
   let source_apps = get-app-list $auth --from $sid
   let candidates = if ($selected | is-empty) { $dest_apps.name } else { $selected }
+  let default_suffix = if $type == 'pipeline' { '-default$' } else { '-DEFAULT$' }
+  let dev_suffix = if $type == 'pipeline' { '-feature$' } else { '-DEV$' }
+  let test_suffix = if $type == 'pipeline' { '-develop$' } else { '-TEST$' }
+  let prod_suffix = if $type == 'pipeline' { '-master$' } else { '-PROD$' }
+  let pre_suffix = if $type == 'pipeline' { '-release$' } else { '-STAGING$' }
   for ap in $candidates {
     let dest_app = $dest_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
     let source_app = $source_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
     if (check-app-empty $source_app $dest_app $ap 'ENV VAR') { continue }
-    let dest_envs = get-env-vars $auth $dest_app
-    let source_envs = get-env-vars $auth $source_app
+    let dest_envs = get-env-vars $auth $dest_app --type $type
+    let source_envs = get-env-vars $auth $source_app --type $type
     if $debug {
       $dest_envs | table -e | print
       $source_envs | table -e | print
     }
     let dest_keys = $dest_envs | columns
     let source_keys = $source_envs | columns
-    let default_src_key = $source_keys | where $it =~ '-default$' | first
-    let dev_src_key = $source_keys | where $it =~ '-feature$' | first
-    let test_src_key = $source_keys | where $it =~ '-develop$' | first
-    let prod_src_key = $source_keys | where $it =~ '-master$' | first
-    let pre_src_key = $source_keys | where $it =~ '-release$' | first
-    let default_dest_key = $dest_keys | where $it =~ '-default$' | first
-    let dev_dest_key = $dest_keys | where $it =~ '-feature$' | first
-    let test_dest_key = $dest_keys | where $it =~ '-develop$' | first
-    let prod_dest_key = $dest_keys | where $it =~ '-master$' | first
-    let pre_dest_key = $dest_keys | where $it =~ '-release$' | first
+    let default_src_key = $source_keys | where $it =~ $default_suffix | first
+    let dev_src_key = $source_keys | where $it =~ $dev_suffix | first
+    let test_src_key = $source_keys | where $it =~ $test_suffix | first
+    let prod_src_key = $source_keys | where $it =~ $prod_suffix | first
+    let pre_src_key = $source_keys | where $it =~ $pre_suffix | first
+    let default_dest_key = $dest_keys | where $it =~ $default_suffix | first
+    let dev_dest_key = $dest_keys | where $it =~ $dev_suffix | first
+    let test_dest_key = $dest_keys | where $it =~ $test_suffix | first
+    let prod_dest_key = $dest_keys | where $it =~ $prod_suffix | first
+    let pre_dest_key = $dest_keys | where $it =~ $pre_suffix | first
     let pairs = [
       [ $default_src_key   $default_dest_key ],
       [ $dev_src_key       $dev_dest_key     ],
@@ -117,23 +133,28 @@ def sync-env-vars [auth: list, sid: int, tid: int, --selected: list, --debug] {
             print $'(ansi y)WARN:(ansi rst) The env var (ansi g)($v.key)(ansi rst) is encrypted, skipping add to ($e.1)'
             continue
           }
+          if $v.type == 'dice-file' {
+            print $'(ansi y)WARN:(ansi rst) The env var (ansi g)($v.key)(ansi rst) is a file, please check it after transfer'
+            continue
+          }
           print $'INFO: Adding env var (ansi g)($v.key)(ansi rst) to (ansi g)($e.1) @ ($dest_app.name)(ansi rst) ...'
         }
       }
       let vars = $src_vars
         | where $it.key not-in $dest_vars.key and $it.encrypt == false
         | select key value type encrypt comment
-      add-env-vars $auth $dest_app $e.1 $vars
+      add-env-vars $auth $dest_app $e.1 $vars --type $type
     }
   }
   print $'(char nl)(ansi g)All Done!(ansi rst)'
 }
 
-# Add the env vars to the App in batch mode
-def add-env-vars [auth: list, app: record, ns: string, vars: list] {
+# Add the pipeline or runtime env vars to the App in batch mode
+def add-env-vars [auth: list, app: record, ns: string, vars: list, --type: string] {
   let query = { appID: $app.id, namespace_name: $ns, encrypt: false } | url build-query
   let payload = { configs: $vars }
-  http post -H $auth --content-type application/json $'($PIPELINE_ENV_ADD_API)?($query)' $payload
+  let api = if $type == 'pipeline' { $PIPELINE_ENV_ADD_API } else { $RUNTIME_ENV_ADD_API }
+  http post -H $auth --content-type application/json $'($api)?($query)' $payload
 }
 
 # Get the env vars of the app
@@ -145,9 +166,9 @@ def add-env-vars [auth: list, app: record, ns: string, vars: list] {
 #   pipeline-secrets-app-12367-master: [],
 #   pipeline-secrets-app-12367-release: [],
 # }
-def get-env-vars [auth: list, app: record] {
+def get-env-vars [auth: list, app: record, --type: string] {
   let query = { appID: $app.id } | url build-query
-  let payload = {
+  let pipeline_payload = {
     namespaceParams:[
       {namespace_name: $'pipeline-secrets-app-($app.id)-default', decrypt: false },
       {namespace_name: $'pipeline-secrets-app-($app.id)-master', decrypt: false },
@@ -155,7 +176,17 @@ def get-env-vars [auth: list, app: record] {
       {namespace_name: $'pipeline-secrets-app-($app.id)-develop', decrypt: false },
       {namespace_name: $'pipeline-secrets-app-($app.id)-feature', decrypt: false },
     ]}
-  http post -H $auth --content-type application/json $'($PIPELINE_ENV_API)?($query)' $payload | get data
+  let runtime_payload = {
+    namespaceParams:[
+      {namespace_name: $'app-($app.id)-DEV', decrypt: false },
+      {namespace_name: $'app-($app.id)-TEST', decrypt: false },
+      {namespace_name: $'app-($app.id)-PROD', decrypt: false },
+      {namespace_name: $'app-($app.id)-STAGING', decrypt: false },
+      {namespace_name: $'app-($app.id)-DEFAULT', decrypt: false },
+    ]}
+  let payload = if $type == 'pipeline' { $pipeline_payload } else { $runtime_payload }
+  let api = if $type == 'pipeline' { $PIPELINE_ENV_API } else { $RUNTIME_ENV_API }
+  http post -H $auth --content-type application/json $'($api)?($query)' $payload | get data
 }
 
 # Sync the git repos between the source and target app
