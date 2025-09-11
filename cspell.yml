@@ -185,3 +185,4 @@ ignorePaths:
 - tmp/
 - dotfiles/clifmrc
 - dotfiles/kitty.conf
+- tests/test-s5cmd.nu

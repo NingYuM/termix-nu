@@ -59,9 +59,9 @@ export def 'erda transfer' [
   --apps(-a): string, # The apps to transfer, separated by comma
   --debug(-d),        # Show more debug info
 ] {
-  if ($from | is-empty) { print $'(ansi r)Error: Source Project ID cannot be empty!(ansi rst)'; exit $ECODE.INVALID_PARAMETER }
-  if ($to | is-empty) { print $'(ansi r)Error: Target Project ID cannot be empty!(ansi rst)'; exit $ECODE.INVALID_PARAMETER }
-  if $from == $to { print $'(ansi r)Error: Source and Target Project ID cannot be the same!(ansi rst)'; exit $ECODE.INVALID_PARAMETER }
+  if ($from | is-empty) { print $'(ansi r)ERROR: Source Project ID cannot be empty!(ansi rst)'; exit $ECODE.INVALID_PARAMETER }
+  if ($to | is-empty) { print $'(ansi r)ERROR: Target Project ID cannot be empty!(ansi rst)'; exit $ECODE.INVALID_PARAMETER }
+  if $from == $to { print $'(ansi r)ERROR: Source and Target Project ID cannot be the same!(ansi rst)'; exit $ECODE.INVALID_PARAMETER }
   check-erda-envs
   let auth = get-erda-auth $ERDA_HOST --type nu | append [Org terminus]
   let source_members = get-members $auth project $from
@@ -70,30 +70,31 @@ export def 'erda transfer' [
 
   print $'(ansi pr)STEP B:(ansi rst) Transferring Apps...'; hr-line
   let selected = if ($apps | is-empty) { [] } else { $apps | split row ',' }
-  create-unexist-apps $auth --selected $selected --debug=$debug --from $from --to $to
+  create-nonexistent-apps $auth --selected $selected --debug=$debug --from $from --to $to
 
   print $'(char nl)(ansi pr)STEP C:(ansi rst) Add Members to Dest Apps...'; hr-line
   add-app-members $auth --selected $selected --debug=$debug --from $from --to $to
 
-  print $'(char nl)(ansi pr)STEP D:(ansi rst) Syncing Git Repos...'; hr-line
-  sync-git-repos $auth $from $to --selected $selected --debug=$debug
-
-  print $'(char nl)(ansi pr)STEP E:(ansi rst) Syncing Pipeline Env vars...'; hr-line
+  print $'(char nl)(ansi pr)STEP D:(ansi rst) Syncing Pipeline Env vars...'; hr-line
   sync-env-vars $auth $from $to --selected $selected --debug=$debug --type pipeline
 
-  print $'(char nl)(ansi pr)STEP F:(ansi rst) Syncing Runtime Env vars...'; hr-line
+  print $'(char nl)(ansi pr)STEP E:(ansi rst) Syncing Runtime Env vars...'; hr-line
   sync-env-vars $auth $from $to --selected $selected --debug=$debug --type runtime
+
+  print $'(char nl)(ansi pr)STEP F:(ansi rst) Syncing Git Repos...'; hr-line
+  sync-git-repos $auth $from $to --selected $selected --debug=$debug
 }
 
+# Sync the pipeline or runtime env vars between the source and target app
 def sync-env-vars [auth: list, sid: int, tid: int, --selected: list, --debug, --type: string] {
   let dest_apps = get-app-list $auth --from $tid
   let source_apps = get-app-list $auth --from $sid
   let candidates = if ($selected | is-empty) { $dest_apps.name } else { $selected }
-  let default_suffix = if $type == 'pipeline' { '-default$' } else { '-DEFAULT$' }
   let dev_suffix = if $type == 'pipeline' { '-feature$' } else { '-DEV$' }
-  let test_suffix = if $type == 'pipeline' { '-develop$' } else { '-TEST$' }
   let prod_suffix = if $type == 'pipeline' { '-master$' } else { '-PROD$' }
+  let test_suffix = if $type == 'pipeline' { '-develop$' } else { '-TEST$' }
   let pre_suffix = if $type == 'pipeline' { '-release$' } else { '-STAGING$' }
+  let default_suffix = if $type == 'pipeline' { '-default$' } else { '-DEFAULT$' }
   for ap in $candidates {
     let dest_app = $dest_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
     let source_app = $source_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
@@ -124,11 +125,11 @@ def sync-env-vars [auth: list, sid: int, tid: int, --selected: list, --debug, --
       [ $pre_src_key       $pre_dest_key     ],
     ]
     for e in $pairs {
-      let src_vars = $source_envs | get $e.0
       let dest_vars = $dest_envs | get $e.1
-      if ($src_vars | length) == 0 { continue }
+      let src_vars = $source_envs | get $e.0
+      if ($src_vars | is-empty) { continue }
       for v in $src_vars {
-        if ($dest_vars | where $it.key == $v.key | length) == 0 {
+        if ($dest_vars | where $it.key == $v.key | is-empty) {
           if $v.encrypt {
             print $'(ansi y)WARN:(ansi rst) The env var (ansi g)($v.key)(ansi rst) is encrypted, skipping add to ($e.1)'
             continue
@@ -170,22 +171,22 @@ def get-env-vars [auth: list, app: record, --type: string] {
   let query = { appID: $app.id } | url build-query
   let pipeline_payload = {
     namespaceParams:[
-      {namespace_name: $'pipeline-secrets-app-($app.id)-default', decrypt: false },
-      {namespace_name: $'pipeline-secrets-app-($app.id)-master', decrypt: false },
-      {namespace_name: $'pipeline-secrets-app-($app.id)-release', decrypt: false },
-      {namespace_name: $'pipeline-secrets-app-($app.id)-develop', decrypt: false },
-      {namespace_name: $'pipeline-secrets-app-($app.id)-feature', decrypt: false },
+      { namespace_name: $'pipeline-secrets-app-($app.id)-master', decrypt: false },
+      { namespace_name: $'pipeline-secrets-app-($app.id)-default', decrypt: false },
+      { namespace_name: $'pipeline-secrets-app-($app.id)-release', decrypt: false },
+      { namespace_name: $'pipeline-secrets-app-($app.id)-develop', decrypt: false },
+      { namespace_name: $'pipeline-secrets-app-($app.id)-feature', decrypt: false },
     ]}
   let runtime_payload = {
     namespaceParams:[
-      {namespace_name: $'app-($app.id)-DEV', decrypt: false },
-      {namespace_name: $'app-($app.id)-TEST', decrypt: false },
-      {namespace_name: $'app-($app.id)-PROD', decrypt: false },
-      {namespace_name: $'app-($app.id)-STAGING', decrypt: false },
-      {namespace_name: $'app-($app.id)-DEFAULT', decrypt: false },
+      { namespace_name: $'app-($app.id)-DEV', decrypt: false },
+      { namespace_name: $'app-($app.id)-TEST', decrypt: false },
+      { namespace_name: $'app-($app.id)-PROD', decrypt: false },
+      { namespace_name: $'app-($app.id)-STAGING', decrypt: false },
+      { namespace_name: $'app-($app.id)-DEFAULT', decrypt: false },
     ]}
-  let payload = if $type == 'pipeline' { $pipeline_payload } else { $runtime_payload }
   let api = if $type == 'pipeline' { $PIPELINE_ENV_API } else { $RUNTIME_ENV_API }
+  let payload = if $type == 'pipeline' { $pipeline_payload } else { $runtime_payload }
   http post -H $auth --content-type application/json $'($api)?($query)' $payload | get data
 }
 
@@ -224,22 +225,22 @@ def add-app-members [auth: list, --selected: list, --from: int, --to: int, --deb
 def check-app-empty [source: record, dest: record, name: string, type: string] {
   mut empty = false
   if ($source | is-empty) {
-    print $'(ansi y)WARNING:(ansi rst) App (ansi r)($name)(ansi rst) not found in source project, skipping ($type) sync.'
+    print $'(ansi y)WARN:(ansi rst) App (ansi r)($name)(ansi rst) not found in source project, skipping ($type) sync.'
     $empty = true
   }
   if ($dest | is-empty) {
-    print $'(ansi y)WARNING:(ansi rst) App (ansi r)($name)(ansi rst) not found in target project, skipping ($type) sync.'
+    print $'(ansi y)WARN:(ansi rst) App (ansi r)($name)(ansi rst) not found in target project, skipping ($type) sync.'
     $empty = true
   }
   $empty
 }
 
-# Create the unexist apps in the target project
-def create-unexist-apps [auth: list, --selected: list, --from: int, --to: int, --debug] {
-  let source_apps = get-app-list $auth --from $from
+# Create the nonexistent apps in the target project
+def create-nonexistent-apps [auth: list, --selected: list, --from: int, --to: int, --debug] {
   let dest_apps = get-app-list $auth --from $to
-  let unexist_apps = get-unexist-apps $source_apps $dest_apps
-  let candidates = if ($selected | is-empty) { $unexist_apps } else { $unexist_apps | where $it.name in $selected }
+  let source_apps = get-app-list $auth --from $from
+  let nonexistent_apps = get-nonexistent-apps $source_apps $dest_apps
+  let candidates = if ($selected | is-empty) { $nonexistent_apps } else { $nonexistent_apps | where $it.name in $selected }
 
   print $'The following apps will be transferred:(char nl)'
   $candidates | select id name mode desc | print
@@ -262,7 +263,7 @@ def get-app-list [auth: list, --from: int] {
 }
 
 # Get the apps that do not exist in the target project
-def get-unexist-apps [source: list, dest: list] {
+def get-nonexistent-apps [source: list, dest: list] {
   let dest_apps = $dest | get name
   $source | where {|it| ($it.name | str downcase) not-in $dest_apps }
 }
@@ -275,6 +276,7 @@ def get-members [auth: list, type: string, sid: int] {
     scopeType: $type,
     pageSize: $PAGE_SIZE,
   } | url build-query
+
   http get -H $auth $'($MEMBER_API)?($query)'
     | get data.list | sort-by userId
     | select userId nick removed deleted status roles
