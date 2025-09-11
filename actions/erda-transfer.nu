@@ -11,7 +11,7 @@
 # [√] Git 代码仓库批量同步分支及 Tags
 # [√] 增量同步不覆盖目标用户权限: 目标项目或者目标应用的同一用户权限若不一致，则以目标为准
 # [√] 源项目或者源应用删除掉的成员、环境变量在后续增量同步过程中如果目标应用里面有不会被删掉，以目标为准
-# [ ] 同步新应用的流水线及运行时环境变量与源应用保持一致，不含加密环境变量
+# [ ] 同步新应用的流水线及运行时环境变量与源应用保持一致，不含加密环境变量，不含文件类型环境变量
 # [ ] 增量同步不覆盖目标应用已有环境变量: 环境变量如果在目标应用已经存在则跳过，以目标为准
 # [ ] 支持通过 fzf 选择要迁移的应用，可以多选、模糊搜索
 # [?] 提前判断没有权限的应用，可以配置是忽略还是退出
@@ -33,6 +33,7 @@ const PAGE_SIZE = 9999
 const MEMBER_API = 'https://erda.cloud/api/terminus/members'
 const APP_LIST_API = 'https://openapi.erda.cloud/api/applications'
 const APP_CREATE_API = 'https://erda.cloud/api/terminus/applications'
+const PIPELINE_ENV_ADD_API = 'https://erda.cloud/api/terminus/cicds/configs'
 const PIPELINE_ENV_API = 'https://erda.cloud/api/terminus/cicds/multinamespace/configs'
 const RUNTIME_ENV_API = 'https://erda.cloud/api/terminus/configmanage/multinamespace/configs'
 
@@ -69,8 +70,92 @@ export def 'erda transfer' [
   print $'(char nl)(ansi pr)STEP D:(ansi rst) Syncing Git Repos...'; hr-line
   sync-git-repos $auth $from $to --selected $selected --debug=$debug
 
-  # print $'(char nl)(ansi pr)STEP E:(ansi rst) Syncing Pipeline Env vars...'; hr-line
-  # sync-env-vars $auth $from $to --selected $selected --debug=$debug
+  print $'(char nl)(ansi pr)STEP E:(ansi rst) Syncing Pipeline Env vars...'; hr-line
+  sync-env-vars $auth $from $to --selected $selected --debug=$debug
+}
+
+def sync-env-vars [auth: list, sid: int, tid: int, --selected: list, --debug] {
+  let dest_apps = get-app-list $auth --from $tid
+  let source_apps = get-app-list $auth --from $sid
+  let candidates = if ($selected | is-empty) { $dest_apps.name } else { $selected }
+  for ap in $candidates {
+    let dest_app = $dest_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
+    let source_app = $source_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
+    if (check-app-empty $source_app $dest_app $ap 'ENV VAR') { continue }
+    let dest_envs = get-env-vars $auth $dest_app
+    let source_envs = get-env-vars $auth $source_app
+    if $debug {
+      $dest_envs | table -e | print
+      $source_envs | table -e | print
+    }
+    let dest_keys = $dest_envs | columns
+    let source_keys = $source_envs | columns
+    let default_src_key = $source_keys | where $it =~ '-default$' | first
+    let dev_src_key = $source_keys | where $it =~ '-feature$' | first
+    let test_src_key = $source_keys | where $it =~ '-develop$' | first
+    let prod_src_key = $source_keys | where $it =~ '-master$' | first
+    let pre_src_key = $source_keys | where $it =~ '-release$' | first
+    let default_dest_key = $dest_keys | where $it =~ '-default$' | first
+    let dev_dest_key = $dest_keys | where $it =~ '-feature$' | first
+    let test_dest_key = $dest_keys | where $it =~ '-develop$' | first
+    let prod_dest_key = $dest_keys | where $it =~ '-master$' | first
+    let pre_dest_key = $dest_keys | where $it =~ '-release$' | first
+    let pairs = [
+      [ $default_src_key   $default_dest_key ],
+      [ $dev_src_key       $dev_dest_key     ],
+      [ $test_src_key      $test_dest_key    ],
+      [ $prod_src_key      $prod_dest_key    ],
+      [ $pre_src_key       $pre_dest_key     ],
+    ]
+    for e in $pairs {
+      let src_vars = $source_envs | get $e.0
+      let dest_vars = $dest_envs | get $e.1
+      if ($src_vars | length) == 0 { continue }
+      for v in $src_vars {
+        if ($dest_vars | where $it.key == $v.key | length) == 0 {
+          if $v.encrypt {
+            print $'(ansi y)WARN:(ansi rst) The env var (ansi g)($v.key)(ansi rst) is encrypted, skipping add to ($e.1)'
+            continue
+          }
+          print $'INFO: Adding env var (ansi g)($v.key)(ansi rst) to (ansi g)($e.1) @ ($dest_app.name)(ansi rst) ...'
+        }
+      }
+      let vars = $src_vars
+        | where $it.key not-in $dest_vars.key and $it.encrypt == false
+        | select key value type encrypt comment
+      add-env-vars $auth $dest_app $e.1 $vars
+    }
+  }
+  print $'(char nl)(ansi g)All Done!(ansi rst)'
+}
+
+# Add the env vars to the App in batch mode
+def add-env-vars [auth: list, app: record, ns: string, vars: list] {
+  let query = { appID: $app.id, namespace_name: $ns, encrypt: false } | url build-query
+  let payload = { configs: $vars }
+  http post -H $auth --content-type application/json $'($PIPELINE_ENV_ADD_API)?($query)' $payload
+}
+
+# Get the env vars of the app
+# Response example:
+# {
+#   pipeline-secrets-app-12367-default: [ { key: 'ENV1', value: 'value1', encrypt: false, comment: 'Description of ENV' } ],
+#   pipeline-secrets-app-12367-develop: [ { key: 'ENV2', value: '', encrypt: true, comment: 'Description of ENV' } ],
+#   pipeline-secrets-app-12367-feature: [],
+#   pipeline-secrets-app-12367-master: [],
+#   pipeline-secrets-app-12367-release: [],
+# }
+def get-env-vars [auth: list, app: record] {
+  let query = { appID: $app.id } | url build-query
+  let payload = {
+    namespaceParams:[
+      {namespace_name: $'pipeline-secrets-app-($app.id)-default', decrypt: false },
+      {namespace_name: $'pipeline-secrets-app-($app.id)-master', decrypt: false },
+      {namespace_name: $'pipeline-secrets-app-($app.id)-release', decrypt: false },
+      {namespace_name: $'pipeline-secrets-app-($app.id)-develop', decrypt: false },
+      {namespace_name: $'pipeline-secrets-app-($app.id)-feature', decrypt: false },
+    ]}
+  http post -H $auth --content-type application/json $'($PIPELINE_ENV_API)?($query)' $payload | get data
 }
 
 # Sync the git repos between the source and target app
@@ -78,17 +163,10 @@ def sync-git-repos [auth: list, sid: int, tid: int, --selected: list, --debug] {
   let dest_apps = get-app-list $auth --from $tid
   let source_apps = get-app-list $auth --from $sid
   let candidates = if ($selected | is-empty) { $dest_apps.name } else { $selected }
-  for s in $candidates {
-    let dest_app = $dest_apps | where ($it.name | str downcase) == ($s | str downcase) | get 0? | default {}
-    let source_app = $source_apps | where ($it.name | str downcase) == ($s | str downcase) | get 0? | default {}
-    if ($dest_app | is-empty) {
-      print $'(ansi y)WARNING:(ansi rst) App (ansi r)($s)(ansi rst) not found in target project, skipping git sync.'
-      continue
-    }
-    if ($source_app | is-empty) {
-      print $'(ansi y)WARNING:(ansi rst) App (ansi r)($s)(ansi rst) not found in source project, skipping git sync.'
-      continue
-    }
+  for ap in $candidates {
+    let dest_app = $dest_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
+    let source_app = $source_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
+    if (check-app-empty $source_app $dest_app $ap git) { continue }
     print $'Syncing git repos from (ansi g)($source_app.name)(ansi rst) to (ansi g)($dest_app.name)(ansi rst) ...'
     git-repo-transfer https://($source_app.gitRepoNew) https://($dest_app.gitRepoNew)
   }
@@ -100,22 +178,29 @@ def add-app-members [auth: list, --selected: list, --from: int, --to: int, --deb
   let source_apps = get-app-list $auth --from $from
   let candidates = if ($selected | is-empty) { $dest_apps.name } else { $selected }
   if $debug { $candidates | first | table -e | print }
-  for s in $candidates {
-    let dest_app = $dest_apps | where ($it.name | str downcase) == ($s | str downcase) | get 0? | default {}
-    let source_app = $source_apps | where ($it.name | str downcase) == ($s | str downcase) | get 0? | default {}
-    if ($dest_app | is-empty) {
-      print $'(ansi y)WARNING:(ansi rst) App (ansi r)($s)(ansi rst) not found in target project, skipping member sync.'
-      continue
-    }
-    if ($source_app | is-empty) {
-      print $'(ansi y)WARNING:(ansi rst) App (ansi r)($s)(ansi rst) not found in source project, skipping member sync.'
-      continue
-    }
+  for ap in $candidates {
+    let dest_app = $dest_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
+    let source_app = $source_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
+    if (check-app-empty $source_app $dest_app $ap member) { continue }
     let src_members = get-members $auth app $source_app.id
-    print $'Adding members to (ansi g)($s)(ansi rst) ...'
-    add-members $auth app $dest_app.id $src_members --name $s
+    print $'Adding members to (ansi g)($ap)(ansi rst) ...'
+    add-members $auth app $dest_app.id $src_members --name $ap
   }
   print $'(char nl)(ansi g)All Done!(ansi rst)'
+}
+
+# Check if the app is not exist in the source or target project
+def check-app-empty [source: record, dest: record, name: string, type: string] {
+  mut empty = false
+  if ($source | is-empty) {
+    print $'(ansi y)WARNING:(ansi rst) App (ansi r)($name)(ansi rst) not found in source project, skipping ($type) sync.'
+    $empty = true
+  }
+  if ($dest | is-empty) {
+    print $'(ansi y)WARNING:(ansi rst) App (ansi r)($name)(ansi rst) not found in target project, skipping ($type) sync.'
+    $empty = true
+  }
+  $empty
 }
 
 # Create the unexist apps in the target project
