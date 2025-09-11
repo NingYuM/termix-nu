@@ -8,19 +8,22 @@
 # [√] 在新项目里面添加用户，跟源项目保持一致
 # [√] 只迁移指定应用，通过 --apps 参数指定
 # [√] 在新应用里面添加用户，跟源应用保持一致
-# [ ] 提前判断没有权限的应用，可以配置是忽略还是退出
-# [ ] 同步新应用的流水线及运行时环境变量与源应用保持一致，不含加密环境变量
-# [ ] 支持通过 fzf 选择要迁移的应用，可以多选、模糊搜索
 # [√] Git 代码仓库批量同步分支及 Tags
+# [√] 增量同步不覆盖目标用户权限: 目标项目或者目标应用的同一用户权限若不一致，则以目标为准
+# [√] 源项目或者源应用删除掉的成员、环境变量在后续增量同步过程中如果目标应用里面有不会被删掉，以目标为准
+# [ ] 同步新应用的流水线及运行时环境变量与源应用保持一致，不含加密环境变量
+# [ ] 增量同步不覆盖目标应用已有环境变量: 环境变量如果在目标应用已经存在则跳过，以目标为准
+# [ ] 支持通过 fzf 选择要迁移的应用，可以多选、模糊搜索
+# [ ] 提前判断没有权限的应用，可以配置是忽略还是退出
 # 前提：
-# 1. 源项目和目标项目必须在 terminus 组织下，目前也只支持这个组织
+# 1. 源项目和目标项目必须在 Terminus 组织下，目前也只支持这个组织
 # 2. 需要有源项目和目标项目的管理员权限:
-#     - 操作者需要先有源项目里面所有应用的访问权限
+#     - 操作者需要先有源项目里面所有应用, 或者所选择应用的访问权限
 #     - 操作者需要在目标项目里面有创建应用的权限
-#     - 新应用创建后操作者即为新应用所有者，不因其在源应用的权限配置而改变
+#     - 新应用创建后操作者即为新应用所有者，不因其在源应用的权限配置而改变(尚待验证)
 # Usage:
 #   t erda-transfer --from 213 --to 1000226
-# 	t erda-transfer --from 213 --to 1000226 --apps parkball,nusi-slim,dingtalk-sign
+# 	t erda-transfer --from 213 --to 1000226 --apps termix-nu,nusi-slim
 
 use ../utils/common.nu [ECODE, hr-line]
 use ../git/repo-transfer.nu ['git-repo-transfer']
@@ -31,13 +34,14 @@ const MEMBER_API = 'https://erda.cloud/api/terminus/members'
 const APP_LIST_API = 'https://openapi.erda.cloud/api/applications'
 const APP_CREATE_API = 'https://erda.cloud/api/terminus/applications'
 
-# Transfer Apps between Erda Projects
-@example '将 Terminus 组织下的 213 项目里面的 termix-nu,nusi-slim 应用迁移到 1000226 项目' {
+# Transfer Apps between Erda Projects, the App will be created if not exist in the dest project
+# All Git branches, tags, project members and app members will be transferred
+@example '将 Terminus 组织下编号为 213 的项目里面的 termix-nu,nusi-slim 应用迁移到编号为 1000226 的项目' {
   t erda-transfer --from 213 --to 1000226 --apps termix-nu,nusi-slim
-} --result '迁移内容包括应用仓库分支、Tags、项目成员、应用成员。该命令可以重复执行,以实现增量同步'
-@example '将 Terminus 组织下的 213 项目里面的所有应用迁移到 1000226 项目' {
+} --result '迁移内容包括应用仓库所有分支、Tags、项目成员、应用成员。该命令可以重复执行,以实现增量同步'
+@example '将 Terminus 组织下编号为 213 的项目里面的所有应用迁移到编号为 1000226 的项目' {
   t erda-transfer --from 213 --to 1000226
-} --result '迁移内容包括所有应用仓库分支、Tags、项目成员、应用成员。该命令可以重复执行,以实现增量同步'
+} --result '迁移内容包括所有应用的各分支、Tags、项目成员、应用成员。该命令可以重复执行,以实现增量同步'
 export def 'erda transfer' [
   --from(-f): int,    # ERDA Source Project ID
   --to(-t): int,      # ERDA Target Project ID
@@ -66,11 +70,11 @@ export def 'erda transfer' [
 
 # Sync the git repos between the source and target app
 def sync-git-repos [auth: list, sid: int, tid: int, --selected: list, --debug] {
-  let source_apps = get-app-list $auth --from $sid
   let dest_apps = get-app-list $auth --from $tid
+  let source_apps = get-app-list $auth --from $sid
   for s in $selected {
-    let source_app = $source_apps | where ($it.name | str downcase) == ($s | str downcase) | first
     let dest_app = $dest_apps | where ($it.name | str downcase) == ($s | str downcase) | first
+    let source_app = $source_apps | where ($it.name | str downcase) == ($s | str downcase) | first
     print $'Syncing git repos from (ansi g)($source_app.name)(ansi rst) to (ansi g)($dest_app.name)(ansi rst) ...'
     git-repo-transfer https://($source_app.gitRepoNew) https://($dest_app.gitRepoNew)
   }
@@ -85,7 +89,7 @@ def add-app-members [auth: list, --selected: list, --from: int, --to: int, --deb
     let dest_app = $dest_apps | where ($it.name | str downcase) == ($s | str downcase) | first
     let source_app = $source_apps | where ($it.name | str downcase) == ($s | str downcase) | first
     let src_members = get-members $auth app $source_app.id
-    print -n $'(char nl)(char nl)Adding members to (ansi g)($s)(ansi rst) ...'
+    print $'Adding members to (ansi g)($s)(ansi rst) ...'
     add-members $auth app $dest_app.id $src_members --name $s
   }
   print $'(char nl)(ansi g)All Done!(ansi rst)'
@@ -124,7 +128,7 @@ def get-unexist-apps [source: list, dest: list] {
   $source | where {|it| ($it.name | str downcase) not-in $dest_apps }
 }
 
-# Get all the project members
+# Get all the project or app members
 def get-members [auth: list, type: string, sid: int] {
   let query = {
     pageNo: 1,
@@ -137,19 +141,27 @@ def get-members [auth: list, type: string, sid: int] {
     | select userId nick removed deleted status roles
 }
 
-# Add members to the project with the same roles, support incremental addition
+# Add members to the project or app with the same roles, support incremental addition
 def add-members [auth: list, type: string, sid: int, members: list, --name: string] {
   let exist_members = get-members $auth $type $sid
   let exist_ids = $exist_members.userId
-  let cond = {|m|
-    let missing = $m.userId not-in $exist_ids
-    let unmatch = $exist_members
-      | where $m.userId == $it.userId and ($m.roles | sort) == ($it.roles | sort)
-      | is-empty
-    $missing or $unmatch
+
+  # Check all members' status and print necessary info to ensure the log order is reasonable
+  for m in $members {
+    if $m.userId in $exist_ids {
+      let existing_member = $exist_members | where $it.userId == $m.userId | first
+      let roles_match = ($m.roles | sort) == ($existing_member.roles | sort)
+      if not $roles_match {
+        print $'(ansi y)NOTE:(ansi rst) The member (ansi r)($m.nick)(ansi rst) already exists in ($type) (ansi r)($name | default $sid)(ansi rst) but with different roles, skipping.'
+      }
+    }
   }
-  for u in ($members | where $cond) {
-    print -n $'(char nl)Adding member (ansi g)($u.nick)(ansi rst) to ($type) (ansi g)($name | default $sid)(ansi rst) ... '
+
+  # Only add the members that do not exist
+  let members_to_add = $members | where {|m| $m.userId not-in $exist_ids }
+
+  for u in $members_to_add {
+    print $'INFO: Adding member (ansi g)($u.nick)(ansi rst) to ($type) (ansi g)($name | default $sid)(ansi rst) ... '
     let payload = {
       roles: $u.roles,
       userIds: [$u.userId],
@@ -157,10 +169,8 @@ def add-members [auth: list, type: string, sid: int, members: list, --name: stri
       scope: {id: ($sid | into string), type: $type},
     }
     let resp = http post -H $auth --content-type application/json -e $MEMBER_API $payload
-    if $resp.success {
-      print -n $'(ansi g)Done(ansi rst)'
-    } else {
-      print $'(char nl)Failed to add (ansi r)($u.nick)(ansi rst) to ($type) (ansi r)($sid)(ansi rst) with error: (ansi r)($resp.err.msg)(ansi rst)'
+    if not $resp.success {
+      print $'Failed to add (ansi r)($u.nick)(ansi rst) to ($type) (ansi r)($sid)(ansi rst) with error: (ansi r)($resp.err.msg)(ansi rst)'
     }
   }
   if $type == 'project' { print (char nl) }
@@ -174,8 +184,8 @@ def create-app [auth: list, pid: int, app: record] {
   let resp = http post -H $auth --content-type application/json -e $APP_CREATE_API $payload
   if $resp.success {
     print $'App (ansi g)($payload.name)(ansi rst) has been created successfully'
-  } else {
-    print $'Failed to create app (ansi r)($payload.name)(ansi rst) with error message: (ansi r)($resp.err.msg)(ansi rst)'
-    $resp | table -e | print
+    return
   }
+  print $'Failed to create app (ansi r)($payload.name)(ansi rst) with error message: (ansi r)($resp.err.msg)(ansi rst)'
+  $resp | table -e | print
 }
