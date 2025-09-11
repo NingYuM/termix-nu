@@ -14,7 +14,7 @@
 # [ ] 同步新应用的流水线及运行时环境变量与源应用保持一致，不含加密环境变量
 # [ ] 增量同步不覆盖目标应用已有环境变量: 环境变量如果在目标应用已经存在则跳过，以目标为准
 # [ ] 支持通过 fzf 选择要迁移的应用，可以多选、模糊搜索
-# [ ] 提前判断没有权限的应用，可以配置是忽略还是退出
+# [?] 提前判断没有权限的应用，可以配置是忽略还是退出
 # 前提：
 # 1. 源项目和目标项目必须在 Terminus 组织下，目前也只支持这个组织
 # 2. 需要有源项目和目标项目的管理员权限:
@@ -33,6 +33,8 @@ const PAGE_SIZE = 9999
 const MEMBER_API = 'https://erda.cloud/api/terminus/members'
 const APP_LIST_API = 'https://openapi.erda.cloud/api/applications'
 const APP_CREATE_API = 'https://erda.cloud/api/terminus/applications'
+const PIPELINE_ENV_API = 'https://erda.cloud/api/terminus/cicds/multinamespace/configs'
+const RUNTIME_ENV_API = 'https://erda.cloud/api/terminus/configmanage/multinamespace/configs'
 
 # Transfer Apps between Erda Projects, the App will be created if not exist in the dest project
 # All Git branches, tags, project members and app members will be transferred
@@ -66,15 +68,27 @@ export def 'erda transfer' [
 
   print $'(char nl)(ansi pr)STEP D:(ansi rst) Syncing Git Repos...'; hr-line
   sync-git-repos $auth $from $to --selected $selected --debug=$debug
+
+  # print $'(char nl)(ansi pr)STEP E:(ansi rst) Syncing Pipeline Env vars...'; hr-line
+  # sync-env-vars $auth $from $to --selected $selected --debug=$debug
 }
 
 # Sync the git repos between the source and target app
 def sync-git-repos [auth: list, sid: int, tid: int, --selected: list, --debug] {
   let dest_apps = get-app-list $auth --from $tid
   let source_apps = get-app-list $auth --from $sid
-  for s in $selected {
-    let dest_app = $dest_apps | where ($it.name | str downcase) == ($s | str downcase) | first
-    let source_app = $source_apps | where ($it.name | str downcase) == ($s | str downcase) | first
+  let candidates = if ($selected | is-empty) { $dest_apps.name } else { $selected }
+  for s in $candidates {
+    let dest_app = $dest_apps | where ($it.name | str downcase) == ($s | str downcase) | get 0? | default {}
+    let source_app = $source_apps | where ($it.name | str downcase) == ($s | str downcase) | get 0? | default {}
+    if ($dest_app | is-empty) {
+      print $'(ansi y)WARNING:(ansi rst) App (ansi r)($s)(ansi rst) not found in target project, skipping git sync.'
+      continue
+    }
+    if ($source_app | is-empty) {
+      print $'(ansi y)WARNING:(ansi rst) App (ansi r)($s)(ansi rst) not found in source project, skipping git sync.'
+      continue
+    }
     print $'Syncing git repos from (ansi g)($source_app.name)(ansi rst) to (ansi g)($dest_app.name)(ansi rst) ...'
     git-repo-transfer https://($source_app.gitRepoNew) https://($dest_app.gitRepoNew)
   }
@@ -84,10 +98,19 @@ def sync-git-repos [auth: list, sid: int, tid: int, --selected: list, --debug] {
 def add-app-members [auth: list, --selected: list, --from: int, --to: int, --debug] {
   let dest_apps = get-app-list $auth --from $to
   let source_apps = get-app-list $auth --from $from
-  if $debug { $dest_apps | first | table -e | print }
-  for s in $selected {
-    let dest_app = $dest_apps | where ($it.name | str downcase) == ($s | str downcase) | first
-    let source_app = $source_apps | where ($it.name | str downcase) == ($s | str downcase) | first
+  let candidates = if ($selected | is-empty) { $dest_apps.name } else { $selected }
+  if $debug { $candidates | first | table -e | print }
+  for s in $candidates {
+    let dest_app = $dest_apps | where ($it.name | str downcase) == ($s | str downcase) | get 0? | default {}
+    let source_app = $source_apps | where ($it.name | str downcase) == ($s | str downcase) | get 0? | default {}
+    if ($dest_app | is-empty) {
+      print $'(ansi y)WARNING:(ansi rst) App (ansi r)($s)(ansi rst) not found in target project, skipping member sync.'
+      continue
+    }
+    if ($source_app | is-empty) {
+      print $'(ansi y)WARNING:(ansi rst) App (ansi r)($s)(ansi rst) not found in source project, skipping member sync.'
+      continue
+    }
     let src_members = get-members $auth app $source_app.id
     print $'Adding members to (ansi g)($s)(ansi rst) ...'
     add-members $auth app $dest_app.id $src_members --name $s
@@ -100,18 +123,18 @@ def create-unexist-apps [auth: list, --selected: list, --from: int, --to: int, -
   let source_apps = get-app-list $auth --from $from
   let dest_apps = get-app-list $auth --from $to
   let unexist_apps = get-unexist-apps $source_apps $dest_apps
-  let transfer_apps = if ($selected | is-empty) { $unexist_apps } else { $unexist_apps | where $it.name in $selected }
+  let candidates = if ($selected | is-empty) { $unexist_apps } else { $unexist_apps | where $it.name in $selected }
 
   print $'The following apps will be transferred:(char nl)'
-  $transfer_apps | select id name mode desc | print
-  if $debug and ($transfer_apps | length) > 0 {
+  $candidates | select id name mode desc | print
+  if $debug and ($candidates | length) > 0 {
     # print 'Source apps:'; $source_apps | print
     # print 'Dest apps:'; $dest_apps | print
     print $'(char nl)First detail:(char nl)'
-    $transfer_apps | first | table -e | print
+    $candidates | first | table -e | print
   }
   print -n (char nl)
-  for app in $transfer_apps {
+  for app in $candidates {
     create-app $auth $to $app
   }
 }

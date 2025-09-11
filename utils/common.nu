@@ -3,6 +3,8 @@
 # Created: 2021/10/10 07:36:56
 # Usage:
 #   use source command to load it
+#   use std; scope commands | where type == 'custom' | where name =~ '^std ' | select name
+#   use std-rfc; scope commands | where type == 'custom' | where name =~ '^std-rfc ' | select name
 
 # Global date format
 # let _DATE_FMT = '%Y.%m.%d'
