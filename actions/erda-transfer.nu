@@ -25,9 +25,9 @@
 #   t erda-transfer --from 213 --to 1000226
 # 	t erda-transfer --from 213 --to 1000226 --apps termix-nu,nusi-slim
 
-use ../utils/common.nu [ECODE, hr-line]
 use ../git/repo-transfer.nu ['git-repo-transfer']
 use ../utils/erda.nu [ERDA_HOST, check-erda-envs, get-erda-auth]
+use ../utils/common.nu [ECODE, hr-line, FZF_DEFAULT_OPTS, FZF_THEME]
 
 const PAGE_SIZE = 9999
 # 查询、新增项目或者应用成员
@@ -56,7 +56,7 @@ const RUNTIME_ENV_API = 'https://erda.cloud/api/terminus/configmanage/multinames
 export def 'erda transfer' [
   --from(-f): int,    # ERDA Source Project ID
   --to(-t): int,      # ERDA Target Project ID
-  --apps(-a): string, # The apps to transfer, separated by comma
+  --apps(-a): string, # The Apps to transfer, separated by comma
   --debug(-d),        # Show more debug info
 ] {
   if ($from | is-empty) { print $'(ansi r)ERROR: Source Project ID cannot be empty!(ansi rst)'; exit $ECODE.INVALID_PARAMETER }
@@ -64,16 +64,28 @@ export def 'erda transfer' [
   if $from == $to { print $'(ansi r)ERROR: Source and Target Project ID cannot be the same!(ansi rst)'; exit $ECODE.INVALID_PARAMETER }
   check-erda-envs
   let auth = get-erda-auth $ERDA_HOST --type nu | append [Org terminus]
-  let source_members = get-members $auth project $from
+
+  # Use fzf to select one or multiple Apps to transfer if none specified
+  let selected = if ($apps | is-empty) { get-selected-apps $auth --from $from } else { $apps | split row ',' }
+  # Validate the selected App names make sure they all exist in the source project
+  validate-app-names $auth --selected $selected --from $from
+  print $'You are going to transfer the following Apps:(char nl)';
+  $selected | sort | wrap name | table -t psql | print
+  print -n (char nl)
+  let confirm = input $'Please confirm by typing (ansi r)y(ansi rst) to continue or (ansi p)q(ansi rst) to quit: '
+  if $confirm == 'q' { print $'Transfer cancelled, Bye...'; exit $ECODE.SUCCESS }
+  if $confirm != 'y' {
+    print -e $'Your input (ansi p)($confirm)(ansi rst) does not match (ansi p)y(ansi rst), bye...'
+    exit $ECODE.INVALID_PARAMETER
+  }
+  print -n (char nl)
+  # TODO: Make sure the operator has access to all the selected APPs
+
   print $'(char nl)(ansi pr)STEP A:(ansi rst) Adding Members to Target Project...'; hr-line
+  let source_members = get-members $auth project $from
   add-members $auth project $to $source_members
 
   print $'(ansi pr)STEP B:(ansi rst) Transferring Apps...'; hr-line
-  # TODO: Use fzf to select one or multiple Apps to transfer if none specified
-  let selected = if ($apps | is-empty) { [] } else { $apps | split row ',' }
-  # Validate the selected App names make sure they all exist in the source project
-  validate-app-names $auth --selected $selected --from $from
-  # TODO: Make sure the operator has access to all the selected APPs
   create-nonexistent-apps $auth --selected $selected --debug=$debug --from $from --to $to
 
   print $'(char nl)(ansi pr)STEP C:(ansi rst) Add Members to Dest Apps...'; hr-line
@@ -97,7 +109,7 @@ def validate-app-names [auth: list, --selected: list, --from: int] {
   let nonexistent_apps = $selected | where {|it| ($it | str downcase) not-in $source_names }
 
   if ($nonexistent_apps | length) > 0 {
-    print $'(ansi r)ERROR: The following apps do not exist in the source project:(ansi rst)'
+    print $'(ansi r)ERROR: The following Apps do not exist in the source project:(ansi rst)'
     $nonexistent_apps | each {|app| print $'  - (ansi r)($app)(ansi rst)' }
     exit $ECODE.INVALID_PARAMETER
   }
@@ -223,7 +235,7 @@ def sync-git-repos [auth: list, sid: int, tid: int, --selected: list, --debug] {
   }
 }
 
-# Add members to the dest apps with the same roles, support incremental addition
+# Add members to the dest Apps with the same roles, support incremental addition
 def add-app-members [auth: list, --selected: list, --from: int, --to: int, --debug] {
   let dest_apps = get-app-list $auth --from $to
   let source_apps = get-app-list $auth --from $from
@@ -254,18 +266,18 @@ def check-app-empty [source: record, dest: record, name: string, type: string] {
   $empty
 }
 
-# Create the nonexistent apps in the target project
+# Create the nonexistent Apps in the target project
 def create-nonexistent-apps [auth: list, --selected: list, --from: int, --to: int, --debug] {
   let dest_apps = get-app-list $auth --from $to
   let source_apps = get-app-list $auth --from $from
   let nonexistent_apps = get-nonexistent-apps $source_apps $dest_apps
   let candidates = if ($selected | is-empty) { $nonexistent_apps } else { $nonexistent_apps | where $it.name in $selected }
 
-  print $'The following apps will be transferred:(char nl)'
+  print $'The following Apps will be transferred:(char nl)'
   $candidates | select id name mode desc | print
   if $debug and ($candidates | length) > 0 {
-    # print 'Source apps:'; $source_apps | print
-    # print 'Dest apps:'; $dest_apps | print
+    # print 'Source Apps:'; $source_apps | print
+    # print 'Dest Apps:'; $dest_apps | print
     print $'(char nl)First detail:(char nl)'
     $candidates | first | table -e | print
   }
@@ -275,19 +287,44 @@ def create-nonexistent-apps [auth: list, --selected: list, --from: int, --to: in
   }
 }
 
-# Get the apps list from the specified project
+# Get the Apps list from the specified project
 def get-app-list [auth: list, --from: int] {
   let query = { projectId: $from, pageNo: 1, pageSize: $PAGE_SIZE } | url build-query
   http get -H $auth $'($APP_LIST_API)?($query)' | get data.list | sort-by id
 }
 
-# Get the apps that do not exist in the target project
+# Get selected Apps by user selection with fzf
+def get-selected-apps [auth: list, --from: int] {
+  let source_apps = get-app-list $auth --from $from
+  if ($source_apps | is-empty) { print $'No Apps found in the source project.'; exit $ECODE.SUCCESS }
+
+  const KEY_MAPPING = $"(ansi grey66)\(Tab: Select, Ctrl-a: Select All, Ctrl-d: Deselect All, ESC: Quit, Enter: Confirm\)(ansi rst)"
+  let FZF_ARGS = [--bind, 'ctrl-a:select-all,ctrl-d:deselect-all', --header, $'Select the Apps to transfer ($KEY_MAPPING)']
+  $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) ($FZF_THEME)'
+
+  let selected = $source_apps
+      | each {|it|
+          let desc = if ($it.desc | is-empty) { 'N/A' } else {
+            $it.desc | str trim | lines | first | str substring 0..<100 | str trim
+          }
+          $it.name | fill -w 30 | append $desc | str join ' | '
+        }
+      | str join "\n"
+      | fzf --multi ...$FZF_ARGS
+      | complete | get stdout | str trim | lines
+      | each {|it| $it | split row ' | ' | first | str trim }
+
+  if ($selected | is-empty) { print $'You have not selected any Apps, bye...'; exit $ECODE.SUCCESS }
+  $selected
+}
+
+# Get the Apps that do not exist in the target project
 def get-nonexistent-apps [source: list, dest: list] {
   let dest_apps = $dest | get name
   $source | where {|it| ($it.name | str downcase) not-in $dest_apps }
 }
 
-# Get all the project or app members
+# Get all the project or App members
 def get-members [auth: list, type: string, sid: int] {
   let query = {
     pageNo: 1,
@@ -301,7 +338,7 @@ def get-members [auth: list, type: string, sid: int] {
     | select userId nick removed deleted status roles
 }
 
-# Add members to the project or app with the same roles, support incremental addition
+# Add members to the project or App with the same roles, support incremental addition
 def add-members [auth: list, type: string, sid: int, members: list, --name: string] {
   let exist_members = get-members $auth $type $sid
   let exist_ids = $exist_members.userId
@@ -336,7 +373,7 @@ def add-members [auth: list, type: string, sid: int, members: list, --name: stri
   if $type == 'project' { print (char nl) }
 }
 
-# Create the app in target project
+# Create the App in target project
 def create-app [auth: list, pid: int, app: record] {
   let payload = {
     mode: $app.mode, name: ($app.name | str downcase), desc: $app.desc, projectId: $pid, isExternalRepo: false
@@ -346,6 +383,6 @@ def create-app [auth: list, pid: int, app: record] {
     print $'App (ansi g)($payload.name)(ansi rst) has been created successfully'
     return
   }
-  print $'Failed to create app (ansi r)($payload.name)(ansi rst) with error message: (ansi r)($resp.err.msg)(ansi rst)'
+  print $'Failed to create App (ansi r)($payload.name)(ansi rst) with error message: (ansi r)($resp.err.msg)(ansi rst)'
   $resp | table -e | print
 }
