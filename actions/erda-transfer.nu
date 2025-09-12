@@ -69,7 +69,11 @@ export def 'erda transfer' [
   add-members $auth project $to $source_members
 
   print $'(ansi pr)STEP B:(ansi rst) Transferring Apps...'; hr-line
+  # TODO: Use fzf to select one or multiple Apps to transfer if none specified
   let selected = if ($apps | is-empty) { [] } else { $apps | split row ',' }
+  # Validate the selected App names make sure they all exist in the source project
+  validate-app-names $auth --selected $selected --from $from
+  # TODO: Make sure the operator has access to all the selected APPs
   create-nonexistent-apps $auth --selected $selected --debug=$debug --from $from --to $to
 
   print $'(char nl)(ansi pr)STEP C:(ansi rst) Add Members to Dest Apps...'; hr-line
@@ -83,6 +87,21 @@ export def 'erda transfer' [
 
   print $'(char nl)(ansi pr)STEP F:(ansi rst) Syncing Git Repos...'; hr-line
   sync-git-repos $auth $from $to --selected $selected --debug=$debug
+}
+
+# Validate the selected App names make sure they all exist in the source project
+def validate-app-names [auth: list, --selected: list, --from: int] {
+  if ($selected | is-empty) { return true }
+  let source_apps = get-app-list $auth --from $from
+  let source_names = $source_apps | get name | str downcase
+  let nonexistent_apps = $selected | where {|it| ($it | str downcase) not-in $source_names }
+
+  if ($nonexistent_apps | length) > 0 {
+    print $'(ansi r)ERROR: The following apps do not exist in the source project:(ansi rst)'
+    $nonexistent_apps | each {|app| print $'  - (ansi r)($app)(ansi rst)' }
+    exit $ECODE.INVALID_PARAMETER
+  }
+  true
 }
 
 # Sync the pipeline or runtime env vars between the source and target app
