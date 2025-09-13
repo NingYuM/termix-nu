@@ -13,7 +13,11 @@
 # [√] 源项目或者源应用删除掉的成员或者环境变量在后续增量同步过程中如果目标应用里面有不会被删掉，以目标为准
 # [√] 同步新应用的流水线及运行时环境变量与源应用保持一致，不含加密环境变量
 # [√] 增量同步不覆盖目标应用已有环境变量: 环境变量如果在目标应用已经存在则跳过，以目标为准
-# [ ] 支持通过 fzf 选择要迁移的应用，可以多选、模糊搜索
+# [√] 支持通过 fzf 选择要迁移的应用，可以多选、模糊搜索
+# [ ] Make sure the operator has access to all the selected APPs before transfer
+# [ ] Reduce call of get-app-list API, especially for querying source Apps
+# [ ] Add members in batch mode for those with the same roles
+# [ ] Transfer encrypted env vars, and replace the values with text like 'Please update the value and encrypt it'
 # [?] 提前判断没有权限的应用，可以配置是忽略还是退出
 # 前提：
 # 1. 源项目和目标项目必须在 Terminus 组织下，目前也只支持这个组织
@@ -44,6 +48,17 @@ const RUNTIME_ENV_ADD_API = 'https://erda.cloud/api/terminus/configmanage/config
 const PIPELINE_ENV_API = 'https://erda.cloud/api/terminus/cicds/multinamespace/configs'
 # 查询运行时环境变量
 const RUNTIME_ENV_API = 'https://erda.cloud/api/terminus/configmanage/multinamespace/configs'
+
+# 流水线环境变量后缀
+const PIPELINE_ENV_SUFFIXES = [
+  { suffix: '-default$' }, { suffix: '-feature$' }, { suffix: '-develop$' },
+  { suffix: '-release$' }, { suffix: '-master$' }
+]
+# 运行时环境变量后缀
+const RUNTIME_ENV_SUFFIXES = [
+  { suffix: '-DEFAULT$' }, { suffix: '-DEV$' }, { suffix: '-TEST$' },
+  { suffix: '-STAGING$' }, { suffix: '-PROD$' }
+]
 
 # Transfer Apps between Erda Projects, the App will be created if not exist in the dest project
 # All Git branches, tags, project members and app members will be transferred
@@ -79,7 +94,6 @@ export def 'erda transfer' [
     exit $ECODE.INVALID_PARAMETER
   }
   print -n (char nl)
-  # TODO: Make sure the operator has access to all the selected APPs
 
   print $'(char nl)(ansi pr)STEP A:(ansi rst) Adding Members to Target Project...'; hr-line
   let source_members = get-members $auth project $from
@@ -121,61 +135,62 @@ def sync-env-vars [auth: list, sid: int, tid: int, --selected: list, --debug, --
   let dest_apps = get-app-list $auth --from $tid
   let source_apps = get-app-list $auth --from $sid
   let candidates = if ($selected | is-empty) { $dest_apps.name } else { $selected }
-  let dev_suffix = if $type == 'pipeline' { '-feature$' } else { '-DEV$' }
-  let prod_suffix = if $type == 'pipeline' { '-master$' } else { '-PROD$' }
-  let test_suffix = if $type == 'pipeline' { '-develop$' } else { '-TEST$' }
-  let pre_suffix = if $type == 'pipeline' { '-release$' } else { '-STAGING$' }
-  let default_suffix = if $type == 'pipeline' { '-default$' } else { '-DEFAULT$' }
+
+  # Define environment suffixes in a structured way to reduce repetition
+  let env_config = if $type == 'pipeline' { $PIPELINE_ENV_SUFFIXES } else { $RUNTIME_ENV_SUFFIXES }
+
   for ap in $candidates {
     let dest_app = $dest_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
     let source_app = $source_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
     if (check-app-empty $source_app $dest_app $ap 'ENV VAR') { continue }
+
     let dest_envs = get-env-vars $auth $dest_app --type $type
     let source_envs = get-env-vars $auth $source_app --type $type
     if $debug {
-      $dest_envs | table -e | print
-      $source_envs | table -e | print
+      print 'Destination App Envs:'; $dest_envs | table -e | print
+      print 'Source App Envs:'; $source_envs | table -e | print
     }
+
     let dest_keys = $dest_envs | columns
     let source_keys = $source_envs | columns
-    let default_src_key = $source_keys | where $it =~ $default_suffix | first
-    let dev_src_key = $source_keys | where $it =~ $dev_suffix | first
-    let test_src_key = $source_keys | where $it =~ $test_suffix | first
-    let prod_src_key = $source_keys | where $it =~ $prod_suffix | first
-    let pre_src_key = $source_keys | where $it =~ $pre_suffix | first
-    let default_dest_key = $dest_keys | where $it =~ $default_suffix | first
-    let dev_dest_key = $dest_keys | where $it =~ $dev_suffix | first
-    let test_dest_key = $dest_keys | where $it =~ $test_suffix | first
-    let prod_dest_key = $dest_keys | where $it =~ $prod_suffix | first
-    let pre_dest_key = $dest_keys | where $it =~ $pre_suffix | first
-    let pairs = [
-      [ $default_src_key   $default_dest_key ],
-      [ $dev_src_key       $dev_dest_key     ],
-      [ $test_src_key      $test_dest_key    ],
-      [ $prod_src_key      $prod_dest_key    ],
-      [ $pre_src_key       $pre_dest_key     ],
-    ]
-    for e in $pairs {
-      let dest_vars = $dest_envs | get $e.1
-      let src_vars = $source_envs | get $e.0
-      if ($src_vars | is-empty) { continue }
-      for v in $src_vars {
-        if ($dest_vars | where $it.key == $v.key | is-empty) {
-          if $v.encrypt {
-            print $'(ansi y)WARN:(ansi rst) The env var (ansi g)($v.key)(ansi rst) is encrypted, skipping add to ($e.1)'
-            continue
-          }
-          if $v.type == 'dice-file' {
-            print $'(ansi y)WARN:(ansi rst) The env var (ansi g)($v.key)(ansi rst) is a file, please check it after transfer'
-            continue
-          }
-          print $'INFO: Adding env var (ansi g)($v.key)(ansi rst) to (ansi g)($e.1) @ ($dest_app.name)(ansi rst) ...'
+
+    # Loop through each environment type (dev, test, prod, etc.)
+    for config in $env_config {
+      let src_key = $source_keys | where $it =~ $config.suffix | get 0?
+      let dest_key = $dest_keys | where $it =~ $config.suffix | get 0?
+
+      # If source or destination environment doesn't exist, skip
+      if ($src_key | is-empty) or ($dest_key | is-empty) { continue }
+
+      let src_vars = $source_envs | get $src_key | default []
+      let dest_vars = $dest_envs | get $dest_key | default []
+
+      # Identify variables that are missing in the destination
+      let missing_vars = $src_vars | where $it.key not-in $dest_vars.key
+
+      if ($missing_vars | is-empty) { continue }
+
+      # Print warnings and info messages for missing variables
+      for v in $missing_vars {
+        if $v.encrypt {
+          print $'(ansi y)WARN:(ansi rst) The env var (ansi g)($v.key)(ansi rst) is encrypted, skipping add to ($dest_key)'
+          continue
         }
+        if $v.type == 'dice-file' {
+          print $'(ansi y)WARN:(ansi rst) The env var (ansi g)($v.key)(ansi rst) is a file, please check it after transfer'
+          continue
+        }
+        print $'INFO: Adding env var (ansi g)($v.key)(ansi rst) to (ansi g)($dest_key) @ ($dest_app.name)(ansi rst) ...'
       }
-      let vars = $src_vars
-        | where $it.key not-in $dest_vars.key and $it.encrypt == false
+
+      # Filter out only the encrypted variables for the final payload
+      let vars_to_add = $missing_vars
+        | where $it.encrypt == false
         | select key value type encrypt comment
-      add-env-vars $auth $dest_app $e.1 $vars --type $type
+
+      if not ($vars_to_add | is-empty) {
+        add-env-vars $auth $dest_app $dest_key $vars_to_add --type $type
+      }
     }
   }
   print $'(char nl)(ansi g)All Done!(ansi rst)'
