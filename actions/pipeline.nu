@@ -116,7 +116,7 @@ def get-pipeline-conf [
   # The condition to filter the matched apps
   let cond = {|x| $apps | split row ',' | any {|it| $it in [$x.appName ($x | get -o alias)] }}
   let matched = if $apps == 'all' { $merged } else if not ($apps | is-empty) { $merged | where $cond }
-  return $matched
+  $matched
 }
 
 # 为目标数据添加 srcBranch 字段的辅助函数
@@ -237,7 +237,7 @@ def query-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
     print -e ($ci | table -e)
     exit $ECODE.SERVER_ERROR
   }
-  return $ci
+  $ci
 }
 
 # 格式化流水线查询结果，以更友好的方式呈现
@@ -325,7 +325,7 @@ def check-cicd [aid: int, appName: string, branch: string, erdaEnv: string, pipe
   let orgName = (fetch-cicd-detail $result.0.id).data.orgName
   hr-line 96 -abc pb
   print (format-pipeline-data $result $orgName)
-  return false
+  false
 }
 
 # 创建 CICD 流水线并返回其对应 ID

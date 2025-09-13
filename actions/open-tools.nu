@@ -211,5 +211,5 @@ def should-upgrade [name: string, latest: record, --force] {
     print $'($name) is already the latest version: (ansi g)($currentVer)(ansi rst), upgrading skipped...'
     return false
   }
-  return true
+  true
 }

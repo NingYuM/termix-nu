@@ -130,7 +130,7 @@ def --env load-emp-conf [] {
     exit $ECODE.INVALID_PARAMETER
   }
   $env.EMP_CONF = $empConf
-  return $empConf
+  $empConf
 }
 
 # Query working hours filling status by specified month
@@ -385,7 +385,7 @@ def handle-working-hours [
   if $notify and $empSwitchEnv == 'on' {
     notify-filling-hours $allMembers --team $team --debug=$debug
   }
-  return false
+  false
 }
 
 def update-staff-list [
