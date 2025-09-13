@@ -15,7 +15,7 @@
 # [√] 增量同步不覆盖目标应用已有环境变量: 环境变量如果在目标应用已经存在则跳过，以目标为准
 # [√] 支持通过 fzf 选择要迁移的应用，可以多选、模糊搜索
 # [√] Make sure the operator has access to all the selected APPs before transfer
-# [ ] Reduce call of get-app-list API, especially for querying source Apps
+# [√] Reduce call of get-app-list API, especially for querying source Apps
 # [ ] Add members in batch mode for those with the same roles
 # [ ] Transfer encrypted env vars, and replace the values with text like 'Please update the value and encrypt it'
 # [?] 提前判断没有权限的应用，可以配置是忽略还是退出
@@ -79,11 +79,12 @@ export def 'erda transfer' [
   if $from == $to { print $'(ansi r)ERROR: Source and Target Project ID cannot be the same!(ansi rst)'; exit $ECODE.INVALID_PARAMETER }
   check-erda-envs
   let auth = get-erda-auth $ERDA_HOST --type nu | append [Org terminus]
+  let source_apps = get-app-list $auth --from $from
 
   # Use fzf to select one or multiple Apps to transfer if none specified
-  let selected = if ($apps | is-empty) { get-selected-apps $auth --from $from } else { $apps | split row ',' }
+  let selected = if ($apps | is-empty) { get-selected-apps $auth --source-apps $source_apps } else { $apps | split row ',' }
   # Validate the selected App names make sure they all exist in the source project
-  validate-app-names $auth --selected $selected --from $from
+  validate-app-names $auth --selected $selected --source-apps $source_apps
   print $'You are going to transfer the following Apps:(char nl)';
   $selected | sort | wrap name | table -t psql | print
   print -n (char nl)
@@ -95,30 +96,29 @@ export def 'erda transfer' [
   }
   print -n (char nl)
 
-  validate-app-auth $auth --selected $selected --from $from
+  validate-app-auth $auth --selected $selected --source-apps $source_apps
   print $'(char nl)(ansi pr)STEP A:(ansi rst) Adding Members to Target Project...'; hr-line
   let source_members = get-members $auth project $from
   add-members $auth project $to $source_members
 
   print $'(ansi pr)STEP B:(ansi rst) Creating Apps...'; hr-line
-  create-nonexistent-apps $auth --selected $selected --debug=$debug --from $from --to $to
+  create-nonexistent-apps $auth --selected $selected --debug=$debug --source-apps $source_apps --to $to
 
   print $'(char nl)(ansi pr)STEP C:(ansi rst) Add Members to Dest Apps...'; hr-line
-  add-app-members $auth --selected $selected --debug=$debug --from $from --to $to
+  add-app-members $auth --selected $selected --debug=$debug --source-apps $source_apps --to $to
 
   print $'(char nl)(ansi pr)STEP D:(ansi rst) Syncing Pipeline Env vars...'; hr-line
-  sync-env-vars $auth $from $to --selected $selected --debug=$debug --type pipeline
+  sync-env-vars $auth $to --selected $selected --source-apps $source_apps --debug=$debug --type pipeline
 
   print $'(char nl)(ansi pr)STEP E:(ansi rst) Syncing Runtime Env vars...'; hr-line
-  sync-env-vars $auth $from $to --selected $selected --debug=$debug --type runtime
+  sync-env-vars $auth $to --selected $selected --source-apps $source_apps --debug=$debug --type runtime
 
   print $'(char nl)(ansi pr)STEP F:(ansi rst) Syncing Git Repos...'; hr-line
-  sync-git-repos $auth $from $to --selected $selected --debug=$debug
+  sync-git-repos $auth $to --selected $selected --source-apps $source_apps --debug=$debug
 }
 
 # Validate the operator has access to the selected Apps in the source project
-def validate-app-auth [auth: list, --selected: list, --from: int] {
-  let source_apps = get-app-list $auth --from $from
+def validate-app-auth [auth: list, --selected: list, --source-apps: list] {
   let select_ids = $source_apps | where ($it.name | str downcase) in $selected | get id
   mut no_auth_apps = []
   for ap in $select_ids {
@@ -134,9 +134,8 @@ def validate-app-auth [auth: list, --selected: list, --from: int] {
 }
 
 # Validate the selected App names make sure they all exist in the source project
-def validate-app-names [auth: list, --selected: list, --from: int] {
+def validate-app-names [auth: list, --selected: list, --source-apps: list] {
   if ($selected | is-empty) { return true }
-  let source_apps = get-app-list $auth --from $from
   let source_names = $source_apps | get name | str downcase
   let nonexistent_apps = $selected | where {|it| ($it | str downcase) not-in $source_names }
 
@@ -149,9 +148,8 @@ def validate-app-names [auth: list, --selected: list, --from: int] {
 }
 
 # Sync the pipeline or runtime env vars between the source and target app
-def sync-env-vars [auth: list, sid: int, tid: int, --selected: list, --debug, --type: string] {
+def sync-env-vars [auth: list, tid: int, --selected: list, --debug, --type: string, --source-apps: list] {
   let dest_apps = get-app-list $auth --from $tid
-  let source_apps = get-app-list $auth --from $sid
   let candidates = if ($selected | is-empty) { $dest_apps.name } else { $selected }
 
   # Define environment suffixes in a structured way to reduce repetition
@@ -255,9 +253,8 @@ def get-env-vars [auth: list, app: record, --type: string] {
 }
 
 # Sync the git repos between the source and target app
-def sync-git-repos [auth: list, sid: int, tid: int, --selected: list, --debug] {
+def sync-git-repos [auth: list, tid: int, --selected: list, --source-apps: list --debug] {
   let dest_apps = get-app-list $auth --from $tid
-  let source_apps = get-app-list $auth --from $sid
   let candidates = if ($selected | is-empty) { $dest_apps.name } else { $selected }
   for ap in $candidates {
     let dest_app = $dest_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
@@ -269,9 +266,8 @@ def sync-git-repos [auth: list, sid: int, tid: int, --selected: list, --debug] {
 }
 
 # Add members to the dest Apps with the same roles, support incremental addition
-def add-app-members [auth: list, --selected: list, --from: int, --to: int, --debug] {
+def add-app-members [auth: list, --selected: list, --to: int, --source-apps: list, --debug] {
   let dest_apps = get-app-list $auth --from $to
-  let source_apps = get-app-list $auth --from $from
   let candidates = if ($selected | is-empty) { $dest_apps.name } else { $selected }
   if $debug { $candidates | first | table -e | print }
   for ap in $candidates {
@@ -300,9 +296,8 @@ def check-app-empty [source: record, dest: record, name: string, type: string] {
 }
 
 # Create the nonexistent Apps in the target project
-def create-nonexistent-apps [auth: list, --selected: list, --from: int, --to: int, --debug] {
+def create-nonexistent-apps [auth: list, --selected: list, --to: int, --source-apps: list --debug] {
   let dest_apps = get-app-list $auth --from $to
-  let source_apps = get-app-list $auth --from $from
   let nonexistent_apps = get-nonexistent-apps $source_apps $dest_apps
   let candidates = if ($selected | is-empty) { $nonexistent_apps } else { $nonexistent_apps | where $it.name in $selected }
 
@@ -327,8 +322,7 @@ def get-app-list [auth: list, --from: int] {
 }
 
 # Get selected Apps by user selection with fzf
-def get-selected-apps [auth: list, --from: int] {
-  let source_apps = get-app-list $auth --from $from
+def get-selected-apps [auth: list, --source-apps: list] {
   if ($source_apps | is-empty) { print $'No Apps found in the source project.'; exit $ECODE.SUCCESS }
 
   const KEY_MAPPING = $"(ansi grey66)\(Tab: Select, Ctrl-a: Select All, Ctrl-d: Deselect All, ESC: Quit, Enter: Confirm\)(ansi rst)"
