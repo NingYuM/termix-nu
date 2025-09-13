@@ -16,7 +16,7 @@
 # [√] 支持通过 fzf 选择要迁移的应用，可以多选、模糊搜索
 # [√] Make sure the operator has access to all the selected APPs before transfer
 # [√] Reduce call of get-app-list API, especially for querying source Apps
-# [ ] Add members in batch mode for those with the same roles
+# [√] Add members in batch mode for those with the same roles
 # [√] Transfer encrypted env vars, and replace the values with text like 'Please update the value and encrypt it'
 # [?] 提前判断没有权限的应用，可以配置是忽略还是退出
 # 前提：
@@ -389,17 +389,26 @@ def add-members [auth: list, type: string, sid: int, members: list, --name: stri
   # Only add the members that do not exist
   let members_to_add = $members | where {|m| $m.userId not-in $exist_ids }
 
-  for u in $members_to_add {
-    print $'INFO: Adding member (ansi g)($u.nick)(ansi rst) to ($type) (ansi g)($name | default $sid)(ansi rst) ... '
+  # Group members by roles and add them in batch mode
+  let grouped_members = $members_to_add | group-by { |m| $m.roles | sort | str join ',' }
+
+  for group in ($grouped_members | transpose key value) {
+    let roles = $group.key | split row ',' | sort
+    let users_in_group = $group.value
+    let user_ids = $users_in_group | get userId
+    let user_nicks = $users_in_group | get nick | str join ', '
+
+    print $'INFO: Adding members (ansi g)($user_nicks)(ansi rst) to ($type) (ansi g)($name | default $sid)(ansi rst) with roles (ansi g)($roles | str join ", ")(ansi rst) ... '
+
     let payload = {
-      roles: $u.roles,
-      userIds: [$u.userId],
+      roles: $roles,
+      userIds: $user_ids,
       options: {rewrite: true}
       scope: {id: ($sid | into string), type: $type},
     }
     let resp = http post -H $auth --content-type application/json -e $MEMBER_API $payload
     if not $resp.success {
-      print $'Failed to add (ansi r)($u.nick)(ansi rst) to ($type) (ansi r)($sid)(ansi rst) with error: (ansi r)($resp.err.msg)(ansi rst)'
+      print $'Failed to add members (ansi r)($user_nicks)(ansi rst) to ($type) (ansi r)($sid)(ansi rst) with error: (ansi r)($resp.err.msg)(ansi rst)'
     }
   }
   if $type == 'project' { print (char nl) }
