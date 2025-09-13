@@ -17,14 +17,13 @@
 # [√] Make sure the operator has access to all the selected APPs before transfer
 # [√] Reduce call of get-app-list API, especially for querying source Apps
 # [√] Add members in batch mode for those with the same roles
-# [√] Transfer encrypted env vars, and replace the values with text like 'Please update the value and encrypt it'
-# [?] 提前判断没有权限的应用，可以配置是忽略还是退出
+# [√] Transfer encrypted env vars, and replace the values with text like '请修改该值并加密存储'
 # 前提：
 # 1. 源项目和目标项目必须在 Terminus 组织下，目前也只支持这个组织
 # 2. 需要有源项目和目标项目的管理员权限:
 #     - 操作者需要先有源项目里面所有应用, 或者所选择应用的访问权限
 #     - 操作者需要在目标项目里面有创建应用的权限
-#     - 新应用创建后操作者即为新应用所有者，不因其在源应用的权限配置而改变(尚待验证)
+#     - 新应用创建后操作者即为新应用所有者，不因其在源应用的权限配置而改变
 # Usage:
 #   t erda-transfer --from 213 --to 1000226
 # 	t erda-transfer --from 213 --to 1000226 --apps termix-nu,nusi-slim
@@ -38,7 +37,7 @@ const PAGE_SIZE = 9999
 const MEMBER_API = 'https://erda.cloud/api/terminus/members'
 # 查询应用列表
 const APP_LIST_API = 'https://openapi.erda.cloud/api/applications'
-# 创建新应用
+# 应用相关 API
 const APPLICATION_API = 'https://erda.cloud/api/terminus/applications'
 # 批量添加流水线环境变量
 const PIPELINE_ENV_ADD_API = 'https://erda.cloud/api/terminus/cicds/configs'
@@ -49,15 +48,16 @@ const PIPELINE_ENV_API = 'https://erda.cloud/api/terminus/cicds/multinamespace/c
 # 查询运行时环境变量
 const RUNTIME_ENV_API = 'https://erda.cloud/api/terminus/configmanage/multinamespace/configs'
 
-# 流水线环境变量后缀
-const PIPELINE_ENV_SUFFIXES = [
-  { suffix: '-default$' }, { suffix: '-feature$' }, { suffix: '-develop$' },
-  { suffix: '-release$' }, { suffix: '-master$' }
-]
 # 运行时环境变量后缀
 const RUNTIME_ENV_SUFFIXES = [
   { suffix: '-DEFAULT$' }, { suffix: '-DEV$' }, { suffix: '-TEST$' },
   { suffix: '-STAGING$' }, { suffix: '-PROD$' }
+]
+
+# 流水线环境变量后缀
+const PIPELINE_ENV_SUFFIXES = [
+  { suffix: '-default$' }, { suffix: '-feature$' }, { suffix: '-develop$' },
+  { suffix: '-release$' }, { suffix: '-master$' }
 ]
 
 # Transfer Apps between Erda Projects, the App will be created if not exist in the dest project
@@ -72,7 +72,7 @@ export def 'erda transfer' [
   --from(-f): int,    # ERDA Source Project ID
   --to(-t): int,      # ERDA Target Project ID
   --apps(-a): string, # The Apps to transfer, separated by comma
-  --debug(-d),        # Show more debug info
+  --debug(-d),
 ] {
   if ($from | is-empty) { print $'(ansi r)ERROR: Source Project ID cannot be empty!(ansi rst)'; exit $ECODE.INVALID_PARAMETER }
   if ($to | is-empty) { print $'(ansi r)ERROR: Target Project ID cannot be empty!(ansi rst)'; exit $ECODE.INVALID_PARAMETER }
@@ -120,14 +120,16 @@ export def 'erda transfer' [
 # Validate the operator has access to the selected Apps in the source project
 def validate-app-auth [auth: list, --selected: list, --source-apps: list] {
   let select_ids = $source_apps | where ($it.name | str downcase) in $selected | get id
-  mut no_auth_apps = []
-  for ap in $select_ids {
-    let try_auth = http get -H $auth -e $'($APPLICATION_API)/($ap)'
-    if $try_auth.err.code == 'AccessDenied' { $no_auth_apps = $no_auth_apps | append $ap }
+
+  let auth_results = $select_ids | par-each {|ap|
+    let result = http get -H $auth -e $'($APPLICATION_API)/($ap)'
+    { id: $ap, has_access: (($result.err?.code? | default '') != 'AccessDenied') }
   }
+
+  let no_auth_apps = $auth_results | where not has_access | get id
   if ($no_auth_apps | is-empty) { return true }
 
-  print $'(ansi r)ERROR: You don not have access to the following Apps in the source project:(ansi rst)(char nl)'
+  print $'(ansi r)ERROR: You do not have access to the following Apps in the source project:(ansi rst)(char nl)'
   $source_apps | where id in $no_auth_apps | select id name | table -t psql | print
   print -n (char nl)
   exit $ECODE.INVALID_PARAMETER
@@ -139,12 +141,10 @@ def validate-app-names [auth: list, --selected: list, --source-apps: list] {
   let source_names = $source_apps | get name | str downcase
   let nonexistent_apps = $selected | where {|it| ($it | str downcase) not-in $source_names }
 
-  if ($nonexistent_apps | length) > 0 {
-    print $'(ansi r)ERROR: The following Apps do not exist in the source project:(ansi rst)'
-    $nonexistent_apps | each {|app| print $'  - (ansi r)($app)(ansi rst)' }
-    exit $ECODE.INVALID_PARAMETER
-  }
-  true
+  if ($nonexistent_apps | is-empty) { return true }
+  print $'(ansi r)ERROR: The following Apps do not exist in the source project:(ansi rst)'
+  $nonexistent_apps | each {|app| print $'  - (ansi r)($app)(ansi rst)' }
+  exit $ECODE.INVALID_PARAMETER
 }
 
 # Sync the pipeline or runtime env vars between the source and target app
@@ -236,14 +236,6 @@ def add-env-vars [auth: list, app: record, ns: string, vars: list, --type: strin
 # }
 def get-env-vars [auth: list, app: record, --type: string] {
   let query = { appID: $app.id } | url build-query
-  let pipeline_payload = {
-    namespaceParams:[
-      { namespace_name: $'pipeline-secrets-app-($app.id)-master', decrypt: false },
-      { namespace_name: $'pipeline-secrets-app-($app.id)-default', decrypt: false },
-      { namespace_name: $'pipeline-secrets-app-($app.id)-release', decrypt: false },
-      { namespace_name: $'pipeline-secrets-app-($app.id)-develop', decrypt: false },
-      { namespace_name: $'pipeline-secrets-app-($app.id)-feature', decrypt: false },
-    ]}
   let runtime_payload = {
     namespaceParams:[
       { namespace_name: $'app-($app.id)-DEV', decrypt: false },
@@ -251,6 +243,14 @@ def get-env-vars [auth: list, app: record, --type: string] {
       { namespace_name: $'app-($app.id)-PROD', decrypt: false },
       { namespace_name: $'app-($app.id)-STAGING', decrypt: false },
       { namespace_name: $'app-($app.id)-DEFAULT', decrypt: false },
+    ]}
+  let pipeline_payload = {
+    namespaceParams:[
+      { namespace_name: $'pipeline-secrets-app-($app.id)-master', decrypt: false },
+      { namespace_name: $'pipeline-secrets-app-($app.id)-default', decrypt: false },
+      { namespace_name: $'pipeline-secrets-app-($app.id)-release', decrypt: false },
+      { namespace_name: $'pipeline-secrets-app-($app.id)-develop', decrypt: false },
+      { namespace_name: $'pipeline-secrets-app-($app.id)-feature', decrypt: false },
     ]}
   let api = if $type == 'pipeline' { $PIPELINE_ENV_API } else { $RUNTIME_ENV_API }
   let payload = if $type == 'pipeline' { $pipeline_payload } else { $runtime_payload }
