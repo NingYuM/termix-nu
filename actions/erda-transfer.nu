@@ -17,7 +17,7 @@
 # [√] Make sure the operator has access to all the selected APPs before transfer
 # [√] Reduce call of get-app-list API, especially for querying source Apps
 # [ ] Add members in batch mode for those with the same roles
-# [ ] Transfer encrypted env vars, and replace the values with text like 'Please update the value and encrypt it'
+# [√] Transfer encrypted env vars, and replace the values with text like 'Please update the value and encrypt it'
 # [?] 提前判断没有权限的应用，可以配置是忽略还是退出
 # 前提：
 # 1. 源项目和目标项目必须在 Terminus 组织下，目前也只支持这个组织
@@ -187,25 +187,30 @@ def sync-env-vars [auth: list, tid: int, --selected: list, --debug, --type: stri
       if ($missing_vars | is-empty) { continue }
 
       # Print warnings and info messages for missing variables
-      for v in $missing_vars {
+      let vars_to_add = $missing_vars | each {|v|
         if $v.encrypt {
-          print $'(ansi y)WARN:(ansi rst) The env var (ansi g)($v.key)(ansi rst) is encrypted, skipping add to ($dest_key)'
-          continue
+          print $'(ansi y)WARN:(ansi rst) Adding encrypted env var (ansi g)($v.key)(ansi rst) with a placeholder value to (ansi g)($dest_key).'
+          let comment = if ($v.comment | is-empty) { '原始值为加密值' } else { $v.comment }
+          return (
+            $v
+              | upsert value '请修改该值并加密存储'
+              | upsert encrypt false
+              | upsert comment $comment
+            )
         }
         if $v.type == 'dice-file' {
           print $'(ansi y)WARN:(ansi rst) The env var (ansi g)($v.key)(ansi rst) is a file, please check it after transfer'
-          continue
+        } else {
+          print $'INFO: Adding env var (ansi g)($v.key)(ansi rst) to (ansi g)($dest_key) @ ($dest_app.name)(ansi rst) ...'
         }
-        print $'INFO: Adding env var (ansi g)($v.key)(ansi rst) to (ansi g)($dest_key) @ ($dest_app.name)(ansi rst) ...'
+        $v
       }
 
-      # Filter out only the encrypted variables for the final payload
-      let vars_to_add = $missing_vars
-        | where $it.encrypt == false
-        | select key value type encrypt comment
+      # Select correct fields for the API payload
+      let vars_to_add_payload = $vars_to_add | select key value type encrypt comment
 
-      if not ($vars_to_add | is-empty) {
-        add-env-vars $auth $dest_app $dest_key $vars_to_add --type $type
+      if not ($vars_to_add_payload | is-empty) {
+        add-env-vars $auth $dest_app $dest_key $vars_to_add_payload --type $type
       }
     }
   }
