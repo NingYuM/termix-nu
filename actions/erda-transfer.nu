@@ -14,7 +14,7 @@
 # [√] 同步新应用的流水线及运行时环境变量与源应用保持一致，不含加密环境变量
 # [√] 增量同步不覆盖目标应用已有环境变量: 环境变量如果在目标应用已经存在则跳过，以目标为准
 # [√] 支持通过 fzf 选择要迁移的应用，可以多选、模糊搜索
-# [ ] Make sure the operator has access to all the selected APPs before transfer
+# [√] Make sure the operator has access to all the selected APPs before transfer
 # [ ] Reduce call of get-app-list API, especially for querying source Apps
 # [ ] Add members in batch mode for those with the same roles
 # [ ] Transfer encrypted env vars, and replace the values with text like 'Please update the value and encrypt it'
@@ -39,7 +39,7 @@ const MEMBER_API = 'https://erda.cloud/api/terminus/members'
 # 查询应用列表
 const APP_LIST_API = 'https://openapi.erda.cloud/api/applications'
 # 创建新应用
-const APP_CREATE_API = 'https://erda.cloud/api/terminus/applications'
+const APPLICATION_API = 'https://erda.cloud/api/terminus/applications'
 # 批量添加流水线环境变量
 const PIPELINE_ENV_ADD_API = 'https://erda.cloud/api/terminus/cicds/configs'
 # 批量添加运行时环境变量
@@ -95,11 +95,12 @@ export def 'erda transfer' [
   }
   print -n (char nl)
 
+  validate-app-auth $auth --selected $selected --from $from
   print $'(char nl)(ansi pr)STEP A:(ansi rst) Adding Members to Target Project...'; hr-line
   let source_members = get-members $auth project $from
   add-members $auth project $to $source_members
 
-  print $'(ansi pr)STEP B:(ansi rst) Transferring Apps...'; hr-line
+  print $'(ansi pr)STEP B:(ansi rst) Creating Apps...'; hr-line
   create-nonexistent-apps $auth --selected $selected --debug=$debug --from $from --to $to
 
   print $'(char nl)(ansi pr)STEP C:(ansi rst) Add Members to Dest Apps...'; hr-line
@@ -113,6 +114,23 @@ export def 'erda transfer' [
 
   print $'(char nl)(ansi pr)STEP F:(ansi rst) Syncing Git Repos...'; hr-line
   sync-git-repos $auth $from $to --selected $selected --debug=$debug
+}
+
+# Validate the operator has access to the selected Apps in the source project
+def validate-app-auth [auth: list, --selected: list, --from: int] {
+  let source_apps = get-app-list $auth --from $from
+  let select_ids = $source_apps | where ($it.name | str downcase) in $selected | get id
+  mut no_auth_apps = []
+  for ap in $select_ids {
+    let try_auth = http get -H $auth -e $'($APPLICATION_API)/($ap)'
+    if $try_auth.err.code == 'AccessDenied' { $no_auth_apps = $no_auth_apps | append $ap }
+  }
+  if ($no_auth_apps | is-empty) { return true }
+
+  print $'(ansi r)ERROR: You don not have access to the following Apps in the source project:(ansi rst)(char nl)'
+  $source_apps | where id in $no_auth_apps | select id name | table -t psql | print
+  print -n (char nl)
+  exit $ECODE.INVALID_PARAMETER
 }
 
 # Validate the selected App names make sure they all exist in the source project
@@ -288,7 +306,7 @@ def create-nonexistent-apps [auth: list, --selected: list, --from: int, --to: in
   let nonexistent_apps = get-nonexistent-apps $source_apps $dest_apps
   let candidates = if ($selected | is-empty) { $nonexistent_apps } else { $nonexistent_apps | where $it.name in $selected }
 
-  print $'The following Apps will be transferred:(char nl)'
+  print $'The following Apps will be created:(char nl)'
   $candidates | select id name mode desc | print
   if $debug and ($candidates | length) > 0 {
     # print 'Source Apps:'; $source_apps | print
@@ -393,7 +411,7 @@ def create-app [auth: list, pid: int, app: record] {
   let payload = {
     mode: $app.mode, name: ($app.name | str downcase), desc: $app.desc, projectId: $pid, isExternalRepo: false
   }
-  let resp = http post -H $auth --content-type application/json -e $APP_CREATE_API $payload
+  let resp = http post -H $auth --content-type application/json -e $APPLICATION_API $payload
   if $resp.success {
     print $'App (ansi g)($payload.name)(ansi rst) has been created successfully'
     return
