@@ -129,7 +129,7 @@ def 'nu-complete dest' [] {
 def --env load-meta-conf [] {
   let metaConf = open $'($env.TERMIX_DIR)/.termixrc' | from toml | get meta
   $env.META_CONF = $metaConf
-  return $metaConf
+  $metaConf
 }
 
 # List available sources and destinations
@@ -394,7 +394,7 @@ def handle-create-snapshot [
     print -e $'Failed to create snapshot, please try again later.'
     exit $ECODE.SERVER_ERROR
   }
-  return $detail.outputs.1
+  $detail.outputs.1
 }
 
 # Upload meta data snapshot and wait for the task to finish, return the meta data download url if success
@@ -430,7 +430,7 @@ def handle-upload-snapshot [
     print -e $'Failed to upload snapshot, please try again later.'
     exit $ECODE.SERVER_ERROR
   }
-  return $detail.outputs.1
+  $detail.outputs.1
 }
 
 # Import meta data to destination and wait for the task to finish

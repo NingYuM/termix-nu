@@ -67,7 +67,7 @@ def get-branches [--branches: string, --all-local-branches, --all-remote-branche
     git fetch origin -p
     return (git branch -r | lines | str trim | where $it starts-with origin/ | where $it !~ 'origin/HEAD')
   }
-  return [(git branch --show-current)]
+  [(git branch --show-current)]
 }
 
 # Get the commit summary of the specified file and keyword
@@ -82,7 +82,7 @@ def get-commit-summary [branch: string, file: string, keyword: string] {
   let committer = $summary.1 | str trim | split row ' ' | get 1
   let commitAt = (($summary.2 | str trim | split row ' ' | get 1 | into int) * 1000 * 1000 * 1000 | into datetime) + 8hr
     | format date $_TIME_FMT
-  return { SHA: $SHA, committer: $committer, commitAt: $commitAt }
+  { SHA: $SHA, committer: $committer, commitAt: $commitAt }
 }
 
 # Same as get-commit-summary but remove usage of `grep`
