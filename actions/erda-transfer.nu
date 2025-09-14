@@ -18,6 +18,7 @@
 # [√] Reduce call of get-app-list API, especially for querying source Apps
 # [√] Add members in batch mode for those with the same roles
 # [√] Transfer encrypted env vars, and replace the values with text like '请修改该值并加密存储'
+# [√] 批量查询用户权限: http get -H $auth https://openapi.erda.cloud/api/permissions | table -e
 # 前提：
 # 1. 源项目和目标项目必须在 Terminus 组织下，目前也只支持这个组织
 # 2. 需要有源项目和目标项目的管理员权限:
@@ -37,6 +38,8 @@ const PAGE_SIZE = 9999
 const MEMBER_API = 'https://erda.cloud/api/terminus/members'
 # 查询应用列表
 const APP_LIST_API = 'https://openapi.erda.cloud/api/applications'
+# 查询用户权限
+const USER_PERMS_API = 'https://openapi.erda.cloud/api/permissions'
 # 应用相关 API
 const APPLICATION_API = 'https://erda.cloud/api/terminus/applications'
 # 批量添加流水线环境变量
@@ -119,11 +122,19 @@ export def 'erda transfer' [
 
 # Validate the operator has access to the selected Apps in the source project
 def validate-app-auth [auth: list, --selected: list, --source-apps: list] {
+  let user_perms = get-user-permissions $auth
   let select_ids = $source_apps | where ($it.name | str downcase) in $selected | get id
 
   let auth_results = $select_ids | par-each {|ap|
-    let result = http get -H $auth -e $'($APPLICATION_API)/($ap)'
-    { id: $ap, has_access: (($result.err?.code? | default '') != 'AccessDenied') }
+    # Check the app access by API is slow
+    # let result = http get -H $auth -e $'($APPLICATION_API)/($ap)'
+    # { id: $ap, has_access: (($result.err?.code? | default '') != 'AccessDenied') }
+
+    # Use the user permissions API to check the app access in batch mode
+    $user_perms
+      | where ($it.scope.type == 'app') and ($it.scope.id == $'($ap)')
+      | get 0?.access?  | default false
+      | wrap has_access | upsert id $ap
   }
 
   let no_auth_apps = $auth_results | where not has_access | get id
@@ -133,6 +144,11 @@ def validate-app-auth [auth: list, --selected: list, --source-apps: list] {
   $source_apps | where id in $no_auth_apps | select id name | table -t psql | print
   print -n (char nl)
   exit $ECODE.INVALID_PARAMETER
+}
+
+# Get all the user permissions in the specified Org
+def get-user-permissions [auth: list] {
+  http get -H $auth $USER_PERMS_API | get data.list
 }
 
 # Validate the selected App names make sure they all exist in the source project
