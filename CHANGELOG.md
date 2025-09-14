@@ -1,6 +1,41 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.93.0 - 2025-09-15
+
+**Bug Fixes**
+
+- Try to fix `t upgrade` error for Windows
+- Fix version display of the upgraded tools
+
+**Features**
+
+- Add `t erda-transfer` command to Transfer Apps between Erda Projects
+- Validate the selected App names to make sure they all exist in the source project
+- Using `fzf` to select APPs to transfer and confirm before transferring
+- Validate and make sure the operator has access to all the selected APPs before transfer
+- Support transfer runtime ENV vars
+- Support transfer pipeline ENV vars
+- Transfer encrypted env vars, and replace the values with a placeholder
+- Add members in batch mode for `t erda-transfer` command
+- Speed up APP auth checks via user permissions API
+
+**Miscellaneous Tasks**
+
+- Update `trantor-artifact-transfer.sh`
+- Use AGENTS.md for AI coding instead of CLAUDE.md or .cursor files
+
+**Performance**
+
+- Get brew APPs version from API instead of web crawling
+- Use `par-each` for auth checking of APPs
+- Improve adding members for `t erda-transfer` command
+
+**Refactor**
+
+- Refactor `sync-env-vars` helper for better readability
+- Reduce call of `get-app-list` API, especially for querying source APPs
+
 ## v1.92.0 - 2025-09-08
 
 **Bug Fixes**

@@ -65,12 +65,12 @@ const PIPELINE_ENV_SUFFIXES = [
 
 # Transfer Apps between Erda Projects, the App will be created if not exist in the dest project
 # All Git branches, tags, project members and app members will be transferred
-@example '将 Terminus 组织下编号为 213 的项目里面的 termix-nu,nusi-slim 应用迁移到编号为 1000226 的项目' {
+@example '将 Terminus 组织下编号为 213 的项目里面的 `termix-nu,nusi-slim` 应用迁移到编号为 1000226 的项目' {
   t erda-transfer --from 213 --to 1000226 --apps termix-nu,nusi-slim
-} --result '迁移内容包括应用仓库所有分支、Tags、项目成员、应用成员。该命令可以重复执行,以实现增量同步'
-@example '将 Terminus 组织下编号为 213 的项目里面的所有应用迁移到编号为 1000226 的项目' {
+} --result '迁移内容包括应用仓库所有分支、Tags、项目成员、应用成员、环境变量。该命令可以重复执行用于增量同步'
+@example '选择 Terminus 组织下编号为 213 的项目里面的应用，并批量迁移到编号为 1000226 的项目' {
   t erda-transfer --from 213 --to 1000226
-} --result '迁移内容包括所有应用的各分支、Tags、项目成员、应用成员。该命令可以重复执行,以实现增量同步'
+} --result '迁移内容同上，需拥有源项目所选择应用的访问权限'
 export def 'erda transfer' [
   --from(-f): int,    # ERDA Source Project ID
   --to(-t): int,      # ERDA Target Project ID
