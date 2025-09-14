@@ -989,7 +989,13 @@ print(token or '')
     local host_path=$(echo "$git_repo_url" | cut -d'/' -f3-)
     auth_git_url="$protocol://git:$git_token@$host_path"
   else
-    auth_git_url="https://git:$git_token@$git_repo_url"
+    # Follow base_url's protocol when git_repo_url has no protocol
+    local base_url=$(cat "$creds_file" | parse_json_field "base_url")
+    local proto="https"
+    if [[ "$base_url" == *"://"* ]]; then
+      proto="${base_url%%://*}"
+    fi
+    auth_git_url="$proto://git:$git_token@$git_repo_url"
   fi
 
   # Clone repo, update pipeline YAML, and push
