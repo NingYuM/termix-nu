@@ -51,7 +51,7 @@ winget install Nushell.Nushell
 
 :::info 注意事项
 
-  对于通过 `brew` 安装 `nushell` 的用户在后续升级之后由于 `nushell` 二进制文件存储路径发生了变化(`brew` 安装的版本号会在路径里得到体现)，`nushell` 的插件配置文件会因找不到之前注册的插件而报错，此时直接把插件注册文件（比如: `/Users/hustcer/Library/Application Support/nushell/plugin.nu`）删掉即可，后续在使用工具的过程中会自动重新注册插件。
+对于通过 `brew` 安装 `nushell` 的用户在后续升级之后由于 `nushell` 二进制文件存储路径发生了变化(`brew` 安装的版本号会在路径里得到体现)，`nushell` 的插件配置文件会因找不到之前注册的插件而报错，此时直接把插件注册文件（比如: `/Users/hustcer/Library/Application Support/nushell/plugin.nu`）删掉即可，后续在使用工具的过程中会自动重新注册插件。
 
 :::
 
@@ -1055,7 +1055,7 @@ t git-pick 0330 -f release/2.5.24.0330
 - `--grep <String>` 或 `-g` 仅在与 `-l` 一起使用时生效，从部署配置里面搜索 name, alias 或 description 字段里包含特定字符串的部署目标
 - `--stop-by-id` 或 `-s` 根据流水线 ID 终止对应的正在运行的流水线
 - `--apps` 或者 `-a` 指定需要批量部署的应用，多个应用以","分隔，在多应用模式下必须指定(`-a all`或者`--apps all`代表选择指定目标下的所有应用)，单应用模式忽略
-- `--override` 或 `-o`  该参数的格式为 JS Object, 用于覆盖部署配置里面的同名配置项, 比如已有部署目标 `prod` 对应的部署分支是 `master`, 但是你需要部署 `hotfix/abc` 分支，由于这是个临时分支如果为部署这个分支去改配置还是比较麻烦的，此时可以通过 `t dp prod -o {branch: 'hotfix/abc'}` 来部署，表示除了分支不一样外其他的部署配置跟 `prod` 保持一致。该参数在 `sh/bash/fish/nushell` 下可以正常使用，但是 `zsh` 因为 `{}` 解析问题貌似不支持
+- `--override` 或 `-o` 该参数的格式为 JS Object, 用于覆盖部署配置里面的同名配置项, 比如已有部署目标 `prod` 对应的部署分支是 `master`, 但是你需要部署 `hotfix/abc` 分支，由于这是个临时分支如果为部署这个分支去改配置还是比较麻烦的，此时可以通过 `t dp prod -o {branch: 'hotfix/abc'}` 来部署，表示除了分支不一样外其他的部署配置跟 `prod` 保持一致。该参数在 `sh/bash/fish/nushell` 下可以正常使用，但是 `zsh` 因为 `{}` 解析问题貌似不支持
 - `--help` 或者 `-h` 查看帮助信息
 
 **使用举例**:
@@ -1106,7 +1106,7 @@ t dp test -o {branch: 'release/2.5.24.0330'}
 - `id`: 选填，待查询的目标流水线对应的 ID，比如上图中的 **988218150879331**; 如果不填则查询默认目标的最近**10**条部署记录
 - `--watch` 或者 `-w` 持续轮询并显示指定流水线各个 Stage 的执行信息，轮询间隔 2秒
 - `--apps` 或者 `-a` 指定需要批量查询的应用，多个应用以","分隔，在多应用模式下必须指定(`-a all`或者`--apps all`代表查询指定目标下的所有应用)，单应用模式忽略
-- `--override` 或 `-o`  该参数的格式为 JS Object, 用于覆盖部署配置里面的同名配置项, 比如已有部署目标 `prod` 对应的部署分支是 `master`, 但是你需要查询 `hotfix/abc` 分支的部署记录，由于这是个临时分支如果为查询这个分支的部署记录去改配置还是比较麻烦的，此时可以通过 `t dq prod -o {branch: 'hotfix/abc'}` 来查询，表示除了分支不一样外其他的查询配置跟 `prod` 保持一致。该参数在 `sh/bash/fish/nushell` 下可以正常使用，但是 `zsh` 因为 `{}` 解析问题貌似不支持
+- `--override` 或 `-o` 该参数的格式为 JS Object, 用于覆盖部署配置里面的同名配置项, 比如已有部署目标 `prod` 对应的部署分支是 `master`, 但是你需要查询 `hotfix/abc` 分支的部署记录，由于这是个临时分支如果为查询这个分支的部署记录去改配置还是比较麻烦的，此时可以通过 `t dq prod -o {branch: 'hotfix/abc'}` 来查询，表示除了分支不一样外其他的查询配置跟 `prod` 保持一致。该参数在 `sh/bash/fish/nushell` 下可以正常使用，但是 `zsh` 因为 `{}` 解析问题貌似不支持
 - `--help` 或者 `-h` 查看帮助信息
 
 **使用举例**:
@@ -1678,8 +1678,8 @@ t art deploy --combine --from terp-runtime --branch release/millgrid-uat --to mi
 
 1. 源项目和目标项目必须在 Terminus 组织下，目前也只支持这个组织
 2. 需要有源项目和目标项目的管理员权限:
-    - 操作者至少需要先有源项目里所选择应用的访问权限;
-    - 操作者需要在目标项目里有创建应用的权限;
+   - 操作者至少需要先有源项目里所选择应用的访问权限;
+   - 操作者需要在目标项目里有创建应用的权限;
 
 **功能描述**:
 
@@ -1700,10 +1700,10 @@ t art deploy --combine --from terp-runtime --branch release/millgrid-uat --to mi
 
 **参数说明**:
 
--  `-f`, `--from` <int>: ERDA 源项目 ID
--  `-t`, `--to` <int>: ERDA 目标项目 ID
--  `-a`, `--apps` <string>: 指定要迁移的应用名，多个应用之间用英文逗号分隔，未指定该参数则进入交互式选择应用界面
--  `-h`, `--help`: 显示该命令的帮助文档
+- `-f`, `--from <int>`: ERDA 源项目 ID
+- `-t`, `--to <int>`: ERDA 目标项目 ID
+- `-a`, `--apps <string>`: 指定要迁移的应用名，多个应用之间用英文逗号分隔，未指定该参数则进入交互式选择应用界面
+- `-h`, `--help`: 显示该命令的帮助文档
 
 **使用举例**:
 
@@ -1716,6 +1716,12 @@ t erda-transfer --from 213 --to 1000226 --apps termix-nu,nusi-slim
 # 迁移内容同上，需拥有源项目所选择应用的访问权限
 t erda-transfer --from 213 --to 1000226
 ```
+
+**演示视频**:
+
+#### Erda 应用批量迁移演示{#app-transfer-cast}
+
+<AsciiPlayer cast="/casts/erda-transfer.cast" poster="npt:0:06" />
 
 ---
 
@@ -2048,125 +2054,3 @@ t query-deps vite -d -b develop,feature/latest,master
 **输出样例**:
 
 ![Query Node Deps Output](https://img.alicdn.com/imgextra/i3/O1CN018vHMfQ1XYHNPsRY9L_!!6000000002935-0-tps-1345-426.jpg)
-
----
-
-## 业务脚本工具{#biz-cmd}
-
----
-
-### 36. 给标品源码仓库批量打 Tag{#gaia-release}
-
-**功能描述**: 在标品前端需要发布新版本的时候将标品 `gaia-mall,gaia-mobile,gaia-picker` 等源码仓库指定分支批量打 Release Tag, 也可以用于删除指定 Tag
-
-**命令格式**: `gaia-release version=('') repos=('mall,mobile,picker') delete=('false')`
-
-**参数说明**:
-
-- `version`: 必填，需要新增的 Tag 前缀，创建 Tag 的时候默认会加上日期信息，比如当指定 Tag 为`v2.2.0`的时候实际生成的可能为`v2.2.0-2021.10.27`, 也可以自己指定时间戳，如果指定了时间戳则以指定时间戳为准，不再添加默认时间戳；
-- `repos`: 可选，需要打 Tag 的源码仓库简称：`mall/mobile/picker`，多个简称之间用 `,` 分隔 ，默认值 `mall,mobile,picker`；
-- `delete`: 可选，`true`表示删除指定 Tag 且不重新添加对应 Tag，默认值 `false` 表示 Tag 不存在则创建 Tag，存在则先删除再创建;
-- 其他说明: 创建 Tag 的时候可以指定分支及其 Tag 后缀，具体可以在`termix.toml`里面的`gaiaSrcRepos`配置项里根据需要作调整;
-
-**使用举例**:
-
-```bash
-# 给`mall/mobile/picker`三个源码仓库创建新的Tag，比如 `v2.2.0-2021.10.27`
-t gaia-release v2.2.0
-# 删除mall,mobile,picker三个仓库`v2.2.0`对应的当天的Tag
-t gaia-release v2.2.0 mall,mobile,picker true
-# 在`mall,mobile`仓库创建Tag时以给定完整的包含时间戳的Tag名称为准，取代默认添加的时间戳
-t gaia-release v2.2.0.21-2021.11.09 mall,mobile
-```
-
----
-
-### 37. 给远程二开仓库批量打 Tag{#tag-redev}
-
-**功能描述**: 给远程二开仓库指定分支批量打 Release Tag, 目前前端二开仓库含增量、全量及所有业态有 13 个，人工挨个仓库打 Tag 是不现实的，也很容易出错。另外，该命令也可以用于删除指定 Tag。
-
-**命令格式**: `t tag-redev tag=('') branch=('master') group=('b2c,b2b,mbr,pik') delete=('false')`
-
-**参数说明**:
-
-- `tag`: 必填，需要新增的 Tag 前缀，创建 Tag 的时候默认会加上日期信息，比如当指定 Tag 为`v2.2.0`的时候实际生成的可能为`v2.2.0-2021.10.27`, 也可以自己指定时间戳，如果指定了时间戳则以指定时间戳为准，不再添加默认时间戳；
-- `branch`: 可选，需要打 Tag 的二开分支，默认值 `master`；
-- `group`: 可选，需要创建 Tag 的二开仓库分组，多个分组之间用`,`分隔, 默认值 `b2c,b2b,mbr,pik`，具体分组配置可以查看`termix.toml`里面的`redevRepos`配置项；
-- `delete`: 可选，`true`表示删除指定 Tag 且不重新添加对应 Tag，默认值 `false` 表示 Tag 不存在则新增 Tag，存在则先删除再新增;
-
-**使用举例**:
-
-```bash
-# 从二开仓库master分支创建新的Tag，比如 `v2.2.0-2021.10.27`
-t tag-redev v2.2.0
-# 删除`v2.2.0`对应的当天的Tag
-t tag-redev v2.2.0 master b2c,b2b,mbr,pik true
-# 从二开仓库develop分支创建新的Tag `v2.5.0`
-t tag-redev v2.5.0 develop
-# 创建Tag时以给定完整的包含时间戳的Tag名称为准，取代默认添加的时间戳
-t tag-redev v2.2.0.21-2021.11.09 master
-```
-
----
-
-### 38. 查询二开仓库的远程分支及 Tag 信息{#ls-redev-refs}
-
-**功能描述**:
-
-显示标品二开仓库的所有 Tag 及其对应创建时间，也可以额外显示分支及其最后提交时间，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `TERMIX_TMP_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `termixTmpPath` 配置;
-
-**命令格式**: `t ls-redev-refs group=('b2c,b2b,mbr,pik') showBranch=('false')`
-
-**参数说明**:
-
-- `group`: 可选，需要查询分支和 Tag 的二开仓库分组，多个分组之间用`,`分隔, 默认值 `b2c,b2b,mbr,pik`，具体分组配置可以查看`termix.toml`里面的`redevRepos`配置项；
-- `showBranch`: 可选，是否显示远程分支信息，默认值 `false`;
-
-**使用举例**:
-
-```bash
-# 仅显示所有Tag及其对应创建时间信息
-t ls-redev-refs
-# 同时显示所有 b2c,b2b 相关业态的二开仓库Tag及分支信息
-t ls-redev-refs b2c,b2b true
-```
-
----
-
-### 39. 批量更新远程二开仓库代码到本地{#pull-redev}
-
-**功能描述**: 更新远程二开仓库代码到本地，该功能需要将所有的二开仓库 clone 到本地，所以需要有二开仓库权限才能操作; 二开仓库代码 clone 路径可以在 .env 文件里面 `TERMIX_TMP_PATH` 配置项里面进行配置，如果该配置项找不到会读取 `termix.toml` 里面的 `termixTmpPath` 配置;
-
-**命令格式**: `t pull-redev branch=('master') group=('b2c,b2b,mbr,pik') diff=('false')`
-
-**参数说明**:
-
-- `branch`: 可选，需要更新代码的二开分支，默认值 `master`；
-- `group`: 可选，需要更新代码的二开仓库分组，多个分组之间用`,`分隔, 默认值 `b2c,b2b,mbr,pik`，具体分组配置可以查看`termix.toml`里面的`redevRepos`配置项；
-- `diff`: 可选，是否显示与指定 Tag 相比变化的文件，默认值 `false`，待比较的 Tag 可以在 .env 环境变量里面通过`REDEV_PREV_TAG`变量指定;
-
-**使用举例**:
-
-```bash
-# 更新二开master分支代码到本地，不显示变化的文件列表
-t pull-redev
-# 更新二开develop分支代码到本地，并显示变化的文件名列表
-t pull-redev develop true
-```
-
-### 40. 扫描(清理)同步仓库里面冗余分支{#prune-branches}
-
-**功能描述**: 随着时间的推移各个部署环境的仓库里面可能存在很多不需要的分支，尤其是之前通过流水线同步的方式不会自动清理源分支不存在的同步分支，这些分支需要被清理掉，否则部署的时候找流水线也不太方便(这真的不是强行加的理由)，本脚本的作用就是扫描出这些分支，但是安全起见不会直接执行删除操作，只是提示用户这些分支是可以被清理掉的，最终还是需要用户去手工确认删掉, 可清理分支的判定原则就是读取全局同步配置: `i` 分支上的 `.termixrc` 文件然后不在同步配置里面的**部署仓库分支**即为可删除分支，如果确认的时候该分支也不是部署中的分支大概率是可以删掉的了;
-
-**命令格式**: `t prune-synced-branches`
-
-**参数说明**:
-
-- 目前没有参数，只是显示可以被清理掉的分支，不做删除操作，需要手工确认删除；
-
-**使用举例**:
-
-```bash
-# 执行该命令的时候先确保已经切换到源码仓库gaia-mall, gaia-mobile, etc.
-t prune-synced-branches
-```
