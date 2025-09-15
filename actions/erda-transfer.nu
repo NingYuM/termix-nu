@@ -64,7 +64,7 @@ const PIPELINE_ENV_SUFFIXES = [
 ]
 
 # Transfer Apps between Erda Projects, the App will be created if not exist in the dest project
-# All Git branches, tags, project members and app members will be transferred
+# All Git branches, tags, project members, app members and ENV vars will be transferred
 @example '将 Terminus 组织下编号为 213 的项目里面的 `termix-nu,nusi-slim` 应用迁移到编号为 1000226 的项目' {
   t erda-transfer --from 213 --to 1000226 --apps termix-nu,nusi-slim
 } --result '迁移内容包括应用仓库所有分支、Tags、项目成员、应用成员、环境变量。该命令可以重复执行用于增量同步'
@@ -74,7 +74,7 @@ const PIPELINE_ENV_SUFFIXES = [
 export def 'erda transfer' [
   --from(-f): int,    # ERDA Source Project ID
   --to(-t): int,      # ERDA Target Project ID
-  --apps(-a): string, # The Apps to transfer, separated by comma
+  --apps(-a): string, # The Apps to transfer, separated by `,` or run in interactive mode if not specified
   --debug(-d),
 ] {
   if ($from | is-empty) { print $'(ansi r)ERROR: Source Project ID cannot be empty!(ansi rst)'; exit $ECODE.INVALID_PARAMETER }
