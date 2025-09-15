@@ -51,7 +51,7 @@ winget install Nushell.Nushell
 
 :::info 注意事项
 
-  对于通过 `brew` 安装 `nushell` 的用户在后续升级之后由于 `nushell` 二进制文件存储路径发生了变化(`brew` 安装的版本号会在路径里得到体现)，`nushell` 的插件配置文件会因找不到之前注册的插件而报错，此时直接把插件注册文件（比如: `/Users/hustcer/Library/Application Support/nushell/plugin.nu`）删掉即可，后续在使用工具的过程中会自动重新注册插件。
+对于通过 `brew` 安装 `nushell` 的用户在后续升级之后由于 `nushell` 二进制文件存储路径发生了变化(`brew` 安装的版本号会在路径里得到体现)，`nushell` 的插件配置文件会因找不到之前注册的插件而报错，此时直接把插件注册文件（比如: `/Users/hustcer/Library/Application Support/nushell/plugin.nu`）删掉即可，后续在使用工具的过程中会自动重新注册插件。
 
 :::
 
@@ -1055,7 +1055,7 @@ t git-pick 0330 -f release/2.5.24.0330
 - `--grep <String>` 或 `-g` 仅在与 `-l` 一起使用时生效，从部署配置里面搜索 name, alias 或 description 字段里包含特定字符串的部署目标
 - `--stop-by-id` 或 `-s` 根据流水线 ID 终止对应的正在运行的流水线
 - `--apps` 或者 `-a` 指定需要批量部署的应用，多个应用以","分隔，在多应用模式下必须指定(`-a all`或者`--apps all`代表选择指定目标下的所有应用)，单应用模式忽略
-- `--override` 或 `-o`  该参数的格式为 JS Object, 用于覆盖部署配置里面的同名配置项, 比如已有部署目标 `prod` 对应的部署分支是 `master`, 但是你需要部署 `hotfix/abc` 分支，由于这是个临时分支如果为部署这个分支去改配置还是比较麻烦的，此时可以通过 `t dp prod -o {branch: 'hotfix/abc'}` 来部署，表示除了分支不一样外其他的部署配置跟 `prod` 保持一致。该参数在 `sh/bash/fish/nushell` 下可以正常使用，但是 `zsh` 因为 `{}` 解析问题貌似不支持
+- `--override` 或 `-o` 该参数的格式为 JS Object, 用于覆盖部署配置里面的同名配置项, 比如已有部署目标 `prod` 对应的部署分支是 `master`, 但是你需要部署 `hotfix/abc` 分支，由于这是个临时分支如果为部署这个分支去改配置还是比较麻烦的，此时可以通过 `t dp prod -o {branch: 'hotfix/abc'}` 来部署，表示除了分支不一样外其他的部署配置跟 `prod` 保持一致。该参数在 `sh/bash/fish/nushell` 下可以正常使用，但是 `zsh` 因为 `{}` 解析问题貌似不支持
 - `--help` 或者 `-h` 查看帮助信息
 
 **使用举例**:
@@ -1106,7 +1106,7 @@ t dp test -o {branch: 'release/2.5.24.0330'}
 - `id`: 选填，待查询的目标流水线对应的 ID，比如上图中的 **988218150879331**; 如果不填则查询默认目标的最近**10**条部署记录
 - `--watch` 或者 `-w` 持续轮询并显示指定流水线各个 Stage 的执行信息，轮询间隔 2秒
 - `--apps` 或者 `-a` 指定需要批量查询的应用，多个应用以","分隔，在多应用模式下必须指定(`-a all`或者`--apps all`代表查询指定目标下的所有应用)，单应用模式忽略
-- `--override` 或 `-o`  该参数的格式为 JS Object, 用于覆盖部署配置里面的同名配置项, 比如已有部署目标 `prod` 对应的部署分支是 `master`, 但是你需要查询 `hotfix/abc` 分支的部署记录，由于这是个临时分支如果为查询这个分支的部署记录去改配置还是比较麻烦的，此时可以通过 `t dq prod -o {branch: 'hotfix/abc'}` 来查询，表示除了分支不一样外其他的查询配置跟 `prod` 保持一致。该参数在 `sh/bash/fish/nushell` 下可以正常使用，但是 `zsh` 因为 `{}` 解析问题貌似不支持
+- `--override` 或 `-o` 该参数的格式为 JS Object, 用于覆盖部署配置里面的同名配置项, 比如已有部署目标 `prod` 对应的部署分支是 `master`, 但是你需要查询 `hotfix/abc` 分支的部署记录，由于这是个临时分支如果为查询这个分支的部署记录去改配置还是比较麻烦的，此时可以通过 `t dq prod -o {branch: 'hotfix/abc'}` 来查询，表示除了分支不一样外其他的查询配置跟 `prod` 保持一致。该参数在 `sh/bash/fish/nushell` 下可以正常使用，但是 `zsh` 因为 `{}` 解析问题貌似不支持
 - `--help` 或者 `-h` 查看帮助信息
 
 **使用举例**:
@@ -1673,8 +1673,8 @@ t art deploy --combine --from terp-runtime --branch release/millgrid-uat --to mi
 
 1. 源项目和目标项目必须在 Terminus 组织下，目前也只支持这个组织
 2. 需要有源项目和目标项目的管理员权限:
-    - 操作者至少需要先有源项目里所选择应用的访问权限;
-    - 操作者需要在目标项目里有创建应用的权限;
+   - 操作者至少需要先有源项目里所选择应用的访问权限;
+   - 操作者需要在目标项目里有创建应用的权限;
 
 **功能描述**:
 
@@ -1695,10 +1695,10 @@ t art deploy --combine --from terp-runtime --branch release/millgrid-uat --to mi
 
 **参数说明**:
 
--  `-f`, `--from` <int>: ERDA 源项目 ID
--  `-t`, `--to` <int>: ERDA 目标项目 ID
--  `-a`, `--apps` <string>: 指定要迁移的应用名，多个应用之间用英文逗号分隔，未指定该参数则进入交互式选择应用界面
--  `-h`, `--help`: 显示该命令的帮助文档
+- `-f`, `--from <int>`: ERDA 源项目 ID
+- `-t`, `--to <int>`: ERDA 目标项目 ID
+- `-a`, `--apps <string>`: 指定要迁移的应用名，多个应用之间用英文逗号分隔，未指定该参数则进入交互式选择应用界面
+- `-h`, `--help`: 显示该命令的帮助文档
 
 **使用举例**:
 
@@ -1711,6 +1711,12 @@ t erda-transfer --from 213 --to 1000226 --apps termix-nu,nusi-slim
 # 迁移内容同上，需拥有源项目所选择应用的访问权限
 t erda-transfer --from 213 --to 1000226
 ```
+
+**演示视频**:
+
+#### Erda 应用批量迁移演示{#app-transfer-cast}
+
+<AsciiPlayer cast="/casts/erda-transfer.cast" poster="npt:0:06" />
 
 ---
 
@@ -2043,4 +2049,3 @@ t query-deps vite -d -b develop,feature/latest,master
 **输出样例**:
 
 ![Query Node Deps Output](https://img.alicdn.com/imgextra/i3/O1CN018vHMfQ1XYHNPsRY9L_!!6000000002935-0-tps-1345-426.jpg)
-
