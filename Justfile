@@ -287,7 +287,7 @@ repo-transfer *OPTIONS: _setup
     git-repo-transfer {{OPTIONS}}
 
 # Transfer Apps between Erda Projects
-[group('-- Common --')]
+[group('-- Common  --')]
 erda-transfer *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'erda-transfer.nu') }}; \
     erda transfer {{OPTIONS}}
