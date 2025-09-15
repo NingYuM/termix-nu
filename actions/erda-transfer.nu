@@ -19,6 +19,8 @@
 # [√] Add members in batch mode for those with the same roles
 # [√] Transfer encrypted env vars, and replace the values with text like '请修改该值并加密存储'
 # [√] 批量查询用户权限: http get -H $auth https://openapi.erda.cloud/api/permissions | table -e
+# [ ] Add `--skip-member-sync` or `-M` option to skip member sync
+# [ ] Support sync between different Orgs other than Terminus
 # 前提：
 # 1. 源项目和目标项目必须在 Terminus 组织下，目前也只支持这个组织
 # 2. 需要有源项目和目标项目的管理员权限:
