@@ -19,7 +19,8 @@
 # [√] Add members in batch mode for those with the same roles
 # [√] Transfer encrypted env vars, and replace the values with text like '请修改该值并加密存储'
 # [√] 批量查询用户权限: http get -H $auth https://openapi.erda.cloud/api/permissions | table -e
-# [ ] Add `--skip-member-sync` or `-M` option to skip member sync
+# [√] Add `--skip-member-sync` or `-M` option to skip member sync
+# [ ] Show more info before transfer: Source project, Target project, Syncing contents
 # [ ] Support sync between different Orgs other than Terminus
 # 前提：
 # 1. 源项目和目标项目必须在 Terminus 组织下，目前也只支持这个组织
@@ -73,10 +74,14 @@ const PIPELINE_ENV_SUFFIXES = [
 @example '选择 Terminus 组织下编号为 213 的项目里面的应用，并批量迁移到编号为 1000226 的项目' {
   t erda-transfer --from 213 --to 1000226
 } --result '迁移内容同上，需拥有源项目所选择应用的访问权限'
+@example '迁移应用但跳过成员同步' {
+  t erda-transfer --from 213 --to 1000226 -M
+} --result '跳过项目与应用成员同步，仅创建应用、同步环境变量与各 Git 分支、Tag'
 export def 'erda transfer' [
-  --from(-f): int,    # ERDA Source Project ID
-  --to(-t): int,      # ERDA Target Project ID
-  --apps(-a): string, # The Apps to transfer, separated by `,` or run in interactive mode if not specified
+  --from(-f): int,        # ERDA Source Project ID
+  --to(-t): int,          # ERDA Target Project ID
+  --apps(-a): string,     # The Apps to transfer, separated by `,` or run in interactive mode if not specified
+  --skip-member-sync(-M), # Skip syncing project and app members
   --debug(-d),
 ] {
   if ($from | is-empty) { print $'(ansi r)ERROR: Source Project ID cannot be empty!(ansi rst)'; exit $ECODE.INVALID_PARAMETER }
@@ -103,23 +108,37 @@ export def 'erda transfer' [
   print -n (char nl)
 
   validate-app-auth $auth --selected $selected --source-apps $source_apps
-  print $'(char nl)(ansi pr)STEP A:(ansi rst) Adding Members to Target Project...'; hr-line
-  let source_members = get-members $auth project $from
-  add-members $auth project $to $source_members
 
-  print $'(ansi pr)STEP B:(ansi rst) Creating Apps...'; hr-line
+  let steps = [A B C D E F]
+  mut step_idx = 0
+
+  if not $skip_member_sync {
+    let step = $steps | get $step_idx; $step_idx += 1
+    print $'(char nl)(ansi pr)STEP ($step):(ansi rst) Adding Members to Target Project...'; hr-line
+    let source_members = get-members $auth project $from
+    add-members $auth project $to $source_members
+  }
+
+  let step = $steps | get $step_idx; $step_idx += 1
+  print $'(char nl)(ansi pr)STEP ($step):(ansi rst) Creating Apps...'; hr-line
   create-nonexistent-apps $auth --selected $selected --debug=$debug --source-apps $source_apps --to $to
 
-  print $'(char nl)(ansi pr)STEP C:(ansi rst) Add Members to Dest Apps...'; hr-line
-  add-app-members $auth --selected $selected --debug=$debug --source-apps $source_apps --to $to
+  if not $skip_member_sync {
+    let step = $steps | get $step_idx; $step_idx += 1
+    print $'(char nl)(ansi pr)STEP ($step):(ansi rst) Add Members to Dest Apps...'; hr-line
+    add-app-members $auth --selected $selected --debug=$debug --source-apps $source_apps --to $to
+  }
 
-  print $'(char nl)(ansi pr)STEP D:(ansi rst) Syncing Pipeline Env vars...'; hr-line
+  let step = $steps | get $step_idx; $step_idx += 1
+  print $'(char nl)(ansi pr)STEP ($step):(ansi rst) Syncing Pipeline Env vars...'; hr-line
   sync-env-vars $auth $to --selected $selected --source-apps $source_apps --debug=$debug --type pipeline
 
-  print $'(char nl)(ansi pr)STEP E:(ansi rst) Syncing Runtime Env vars...'; hr-line
+  let step = $steps | get $step_idx; $step_idx += 1
+  print $'(char nl)(ansi pr)STEP ($step):(ansi rst) Syncing Runtime Env vars...'; hr-line
   sync-env-vars $auth $to --selected $selected --source-apps $source_apps --debug=$debug --type runtime
 
-  print $'(char nl)(ansi pr)STEP F:(ansi rst) Syncing Git Repos...'; hr-line
+  let step = $steps | get $step_idx
+  print $'(char nl)(ansi pr)STEP ($step):(ansi rst) Syncing Git Repos...'; hr-line
   sync-git-repos $auth $to --selected $selected --source-apps $source_apps --debug=$debug
 }
 
