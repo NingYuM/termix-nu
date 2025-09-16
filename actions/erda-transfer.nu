@@ -32,8 +32,8 @@
 # 	t erda-transfer --from 213 --to 1000226 --apps termix-nu,nusi-slim
 
 use ../git/repo-transfer.nu ['git-repo-transfer']
-use ../utils/erda.nu [ERDA_HOST, check-erda-envs, get-erda-auth]
 use ../utils/common.nu [ECODE, hr-line, FZF_DEFAULT_OPTS, FZF_THEME]
+use ../utils/erda.nu [ERDA_HOST, check-erda-envs, get-erda-auth, renew-erda-session]
 
 const PAGE_SIZE = 9999
 # 查询、新增项目或者应用成员
@@ -83,6 +83,7 @@ export def 'erda transfer' [
   if ($to | is-empty) { print $'(ansi r)ERROR: Target Project ID cannot be empty!(ansi rst)'; exit $ECODE.INVALID_PARAMETER }
   if $from == $to { print $'(ansi r)ERROR: Source and Target Project ID cannot be the same!(ansi rst)'; exit $ECODE.INVALID_PARAMETER }
   check-erda-envs
+  renew-erda-session $ERDA_HOST
   let auth = get-erda-auth $ERDA_HOST --type nu | append [Org terminus]
   let source_apps = get-app-list $auth --from $from
 
@@ -133,14 +134,14 @@ def validate-app-auth [auth: list, --selected: list, --source-apps: list, --debu
 
   let auth_results = $select_ids | par-each {|ap|
     # Check the app access by API is slow
-    let result = http get -H $auth -e $'($APPLICATION_API)/($ap)'
-    { id: $ap, has_access: (($result.err?.code? | default '') != 'AccessDenied') }
+    # let result = http get -H $auth -e $'($APPLICATION_API)/($ap)'
+    # { id: $ap, has_access: (($result.err?.code? | default '') != 'AccessDenied') }
 
     # Use the user permissions API to check the app access in batch mode
-    # $user_perms
-    #   | where ($it.scope.type == 'app') and ($it.scope.id == $'($ap)')
-    #   | get 0?.access?  | default false
-    #   | wrap has_access | upsert id $ap
+    $user_perms
+      | where ($it.scope.type == 'app') and ($it.scope.id == $'($ap)')
+      | get 0?.access?  | default false
+      | wrap has_access | upsert id $ap
   }
 
   let no_auth_apps = $auth_results | where not has_access | get id
