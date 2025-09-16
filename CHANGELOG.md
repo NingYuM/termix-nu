@@ -1,6 +1,11 @@
 # CHANGELOG
-
 All notable changes to this project will be documented in this file.
+
+## v1.93.1 - 2025-09-16
+
+**Bug Fixes**
+
+- Always renew Erda session for `t erda-transfer` command
 
 ## v1.93.0 - 2025-09-15
 
