@@ -123,20 +123,24 @@ export def 'erda transfer' [
 }
 
 # Validate the operator has access to the selected Apps in the source project
-def validate-app-auth [auth: list, --selected: list, --source-apps: list] {
+def validate-app-auth [auth: list, --selected: list, --source-apps: list, --debug] {
   let user_perms = get-user-permissions $auth
+  if $debug {
+    print $'User permissions:';
+    $user_perms | sort-by -c {|a, b| ($a.scope.id | into int) < ($b.scope.id | into int) } | table -e | print
+  }
   let select_ids = $source_apps | where ($it.name | str downcase) in $selected | get id
 
   let auth_results = $select_ids | par-each {|ap|
     # Check the app access by API is slow
-    # let result = http get -H $auth -e $'($APPLICATION_API)/($ap)'
-    # { id: $ap, has_access: (($result.err?.code? | default '') != 'AccessDenied') }
+    let result = http get -H $auth -e $'($APPLICATION_API)/($ap)'
+    { id: $ap, has_access: (($result.err?.code? | default '') != 'AccessDenied') }
 
     # Use the user permissions API to check the app access in batch mode
-    $user_perms
-      | where ($it.scope.type == 'app') and ($it.scope.id == $'($ap)')
-      | get 0?.access?  | default false
-      | wrap has_access | upsert id $ap
+    # $user_perms
+    #   | where ($it.scope.type == 'app') and ($it.scope.id == $'($ap)')
+    #   | get 0?.access?  | default false
+    #   | wrap has_access | upsert id $ap
   }
 
   let no_auth_apps = $auth_results | where not has_access | get id
@@ -339,7 +343,8 @@ def create-nonexistent-apps [auth: list, --selected: list, --to: int, --source-a
 }
 
 # Get the Apps list from the specified project
-def get-app-list [auth: list, --from: int] {
+def get-app-list [auth: list, --from: int, --debug] {
+  if $debug { print $'Getting Apps list from ($from) project...'; hr-line }
   let query = { projectId: $from, pageNo: 1, pageSize: $PAGE_SIZE } | url build-query
   http get -H $auth $'($APP_LIST_API)?($query)' | get data.list | sort-by id
 }
