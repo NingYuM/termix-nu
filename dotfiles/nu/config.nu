@@ -44,22 +44,6 @@ alias tokeid = print (
     | into int Files Lines Code Comments Blanks
 )
 
-
-# ----------------------- ENV VARS ------------------------
-$env.EDITOR = 'hx'
-# Disable the date & time displaying on the right of prompt
-$env.PROMPT_COMMAND_RIGHT = { '' }
-
-let poshDir = if (isWindows) {
-    which oh-my-posh | get path | path dirname | path dirname | get 0
-  } else { brew --prefix oh-my-posh | str trim }
-let poshTheme = if (isWindows) { $'($poshDir)/themes/' } else { $'($poshDir)/share/oh-my-posh/themes/' }
-# Recommend themes: zash*/space/robbyrussel/powerline/powerlevel10k_lean*/material/half-life/lambda
-# Recommend double lines: amro/pure/spaceship
-$env.PROMPT_COMMAND = { oh-my-posh prompt print primary --config $'($poshTheme)/zash.omp.json' }
-$env.PROMPT_INDICATOR = $"(ansi y)$> (ansi rst)"
-
-
 # -------------------- Custom Commands -------------------------
 def isWindows [] { (sys host | get name) == 'Windows' }
 
@@ -757,3 +741,14 @@ $env.config.keybindings ++= [{
 # atuin init nu --disable-up-arrow | save -rf ~/.local/share/atuin/init.nu
 source $'($nu.home-path)/.atuin.nu'
 source $'($nu.home-path)/.config/carapace/init.nu'
+
+# ----------------------- ENV VARS ------------------------
+$env.EDITOR = 'hx'
+
+let poshDir = if (isWindows) {
+    which oh-my-posh | get path | path dirname | path dirname | get 0
+  } else { brew --prefix oh-my-posh | str trim }
+let poshTheme = if (isWindows) { $'($poshDir)/themes/' } else { $'($poshDir)/share/oh-my-posh/themes/' }
+# Recommend themes: zash*/space/robbyrussel/powerline/powerlevel10k_lean*/material/half-life/lambda
+# Recommend double lines: amro/pure/spaceship
+oh-my-posh init nu --config $'($poshTheme)/zash.omp.json'
