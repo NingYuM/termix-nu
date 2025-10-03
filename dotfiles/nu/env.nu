@@ -4,12 +4,12 @@
 
 # ----------------------- Begin customization -----------------------
 $env.GPG_TTY = (tty)
-$env.VOLTA_HOME = $'($env.HOME)/.volta'
-$env.PNPM_HOME = $'($env.HOME)/Library/pnpm'
-$env.ANDROID_HOME = $'($env.HOME)/Library/Android/sdk'
+$env.PNPM_HOME = $'($nu.home-path)/Library/pnpm'
+$env.ANDROID_HOME = $'($nu.home-path)/Library/Android/sdk'
 $env.HOMEBREW_BOTTLE_DOMAIN = 'https://mirrors.ustc.edu.cn/homebrew-bottles/bottles'
 
-$env.XDG_CONFIG_HOME = $'($env.HOME)/.config'
+$env.XDG_CONFIG_HOME = $'($nu.home-path)/.config'
+$env.CODEX_HOME = $'($nu.home-path)/.config/codex'
 
 # To add entries to PATH (on Windows you might use Path), you can use the following pattern:
 # $env.PATH = ($env.PATH | split row (char esep) | prepend '/some/path')
@@ -24,17 +24,16 @@ $env.PATH = (
   $env.PATH
     | split row (char esep)
     | prepend $env.PNPM_HOME
-    | prepend $'($env.HOME)/.local/bin'
+    | prepend $'($nu.home-path)/.local/bin'
     | prepend '/usr/local/bin'
     | prepend '/opt/homebrew/bin'
     | prepend '/Library/TeX/texbin'
-    | prepend $'($env.VOLTA_HOME)/bin'
     | prepend '/usr/local/opt/ruby/bin'
-    | prepend $'($env.HOME)/.bun/bin'
-    | prepend $'($env.HOME)/.moon/bin'
-    | prepend $'($env.HOME)/.cargo/bin'
+    | prepend $'($nu.home-path)/.bun/bin'
+    | prepend $'($nu.home-path)/.moon/bin'
+    | prepend $'($nu.home-path)/.cargo/bin'
     | append `/Applications/Ghostty.app/Contents/MacOS/`
-    | append $'($env.HOME)/Library/Android/sdk/platform-tools'
+    | append $'($nu.home-path)/Library/Android/sdk/platform-tools'
 )
 
 if not (which fnm | is-empty) {
