@@ -1698,6 +1698,7 @@ t art deploy --combine --from terp-runtime --branch release/millgrid-uat --to mi
 - `-f`, `--from <int>`: ERDA 源项目 ID
 - `-t`, `--to <int>`: ERDA 目标项目 ID
 - `-a`, `--apps <string>`: 指定要迁移的应用名，多个应用之间用英文逗号分隔，未指定该参数则进入交互式选择应用界面
+- `-m`, `--sync-member`: 同步项目成员和应用成员
 - `-h`, `--help`: 显示该命令的帮助文档
 
 **使用举例**:
@@ -1705,11 +1706,11 @@ t art deploy --combine --from terp-runtime --branch release/millgrid-uat --to mi
 ```bash
 # 将 Terminus 组织下编号为 213 的项目里面的 termix-nu,nusi-slim 应用迁移到编号为 1000226 的项目
 # 迁移内容包括应用仓库所有分支、Tags、项目成员、应用成员、环境变量。该命令可以重复执行用于增量同步
-t erda-transfer --from 213 --to 1000226 --apps termix-nu,nusi-slim
+t erda-transfer --from 213 --to 1000226 --sync-member --apps termix-nu,nusi-slim
 
 # 选择 Terminus 组织下编号为 213 的项目里面的应用，并批量迁移到编号为 1000226 的项目
 # 迁移内容同上，需拥有源项目所选择应用的访问权限
-t erda-transfer --from 213 --to 1000226
+t erda-transfer --from 213 --to 1000226 --sync-member
 ```
 
 **演示视频**:
