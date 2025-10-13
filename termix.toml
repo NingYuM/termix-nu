@@ -158,11 +158,11 @@ TERP latest.json Nginx 业务策略配置方法:
 """
 
 [empWorkingHour]
-leaveUrl = 'https://emp-portal.app.terminus.io/api/trantor/service/engine/execute/MD$get_employee_leave_info'
-timeUrl = 'https://emp-portal.app.terminus.io/api/trantor/service/engine/execute/WORKTIME$get_employee_project_hours_within_specified_time'
-staffUrl = 'https://emp-portal.app.terminus.io/api/trantor/service/engine/execute/WORKTIME$get_department_employees_with_work_hour_filter'
-timeSummaryUrl = 'https://emp-portal.app.terminus.io/api/trantor/service/engine/execute/WORKTIME$department_employees_work_hours_data_status_statis'
-allStaffUrl = 'https://emp-portal.app.terminus.io/api/trantor/service/engine/execute/PROJECT$SYS_PagingDataService?tmodule=&modelKey=MD%24md__staff_b_o'
+leaveUrl = 'https://emp-portal.app.duandian.com/api/trantor/service/engine/execute/MD$get_employee_leave_info'
+timeUrl = 'https://emp-portal.app.duandian.com/api/trantor/service/engine/execute/WORKTIME$get_employee_project_hours_within_specified_time'
+staffUrl = 'https://emp-portal.app.duandian.com/api/trantor/service/engine/execute/WORKTIME$get_department_employees_with_work_hour_filter'
+timeSummaryUrl = 'https://emp-portal.app.duandian.com/api/trantor/service/engine/execute/WORKTIME$department_employees_work_hours_data_status_statis'
+allStaffUrl = 'https://emp-portal.app.duandian.com/api/trantor/service/engine/execute/PROJECT$SYS_PagingDataService?tmodule=&modelKey=MD%24md__staff_b_o'
 
 # 快捷导航
 [quickNavs]
