@@ -43,7 +43,7 @@ const CHECK_DURATION = 0day
 const STAFFS_FILE = '/tmp/emp-staffs.json'
 const DEFAULT_LASTDAY_MSG = '特别提醒：马上要放假了，请务必在今天完成本周工时填写，因为接下来机器人也要休假了。'
 
-const REFERER = 'https://emp-portal.app.terminus.io/EMP_MANAGER_PORTAL/EMP_MANAGER_PORTAL/EMP_MANAGER_PORTAL$82VVjK/page'
+const REFERER = 'https://emp-portal.app.duandian.com/EMP_MANAGER_PORTAL/EMP_MANAGER_PORTAL/EMP_MANAGER_PORTAL$LrFEow/page'
 
 # Run EMP working hours checking job everyday, but only send notifications for Monday, Friday, Saturday, Sunday and Month end
 export def working-hours-daily-checking [--debug(-d)] {
@@ -523,10 +523,10 @@ def get-user-auth [
   }
 
   cd $env.TERMIX_DIR
-  mut iamHost = 'emp-portal-iam.app.terminus.io'
+  mut iamHost = 'emp-portal-iam.app.duandian.com'
   if not ($iamHost | str starts-with http) { $iamHost = $'https://($iamHost)' }
   const PUB_KEY_FILE = 'tmp/pub.key'
-  let IAM_HEADER = [Referer 'https://emp-portal-iam.app.terminus.io/EMP_MANAGER_PORTAL-EMP-tpf_hkboivmz/account' ...$HTTP_HEADERS]
+  let IAM_HEADER = [Referer 'https://emp-portal-iam.app.duandian.com/EMP_MANAGER_PORTAL-EMP-tpf_hkboivmz/account' ...$HTTP_HEADERS]
   let pubKey = http get --headers $IAM_HEADER $'($iamHost)/iam/api/v1/user/common/front-end-config'
       | get data.transmissionCryptoProps?.publicKey?
 
