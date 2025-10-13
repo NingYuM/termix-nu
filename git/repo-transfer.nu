@@ -52,7 +52,8 @@ def do-push [
 ] {
   print $'(ansi g)Push code to the remote dest:(ansi rst)(char nl)'
   # 当仓库不存在的时候截获标准错误流需要 `do -i {}`
-  let push = (do -i { git push --mirror } | complete)
+  # --no-verify: Skip all pre-push and post-push hooks to avoid "fatal: this operation must be run in a work tree" error
+  let push = (do -i { git push --mirror --no-verify } | complete)
   # FIXME: Nu Bug: stdout redirect to stderr
   if not ($push.stderr | is-empty) { print $push.stderr }
   if not ($push.stdout | is-empty) { print $push.stdout }
