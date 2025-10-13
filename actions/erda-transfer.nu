@@ -67,21 +67,21 @@ const PIPELINE_ENV_SUFFIXES = [
 ]
 
 # Transfer Apps between Erda Projects, the App will be created if not exist in the dest project
-# All Git branches, tags, project members, app members and ENV vars will be transferred
+# All Git branches, tags & ENV vars will be transferred by default. Use `--sync-member` to sync members
 @example '将 Terminus 组织下编号为 213 的项目里面的 `termix-nu,nusi-slim` 应用迁移到编号为 1000226 的项目' {
   t erda-transfer --from 213 --to 1000226 --apps termix-nu,nusi-slim
-} --result '迁移内容包括应用仓库所有分支、Tags、项目成员、应用成员、环境变量。该命令可以重复执行用于增量同步'
+} --result '迁移内容包括应用仓库所有分支、Tags、环境变量。该命令可以重复执行用于增量同步'
 @example '选择 Terminus 组织下编号为 213 的项目里面的应用，并批量迁移到编号为 1000226 的项目' {
   t erda-transfer --from 213 --to 1000226
 } --result '迁移内容同上，需拥有源项目所选择应用的访问权限'
-@example '迁移应用但跳过成员同步' {
-  t erda-transfer --from 213 --to 1000226 -M
-} --result '跳过项目与应用成员同步，仅创建应用、同步环境变量与各 Git 分支、Tag'
+@example '迁移应用并同步项目与应用成员' {
+  t erda-transfer --from 213 --to 1000226 --sync-member
+} --result '除了默认迁移内容外，还会同步项目成员与应用成员及其权限'
 export def 'erda transfer' [
   --from(-f): int,        # ERDA Source Project ID
   --to(-t): int,          # ERDA Target Project ID
   --apps(-a): string,     # The Apps to transfer, separated by `,` or run in interactive mode if not specified
-  --skip-member-sync(-M), # Skip syncing project and app members
+  --sync-member(-m),      # Sync project and App members
   --debug(-d),
 ] {
   if ($from | is-empty) { print $'(ansi r)ERROR: Source Project ID cannot be empty!(ansi rst)'; exit $ECODE.INVALID_PARAMETER }
@@ -112,7 +112,7 @@ export def 'erda transfer' [
   let steps = [A B C D E F]
   mut step_idx = 0
 
-  if not $skip_member_sync {
+  if $sync_member {
     let step = $steps | get $step_idx; $step_idx += 1
     print $'(char nl)(ansi pr)STEP ($step):(ansi rst) Adding Members to Target Project...'; hr-line
     let source_members = get-members $auth project $from
@@ -123,7 +123,7 @@ export def 'erda transfer' [
   print $'(char nl)(ansi pr)STEP ($step):(ansi rst) Creating Apps...'; hr-line
   create-nonexistent-apps $auth --selected $selected --debug=$debug --source-apps $source_apps --to $to
 
-  if not $skip_member_sync {
+  if $sync_member {
     let step = $steps | get $step_idx; $step_idx += 1
     print $'(char nl)(ansi pr)STEP ($step):(ansi rst) Add Members to Dest Apps...'; hr-line
     add-app-members $auth --selected $selected --debug=$debug --source-apps $source_apps --to $to
