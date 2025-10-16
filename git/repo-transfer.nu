@@ -153,20 +153,52 @@ def do-push [
   }
 }
 
-# Push specified branches to the remote dest
+# Identify transient network/transport errors which are worth retrying
+def is-transient-error [
+  stderr: string
+] {
+  $stderr =~ 'unexpected disconnect|early EOF|hung up|timed out|curl 18|curl 55|Transfer closed|sideband'
+}
+
+# Push a single branch with retries and HTTP/1.1 fallback/low speed relax
+def push-one [
+  dest: string,
+  branch: string
+] {
+  mut attempt = 0
+  let max_retries = 3
+  loop {
+    let res = (
+      with-env { GIT_HTTP_VERSION: 'HTTP/1.1' } {
+        do -i { git -c http.lowSpeedLimit=0 -c http.lowSpeedTime=1200 push --force-with-lease --no-verify --force origin $'($branch):($branch)' } | complete
+      }
+    )
+    # Print outputs (Nu mixes streams sometimes)
+    if not ($res.stderr | is-empty) { print $res.stderr }
+    if not ($res.stdout | is-empty) { print $res.stdout }
+
+    if $res.exit_code == 0 { return }
+
+    if (is-transient-error ($res.stderr | default '')) and ($attempt < $max_retries) {
+      $attempt += 1
+      print $'(ansi y)WARN:(ansi rst) transient push error on (ansi g)($branch)(ansi rst), retry #($attempt) ...'
+      sleep ($attempt * 1sec)
+      continue
+    }
+
+    if $res.stderr =~ 'not found' {
+      print -e $'(ansi r)Error: The dest repo does not exist, please create it and try again, bye...(ansi rst)(char nl)'
+    }
+    error make { msg: $'Push failed on branch: ($branch)' }
+  }
+}
+
+# Push specified branches to the remote dest (sequential with retries)
 def do-push-branches [
   dest: string,           # The dest repo git url
   branches: list<string>  # List of branch names to push
 ] {
   print $'(ansi g)Push specified branches to the remote dest:(ansi rst)(char nl)'
-  let push = git push --force-with-lease --no-verify --force origin ...($branches | each {|b| $'($b):($b)'}) | complete
-  # FIXME: Nu Bug: stdout redirect to stderr
-  if not ($push.stderr | is-empty) { print $push.stderr }
-  if not ($push.stdout | is-empty) { print $push.stdout }
-  if $push.stderr =~ 'not found' {
-    print -e $'(ansi r)Error: The dest repo does not exist, please create it and try again, bye...(ansi rst)(char nl)'
-  }
-  if $push.exit_code == 0 {
-    print $'(ansi g)Bravo! Branches transfer successfully!(ansi rst)(char nl)'
-  }
+  for b in $branches { push-one $dest $b }
+  print $'(ansi g)Bravo! Branches transfer successfully!(ansi rst)(char nl)'
 }
