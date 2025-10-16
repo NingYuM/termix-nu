@@ -8,6 +8,22 @@
 
 use ../utils/common.nu [ECODE get-tmp-path hr-line]
 
+# Common Git HTTP push options
+const GIT_HTTP_PUSH_OPTS = [-c http.lowSpeedLimit=0 -c http.lowSpeedTime=1200 push --force-with-lease --no-verify --force]
+
+# Normalize branches string to unique, trimmed list
+def normalize-branches [
+  branches: string
+] {
+  $branches | split row , | each { str trim } | compact --empty | uniq
+}
+
+# Get a local repo folder name from source url with suffix
+def get-repo-name [ source: string, suffix: string ] {
+  let nameIdxStart = $source | str index-of -e /
+  $'($source | str substring ($nameIdxStart + 1)..)-($suffix)'
+}
+
 # Transfer repo from source to dest
 @example '将 Git 仓库从源仓库同步到新的目标仓库，比如：' {
   t repo-transfer https://erda.cloud/terminus/dop/t-erp/a.git https://erda.cloud/terminus/dop/t-erp/b.git
@@ -21,8 +37,7 @@ export def 'git-repo-transfer' [
   print $'(char nl)Sync git repo from ($source)(char nl)'
   print $'to dest:      (ansi g)---> ($dest)(ansi rst)(char nl)'
   hr-line
-  let nameIndexStart = ($source | str index-of -e '/')
-  let repoName = $'($source | str substring ($nameIndexStart + 1)..)-sync'
+  let repoName = get-repo-name $source sync
   let exists = ([$tmpPath $repoName] | path join | path exists)
 
   if $exists {
@@ -63,10 +78,9 @@ export def 'git-branch-transfer' [
   print $'branches:     (ansi g)($branches)(ansi rst)(char nl)'
   hr-line
 
-  let nameIndexStart = $source | str index-of -e '/'
-  let repoName = $'($source | str substring ($nameIndexStart + 1)..)-branch-sync'
+  let repoName = get-repo-name $source branch-sync
   let exists = [$tmpPath $repoName] | path join | path exists
-  let branches = $branches | split row ',' | each { str trim }
+  let branches = normalize-branches $branches
 
   # Use match to reduce nested if/else
   match $exists {
@@ -94,8 +108,7 @@ def handle-existing-repo [
   let prevFetchUrl = (git remote get-url origin | str trim)
   if ($prevFetchUrl != $source) {
     let tmpPath = get-tmp-path
-    let nameIndexStart = $source | str index-of -e '/'
-    let repoName = $'($source | str substring ($nameIndexStart + 1)..)-branch-sync'
+    let repoName = get-repo-name $source branch-sync
     print -e $'(ansi r)Path ($tmpPath)/($repoName) already exists(ansi rst), Please remove it and try again...(char nl)'
     exit $ECODE.CONDITION_NOT_SATISFIED
   }
@@ -167,10 +180,11 @@ def push-one [
 ] {
   mut attempt = 0
   let max_retries = 3
+  print $'Pushing branch (ansi g)($branch)(ansi rst)...'
   loop {
     let res = (
       with-env { GIT_HTTP_VERSION: 'HTTP/1.1' } {
-        do -i { git -c http.lowSpeedLimit=0 -c http.lowSpeedTime=1200 push --force-with-lease --no-verify --force origin $'($branch):($branch)' } | complete
+        do -i { git ...$GIT_HTTP_PUSH_OPTS origin $'($branch):($branch)' } | complete
       }
     )
     # Print outputs (Nu mixes streams sometimes)
