@@ -20,6 +20,7 @@
 # [√] Transfer encrypted env vars, and replace the values with text like '请修改该值并加密存储'
 # [√] 批量查询用户权限: http get -H $auth https://openapi.erda.cloud/api/permissions | table -e
 # [√] Add `--skip-member-sync` or `-M` option to skip member sync
+# [√] Add `--branches` or `-b` option to sync specified branches with git-branch-transfer
 # [ ] Show more info before transfer: Source project, Target project, Syncing contents
 # [ ] Support sync between different Orgs other than Terminus
 # 前提：
@@ -32,7 +33,7 @@
 #   t erda-transfer --from 213 --to 1000226
 # 	t erda-transfer --from 213 --to 1000226 --apps termix-nu,nusi-slim
 
-use ../git/repo-transfer.nu ['git-repo-transfer']
+use ../git/repo-transfer.nu [git-repo-transfer, git-branch-transfer]
 use ../utils/common.nu [ECODE, hr-line, FZF_DEFAULT_OPTS, FZF_THEME]
 use ../utils/erda.nu [ERDA_HOST, check-erda-envs, get-erda-auth, renew-erda-session]
 
@@ -77,11 +78,15 @@ const PIPELINE_ENV_SUFFIXES = [
 @example '迁移应用并同步项目与应用成员' {
   t erda-transfer --from 213 --to 1000226 --sync-member
 } --result '除了默认迁移内容外，还会同步项目成员与应用成员及其权限'
+@example '仅同步指定分支（例如 main 与 develop），而非所有分支与 Tags' {
+  t erda-transfer --from 213 --to 1000226 --apps termix-nu -b main,develop
+} --result '仅同步所列分支；可以重复执行用于增量同步'
 export def 'erda transfer' [
   --from(-f): int,        # ERDA Source Project ID
   --to(-t): int,          # ERDA Target Project ID
   --apps(-a): string,     # The Apps to transfer, separated by `,` or run in interactive mode if not specified
   --sync-member(-m),      # Sync project and App members
+  --branches(-b): string, # The branches to transfer, separated by `,`, e.g. `main,develop`
   --debug(-d),
 ] {
   if ($from | is-empty) { print $'(ansi r)ERROR: Source Project ID cannot be empty!(ansi rst)'; exit $ECODE.INVALID_PARAMETER }
@@ -92,12 +97,26 @@ export def 'erda transfer' [
   let auth = get-erda-auth $ERDA_HOST --type nu | append [Org terminus]
   let source_apps = get-app-list $auth --from $from
 
+  let is_mirror = $branches | is-empty
   # Use fzf to select one or multiple Apps to transfer if none specified
   let selected = if ($apps | is-empty) { get-selected-apps $auth --source-apps $source_apps } else { $apps | split row ',' }
   # Validate the selected App names make sure they all exist in the source project
   validate-app-names $auth --selected $selected --source-apps $source_apps
-  print $'You are going to transfer the following Apps:(char nl)';
-  $selected | sort | wrap name | table -t psql | print
+  print $'You are going to transfer with the following config:'; hr-line 52
+  let selected_branches = if $is_mirror { 'N/A' } else if ($branches !~ ',') { $branches } else { $branches | split row , }
+  mut setting = {
+    '所选迁移应用': $selected,
+    '所选同步分支': $selected_branches,
+    '迁移源 项 目': $from,
+    '迁移目标项目': $to,
+    '代码仓库镜像': (if $is_mirror { $'是 (ansi grey66)<所有分支 & Tags>(ansi rst)' } else { '否' }),
+    '迁移项目成员': $sync_member,
+    '迁移应用成员': $sync_member,
+  }
+  if not $is_mirror {
+    $setting = $setting | upsert '注 意  事 项' $'(ansi r)分支同步采用强制推送策略会导致目标仓库同名分支上的改动被覆盖，请谨慎操作!(ansi rst)'
+  }
+  $setting | table -et psql | print
   print -n (char nl)
   let confirm = input $'Please confirm by typing (ansi r)y(ansi rst) to continue or (ansi p)q(ansi rst) to quit: '
   if $confirm == 'q' { print $'Transfer cancelled, Bye...'; exit $ECODE.SUCCESS }
@@ -139,7 +158,7 @@ export def 'erda transfer' [
 
   let step = $steps | get $step_idx
   print $'(char nl)(ansi pr)STEP ($step):(ansi rst) Syncing Git Repos...'; hr-line
-  sync-git-repos $auth $to --selected $selected --source-apps $source_apps --debug=$debug
+  sync-git-repos $auth $to --selected $selected --source-apps $source_apps --branches $branches --debug=$debug
 }
 
 # Validate the operator has access to the selected Apps in the source project
@@ -300,15 +319,20 @@ def get-env-vars [auth: list, app: record, --type: string] {
 }
 
 # Sync the git repos between the source and target app
-def sync-git-repos [auth: list, tid: int, --selected: list, --source-apps: list --debug] {
+def sync-git-repos [auth: list, tid: int, --selected: list, --source-apps: list, --branches: string, --debug] {
   let dest_apps = get-app-list $auth --from $tid
   let candidates = if ($selected | is-empty) { $dest_apps.name } else { $selected }
   for ap in $candidates {
     let dest_app = $dest_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
     let source_app = $source_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
     if (check-app-empty $source_app $dest_app $ap git) { continue }
-    print $'Syncing git repos from (ansi g)($source_app.name)(ansi rst) to (ansi g)($dest_app.name)(ansi rst) ...'
-    git-repo-transfer https://($source_app.gitRepoNew) https://($dest_app.gitRepoNew)
+    if ($branches | default '' | str trim | is-empty) {
+      print $'Syncing git repos from (ansi g)($source_app.name)(ansi rst) to (ansi g)($dest_app.name)(ansi rst) ...'
+      git-repo-transfer https://($source_app.gitRepoNew) https://($dest_app.gitRepoNew)
+    } else {
+      print $'Syncing branches (ansi g)($branches)(ansi rst) from (ansi g)($source_app.name)(ansi rst) to (ansi g)($dest_app.name)(ansi rst) ...'
+      git-branch-transfer https://($source_app.gitRepoNew) https://($dest_app.gitRepoNew) $branches
+    }
   }
 }
 
