@@ -78,9 +78,9 @@ const PIPELINE_ENV_SUFFIXES = [
 @example '迁移应用并同步项目与应用成员' {
   t erda-transfer --from 213 --to 1000226 --sync-member
 } --result '除了默认迁移内容外，还会同步项目成员与应用成员及其权限'
-@example '仅同步指定分支（例如 main 与 develop），而非所有分支与 Tags' {
+@example '仅同步指定分支（例如 `main` 与 `develop`），而非所有分支与 Tags' {
   t erda-transfer --from 213 --to 1000226 --apps termix-nu -b main,develop
-} --result '仅同步所列分支；可以重复执行用于增量同步'
+} --result '仅同步所列分支，可以重复执行用于增量同步'
 export def 'erda transfer' [
   --from(-f): int,        # ERDA Source Project ID
   --to(-t): int,          # ERDA Target Project ID

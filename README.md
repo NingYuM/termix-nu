@@ -1689,7 +1689,12 @@ t art deploy --combine --from terp-runtime --branch release/millgrid-uat --to mi
 - 加密的环境变量首次同步值会被替换为 '请修改该值并加密存储' 并以明文存储，迁移完毕需自行检查修改;
 - 源项目或者源应用删除的成员或者环境变量在后续增量同步过程中如果目标项目/应用里面有不会被删掉，只增不减;
 - 可以全量或增量同步 Git 代码仓库所有分支及 Tag;
+- 可以全量或增量同步指定的 Git 分支，多个分支用 `,` 分隔(分支同步采用强推策略，会强制覆盖目标仓库的同名分支)；
 - 几乎所有操作都是直接调用 Erda 提供的 API 完成的，所以需要在 `.env` 里面配置 `ERDA_USERNAME` & `ERDA_PASSWORD`;
+
+**分支同步注意事项**:
+
+当同步指定分支时，作为最佳实践如果要在迁移后的分支上修改建议拉新分支修改（定制开发），这样后续再次同步的时候可以把新的改动 `cherry-pick` 到定开分支上，保持延续性，如果直接在迁移分支上改除非后面不需要再次同步，否则重新同步会强制覆盖同名分支的改动，造成代码丢失 ！！！
 
 **命令格式**: `t erda-transfer *OPTIONS`
 
@@ -1699,6 +1704,7 @@ t art deploy --combine --from terp-runtime --branch release/millgrid-uat --to mi
 - `-t`, `--to <int>`: ERDA 目标项目 ID
 - `-a`, `--apps <string>`: 指定要迁移的应用名，多个应用之间用英文逗号分隔，未指定该参数则进入交互式选择应用界面
 - `-m`, `--sync-member`: 同步项目成员和应用成员
+- `-b`, `--branches <string>`: 指定要同步的分支，多个分支之间用英文逗号分隔：e.g. main,develop
 - `-h`, `--help`: 显示该命令的帮助文档
 
 **使用举例**:
@@ -1711,6 +1717,9 @@ t erda-transfer --from 213 --to 1000226 --sync-member --apps termix-nu,nusi-slim
 # 选择 Terminus 组织下编号为 213 的项目里面的应用，并批量迁移到编号为 1000226 的项目
 # 迁移内容同上，需拥有源项目所选择应用的访问权限
 t erda-transfer --from 213 --to 1000226 --sync-member
+
+# 仅同步指定分支（例如 main 与 develop），而非所有分支与 Tags，可以重复执行用于增量同步
+t erda-transfer --from 213 --to 1000226 --apps termix-nu -b main,develop
 ```
 
 **演示视频**:
