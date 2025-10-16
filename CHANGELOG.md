@@ -1,6 +1,20 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.95.0 - 2025-10-16
+
+**Features**
+
+- Do not sync members by default, use `--sync-member` to turn it on for `t erda-transfer`
+- Add branch syncing support for `t erda-transfer` command
+- Show more detail for confirmation before running `t erda-transfer` command
+
+**Bug Fixes**
+
+- Fix potential git repo sync error for `t erda-transfer` command
+- Fix EMP working hours query hosts
+- Try to fix "unexpected disconnect while reading sideband packet" error for branch syncing
+
 ## v1.93.1 - 2025-09-16
 
 **Bug Fixes**
