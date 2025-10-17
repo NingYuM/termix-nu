@@ -170,7 +170,7 @@ def do-push [
 def is-transient-error [
   stderr: string
 ] {
-  $stderr =~ 'unexpected disconnect|early EOF|hung up|timed out|curl 18|curl 55|Transfer closed|sideband'
+  $stderr =~ 'unexpected disconnect|early EOF|hung up|timed out|Transfer closed|sideband'
 }
 
 # Push a single branch with retries and HTTP/1.1 fallback/low speed relax
