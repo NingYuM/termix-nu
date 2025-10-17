@@ -277,7 +277,7 @@ export def query-hours-by-team [
     $summary | get data.data | select staffWorkTimeFillResponseList | flatten
       | get staffWorkTimeFillResponseList
       | where ($it | describe) =~ 'record' and ($it.staffBO?.id | default 0) > 0
-      | reject id | rename --column $rename
+      | rename --column $rename
     )
 
   if $debug { log 'hourSummary' ($hourSummary | table -e) }
