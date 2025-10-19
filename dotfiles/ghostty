@@ -77,6 +77,7 @@ selection-background = #7D717F
 clipboard-paste-protection = true
 clipboard-trim-trailing-spaces = true
 
+scrollbar = never
 mouse-hide-while-typing = true
 macos-titlebar-style = transparent
 macos-non-native-fullscreen = false
