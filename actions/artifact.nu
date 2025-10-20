@@ -509,7 +509,30 @@ def consume-trantor-artifact [
         --project-id $destSetting.projectId
         --non-interactive --output-format json
       ) | complete
-    let shellResp = $pipeline.stdout | from json
+
+    # Guard: child process failure
+    if ($pipeline.exit_code != 0) {
+      print -e $'(ansi r)Failed to bootstrap artifact building via shell script.(ansi rst)'
+      if ($pipeline.stderr | is-not-empty) { print $'(char nl)Shell stderr:'; print $pipeline.stderr }
+      if ($pipeline.stdout | is-not-empty) { print $'(char nl)Shell stdout:'; print $pipeline.stdout }
+      exit $ECODE.SERVER_ERROR
+    }
+
+    # Guard: empty stdout
+    if ($pipeline.stdout | str trim | is-empty) {
+      print -e $'(ansi r)Shell returned empty output. Unable to read pipeline information.(ansi rst)'
+      print -e $'Please check authentication/session, base URL and application name, then retry.'
+      exit $ECODE.SERVER_ERROR
+    }
+
+    # Parse JSON safely
+    let shellResp = try { $pipeline.stdout | from json } catch { {} }
+    if ($shellResp | is-empty) or ($shellResp.pipeline_id? | default '' | is-empty) {
+      print -e $'(ansi r)Failed to parse pipeline info from shell output.(ansi rst)'
+      print $'(char nl)Raw stdout:'; print $pipeline.stdout
+      exit $ECODE.SERVER_ERROR
+    }
+
     print $'(char nl)Shell response:'; $shellResp | table -e | print
     let pipelineId = $shellResp.pipeline_id?
     print $'(char nl)Building artifact with pipeline ID: (ansi g)($pipelineId)(ansi rst)'
