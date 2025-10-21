@@ -496,6 +496,8 @@ def consume-trantor-artifact [
   let metaPath = $'(get-tmp-path)/($RELEASE_META_PATH)/releases.json'
   let auth = get-erda-auth $destSetting.erdaHost | str replace 'cookie: ' ''
   let selected = open $metaPath | where metadata?.erda_release_version? == $version | get 0
+  let respBegin = $'Shell stderr:(char nl)(ansi grey66)--- Begin Response from Trantor Bash Script ---- (char nl)'
+  let respEnd = $'--- End Response from Trantor Bash Script ---- (char nl)(ansi rst)'
   print $'You are going to consume the Trantor artifact: (ansi g)($version)(ansi rst)'; hr-line
   $selected | reject -o metadata.file_hashes metadata.changelog | table -e | print
   let preCheck = query-release-by-version $version $destSetting
@@ -512,9 +514,11 @@ def consume-trantor-artifact [
 
     # Guard: child process failure
     if ($pipeline.exit_code != 0) {
-      print -e $'(ansi r)Failed to bootstrap artifact building via shell script.(ansi rst)'
-      if ($pipeline.stderr | is-not-empty) { print $'(char nl)Shell stderr:'; print $pipeline.stderr }
-      if ($pipeline.stdout | is-not-empty) { print $'(char nl)Shell stdout:'; print $pipeline.stdout }
+      print -e $'(char nl)(ansi r)Failed to bootstrap artifact building via shell script.(ansi rst)'
+      if ($pipeline.stderr | is-not-empty) { print $'(char nl)($respBegin)'; print $pipeline.stderr; print $respEnd }
+      if ($pipeline.stdout | is-empty) {
+        print $'(ansi r)Shell stdout is empty, please make sure you have the (ansi g)Admin OR Owner (ansi r)role of (ansi g)trantor2 (ansi r)App.(ansi rst)'
+      } else { print $'(char nl)Shell stdout:'; print $'(char nl)($respBegin)'; print $pipeline.stdout; print $respEnd }
       exit $ECODE.SERVER_ERROR
     }
 
@@ -529,7 +533,7 @@ def consume-trantor-artifact [
     let shellResp = try { $pipeline.stdout | from json } catch { {} }
     if ($shellResp | is-empty) or ($shellResp.pipeline_id? | default '' | is-empty) {
       print -e $'(ansi r)Failed to parse pipeline info from shell output.(ansi rst)'
-      print $'(char nl)Raw stdout:'; print $pipeline.stdout
+      print $'(char nl)Raw stdout:'; print $'(char nl)($respBegin)'; print $pipeline.stdout; print $respEnd
       exit $ECODE.SERVER_ERROR
     }
 
