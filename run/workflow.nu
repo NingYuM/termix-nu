@@ -10,7 +10,7 @@
 #   - https://api.github.com/repos/hustcer/release-app/actions/runs/12096272615
 #   - https://docs.erda.cloud/next/manual/dop/guides/reference/pipeline.html
 
-use common.nu [hr-line]
+use ../utils/common.nu [hr-line]
 
 const QUERY_INTERVAL = 5sec
 const GH_REPO = 'hustcer/release-app'
@@ -63,9 +63,6 @@ def run-workflow [
   let CALL_URL = $'https://api.github.com/repos/($GH_REPO)/actions/workflows/($workflow)/dispatches'
   let startTime = (date now) - 8hr | format date $TIME_FMT
   http post --content-type application/json -H $HEADERS $CALL_URL $payload | table -e
-  let endTime = (date now) - 8hr + 10sec | format date $TIME_FMT
-  let timeRange = $'($startTime)..($endTime)'
-  print $'Workflow run created at time range: ($timeRange)'
 
   # Get workflow run ID using distinct ID
   let workflowRunID = get-workflow-run-id $distinctId $workflow $branch
@@ -73,8 +70,7 @@ def run-workflow [
   if ($workflowRunID | is-not-empty) and ($env.PIPELINE_ID? | is-not-empty) {
     print $'action meta: workflowRunID=($workflowRunID)'
   }
-
-  $timeRange
+  $workflowRunID
 }
 
 # Query Github workflow run status
@@ -160,7 +156,7 @@ def get-workflow-run-id [
   distinctId: string,                  # Unique identifier to search for
   workflow: string,                    # Workflow file name
   branch: string = 'release/app',      # Branch name
-  --timeout: int = 120,                # Timeout in seconds (default: 120)
+  --timeout: duration = 120sec,        # Timeout duration (default: 120sec)
   --verbose(-v),                       # Show detailed progress
 ] {
   let HEADERS = [Authorization $'token ($env.GITHUB_TOKEN)']
@@ -169,21 +165,17 @@ def get-workflow-run-id [
   if $verbose { print $'Searching for workflow run with distinct ID: (ansi c)($distinctId)(ansi reset)' }
 
   # Wait for workflow to initialize
-  sleep 8sec
+  sleep 3sec
 
-  let result = poll_for_run $distinctId $RUNS_URL $HEADERS $branch $timeout $verbose
+  let result = poll_for_run $distinctId $RUNS_URL $HEADERS $branch --timeout $timeout --verbose=$verbose
 
   if ($result == null) {
     print $'(ansi r)✗ Could not find workflow run with distinct ID(ansi reset)'
-    if not $verbose {
-      print $'  Tip: Use --verbose flag to see detailed search progress'
-    }
+    if not $verbose { print $'  Tip: Use --verbose flag to see detailed search progress' }
     return null
   }
 
-  if $verbose {
-    print $'(ansi g)✓ Found workflow run ID: ($result)(ansi reset)'
-  }
+  if $verbose { print $'(ansi g)✓ Found workflow run ID: ($result)(ansi reset)' }
 
   $result
 }
@@ -194,19 +186,16 @@ def poll_for_run [
   runsUrl: string,
   headers: list,
   branch: string,
-  timeout: int,
-  verbose: bool,
+  --timeout: duration = 120sec,
+  --verbose,
 ] {
-  let startTime = date now
-  let timeoutNs = $timeout * 1_000_000_000
   mut retryCount = 0
+  let startTime = date now
 
   loop {
     $retryCount += 1
-
-    # Check timeout
-    if (($startTime | into int) + $timeoutNs < (date now | into int)) {
-      if $verbose { print $'(ansi y)Timeout after ($timeout)s(ansi reset)' }
+    if $startTime + $timeout < (date now) {
+      if $verbose { print $'(ansi y)Timeout after ($timeout)(ansi reset)' }
       return null
     }
 
@@ -222,11 +211,9 @@ def poll_for_run [
     if $verbose { print $'Retry ($retryCount): Checking ($runs | length) runs...' }
 
     # Search for matching run
-    let matchedRunId = search_runs_for_distinct_id $runs $distinctId $headers $verbose
+    let matchedRunId = search_runs_for_distinct_id $runs $distinctId $headers --verbose=$verbose
 
-    if ($matchedRunId != null) {
-      return $matchedRunId
-    }
+    if ($matchedRunId != null) { return $matchedRunId }
 
     # Not found, wait and retry
     print -n '.'  # Progress indicator
@@ -254,26 +241,12 @@ def search_runs_for_distinct_id [
   runs: list,
   distinctId: string,
   headers: list,
-  verbose: bool,
+  --verbose,
 ] {
   for run in $runs {
-    # Method 1: Check workflow inputs (primary method)
-    let runDetailUrl = $'https://api.github.com/repos/($GH_REPO)/actions/runs/($run.id)'
-    let runDetail = try { http get --headers $headers $runDetailUrl } catch { {} }
-    let runDistinctId = $runDetail | get inputs? | default {} | get 'distinct-id'? | default ''
-
-    if ($runDistinctId == $distinctId) {
-      if $verbose {
-        print $'  Found match in run ($run.id) via inputs'
-      }
-      return $run.id
-    }
-
-    # Method 2: Check step names (fallback)
+    # Check step names
     let matched = check_run_steps $run $distinctId $headers $verbose
-    if ($matched != null) {
-      return $matched
-    }
+    if ($matched != null) { return $matched }
   }
 
   null
@@ -294,9 +267,7 @@ def check_run_steps [
     for step in $steps {
       let stepName = $step.name? | default ''
       if ($stepName | str contains $distinctId) {
-        if $verbose {
-          print $'  Found match in run ($run.id) step: ($stepName)'
-        }
+        if $verbose { print $'  Found match in run ($run.id) step: ($stepName)' }
         return $run.id
       }
     }
