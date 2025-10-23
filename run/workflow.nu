@@ -18,17 +18,17 @@ const TIME_FMT = '%Y-%m-%dT%H:%M:%SZ'
 
 # Mobile App build and query from Github workflow
 export def github-workflow [
-  action: string,                           # Action to perform, e.g. run, query, polling, etc.
+  action: string@[run query polling],       # Action to perform, e.g. run, query, polling, etc.
   --silent(-s),                             # Silent mode
-  --created(-c): string,                    # Created time range, e.g. 2024-11-30T12:13:06Z..2024-11-30T12:13:10Z
+  --run-id(-i): string,                     # Workflow run ID
   --src-branch: string = 'develop',         # Source branch to build the App from
   --branch(-b): string = 'release/app',     # Branch to run workflow on
   --workflow(-w): string = 'terp-app.yml',  # Workflow file to run
 ] {
   match $action {
     run => { run-workflow $src_branch $branch $workflow },
-    query => { query-workflow $created $branch --silent=$silent },
-    polling => { polling-workflow $created $branch },
+    query => { query-workflow $run_id $branch --silent=$silent },
+    polling => { polling-workflow $run_id $branch },
     _ => { print $'Invalid action: (ansi r)($action)(ansi reset)' },
   }
 }
@@ -75,74 +75,52 @@ def run-workflow [
 
 # Query Github workflow run status
 def query-workflow [
-  created: string,   # Created time range, e.g. 2024-11-30T12:13:06Z..2024-11-30T12:13:10Z
+  runId: string,    # Workflow run ID
   branch: string = 'release/app',
-  --silent,          # Silent mode
+  --silent,         # Silent mode
 ] {
   let HEADERS = [Authorization $'token ($env.GITHUB_TOKEN)']
-  let CALL_URL = $'https://api.github.com/repos/($GH_REPO)/actions/runs'
-  let query = {
-    per_page: 5,
-    created: $created,
-    branch: 'release/app',
-    event: 'workflow_dispatch',
-    exclude_pull_requests: 'true',
-  } | url build-query
-  if not $silent { print $'Querying workflow runs from: (char nl)(ansi g)($CALL_URL)?($query)(ansi reset)' }
-  let queryDetail = {|| try { http get --max-time 60sec --allow-errors --headers  $HEADERS $'($CALL_URL)?($query)' } catch { |err| print $err.msg } }
-  let run = do $queryDetail
-  # Try just one more time if there is a network error or empty result
-  let run = if ($run | is-empty) { sleep $QUERY_INTERVAL; do $queryDetail } else { $run }
-
-  # 检查 workflow_runs 是否为空
-  let runs = $run | get workflow_runs? | default []
-  if ($runs | is-empty) {
-    if not $silent { print $'(ansi y)Warning: No workflow runs found in the time range(ansi reset)' }
+  let CALL_URL = $'https://api.github.com/repos/($GH_REPO)/actions/runs/($runId)'
+  if not $silent { print $'Querying workflow run: (ansi g)($CALL_URL)(ansi reset)' }
+  let run = (try { http get --max-time 60sec --allow-errors --headers $HEADERS $CALL_URL } catch { null })
+  if ($run == null) {
+    if not $silent { print $'(ansi y)Warning: Workflow run not found or network error(ansi reset)' }
     return null
   }
-
-  let result = $runs | first
-  if not $silent { print $'You can check the workflow run at: (ansi g)($result.html_url)(ansi reset)' }
-  $result | select id status conclusion
+  if not $silent { print $'You can check the workflow run at: (ansi g)($run.html_url)(ansi reset)' }
+  $run | select id status conclusion html_url
 }
 
 # Polling Github workflow run status until it's completed or failed
 def polling-workflow [
-  created: string,   # Created time range, e.g. 2024-11-30T12:13:06Z..2024-11-30T12:13:10Z
+  runId: string,   # Workflow run ID
   branch: string = 'release/app',
 ] {
   mut counter = 0
   mut keepPolling = true
   let startTime = date now
-  sleep 5sec  # Wait for Github API to be ready and avoid empty result
-  mut query = query-workflow $created $branch
-  # 如果第一次查询返回 null，继续等待
-  while ($query | is-empty) {
+  mut query = query-workflow $runId $branch
+  while ($query | is-empty) or ($query == null) {
     sleep $QUERY_INTERVAL
-    $query = query-workflow $created $branch --silent=true
+    $query = query-workflow $runId $branch --silent=true
   }
   if ($env.PIPELINE_ID? | is-not-empty) {
     print $'action meta: ghRunID=($query.id)'
     print $'action meta: detailUrl=https://github.com/($GH_REPO)/actions/runs/($query.id)'
   }
-  # Check the status and conclusion of the workflow run:
-  # Status: completed
-  # CONCLUSION: success,failure,skipped,cancelled
   loop {
     $counter += 1
-    print -n '*'  # * 💤 👣 ✨ 🍵 ⚡ 🎉 🔹 🔸
+    print -n '*'
     if not $keepPolling { break }
     if ($counter == 90) { $counter = 0; print -n (char nl) }
     sleep $QUERY_INTERVAL
-    $query = query-workflow $created $branch --silent=true
-    # 检查 query 是否为 null 以及 status 是否为 completed
+    $query = query-workflow $runId $branch --silent=true
     if ($query != null) and ($query.status == 'completed') { $keepPolling = false }
   }
   let endTime = date now
   let conclusion = if $query.conclusion in [failure, cancelled] {
       $'(ansi r)($query.conclusion)(ansi reset)'
     } else { $'(ansi g)($query.conclusion)(ansi reset)' }
-
   if ($env.PIPELINE_ID? | is-not-empty) {
     print $'(char nl)action meta: finalStatus=($query.conclusion)'
   }
