@@ -25,10 +25,10 @@ const TIME_FMT = '%Y-%m-%dT%H:%M:%SZ'
 export def github-workflow [
   action: string@[run query polling],       # Action to perform, e.g. run, query, polling, etc.
   --silent(-s),                             # Silent mode
-  --run-id(-i): string,                     # Workflow run ID
-  --src-branch: string = 'develop',         # Source branch to build the App from
-  --branch(-b): string = 'release/app',     # Branch to run workflow on
-  --workflow(-w): string = 'terp-app.yml',  # Workflow file to run
+  --run-id(-i): string,                     # Workflow run ID, required by `query` & `polling`
+  --src-branch: string = 'develop',         # Source branch to build the App from, required by `run`
+  --branch(-b): string = 'release/app',     # Branch to run workflow on, required by `run`
+  --workflow(-w): string = 'terp-app.yml',  # Workflow file to run, required by `run`
 ] {
   # Validate required parameters based on action
   match $action {
@@ -43,7 +43,7 @@ export def github-workflow [
   }
 
   match $action {
-    'run' => { run-workflow $src_branch $branch $workflow }
+    'run' => { run-workflow $src_branch $branch $workflow --silent=$silent }
     'query' => { query-workflow $run_id $branch --silent=$silent }
     'polling' => { polling-workflow $run_id $branch }
     _ => {
@@ -91,6 +91,7 @@ def run-workflow [
   src_branch: string = 'develop',     # Source branch to build the App from
   branch: string = 'release/app',     # Branch to run workflow on
   workflow: string = 'terp-app.yml',  # Workflow file to run
+  --silent,                           # Silent mode
 ] {
   # Generate unique distinct ID for tracking this workflow run
   let distinct_id = generate-distinct-id
@@ -111,7 +112,7 @@ def run-workflow [
   github-api-post $call_url $payload | table -e
 
   # Get workflow run ID using distinct ID
-  let workflow_run_id = get-workflow-run-id $distinct_id $workflow $branch
+  let workflow_run_id = get-workflow-run-id $distinct_id $workflow $branch --silent=$silent
   print $'workflowRunID: ($workflow_run_id)'
   print-action-meta 'workflowRunID' ($workflow_run_id | into string)
 
@@ -217,22 +218,22 @@ def get-workflow-run-id [
   workflow: string,                       # Workflow file name
   branch: string = 'release/app',         # Branch name
   --timeout: duration = $DEFAULT_TIMEOUT, # Timeout duration (default: 120sec)
-  --verbose(-v),                          # Show detailed progress
+  --silent,                               # Silent mode
 ] {
   let runs_url = $'https://api.github.com/repos/($GH_REPO)/actions/workflows/($workflow)/runs'
-  if $verbose { print $'Searching for workflow run with distinct ID: (ansi c)($distinct_id)(ansi reset)' }
+  if not $silent { print $'Searching for workflow run with distinct ID: (ansi c)($distinct_id)(ansi reset)' }
 
   # Wait for workflow to initialize
   sleep $WORKFLOW_INIT_DELAY
-  let result = poll-for-run $distinct_id $runs_url $branch --timeout $timeout --verbose=$verbose
+  let result = poll-for-run $distinct_id $runs_url $branch --timeout $timeout --silent=$silent
 
   if ($result == null) {
     print $'(ansi r)✗ Could not find workflow run with distinct ID(ansi reset)'
-    if not $verbose { print $'  Tip: Use --verbose flag to see detailed search progress' }
+    if not $silent { print $'  Tip: Use --silent flag to hide detailed search progress' }
     return null
   }
 
-  if $verbose { print $'(ansi g)✓ Found workflow run ID: ($result)(ansi reset)' }
+  if not $silent { print $'(ansi g)✓ Found workflow run ID: ($result)(ansi reset)' }
   $result
 }
 
@@ -251,7 +252,7 @@ def poll-for-run [
   runs_url: string,
   branch: string,
   --timeout: duration = $DEFAULT_TIMEOUT,
-  --verbose,
+  --silent,
 ] {
   mut retry_count = 0
   let start_time = date now
@@ -260,21 +261,21 @@ def poll-for-run [
     $retry_count += 1
     # Check timeout
     if $start_time + $timeout < (date now) {
-      if $verbose { print $'(ansi y)Timeout after ($timeout)(ansi reset)' }
+      if not $silent { print $'(ansi y)Timeout after ($timeout)(ansi reset)' }
       return null
     }
 
     # Fetch recent workflow runs
     let runs = fetch-workflow-runs $runs_url $branch
     if ($runs | is-empty) {
-      if $verbose { print $'Retry ($retry_count): Waiting for workflow runs...' }
+      if not $silent { print $'Retry ($retry_count): Waiting for workflow runs...' }
       sleep $QUERY_INTERVAL
       continue
     }
 
-    if $verbose { print $'Retry ($retry_count): Checking ($runs | length) runs...' }
+    if not $silent { print $'Retry ($retry_count): Checking ($runs | length) runs...' }
     # Search for matching run
-    let matched_run_id = search-runs-for-distinct-id $runs $distinct_id --verbose=$verbose
+    let matched_run_id = search-runs-for-distinct-id $runs $distinct_id --silent=$silent
     if ($matched_run_id != null) { return $matched_run_id }
     # Not found, wait and retry
     print -n '.'  # Progress indicator
@@ -283,7 +284,7 @@ def poll-for-run [
 }
 
 # Check if any step in the run contains the distinct ID
-def check-run-steps [run: record, distinct_id: string, verbose: bool] {
+def check-run-steps [run: record, distinct_id: string, --silent] {
   let jobs_url = $'https://api.github.com/repos/($GH_REPO)/actions/runs/($run.id)/jobs'
   let jobs = try {
     github-api-get $jobs_url --silent | get jobs? | default []
@@ -294,7 +295,7 @@ def check-run-steps [run: record, distinct_id: string, verbose: bool] {
     for step in $steps {
       let step_name = $step.name? | default ''
       if ($step_name | str contains $distinct_id) {
-        if $verbose { print $'  Found match in run ($run.id) step: ($step_name)' }
+        if not $silent { print $'  Found match in run ($run.id) step: ($step_name)' }
         return $run.id
       }
     }
@@ -307,11 +308,11 @@ def check-run-steps [run: record, distinct_id: string, verbose: bool] {
 def search-runs-for-distinct-id [
   runs: list,
   distinct_id: string,
-  --verbose,
+  --silent,
 ] {
   for run in $runs {
     # Check step names
-    let matched = check-run-steps $run $distinct_id $verbose
+    let matched = check-run-steps $run $distinct_id --silent=$silent
     if ($matched != null) { return $matched }
   }
 
