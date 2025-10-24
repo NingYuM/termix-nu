@@ -29,6 +29,7 @@ export def github-workflow [
   --src-branch: string = 'develop',         # Source branch to build the App from, required by `run`
   --branch(-b): string = 'release/app',     # Branch to run workflow on, required by `run`
   --workflow(-w): string = 'terp-app.yml',  # Workflow file to run, required by `run`
+  --enable-ios(-I),                         # Enable iOS build, default is `false`, work for `run`
 ] {
   # Validate required parameters based on action
   match $action {
@@ -43,9 +44,9 @@ export def github-workflow [
   }
 
   match $action {
-    'run' => { run-workflow $src_branch $branch $workflow --silent=$silent }
-    'query' => { query-workflow $run_id $branch --silent=$silent }
     'polling' => { polling-workflow $run_id $branch }
+    'query' => { query-workflow $run_id $branch --silent=$silent }
+    'run' => { run-workflow $src_branch $branch $workflow --silent=$silent --enable-ios=$enable_ios }
     _ => {
       error make {
         msg: $'Invalid action: ($action)'
@@ -67,10 +68,11 @@ def build-workflow-payload [
   src_branch: string,
   branch: string,
   distinct_id: string
+  --enable-ios(-I),       # Enable iOS build, default is `false`
 ] {
   {
     ref: $branch,
-    inputs: { ios: false, android: true, 'build-branch': $src_branch, 'distinct-id': $distinct_id }
+    inputs: { ios: $enable_ios, android: true, 'build-branch': $src_branch, 'distinct-id': $distinct_id }
   }
 }
 
@@ -91,11 +93,12 @@ def run-workflow [
   src_branch: string = 'develop',     # Source branch to build the App from
   branch: string = 'release/app',     # Branch to run workflow on
   workflow: string = 'terp-app.yml',  # Workflow file to run
+  --enable-ios(-I),                   # Enable iOS build, default is `false`
   --silent,                           # Silent mode
 ] {
   # Generate unique distinct ID for tracking this workflow run
   let distinct_id = generate-distinct-id
-  let payload = build-workflow-payload $src_branch $branch $distinct_id
+  let payload = build-workflow-payload $src_branch $branch $distinct_id --enable-ios=$enable_ios
 
   print $'Running workflow (ansi g)($workflow)(ansi reset) on branch (ansi g)($branch)(ansi reset) with payload:'
   hr-line
@@ -113,7 +116,7 @@ def run-workflow [
 
   # Get workflow run ID using distinct ID
   let workflow_run_id = get-workflow-run-id $distinct_id $workflow $branch --silent=$silent
-  print $'workflowRunID: ($workflow_run_id)'
+  print $'(char nl)Workflow Run ID: (ansi g)($workflow_run_id)(ansi reset)'
   print-action-meta 'workflowRunID' ($workflow_run_id | into string)
 
   $workflow_run_id
@@ -136,11 +139,7 @@ def query-workflow [
   --silent,                     # Silent mode
 ] {
   let call_url = $'https://api.github.com/repos/($GH_REPO)/actions/runs/($run_id)'
-
-  if not $silent {
-    print $'Querying workflow run: (ansi g)($call_url)(ansi reset)'
-  }
-
+  if not $silent { print $'Querying workflow run: (ansi g)($call_url)(ansi reset)' }
   let run = github-api-get $call_url --silent=$silent
   if ($run == null) {
     if not $silent {
@@ -240,7 +239,6 @@ def get-workflow-run-id [
 # Fetch recent workflow runs from GitHub API
 def fetch-workflow-runs [runs_url: string, branch: string] {
   let query = { per_page: 10, branch: $branch, event: 'workflow_dispatch' } | url build-query
-
   try {
     github-api-get $'($runs_url)?($query)' --silent | get workflow_runs? | default []
   } catch { [] }
