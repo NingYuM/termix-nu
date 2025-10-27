@@ -15,7 +15,7 @@
 # [√] Get available modules from latest.json if sync all is selected
 # [√] Display frontend module metadata
 # [√] Display module status statistics info in metadata view
-# [√] Revert frontend module to a selected version, ossutil or mc required
+# [√] Revert frontend module to a selected version, s5cmd required
 # [√] Add Revert metadata to latest.json
 # Ref:
 #   - https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/fe-resources/dev/latest.json
@@ -28,15 +28,15 @@
 #   - 无权限: StatusCode=403, ErrorCode=AccessDenied, ErrorMessage="The bucket you access does not belong to you."
 
 use ../utils/common.nu [ECODE, FZF_DEFAULT_OPTS, FZF_THEME, _TIME_FMT]
-use ../utils/common.nu [is-installed, hr-line, get-conf, get-tmp-path, compare-ver, with-progress]
+use ../utils/common.nu [is-installed, hr-line, get-conf, get-tmp-path, compare-ver, with-progress, get-empty-keys]
 
 # --------------------------------- Constants and Configs ---------------------------------
 const JSON_ENTRY = 'latest.json'
 const STORE_TYPES = [aliyun, minio, volc, ifly]
 const VALID_ACTIONS = [init, download, transfer, detect, revert]
 const VALID_MODULES = [terp-mobile terp service service-mobile iam dors dors-mobile base base-mobile b2b emp]
-const ENDPOINT = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com'
 const DEFAULT_ENDPOINT = 'https://oss-cn-hangzhou.aliyuncs.com'
+const ENDPOINT = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com'
 const ASSETS_URL = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/fe-resources/assets/terp-assets.tar.gz'
 
 # Don't validate module names by default
@@ -63,9 +63,7 @@ const MOD_DESC = {
 
 const TOOL_INSTALL_TIP = {
   fzf: 'Please install fzf by `brew install fzf` first'
-  mc: 'Please install mc by `brew install minio/stable/mc`'
   s5cmd: 'Please install s5cmd by `brew install s5cmd` first'
-  ossutil: 'Please install `ossutil`, see https://alibabacloud.com/help/zh/oss/developer-reference/install-ossutil'
 }
 # -----------------------------------------------------------------------------------------
 
@@ -105,16 +103,19 @@ const TOOL_INSTALL_TIP = {
 @example '通过自定义 `latest.json` 完整 URL 查看资源摘要' {
   t ta detect -f https://portal-test.app.terminus.io/latest.json
 } --result '从指定 URL 读取 latest.json 并显示模块列表及状态'
+@example '回滚 `terp-dev` 环境的 `base` 模块到之前的版本' {
+  t ta revert base -t terp-dev -d oss
+} --result '目前只支持回滚单个模块，交互式选择要回滚的版本，确认后执行回滚操作'
 @example '从 OSS 下载所有模块静态资源到本地临时目录' {
   t ta download all -f dev
 } --result '这个命令你一般不会用到，资源同步的时候会自动调用这个命令'
 export def 'terp assets' [
-  action: string,             # Available actions: init, download, transfer, detect and revert
-  modules?: string,           # Available values: base/base-mobile/terp/terp-mobile/iam/charts/service/all. Multiple modules separated by `,`
-  --from(-f): string,         # Source mount point or source URL. Note: Only `detect` action supports multiple sources separated by `,`
-  --to(-t): string,           # Destination mount point
-  --quiet(-q),                # Show less info
-  --dest-store(-d): string,   # Destination store, should be configured in .termixrc
+  action: string@$VALID_ACTIONS,  # Available actions: init, download, transfer, detect and revert
+  modules?: string,               # Available values: base/base-mobile/terp/terp-mobile/iam/charts/service/all. Multiple modules separated by `,`
+  --from(-f): string,             # Source mount point or source URL. Note: Only `detect` action supports multiple sources separated by `,`
+  --to(-t): string,               # Destination mount point
+  --quiet(-q),                    # Show less info
+  --dest-store(-d): string,       # Destination store, should be configured in .termixrc
 ] {
   cd $env.TERMIX_DIR
   # Handle revert action
@@ -122,10 +123,8 @@ export def 'terp assets' [
     if ($modules | is-empty) {
       print $'Please specify the frontend (ansi p)module(ansi rst) to revert, e.g. `(ansi p)t ta revert base(ansi rst)`'
     }
-    # If you want to revert module from MINIO the `--to` option should be in the format of `mount-point@mc-alias`
     if ($to | is-empty) {
       print $'Please specify the destination mount point to revert by `(ansi p)-t(ansi rst)` or `(ansi p)--to(ansi rst)` option'
-      print $'To revert module in MINIO the `-t` option should be like `(ansi p)test@mc-alias(ansi rst)`'
     }
     if ($dest_store | is-empty) { print $'Please specify the destination store to revert the frontend module by `(ansi p)-d(ansi rst)` option' }
     if ([$modules $to $dest_store] | any { $in | is-empty }) { exit $ECODE.INVALID_PARAMETER }
@@ -152,7 +151,10 @@ export def fzf-preview [revision: string, localPath: string, remoteURI: string, 
   let dest = $'($localPath)/($revision)/namespace.json'
   let ossConf = get-dest-oss $destStore
   let remoteFile = $'($remoteURI)/($revision)/namespace.json'
-  let result = do-storage-cp $remoteFile $dest $ossConf
+  # Ensure parent directory exists for preview copy
+  let parent = $dest | path dirname
+  if not ($parent | path exists) { mkdir $parent }
+  let result = do-storage-cp $remoteFile $dest
   if $result.exit_code != 0 {
     print -e $'Failed to copy namespace.json for preview'
     print $result.stderr
@@ -185,20 +187,19 @@ def detect-multiple-assets [from: string] {
   }
 }
 
-# Revert frontend module to a selected version, ossutil or mc required
-def revert-module [module: string, to: string, destStore: string] {
+# Revert frontend module to a selected version, s5cmd required
+def --env revert-module [module: string, to: string, destStore: string] {
   let ossConf = get-dest-oss $destStore
   revert-precheck $module $to $ossConf
 
   let target = $to | split row @ | first
   let localPath = $'(get-tmp-path)/terp/revert/($module)/($target)/' | str replace -a \ /
-  let isMinio = ($ossConf.TYPE? | default 'aliyun') == 'minio'
-  let mcAlias = if $isMinio { $to | split row @ | last } else { '' }
-  let remoteURI = if $isMinio {
-      $'($mcAlias)/($ossConf.OSS_BUCKET)/fe-resources/($target)'
-    } else {
-      $'oss://($ossConf.OSS_BUCKET)/fe-resources/($target)'
-    }
+  # Configure S3-compatible credentials for s5cmd once
+  $env.AWS_REGION = $ossConf.OSS_REGION | default 'us-east-1'
+  $env.AWS_ACCESS_KEY_ID = $ossConf.OSS_AK | default ''
+  $env.AWS_SECRET_ACCESS_KEY = $ossConf.OSS_SK | default ''
+  $env.S3_ENDPOINT_URL = $ossConf.OSS_ENDPOINT | default $DEFAULT_ENDPOINT
+  let remoteURI = $'s3://($ossConf.OSS_BUCKET)/fe-resources/($target)'
 
   if not ($localPath | path exists) { mkdir $localPath }
 
@@ -395,8 +396,8 @@ def detect [latestMeta: record] {
   let reverted = $latestMeta.latest | values | where {|it| $it.metadata?.revertAt? | is-not-empty }
   if ($reverted | length) > 0 {
     print $'(char nl)Module Revert Found:(char nl)'
-    $reverted | select namespace metadata.revertBy metadata.revertAt
-      | rename module revertBy revertAt | sort-by module
+    $reverted | select namespace metadata.revertBy metadata.revertAt metadata.revertFrom? metadata.revertTo?
+      | rename module revertBy revertAt revertFrom revertTo | sort-by module
       | upsert revertBy {|it| $it.revertBy? | show } | print; print -n (char nl)
   }
 }
@@ -408,31 +409,14 @@ def detect [latestMeta: record] {
 # Check if the required tools are installed and validating args for module reverting
 def revert-precheck [module: string, to: string, ossConf: record] {
   let type = $ossConf.TYPE? | default 'aliyun' | str downcase
-  if $type not-in [minio, aliyun] {
+  if $type not-in $STORE_TYPES {
     print -e $'The storage type (ansi r)($type)(ansi rst) is invalid for assets reverting. Supported types: (ansi g)($STORE_TYPES | str join ", ")(ansi rst)'
     exit $ECODE.INVALID_PARAMETER
   }
 
-  let isMinio = $type == 'minio'
   if $module =~ ',' { print $'Revert frontend module is not supported for multiple modules yet'; exit $ECODE.INVALID_PARAMETER }
-  if $isMinio and ($to !~ '@') {
-    print $'To revert module in MINIO the `-t` option should be like `(ansi p)test@mc-alias(ansi rst)`'; exit $ECODE.INVALID_PARAMETER
-  }
-  if $to =~ '@' {
-    if not $isMinio { print '`@` should not be used in `-t` / `--to` option for OSS storage'; exit $ECODE.INVALID_PARAMETER }
-    let mcAlias = $to | split row @ | last
-    if $mcAlias not-in (mc alias ls --json | from json -o | get alias) {
-      print $'The specified mc alias (ansi p)($mcAlias)(ansi rst) does not exist, please check your mc config'; exit $ECODE.INVALID_PARAMETER
-    }
-    # Minio AK/SK/Endpoint check
-    let mconf = mc alias ls --json | from json -o | where alias == $mcAlias | get 0
-    if $mconf.accessKey != $ossConf.OSS_AK or $mconf.secretKey != $ossConf.OSS_SK or $mconf.URL != $ossConf.OSS_ENDPOINT {
-      print -e $'The specified mc alias (ansi p)($mcAlias)(ansi rst) does not match the OSS config, please check your mc config'
-      exit $ECODE.INVALID_PARAMETER
-    }
-  }
 
-  let requiredTools = if $type == 'aliyun' { [fzf ossutil] } else { [fzf mc] }
+  let requiredTools = [fzf s5cmd]
   let missingTips = $requiredTools | reduce --fold [] {|it, acc|
       if not (is-installed $it) { $acc | append ($TOOL_INSTALL_TIP | get $it) } else { $acc }
     }
@@ -445,13 +429,21 @@ def revert-precheck [module: string, to: string, ossConf: record] {
 
 # Select the revision to revert
 def select-revert-revision [module: string, remoteURI: string, localPath: string, destStore: string, ossConf: record] {
-  let isMinio = ($ossConf.TYPE? | default 'aliyun') == 'minio'
-  let ossAuth = [-i $ossConf.OSS_AK -k $ossConf.OSS_SK -e $ossConf.OSS_ENDPOINT]
-  let moduleRevisions = if $isMinio {
-      mc ls $remoteURI --json | from json -o | where key =~ $'($module)-\d' | get key
-    } else {
-      ossutil ls ...$ossAuth $'($remoteURI)/' -d | lines | where $it =~ $'($remoteURI)/($module)-\d'
-    }
+  # Use s5cmd to list namespace.json under each revision directory, then extract revision names
+  let pattern = $'($remoteURI)/($module)-*/namespace.json'
+  let lines = s5cmd ls $pattern | complete
+  if $lines.exit_code != 0 {
+    print -e $'Failed to list revisions via s5cmd:'
+    print $lines.stderr; exit $lines.exit_code
+  }
+  let moduleRevisions = $lines.stdout | str trim | lines
+    | where {|l| $l =~ $'($module)-\d' }
+    | each {|l|
+        let path = ($l | split row ' ' | last)
+        let rel = if $path =~ '^s3://' { $path | str replace $'($remoteURI)/' '' } else { $path }
+        $rel | split row '/' | first
+      }
+    | uniq
 
   let title = $'Select the revision to apply:'
   let PREVIEW_CMD = $"nu actions/terp-assets.nu {} ($localPath) ($remoteURI) ($destStore)"
@@ -484,7 +476,7 @@ def execute-revert [
     print -e $'Your input (ansi p)($dest)(ansi rst) does not match (ansi p)($target)(ansi rst), bye...'; exit $ECODE.INVALID_PARAMETER
   }
   # Copy remote latest.json to local at the last moment to make sure the latest version is used
-  let cpLatest = do-storage-cp $'($remoteURI)/latest.json' $localPath $ossConf --force
+  let cpLatest = do-storage-cp $'($remoteURI)/latest.json' $localPath
   if $cpLatest.exit_code != 0 {
     print -e $'Failed to copy latest.json from remote'
     print $cpLatest.stderr
@@ -493,13 +485,14 @@ def execute-revert [
 
   let revertAt = date now | format date $_TIME_FMT
   let revertBy = $env.DICE_OPERATOR_NAME? | default (git config --get user.name) | encode base64
-  let revertMeta = { revertAt: $revertAt, revertBy: $revertBy }
+  let revertFrom = open $'($localPath)/latest.json' | get $module | get dirname
+  let revertMeta = { revertAt: $revertAt, revertBy: $revertBy, revertTo: $revision, revertFrom: $revertFrom }
   let moduleMeta = open $'($localPath)/($revision)/namespace.json' | upsert metadata {|it| $it.metadata | merge $revertMeta }
   let update = {} | upsert $module { prefix: $'fe-resources/($target)', dirname: $revision, ...$moduleMeta }
   let updated = open $'($localPath)/latest.json' | merge $update
   $updated | save -f $'($localPath)/latest.json'
 
-  let sync = do-storage-cp $'($localPath)/latest.json' $'($remoteURI)/latest.json' $ossConf --force
+  let sync = do-storage-cp $'($localPath)/latest.json' $'($remoteURI)/latest.json'
   if $sync.exit_code == 0 {
     print $'Revert (ansi p)($module)(ansi rst) module to (ansi p)($revision) for ($target)@($destStore)(ansi rst) successful!'; exit $ECODE.SUCCESS
   }
@@ -512,17 +505,16 @@ def execute-revert [
 # ------------------------------ Storage Abstractions ---------------------------------
 # ***************************************************************************************
 
-# Copy assets from source to dest
-def do-storage-cp [source: string, dest: string, ossConf: record, --force] {
-  let type = $ossConf.TYPE? | default 'aliyun' | str downcase
-  if $type == 'minio' {
-    # mc doesn't have a global force flag for `cp`, quiet is `-q`
-    mc cp -q $source $dest | complete
-  } else {
-    let auth = [-i $ossConf.OSS_AK -k $ossConf.OSS_SK -e $ossConf.OSS_ENDPOINT]
-    let force_flag = if $force { ['--force'] } else { [] }
-    ossutil cp ...$auth ...$force_flag $source $dest | complete
+# Copy assets from source to dest，s5cmd ENV vars should be set by caller
+def do-storage-cp [source: string, dest: string] {
+  # Use s5cmd for both upload and download; credentials must be set by caller
+  # Note: s5cmd overwrites by default
+  let empties = get-empty-keys $env [AWS_REGION AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY S3_ENDPOINT_URL]
+  if ($empties | is-not-empty) {
+    print -e $'Please set (ansi r)($empties | str join ", ")(ansi rst) in your environment first...'
+    exit $ECODE.INVALID_PARAMETER
   }
+  s5cmd cp $source $dest | complete
 }
 
 # ***************************************************************************************

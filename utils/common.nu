@@ -571,3 +571,9 @@ export def set-dot-conf [key: string, value: any] {
     | upsert $key $value | to json
     | save -rf $TERMIX_CONF
 }
+
+# Get the empty keys from a record, return null if all keys are set
+export def get-empty-keys [record: any, keys: list<string>] {
+  let empties = $keys | where {|ky| $record | get -o $ky | is-empty }
+  if ($empties | length) > 0 { $empties } else { null }
+}
