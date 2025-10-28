@@ -49,7 +49,7 @@ export def update-pkg [] {
   print 'Removing husky config...'
   $pkgs | each {|it|
     let pkgJson = glob $'($it)/**/package.json' | first
-    let pkg = open $pkgJson | reject -i husky
+    let pkg = open $pkgJson | reject -o husky
     $pkg | save -f $pkgJson
   }
 
@@ -85,7 +85,7 @@ export def update-pkg [] {
   print 'Removing outdated f2elint deps...'
   $pkgs | each {|it|
     let pkgJson = glob $'($it)/**/package.json' | first
-    let pkg = open $pkgJson | reject -i devDependencies.f2elint
+    let pkg = open $pkgJson | reject -o devDependencies.f2elint
     $pkg | save -f $pkgJson
   }
 
@@ -152,11 +152,11 @@ export def gen-page-data [
           open $module | get title? | default $DEFAULT_PAGE_TITLE
         } else { $DEFAULT_PAGE_TITLE }
       }
-    | reject -i pkg
+    | reject -o pkg
 
   let data = {
     title: '云采销 - SRM',
-    assetsDomain: ($ENV_MAP | get -i $environment),
+    assetsDomain: ($ENV_MAP | get -o $environment),
     pages: $pages,
   }
   $data
@@ -276,7 +276,7 @@ export def get-keywords [
     | uniq-by match
     | sort-by path
 
-  if $save { $keywords | save -f $'tools/keyword-($NAME_MAP | get -i $keyword | default $keyword).yaml' } else { $keywords | print }
+  if $save { $keywords | save -f $'tools/keyword-($NAME_MAP | get -o $keyword | default $keyword).yaml' } else { $keywords | print }
 }
 
 export def get-assets [

@@ -35,7 +35,7 @@ def summary [
     for a in $MEMBERS {
       mut stat = t git-stat --author $a --from $from --to $to --max-count $max_count --summary-only --json --exclude ($EXCLUDES | str join ',')
                         | from json
-                        | upsert name ($NAME_MAP | get -i $a | default $a)
+                        | upsert name ($NAME_MAP | get -o $a | default $a)
                         | upsert repo $repo
       $stats = ($stats | append $stat)
     }

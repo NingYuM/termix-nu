@@ -65,9 +65,9 @@ export def deprecated-modules [
   mut latest = open $dest
   for m in $modules {
     if $m not-in $latest { continue }
-    if $delete { $latest = ($latest | reject -i $m); continue }
+    if $delete { $latest = ($latest | reject -o $m); continue }
     if $enable {
-      $latest = ($latest | reject -i ([$m deprecated] | into cell-path))
+      $latest = ($latest | reject -o ([$m deprecated] | into cell-path))
       continue
     }
     $latest = ($latest | upsert ([$m deprecated] | into cell-path) true)
@@ -98,7 +98,7 @@ def view-modules [url: string] {
 # Get dest OSS settings
 def --env get-dest-oss [destStore: string] {
   let LOCAL_CONFIG = if ('.termixrc' | path exists) { '.termixrc' } else { $'($env.TERMIX_DIR)/.termixrc' }
-  let ossConf = open $LOCAL_CONFIG | from toml | get -i $destStore
+  let ossConf = open $LOCAL_CONFIG | from toml | get -o $destStore
   if ($ossConf | is-empty) {
     print $'The storage you specified (ansi p)($destStore)(ansi reset) does not exist in (ansi p)($LOCAL_CONFIG)(ansi reset).'
     exit $ECODE.INVALID_PARAMETER

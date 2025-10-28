@@ -7,7 +7,7 @@ t dir-batch-exec "'ls pkgs | length'" acrm-ui,asrm-ui,bulma-ui,carbon-ui,csp-por
 
 # Clear Husky config
 rg husky -C 3
-ls pkgs/ | get name | each {|it| let pkg = open $'($it)/package.json' | reject -i husky; $pkg | save -f $'($it)/package.json' }
+ls pkgs/ | get name | each {|it| let pkg = open $'($it)/package.json' | reject -o husky; $pkg | save -f $'($it)/package.json' }
 cd .git/hooks; rg husky --files-with-matches | lines | rm ...$in
 
 # Add assets script after building assets
@@ -17,7 +17,7 @@ ls pkgs/ | get name | each {|it| let pkg = open $'($it)/package.json' | upsert s
 ls pkgs/ | get name | each {|it| let pkg = open $'($it)/package.json' | upsert distVersion '1.0.0'; $pkg | save -f $'($it)/package.json' }
 
 # Remove f2elint deps
-ls pkgs/ | get name | each {|it| let pkg = open $'($it)/package.json' | reject -i devDependencies.f2elint; $pkg | save -f $'($it)/package.json' }
+ls pkgs/ | get name | each {|it| let pkg = open $'($it)/package.json' | reject -o devDependencies.f2elint; $pkg | save -f $'($it)/package.json' }
 
 # 依赖检查
 let pkgs = ls pkgs/ | get name | each {|it| open $'($it)/package.json' | get name }
