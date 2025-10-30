@@ -115,6 +115,7 @@ return {
 
   -- Font settings
   font = wezterm.font_with_fallback {
+    'MonoLisa Nerd Font Light',
     'Lilex',
     'Sarasa Term SC',
     'Fira Code',
