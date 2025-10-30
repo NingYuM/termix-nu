@@ -47,14 +47,15 @@ grapheme-width-method = unicode
 # font-family = Hack Nerd Font Mono
 # font-family = Source Code Pro
 # font-family = Fira Code
-font-family = Geist Mono
+# font-family = Geist Mono
+font-family = MonoLisa Nerd Font Light
 # font-family = Google Sans Code
 # font-family = Lilex Regular
 window-title-font-family = Fira Code
 # 中文字体
 # font-codepoint-map = U+4e00-U+9fa5=Maple Mono NF CN
 # Use Fira Code for char g
-font-codepoint-map = U+0067-U+0067=Fira Code
+# font-codepoint-map = U+0067-U+0067=Fira Code
 # font-codepoint-map = U+4e00-U+9fa5=Sarasa Term SC
 
 # window-decoration = false
@@ -65,9 +66,11 @@ window-width = 80
 window-height = 20
 window-theme = dark
 
-cursor-style = bar
-# cursor-color = #eec36d
+# Variant: bar, block, underline, block_hollow
+cursor-style = block_hollow
+cursor-color = #eec36d
 # cursor-color = #a8357a
+cursor-opacity = 0.7
 adjust-cursor-height = 60
 adjust-cursor-thickness = 3
 
