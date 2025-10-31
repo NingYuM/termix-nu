@@ -77,11 +77,11 @@ def get-redirects [
   --environment(-e): string,    # The environment to configure routers
   --type(-t): string = 'url',   # The redirect type to query, default is url, available values are url or service
 ] {
-  let redirctType = if ($type | is-empty) { 'ALL' } else { $type | str upcase }
+  let redirectType = if ($type | is-empty) { 'ALL' } else { $type | str upcase }
   for pkg in $packages {
     print $'Querying Erda redirect configs for:(char nl)'
     print ($pkg | reject matchDomain)
-    print $'(char nl)Erda (ansi g)($redirctType)(ansi reset) redirect configs for domain: (ansi g)($pkg.matchDomain)(ansi reset) of ($environment)'; hr-line
+    print $'(char nl)Erda (ansi g)($redirectType)(ansi reset) redirect configs for domain: (ansi g)($pkg.matchDomain)(ansi reset) of ($environment)'; hr-line
     let routerQueryUrl = $'($ERDA_HOST)/api/($PROJECT_CONF.orgName)/gateway/openapi/packages/($pkg.id)/apis?pageSize=1000'
     let routes = http get -e --headers (get-erda-auth $ERDA_HOST --type nu) $routerQueryUrl
       | get data.list

@@ -16,6 +16,9 @@
 use ../utils/erda.nu [ERDA_HOST, get-erda-auth]
 use ../utils/common.nu [ECODE get-tmp-path hr-line has-ref]
 
+# 最大连续失败次数, 超出则停止为该包创建 Tag
+const MAX_FAILURE = 15
+
 # 列出所有 URL 为空的仓库及其维护者信息
 export def get-repo-maintainers [--show-maintainers(-m)] {
   let empties = open repos.toml
@@ -98,6 +101,7 @@ export def create-tag-for-multi-repo [pkg: record] {
   print $'(ansi c)Missing tags:(ansi rst) ($missingTags | length)'
 
   # 为每个缺失的 Tag 创建标签
+  mut failed = 0
   for tag in ($missingTags | enumerate) {
     let idx = $'#($tag.index + 1)'
     let version = $tag.item | str trim -c v
@@ -112,6 +116,11 @@ export def create-tag-for-multi-repo [pkg: record] {
 
     if ($commitHash | is-empty) {
       print $'(ansi y)WARNING:(ansi rst) No commit found for version ($version) ($idx) ...'
+      $failed = $failed + 1
+      if $failed > $MAX_FAILURE {
+        print $'(ansi r)ERROR:(ansi rst) Too many consecutive failures. Stop creating tags for this package.'
+        break
+      }
       continue
     }
 
@@ -119,7 +128,7 @@ export def create-tag-for-multi-repo [pkg: record] {
     let message = $'A new release Tag for version: ($tag.item) created by termix-nu'
 
     try {
-      git tag -a $tag.item $commitHash -m $message
+      git tag -a $tag.item $commitHash -m $message; $failed = 0
       print $'(ansi g)✓(ansi rst) Created tag ($tag.item) at commit ($commitHash | str substring 0..7) ($idx) ...'
     } catch {|e|
       print $'(ansi r)ERROR:(ansi rst) Failed to create tag ($tag.item): ($e.msg) ($idx) ...'
@@ -147,6 +156,7 @@ export def create-tag-for-mono-repo [pkg: record] {
   let standalone = $pkg.standalone? | default false
 
   # 为每个缺失的标签创建标签
+  mut failed = 0
   for tag in ($missingTags | enumerate) {
     let idx = $'#($tag.index + 1)'
     let version = $tag.item | str trim -c v
@@ -176,6 +186,11 @@ export def create-tag-for-mono-repo [pkg: record] {
 
     if ($commitHash | is-empty) {
       print $'(ansi y)WARNING:(ansi rst) No commit found for version ($version) ($idx) ...'
+      $failed = $failed + 1
+      if $failed > $MAX_FAILURE {
+        print $'(ansi r)ERROR:(ansi rst) Too many consecutive failures. Stop creating tags for this package.'
+        break
+      }
       continue
     }
 
@@ -187,7 +202,7 @@ export def create-tag-for-mono-repo [pkg: record] {
     let message = $'A new release Tag for version: ($finalTag) created by termix-nu'
 
     try {
-      git tag -a $finalTag $commitHash -m $message
+      git tag -a $finalTag $commitHash -m $message; $failed = 0
       print $'(ansi g)✓(ansi rst) Created tag (ansi g)($finalTag)(ansi rst) at commit ($commitHash | str substring 0..7) ($idx) ...'
     } catch {|e|
       print $'(ansi r)ERROR:(ansi rst) Failed to create tag ($finalTag): ($e.msg) ($idx) ...'
@@ -256,11 +271,11 @@ export def download-src-pkgs [pkgs: table, repos: table] {
     let ver = $pkg.version
     let repoUrl = $repos | where name == $name | get repo | first | str replace 'terminus/dop' 'api/terminus/repo'
     let url = $'($repoUrl)/archive/($ver).tar.gz'
-    let vurl = $'($repoUrl)/archive/v($ver).tar.gz'
+    let vUrl = $'($repoUrl)/archive/v($ver).tar.gz'
     let pkgUrl = $'($repoUrl)/archive/($name)@($ver).tar.gz'
     let dest = $'pkg-src/($name)-($ver).tar.gz'
     try {
-      try { http get --headers $headers $url } catch { http get --headers $headers $vurl }
+      try { http get --headers $headers $url } catch { http get --headers $headers $vUrl }
     } catch {
       http get --headers $headers $pkgUrl
     } | save -rfp $dest

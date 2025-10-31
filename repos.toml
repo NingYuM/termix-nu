@@ -160,7 +160,7 @@ repo = "https://erda.cloud/terminus/dop/frontend-product/trnw-package-tools"
 [[repos]]
 name = "@terminus/trnw-tools"
 tagged = true
-srcPublished = true  # Maybe be true
+srcPublished = true
 downloadable = true
 url = "https://erda.cloud/terminus/dop/projects/213/apps/1003445/repo"
 repo = "https://erda.cloud/terminus/dop/frontend-product/trnw-tools"
