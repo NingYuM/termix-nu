@@ -86,6 +86,7 @@ export def --env clone-repo [repo: string] {
 #   - 使用 git 命令分析 package.json 文件的变更记录，找出版本变更的 Commit hash, 然后从这个 Commit hash 创建 Tag，备注信息为: `A new release Tag for version: ($tagName) created by termix-nu`
 #   - 切记：不要修改或者删除仓库里面先前已经有的 Tag
 export def create-tag-for-multi-repo [pkg: record] {
+  print $'(char nl)(ansi c)Creating tags for multi repo: (ansi rst) (ansi g)($pkg.name)(ansi rst)'; hr-line
   let releases = npm info $pkg.name time --json | from json | reject created modified
   let versions = $releases | columns | where $it !~ 'alpha'
   let tags = git tag -l | lines | each { str trim }
@@ -97,8 +98,9 @@ export def create-tag-for-multi-repo [pkg: record] {
   print $'(ansi c)Missing tags:(ansi rst) ($missingTags | length)'
 
   # 为每个缺失的 Tag 创建标签
-  for tagName in $missingTags {
-    let version = $tagName | str trim -c v
+  for tag in ($missingTags | enumerate) {
+    let idx = $'#($tag.index + 1)'
+    let version = $tag.item | str trim -c v
     # 获取所有修改 package.json 的 commits，然后检查每个 commit 的版本号
     let allCommits = try { git log --all --format=%H -- package.json | lines } catch { [] }
 
@@ -109,18 +111,18 @@ export def create-tag-for-multi-repo [pkg: record] {
     } | compact
 
     if ($commitHash | is-empty) {
-      print $'(ansi y)WARNING:(ansi rst) No commit found for version ($version)'
+      print $'(ansi y)WARNING:(ansi rst) No commit found for version ($version) ($idx) ...'
       continue
     }
 
     let commitHash = $commitHash | last
-    let message = $'A new release Tag for version: ($tagName) created by termix-nu'
+    let message = $'A new release Tag for version: ($tag.item) created by termix-nu'
 
     try {
-      git tag -a $tagName $commitHash -m $message
-      print $'(ansi g)✓(ansi rst) Created tag ($tagName) at commit ($commitHash | str substring 0..7)'
+      git tag -a $tag.item $commitHash -m $message
+      print $'(ansi g)✓(ansi rst) Created tag ($tag.item) at commit ($commitHash | str substring 0..7) ($idx) ...'
     } catch {|e|
-      print $'(ansi r)ERROR:(ansi rst) Failed to create tag ($tagName): ($e.msg)'
+      print $'(ansi r)ERROR:(ansi rst) Failed to create tag ($tag.item): ($e.msg) ($idx) ...'
     }
   }
 
@@ -129,7 +131,7 @@ export def create-tag-for-multi-repo [pkg: record] {
 
 # Create tags for a mono-repo package
 export def create-tag-for-mono-repo [pkg: record] {
-  print $'(ansi c)Creating tags for mono repo: (ansi rst) (ansi g)($pkg.name)(ansi rst)'; hr-line
+  print $'(char nl)(ansi c)Creating tags for mono repo: (ansi rst) (ansi g)($pkg.name)(ansi rst)'; hr-line
   let releases = npm info $pkg.name time --json | from json | reject created modified
   let versions = $releases | columns | where $it !~ 'alpha'
   let tags = git tag -l | lines | each { str trim }
@@ -142,13 +144,15 @@ export def create-tag-for-mono-repo [pkg: record] {
   print $'(ansi c)Package:(ansi rst) (ansi g)($pkg.name)(ansi rst)'
   print $'(ansi c)Missing tags:(ansi rst) ($missingTags | length)'
   let pkgFile = $pkg.pkgFile?
+  let standalone = $pkg.standalone? | default false
 
   # 为每个缺失的标签创建标签
-  for tagName in $missingTags {
-    let version = $tagName | str trim -c v
+  for tag in ($missingTags | enumerate) {
+    let idx = $'#($tag.index + 1)'
+    let version = $tag.item | str trim -c v
     let newTag = $'($pkg.name)@($version)'
     if (has-ref $newTag) {
-      print $'(ansi y)INFO:(ansi rst) Tag ($newTag) already exists, skip...'
+      print $'(ansi y)INFO:(ansi rst) Tag ($newTag) already exists, skip ($idx) ...'
       continue
     }
 
@@ -156,7 +160,7 @@ export def create-tag-for-mono-repo [pkg: record] {
     let allCommits = if ($pkgFile | is-not-empty) {
       try { git log --all --format=%H -- $pkgFile | lines } catch { [] }
     } else {
-      print $'(ansi y)WARNING:(ansi rst) No pkgFile specified for package: ($pkg.name)'
+      print $'(ansi y)WARNING:(ansi rst) No pkgFile specified for package: ($pkg.name) ($idx) ...'
       []
     }
 
@@ -171,7 +175,7 @@ export def create-tag-for-mono-repo [pkg: record] {
     } | compact
 
     if ($commitHash | is-empty) {
-      print $'(ansi y)WARNING:(ansi rst) No commit found for version ($version)'
+      print $'(ansi y)WARNING:(ansi rst) No commit found for version ($version) ($idx) ...'
       continue
     }
 
@@ -179,14 +183,14 @@ export def create-tag-for-mono-repo [pkg: record] {
     # 检查该提交修改的文件，若修改了多个 /package.json 则使用版本标签，否则使用 name@version 标签
     let changedFiles = try { git diff-tree --no-commit-id --name-only -r $commitHash | lines } catch { [] }
     let pkgJsonChangedCnt = $changedFiles | where {|p| $p | str ends-with '/package.json' } | length
-    let finalTag = if $pkgJsonChangedCnt > 1 { $tagName } else { $newTag }
+    let finalTag = if $pkgJsonChangedCnt == 1 or $standalone { $newTag } else { $tag.item }
     let message = $'A new release Tag for version: ($finalTag) created by termix-nu'
 
     try {
       git tag -a $finalTag $commitHash -m $message
-      print $'(ansi g)✓(ansi rst) Created tag (ansi g)($finalTag)(ansi rst) at commit ($commitHash | str substring 0..7)'
+      print $'(ansi g)✓(ansi rst) Created tag (ansi g)($finalTag)(ansi rst) at commit ($commitHash | str substring 0..7) ($idx) ...'
     } catch {|e|
-      print $'(ansi r)ERROR:(ansi rst) Failed to create tag ($finalTag): ($e.msg)'
+      print $'(ansi r)ERROR:(ansi rst) Failed to create tag ($finalTag): ($e.msg) ($idx) ...'
     }
   }
 

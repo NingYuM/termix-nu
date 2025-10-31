@@ -2,6 +2,7 @@
 [[repos]]
 name = "@terminus/termix"
 monoRepo = true
+standalone = true
 downloadable = true
 pkgFile = "packages/termix/package.json"
 url = "https://erda.cloud/terminus/dop/projects/213/apps/4280/repo"
@@ -25,6 +26,7 @@ repo = "https://erda.cloud/terminus/dop/frontend-product/mp-calendar"
 [[repos]]
 name = "@terminus/designer"
 monoRepo = true
+standalone = true
 downloadable = true
 pkgFile = "packages/designer/package.json"
 url = "https://erda.cloud/terminus/dop/projects/213/apps/4220/repo"
@@ -32,8 +34,9 @@ repo = "https://erda.cloud/terminus/dop/frontend-product/eevee"
 
 [[repos]]
 name = "@terminus/eevee"
-downloadable = true
 monoRepo = true
+standalone = true
+downloadable = true
 pkgFile = "packages/eevee/package.json"
 url = "https://erda.cloud/terminus/dop/projects/213/apps/4220/repo"
 repo = "https://erda.cloud/terminus/dop/frontend-product/eevee"
@@ -41,6 +44,7 @@ repo = "https://erda.cloud/terminus/dop/frontend-product/eevee"
 [[repos]]
 name = "@terminus/site-manager"
 monoRepo = true
+standalone = true
 downloadable = true
 pkgFile = "packages/site-manager/package.json"
 url = "https://erda.cloud/terminus/dop/projects/213/apps/4220/repo"
@@ -49,6 +53,7 @@ repo = "https://erda.cloud/terminus/dop/frontend-product/eevee"
 [[repos]]
 name = "@terminus/eevee-config-plugin"
 monoRepo = true
+standalone = true
 downloadable = true
 pkgFile = "packages/eevee-config-plugin/package.json"
 url = "https://erda.cloud/terminus/dop/projects/213/apps/4220/repo"
