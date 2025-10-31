@@ -83,6 +83,28 @@ export def --env clone-repo [repo: string] {
   }
 }
 
+# Calculate missing tags for a package
+def get-missing-tags [pkg: record] {
+  let releases = npm info $pkg.name time --json | from json | reject created modified
+  let versions = $releases | columns | where $it !~ 'alpha'
+  let tags = git tag -l | lines | each { str trim }
+  let hasV = $tags | any {|t| $t | str starts-with 'v' }
+  # Normalize existing tags to versions: supports '1.2.3', 'v1.2.3', '@scope/name@1.2.3'
+  let existingVers = ($tags | each {|t|
+    let plain = ($t | str trim -c v)
+    if ($plain =~ '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)') { $plain } else {
+      if ($t | str contains '@') {
+        let last = ($t | split row '@' | last)
+        let cleaned = ($last | str trim -c v)
+        if ($cleaned =~ '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)') { $cleaned } else { null }
+      } else { null }
+    }
+  } | compact)
+  let missingTags = $versions | where $it not-in $existingVers
+  let missingTags = if $hasV { $missingTags | each {|it| $'v($it)' } } else { $missingTags }
+  $missingTags
+}
+
 # Create tags for a multi-repo package
 # 创建 Tag 的过程：
 #   - 根据已经发布的版本计算缺失的 Tag，已完成
@@ -90,12 +112,7 @@ export def --env clone-repo [repo: string] {
 #   - 切记：不要修改或者删除仓库里面先前已经有的 Tag
 export def create-tag-for-multi-repo [pkg: record] {
   print $'(char nl)(ansi c)Creating tags for multi repo: (ansi rst) (ansi g)($pkg.name)(ansi rst)'; hr-line
-  let releases = npm info $pkg.name time --json | from json | reject created modified
-  let versions = $releases | columns | where $it !~ 'alpha'
-  let tags = git tag -l | lines | each { str trim }
-  let hasV = $tags | any {|t| $t | str starts-with 'v' }
-  let missingTags = $versions | where $it not-in ($tags | each { str trim -c v })
-  let missingTags = if $hasV { $missingTags | each {|it| $'v($it)' } } else { $missingTags }
+  let missingTags = get-missing-tags $pkg
 
   print $'(ansi c)Package:(ansi rst) (ansi g)($pkg.name)(ansi rst)'
   print $'(ansi c)Missing tags:(ansi rst) ($missingTags | length)'
@@ -135,20 +152,13 @@ export def create-tag-for-multi-repo [pkg: record] {
     }
   }
 
-  { name: $pkg.name, versions: $versions, tags: $tags, missingTags: $missingTags }
+  { name: $pkg.name, missingTags: $missingTags }
 }
 
 # Create tags for a mono-repo package
 export def create-tag-for-mono-repo [pkg: record] {
   print $'(char nl)(ansi c)Creating tags for mono repo: (ansi rst) (ansi g)($pkg.name)(ansi rst)'; hr-line
-  let releases = npm info $pkg.name time --json | from json | reject created modified
-  let versions = $releases | columns | where $it !~ 'alpha'
-  let tags = git tag -l | lines | each { str trim }
-  let hasV = $tags | any {|t| $t | str starts-with 'v' }
-
-  # 计算缺失的标签
-  let missingTags = $versions | where $it not-in ($tags | each { str trim -c v })
-  let missingTags = if $hasV { $missingTags | each {|it| $'v($it)' } } else { $missingTags }
+  let missingTags = get-missing-tags $pkg
 
   print $'(ansi c)Package:(ansi rst) (ansi g)($pkg.name)(ansi rst)'
   print $'(ansi c)Missing tags:(ansi rst) ($missingTags | length)'
@@ -209,7 +219,7 @@ export def create-tag-for-mono-repo [pkg: record] {
     }
   }
 
-  { name: $pkg.name, versions: $versions, tags: $tags, missingTags: $missingTags }
+  { name: $pkg.name, missingTags: $missingTags }
 }
 
 # Create git tags for all downloadable and untagged repositories
@@ -249,14 +259,12 @@ export def count-latest-tags [--days(-d): int = 2] {
   for repo in $repos {
     if not (($tmpPath | path join $repo | path join '.git') | path exists) { continue }
     let lines = (try { git -C ($tmpPath | path join $repo) for-each-ref --format='%(refname:short)|%(creatordate:iso-strict)' refs/tags | lines } catch { [] })
-    let cnt = ($lines
-      | each {|l|
+    let cnt = (
+        $lines | each {|l|
           let p = ($l | split row '|')
           if ($p | length) < 2 { null } else { { name: ($p | get 0), date: (($p | get 1) | into datetime) } }
         }
-      | compact
-      | where date >= $threshold
-      | length)
+      | compact | where date >= $threshold | length)
     $total += $cnt
   }
   $total
