@@ -1,0 +1,188 @@
+
+[[repos]]
+name = "@terminus/termix"
+monoRepo = true
+downloadable = true
+pkgFile = "packages/termix/package.json"
+url = "https://erda.cloud/terminus/dop/projects/213/apps/4280/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/mall-base"
+
+[[repos]]
+name = "@terminus/mp-barcode"
+tagged = true
+downloadable = true
+url = "https://erda.cloud/terminus/dop/projects/213/apps/4205/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/mp-barcode"
+
+[[repos]]
+name = "@terminus/mp-calendar"
+tagged = true
+srcPublished = true
+downloadable = true
+url = "https://erda.cloud/terminus/dop/projects/213/apps/4206/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/mp-calendar"
+
+[[repos]]
+name = "@terminus/designer"
+monoRepo = true
+downloadable = true
+pkgFile = "packages/designer/package.json"
+url = "https://erda.cloud/terminus/dop/projects/213/apps/4220/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/eevee"
+
+[[repos]]
+name = "@terminus/eevee"
+downloadable = true
+monoRepo = true
+pkgFile = "packages/eevee/package.json"
+url = "https://erda.cloud/terminus/dop/projects/213/apps/4220/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/eevee"
+
+[[repos]]
+name = "@terminus/site-manager"
+monoRepo = true
+downloadable = true
+pkgFile = "packages/site-manager/package.json"
+url = "https://erda.cloud/terminus/dop/projects/213/apps/4220/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/eevee"
+
+[[repos]]
+name = "@terminus/eevee-config-plugin"
+monoRepo = true
+downloadable = true
+pkgFile = "packages/eevee-config-plugin/package.json"
+url = "https://erda.cloud/terminus/dop/projects/213/apps/4220/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/eevee"
+
+[[repos]]
+name = "@terminus/react-imageview"
+tagged = true
+downloadable = true
+url = "https://erda.cloud/terminus/dop/projects/170/apps/5492/repo"
+repo = "https://erda.cloud/terminus/dop/nusi/react-imageview"
+
+[[repos]]
+name = "@terminus/react-underline-tabbar"
+tagged = true
+downloadable = true
+url = "https://erda.cloud/terminus/dop/projects/170/apps/4773/repo"
+repo = "https://erda.cloud/terminus/dop/nusi/react-underline-tabbar"
+
+[[repos]]
+name = "@terminus/react-native-amap-sdk"
+tagged = true
+downloadable = true
+url = "https://erda.cloud/terminus/dop/projects/254/apps/5236/repo"
+repo = "https://erda.cloud/terminus/dop/mobile/react-native-amap"
+
+[[repos]]
+name = "@terminus/react-native-camera"
+tagged = true
+downloadable = true
+url = "https://erda.cloud/terminus/dop/projects/254/apps/5264/repo"
+repo = "https://erda.cloud/terminus/dop/mobile/react-native-camera"
+
+[[repos]]
+name = "@terminus/react-native-octopus"
+monoRepo = true
+downloadable = true
+pkgFile = "packages/react-native-octopus/package.json"
+url = "https://erda.cloud/terminus/dop/projects/213/apps/4847/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/octopus"
+
+[[repos]]
+name = "@terminus/octopus-core"
+monoRepo = true
+downloadable = true
+pkgFile = "packages/core/package.json"
+url = "https://erda.cloud/terminus/dop/projects/213/apps/4847/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/octopus"
+
+[[repos]]
+name = "@terminus/octopus-cli"
+monoRepo = true
+downloadable = true
+pkgFile = "packages/cli/package.json"
+url = "https://erda.cloud/terminus/dop/projects/213/apps/4847/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/octopus"
+
+[[repos]]
+name = "@terminus/octopus-jssdk"
+monoRepo = true
+downloadable = true
+pkgFile = "packages/jssdk/package.json"
+url = "https://erda.cloud/terminus/dop/projects/213/apps/4847/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/octopus"
+
+[[repos]]
+name = "@terminus/octopus-shared"
+monoRepo = true
+downloadable = true
+pkgFile = "packages/shared/package.json"
+url = "https://erda.cloud/terminus/dop/projects/213/apps/4847/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/octopus"
+
+[[repos]]
+name = "@terminus/rn-b2b2c"
+tagged = true
+downloadable = true
+url = "https://erda.cloud/terminus/dop/projects/254/apps/5308/repo"
+repo = "https://erda.cloud/terminus/dop/mobile/react-native-b2b2c"
+
+[[repos]]
+name = "@terminus/rn-share"
+tagged = true
+downloadable = true
+url = "https://erda.cloud/terminus/dop/projects/254/apps/5261/repo"
+repo = "https://erda.cloud/terminus/dop/mobile/react-native-share"
+
+[[repos]]
+name = "@terminus/trnw-design"
+tagged = true
+srcPublished = false
+downloadable = true
+url = "https://erda.cloud/terminus/dop/projects/213/apps/1003444/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/trnw-design"
+
+[[repos]]
+name = "@terminus/trnw-package-tools"
+tagged = true
+srcPublished = false
+downloadable = true
+url = "https://erda.cloud/terminus/dop/projects/213/apps/1003446/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/trnw-package-tools"
+
+[[repos]]
+name = "@terminus/trnw-tools"
+tagged = true
+srcPublished = true  # Maybe be true
+downloadable = true
+url = "https://erda.cloud/terminus/dop/projects/213/apps/1003445/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/trnw-tools"
+
+[[repos]]
+name = "@terminus/rollup-plugin-typescript"
+monoRepo = true
+srcPublished = false
+downloadable = true
+pkgFile = "packages/typescript/package.json"
+url = "https://erda.cloud/terminus/dop/projects/213/apps/4847/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/octopus"
+
+[[repos]]
+name = "@terminus/typescript-checker"
+repo = ''
+srcPublished = true
+downloadable = true
+
+[[repos]]
+name = "@terminus/rollup-plugin-alias"
+repo = ''
+srcPublished = true
+downloadable = true
+
+[[repos]]
+name = "@terminus/react-navigation-bottom-tabs"
+repo = ''
+srcPublished = true
+downloadable = true
