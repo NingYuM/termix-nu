@@ -244,6 +244,7 @@ export def create-tag-for-mono-repo [pkg: record, --tags(-t): string] {
 }
 
 # Create git tags for all downloadable and untagged repositories
+# e.g.: `t tag-repo --pkgs @terminus/bricks=1.1.1,@terminus/mall-utils=1.3.9`
 export def prepare-repo-tags [--push-tags(-p), --pkgs: string] {
   update-pkg-json-for-mono-repos
 
@@ -347,7 +348,7 @@ export def download-npm-pkgs [pkgs: table, repos: table] {
   }
 }
 
-# 下载所有源码包
+# 下载所有源码包, e.g.: `t fe-src @terminus/bricks=1.1.1,@terminus/mall-utils=1.3.9`
 export def download-all-src-pkgs [
   pkgs: string        # Npm pkgs to download, format: pkg1=ver1,pkg2=ver2,...
   --compress-all(-c)  # Compress pkg-src directory to fe-src.tar.gz

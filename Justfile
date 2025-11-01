@@ -251,6 +251,12 @@ ls-node *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'ls-node.nu') }}; \
     ls-node-remote {{OPTIONS}}
 
+# Create git tags for frontend packages
+[group('-- Frontend --')]
+tag-repo *OPTIONS: _setup
+  @overlay use {{ join(_termix, 'git', 'repo-src.nu') }}; \
+    prepare-repo-tags {{OPTIONS}}
+
 # Download source code for frontend packages
 [group('-- Frontend --')]
 fe-src *OPTIONS: _setup

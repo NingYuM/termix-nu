@@ -17,6 +17,12 @@ srcPublished = true
 downloadable = true
 
 [[repos]]
+name = "@terminus/bricks"
+downloadable = true
+repo = "https://erda.cloud/terminus/dop/frontend-product/bricks"
+url = "https://erda.cloud/terminus/dop/projects/213/apps/5317/repo"
+
+[[repos]]
 name = "@terminus/designer"
 tagged = true
 monoRepo = true
@@ -73,6 +79,15 @@ monoRepo = true
 standalone = true
 downloadable = true
 pkgFile = "packages/mall-base/package.json"
+url = "https://erda.cloud/terminus/dop/projects/213/apps/4280/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/mall-base"
+
+[[repos]]
+name = "@terminus/mall-utils"
+monoRepo = true
+standalone = true
+downloadable = true
+pkgFile = "packages/mall-utils/package.json"
 url = "https://erda.cloud/terminus/dop/projects/213/apps/4280/repo"
 repo = "https://erda.cloud/terminus/dop/frontend-product/mall-base"
 
