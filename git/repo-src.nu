@@ -112,6 +112,34 @@ def get-missing-tags [pkg: record] {
   $missingTags
 }
 
+# Helpers
+# Normalize target tags list from input; fallback to all missing tags
+def normalize-targets [missing: list<string>, tags?: string] {
+  match ($tags | is-empty) {
+    true => { $missing }
+    false => {
+      let wanted = $tags | split row , | each { str trim } | compact -e
+      $missing | where {|t| ($t | str trim -c v) in $wanted }
+    }
+  }
+}
+
+# Get commit hashes for the given file path across all branches
+def file-commits [path: string] {
+  try { git log --all --format=%H -- $path | lines } catch { [] }
+}
+
+# Find the last commit that updated the file to the specific version in its JSON
+# Returns: commit hash string or null
+def last-commit-for-version [path: string, version: string] {
+  let commits = file-commits $path
+  let matches = $commits | each {|commit|
+    let content = try { git show $'($commit):($path)' | from json } catch { { version: "" } }
+    if $content.version? == $version { $commit } else { null }
+  } | compact
+  if ($matches | is-empty) { null } else { $matches | last }
+}
+
 # Create tags for a multi-repo package
 # 创建 Tag 的过程：
 #   - 根据已经发布的版本计算缺失的 Tag，已完成
@@ -121,10 +149,7 @@ export def create-tag-for-multi-repo [pkg: record, --tags(-t): string] {
   print $'(char nl)(ansi c)Creating tags for multi repo: (ansi rst) (ansi g)($pkg.name)(ansi rst)'; hr-line
   let missingTags = get-missing-tags $pkg
 
-  let targets = if ($tags | is-not-empty) {
-    let wanted = $tags | split row , | compact -e
-    $missingTags | where {|t| ($t | str trim -c v) in $wanted }
-  } else { $missingTags }
+  let targets = normalize-targets $missingTags $tags
 
   print $'(ansi c)Package:(ansi rst) (ansi g)($pkg.name)(ansi rst)'
   print $'(ansi c)Missing tags:(ansi rst) ($targets | length)'
@@ -134,14 +159,8 @@ export def create-tag-for-multi-repo [pkg: record, --tags(-t): string] {
   for tag in ($targets | enumerate) {
     let idx = $'#($tag.index + 1)'
     let version = $tag.item | str trim -c v
-    # 获取所有修改 package.json 的 commits，然后检查每个 commit 的版本号
-    let allCommits = try { git log --all --format=%H -- package.json | lines } catch { [] }
-
-    # 找到版本号匹配的最后一个 commit
-    let commitHash = $allCommits | each {|commit|
-      let content = try { git show $'($commit):package.json' | from json } catch { { version: "" } }
-      if $content.version? == $version { $commit } else { null }
-    } | compact
+    # 获取指定版本的最后一次变更提交
+    let commitHash = last-commit-for-version 'package.json' $version
 
     if ($commitHash | is-empty) {
       print $'(ansi y)WARNING:(ansi rst) No commit found for version ($version) ($idx) ...'
@@ -153,7 +172,7 @@ export def create-tag-for-multi-repo [pkg: record, --tags(-t): string] {
       continue
     }
 
-    let commitHash = $commitHash | last
+    let commitHash = $commitHash
     let message = $'A new release Tag for version: ($tag.item) created by termix-nu'
 
     try {
@@ -172,10 +191,7 @@ export def create-tag-for-mono-repo [pkg: record, --tags(-t): string] {
   print $'(char nl)(ansi c)Creating tags for mono repo: (ansi rst) (ansi g)($pkg.name)(ansi rst)'; hr-line
   let missingTags = get-missing-tags $pkg
 
-  let targets = if ($tags | is-not-empty) {
-    let wanted = $tags | split row , | compact -e
-    $missingTags | where {|t| ($t | str trim -c v) in $wanted }
-  } else { $missingTags }
+  let targets = normalize-targets $missingTags $tags
 
   print $'(ansi c)Package:(ansi rst) (ansi g)($pkg.name)(ansi rst)'
   print $'(ansi c)Missing tags:(ansi rst) ($targets | length)'
@@ -193,23 +209,11 @@ export def create-tag-for-mono-repo [pkg: record, --tags(-t): string] {
       continue
     }
 
-    # 获取所有修改 package.json 的 commits
-    let allCommits = if ($pkgFile | is-not-empty) {
-      try { git log --all --format=%H -- $pkgFile | lines } catch { [] }
-    } else {
-      print $'(ansi y)WARNING:(ansi rst) No pkgFile specified for package: ($pkg.name) ($idx) ...'
-      []
+    # 获取指定版本的最后一次变更提交
+    let commitHash = match ($pkgFile | is-not-empty) {
+      true => { last-commit-for-version $pkgFile $version }
+      false => { print $'(ansi y)WARNING:(ansi rst) No pkgFile specified for package: ($pkg.name) ($idx) ...'; null }
     }
-
-    # 找到版本号匹配的最后一个 commit
-    let commitHash = $allCommits | each {|commit|
-      let content = if ($pkgFile | is-not-empty) {
-        try { git show $'($commit):($pkgFile)' | from json } catch { { version: "" } }
-      } else {
-        { version: "" }
-      }
-      if $content.version? == $version { $commit } else { null }
-    } | compact
 
     if ($commitHash | is-empty) {
       print $'(ansi y)WARNING:(ansi rst) No commit found for version ($version) ($idx) ...'
@@ -221,7 +225,7 @@ export def create-tag-for-mono-repo [pkg: record, --tags(-t): string] {
       continue
     }
 
-    let commitHash = $commitHash | last
+    let commitHash = $commitHash
     # 检查该提交修改的文件，若修改了多个 /package.json 则使用版本标签，否则使用 name@version 标签
     let changedFiles = try { git diff-tree --no-commit-id --name-only -r $commitHash | lines } catch { [] }
     let pkgJsonChangedCnt = $changedFiles | where {|p| $p | str ends-with '/package.json' } | length
@@ -249,19 +253,20 @@ export def prepare-repo-tags [--push-tags(-p), --pkgs: string] {
     | where downloadable == true
     | where ($it.repo | is-not-empty)
 
-  let repos = if ($pkgs | is-not-empty) {
-    let specs = $pkgs | split row , | each { str trim }
-      | compact -e | each { parse '{name}={version}' | into record }
-    $specs | each {|sp|
-      let match = $allRepos | where name == $sp.name
-      if ($match | is-empty) {
-        print $'(ansi y)WARNING:(ansi rst) Package not found in repos.toml: (ansi y)($sp.name)(ansi rst)'; null
-      } else {
-        ($match | first) | upsert __target_tags $sp.version
-      }
-    } | compact -e
-  } else {
-    $allRepos | default false tagged | where tagged != true
+  let repos = match ($pkgs | is-not-empty) {
+    true => {
+      let specs = $pkgs | split row , | each { str trim }
+        | compact -e | each { parse '{name}={version}' | into record }
+      $specs | each {|sp|
+        let match = $allRepos | where name == $sp.name
+        if ($match | is-empty) {
+          print $'(ansi y)WARNING:(ansi rst) Package not found in repos.toml: (ansi y)($sp.name)(ansi rst)'; null
+        } else {
+          ($match | first) | upsert __target_tags $sp.version
+        }
+      } | compact -e
+    }
+    false => { $allRepos | default false tagged | where tagged != true }
   }
 
   $repos | each { |repo|
