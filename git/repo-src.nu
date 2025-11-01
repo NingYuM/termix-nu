@@ -13,8 +13,8 @@
 # [ ] 将源码包上传到公司 OSS，并提供下载链接？
 # [ ] 提供工具检查 npm 包发布产物里面是否包含源码
 
-use ../utils/erda.nu [ERDA_HOST, get-erda-auth]
 use ../utils/common.nu [ECODE get-tmp-path hr-line has-ref]
+use ../utils/erda.nu [ERDA_HOST, get-erda-auth, renew-erda-session]
 
 # 最大连续失败次数, 超出则停止为该包创建 Tag
 const MAX_FAILURE = 15
@@ -312,6 +312,7 @@ export def download-npm-pkgs [pkgs: table, repos: table] {
 
 # 下载所有源码包
 export def download-all-src-pkgs [pkgs: string] {
+  renew-erda-session
   let tmpPath = get-tmp-path
   let repos = open repos.toml | get repos
   cd $tmpPath
