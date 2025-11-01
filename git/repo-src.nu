@@ -117,16 +117,21 @@ def get-missing-tags [pkg: record] {
 #   - 根据已经发布的版本计算缺失的 Tag，已完成
 #   - 使用 git 命令分析 package.json 文件的变更记录，找出版本变更的 Commit hash, 然后从这个 Commit hash 创建 Tag，备注信息为: `A new release Tag for version: ($tagName) created by termix-nu`
 #   - 切记：不要修改或者删除仓库里面先前已经有的 Tag
-export def create-tag-for-multi-repo [pkg: record] {
+export def create-tag-for-multi-repo [pkg: record, --tags(-t): string] {
   print $'(char nl)(ansi c)Creating tags for multi repo: (ansi rst) (ansi g)($pkg.name)(ansi rst)'; hr-line
   let missingTags = get-missing-tags $pkg
 
+  let targets = if ($tags | is-not-empty) {
+    let wanted = $tags | split row , | compact -e
+    $missingTags | where {|t| ($t | str trim -c v) in $wanted }
+  } else { $missingTags }
+
   print $'(ansi c)Package:(ansi rst) (ansi g)($pkg.name)(ansi rst)'
-  print $'(ansi c)Missing tags:(ansi rst) ($missingTags | length)'
+  print $'(ansi c)Missing tags:(ansi rst) ($targets | length)'
 
   # 为每个缺失的 Tag 创建标签
   mut failed = 0
-  for tag in ($missingTags | enumerate) {
+  for tag in ($targets | enumerate) {
     let idx = $'#($tag.index + 1)'
     let version = $tag.item | str trim -c v
     # 获取所有修改 package.json 的 commits，然后检查每个 commit 的版本号
@@ -163,18 +168,23 @@ export def create-tag-for-multi-repo [pkg: record] {
 }
 
 # Create tags for a mono-repo package
-export def create-tag-for-mono-repo [pkg: record] {
+export def create-tag-for-mono-repo [pkg: record, --tags(-t): string] {
   print $'(char nl)(ansi c)Creating tags for mono repo: (ansi rst) (ansi g)($pkg.name)(ansi rst)'; hr-line
   let missingTags = get-missing-tags $pkg
 
+  let targets = if ($tags | is-not-empty) {
+    let wanted = $tags | split row , | compact -e
+    $missingTags | where {|t| ($t | str trim -c v) in $wanted }
+  } else { $missingTags }
+
   print $'(ansi c)Package:(ansi rst) (ansi g)($pkg.name)(ansi rst)'
-  print $'(ansi c)Missing tags:(ansi rst) ($missingTags | length)'
+  print $'(ansi c)Missing tags:(ansi rst) ($targets | length)'
   let pkgFile = $pkg.pkgFile?
   let standalone = $pkg.standalone? | default false
 
   # 为每个缺失的标签创建标签
   mut failed = 0
-  for tag in ($missingTags | enumerate) {
+  for tag in ($targets | enumerate) {
     let idx = $'#($tag.index + 1)'
     let version = $tag.item | str trim -c v
     let newTag = $'($pkg.name)@($version)'
