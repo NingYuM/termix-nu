@@ -148,9 +148,7 @@ def last-commit-for-version [path: string, version: string] {
 export def create-tag-for-multi-repo [pkg: record, --tags(-t): string] {
   print $'(char nl)(ansi c)Creating tags for multi repo: (ansi rst) (ansi g)($pkg.name)(ansi rst)'; hr-line
   let missingTags = get-missing-tags $pkg
-
   let targets = normalize-targets $missingTags $tags
-
   print $'(ansi c)Package:(ansi rst) (ansi g)($pkg.name)(ansi rst)'
   print $'(ansi c)Missing tags:(ansi rst) ($targets | length)'
 
@@ -160,7 +158,7 @@ export def create-tag-for-multi-repo [pkg: record, --tags(-t): string] {
     let idx = $'#($tag.index + 1)'
     let version = $tag.item | str trim -c v
     # 获取指定版本的最后一次变更提交
-    let commitHash = last-commit-for-version 'package.json' $version
+    let commitHash = last-commit-for-version package.json $version
 
     if ($commitHash | is-empty) {
       print $'(ansi y)WARNING:(ansi rst) No commit found for version ($version) ($idx) ...'
@@ -174,7 +172,6 @@ export def create-tag-for-multi-repo [pkg: record, --tags(-t): string] {
 
     let commitHash = $commitHash
     let message = $'A new release Tag for version: ($tag.item) created by termix-nu'
-
     try {
       git tag -a $tag.item $commitHash -m $message; $failed = 0
       print $'(ansi g)✓(ansi rst) Created tag ($tag.item) at commit ($commitHash | str substring 0..7) ($idx) ...'
@@ -190,9 +187,7 @@ export def create-tag-for-multi-repo [pkg: record, --tags(-t): string] {
 export def create-tag-for-mono-repo [pkg: record, --tags(-t): string] {
   print $'(char nl)(ansi c)Creating tags for mono repo: (ansi rst) (ansi g)($pkg.name)(ansi rst)'; hr-line
   let missingTags = get-missing-tags $pkg
-
   let targets = normalize-targets $missingTags $tags
-
   print $'(ansi c)Package:(ansi rst) (ansi g)($pkg.name)(ansi rst)'
   print $'(ansi c)Missing tags:(ansi rst) ($targets | length)'
   let pkgFile = $pkg.pkgFile?
@@ -272,11 +267,20 @@ export def prepare-repo-tags [--push-tags(-p), --pkgs: string] {
 
   $repos | each { |repo|
     clone-repo $repo.repo
-    if $repo.monoRepo? and $repo.monoRepo == true {
-      if ($repo.__target_tags? | is-not-empty) { create-tag-for-mono-repo $repo --tags $repo.__target_tags } else { create-tag-for-mono-repo $repo }
-    } else {
-      if ($repo.__target_tags? | is-not-empty) { create-tag-for-multi-repo $repo --tags $repo.__target_tags } else { create-tag-for-multi-repo $repo }
+    let has_tags = not ($repo.__target_tags? | is-empty)
+    match ($repo.monoRepo? | default false) {
+      true => {
+        if $has_tags {
+          create-tag-for-mono-repo $repo --tags $repo.__target_tags
+        } else { create-tag-for-mono-repo $repo }
+      }
+      _ => {
+        if $has_tags {
+          create-tag-for-multi-repo $repo --tags $repo.__target_tags
+        } else { create-tag-for-multi-repo $repo }
+      }
     }
+
     if $push_tags {
       git push origin --tags
       print $'(ansi g)Tags pushed successfully!(ansi rst)(char nl)'
@@ -289,11 +293,10 @@ export def count-latest-tags [--days(-d): int = 2] {
   let tmpPath = get-tmp-path
   let duration = $days * 1day
   let threshold = (date now) - $duration
+  let repos = ls | where type == dir | get name
 
   cd $tmpPath
-  let repos = ls | where type == dir | get name
   mut total = 0
-
   for repo in $repos {
     if not (($tmpPath | path join $repo | path join '.git') | path exists) { continue }
     let lines = (try { git -C ($tmpPath | path join $repo) for-each-ref --format='%(refname:short)|%(creatordate:iso-strict)' refs/tags | lines } catch { [] })
@@ -301,8 +304,7 @@ export def count-latest-tags [--days(-d): int = 2] {
         $lines | each {|l|
           let p = ($l | split row '|')
           if ($p | length) < 2 { null } else { { name: ($p | get 0), date: (($p | get 1) | into datetime) } }
-        }
-      | compact | where date >= $threshold | length)
+        } | compact | where date >= $threshold | length)
     $total += $cnt
   }
   $total
@@ -316,15 +318,13 @@ export def download-src-pkgs [pkgs: table, repos: table] {
     let name = $pkg.name
     let ver = $pkg.version
     let repoUrl = $repos | where name == $name | get repo | first | str replace 'terminus/dop' 'api/terminus/repo'
+    let dest = $'pkg-src/($name)-($ver).tar.gz'
     let url = $'($repoUrl)/archive/($ver).tar.gz'
     let vUrl = $'($repoUrl)/archive/v($ver).tar.gz'
     let pkgUrl = $'($repoUrl)/archive/($name)@($ver).tar.gz'
-    let dest = $'pkg-src/($name)-($ver).tar.gz'
     try {
       try { http get --headers $headers $url } catch { http get --headers $headers $vUrl }
-    } catch {
-      http get --headers $headers $pkgUrl
-    } | save -rfp $dest
+    } catch { http get --headers $headers $pkgUrl } | save -rfp $dest
     print $'(ansi g)✓(ansi rst) Downloaded (ansi g)($name)@($ver)(ansi rst) source code to (ansi g)($dest)(ansi rst)'
   }
 }
@@ -358,7 +358,7 @@ export def download-all-src-pkgs [
   let repos = open repos.toml | get repos
   cd $tmpPath
   print $'Source code will be downloaded to (ansi g)($tmpPath)/pkg-src(ansi rst)'; hr-line
-  if ('pkg-src' | path exists) { rm -rf 'pkg-src' }
+  if ('pkg-src' | path exists) { rm -rf pkg-src }
   mkdir pkg-src/@terminus
   let categoryPkgs = category-pkgs $pkgs $repos
   download-npm-pkgs $categoryPkgs.noSrcPkgs $repos
@@ -383,7 +383,7 @@ export def category-pkgs [pkgs: string, repos: table] {
   let allPkgs = $repos | get name
   let srcAvailablePkgs = $repos | where {|it| $it.repo? | is-not-empty } | get name
   let srcMissingPkgs = $repos | where {|it| $it.repo? | is-empty } | get name
-  let pkgs = $pkgs | split row ,  | each { parse '{name}={version}' | into record }
+  let pkgs = $pkgs | split row , | each { parse '{name}={version}' | into record }
   let missingPkgs = $pkgs | where $it.name not-in $allPkgs
   if ($missingPkgs | is-empty) {
     let noSrcPkgs = $pkgs | where $it.name in $srcMissingPkgs
@@ -479,7 +479,6 @@ export def update-pkg-json-for-mono-repos [] {
   }
 
   $data | upsert repos $updatedRepos | update repos { sort-by repo } | save -f $reposPath
-
   print $'(ansi g)✓(ansi rst) Updated ($updatedList | length) packages in repos.toml:'
   $updatedList | print
 }
