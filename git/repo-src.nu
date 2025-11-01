@@ -9,6 +9,7 @@
 # [√] 如果没有源码仓库并且 srcPublished 为 true，则直接从 npm 包中下载源码
 # [√] 为各 Multi Repo NPM 包的每一个发布版本生成 TAG, 不影响已有 Tag，考虑多分支情况
 # [√] 为各 Mono Repo NPM 包的每一个发布版本生成 TAG, 不影响已有 Tag，考虑多分支情况
+# [√] 为各 Mono Repo NPM 包自动查找并更新 pkgFile 字段
 # [√] 创建一个总的压缩包，包含所有源码包和清单文件
 # [ ] 将源码包上传到公司 OSS，并提供下载链接？
 # [ ] 提供工具检查 npm 包发布产物里面是否包含源码
@@ -59,7 +60,8 @@ export def list-gitlab-repos [] {
 } --result 'Clone the repository and pull all branches and tags'
 export def --env clone-repo [repo: string] {
   let tmpPath = get-tmp-path
-  let repoName = $repo | path basename
+  # 移除可能存在的 .git 后缀
+  let repoName = $repo | path basename | str replace -r '\.git$' ''
   let repoPath = $tmpPath | path join $repoName
 
   cd $tmpPath
@@ -229,6 +231,8 @@ export def create-tag-for-mono-repo [pkg: record] {
 
 # Create git tags for all downloadable and untagged repositories
 export def prepare-repo-tags [--push-tags(-p)] {
+  update-pkg-json-for-mono-repos
+
   let repos = open repos.toml | get repos
     | default true downloadable
     | default false monoRepo
@@ -365,3 +369,88 @@ export def category-pkgs [pkgs: string, repos: table] {
 # @terminus/mp-barcode=1.0.4,@terminus/trnw-tools=5.0.0-beta2
 # @terminus/mp-barcode=1.0.4,@terminus/trnw-tools=5.0.0-beta2,@terminus/typescript-checker=1.0.7,@terminus/rollup-plugin-alias=2.2.1
 # @terminus/mp-barcode=1.0.4,@terminus/trnw-tools=5.0.0-beta2,@terminus/typescript-checker=1.0.7,@terminus/rollup-plugin-alias=2.2.1,@terminus/rollup-plugin-typescript=4.0.11,@terminus/react-native-octopus=4.1.1
+
+# 为 mono repo 自动查找并更新 pkgFile 字段
+export def update-pkg-json-for-mono-repos [] {
+  print $'(ansi c)Updating pkgFile for mono repos...(ansi rst)'; hr-line
+
+  # 保存当前工作目录的绝对路径，以便后续保存文件
+  let workDir = $env.PWD
+  let reposPath = $workDir | path join 'repos.toml'
+  mut data = open $reposPath
+  let repos = $data.repos | default false monoRepo
+
+  # 找出所有 monoRepo = true 但没有 pkgFile 的仓库
+  let missingPkgFile = $repos | where {|it|
+    ($it.monoRepo? == true) and ($it.pkgFile? | is-empty) and ($it.repo? | is-not-empty)
+  }
+
+  if ($missingPkgFile | is-empty) {
+    print $'(ansi g)✓(ansi rst) All mono repos already have pkgFile configured.'
+    return
+  }
+
+  print $'Found ($missingPkgFile | length) mono repos without pkgFile:'
+  $missingPkgFile | select name repo | print
+
+  let tmpPath = get-tmp-path
+  # 按仓库分组处理，避免重复克隆同一仓库
+  let groupedByRepo = $missingPkgFile | group-by repo
+
+  mut updated = []
+  for repoUrl in ($groupedByRepo | columns) {
+    let pkgs = $groupedByRepo | get $repoUrl
+    print $'(char nl)(ansi c)Processing repository:(ansi rst) (ansi g)($repoUrl)(ansi rst)'; hr-line
+
+    clone-repo $repoUrl
+    let repoName = $repoUrl | path basename
+    let repoPath = $tmpPath | path join $repoName
+
+    # 在最新的 HEAD 中搜索所有 package.json 文件
+    cd $repoPath
+    let pkgJsonFiles = try {
+      glob **/package.json | where {|f| not ($f | str contains 'node_modules') }
+    } catch { [] }
+
+    print $'(ansi c)Found ($pkgJsonFiles | length) package.json files(ansi rst)'
+
+    # 为每个缺失 pkgFile 的包查找对应的 package.json
+    for pkg in $pkgs {
+      let pkgName = $pkg.name
+      print $'(ansi c)Searching for:(ansi rst) (ansi g)($pkgName)(ansi rst)'
+
+      let matchedFile = $pkgJsonFiles | each {|f|
+        let content = try { open $f } catch { { name: "" } }
+        if $content.name? == $pkgName { $f } else { null }
+      } | compact -e
+
+      if ($matchedFile | is-not-empty) {
+        let absolutePath = $matchedFile | first
+        # 转换为相对于仓库根目录的相对路径
+        let relativePath = $absolutePath | path relative-to $repoPath
+        print $'(ansi g)✓(ansi rst) Found match: (ansi g)($relativePath)(ansi rst)'
+        $updated = $updated | append { name: $pkgName, pkgFile: $relativePath }
+      } else {
+        print $'(ansi y)WARNING:(ansi rst) No matching package.json found for ($pkgName)'
+      }
+    }
+  }
+
+  if ($updated | is-empty) {
+    print $'(char nl)(ansi y)No pkgFile updates found.(ansi rst)'
+    return
+  }
+
+  print $'(char nl)(ansi c)Updating repos.toml...(ansi rst)'; hr-line
+  # 将 updated 转换为不可变变量以便在闭包中使用
+  let updatedList = $updated
+  let updatedRepos = $data.repos | each {|repo|
+    let match = $updatedList | where name == $repo.name
+    if ($match | is-not-empty) { $repo | upsert pkgFile ($match | first).pkgFile } else { $repo }
+  }
+
+  $data | upsert repos $updatedRepos | update repos { sort-by repo } | save -f $reposPath
+
+  print $'(ansi g)✓(ansi rst) Updated ($updatedList | length) packages in repos.toml:'
+  $updatedList | print
+}

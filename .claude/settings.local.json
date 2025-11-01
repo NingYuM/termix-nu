@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__nushell__evaluate"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
