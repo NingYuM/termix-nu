@@ -240,23 +240,36 @@ export def create-tag-for-mono-repo [pkg: record, --tags(-t): string] {
 }
 
 # Create git tags for all downloadable and untagged repositories
-export def prepare-repo-tags [--push-tags(-p)] {
+export def prepare-repo-tags [--push-tags(-p), --pkgs: string] {
   update-pkg-json-for-mono-repos
 
-  let repos = open repos.toml | get repos
+  let allRepos = open repos.toml | get repos
     | default true downloadable
     | default false monoRepo
-    | default false tagged
     | where downloadable == true
-    | where tagged != true
     | where ($it.repo | is-not-empty)
+
+  let repos = if ($pkgs | is-not-empty) {
+    let specs = $pkgs | split row , | each { str trim }
+      | compact -e | each { parse '{name}={version}' | into record }
+    $specs | each {|sp|
+      let match = $allRepos | where name == $sp.name
+      if ($match | is-empty) {
+        print $'(ansi y)WARNING:(ansi rst) Package not found in repos.toml: (ansi y)($sp.name)(ansi rst)'; null
+      } else {
+        ($match | first) | upsert __target_tags $sp.version
+      }
+    } | compact -e
+  } else {
+    $allRepos | default false tagged | where tagged != true
+  }
 
   $repos | each { |repo|
     clone-repo $repo.repo
     if $repo.monoRepo? and $repo.monoRepo == true {
-      create-tag-for-mono-repo $repo
+      if ($repo.__target_tags? | is-not-empty) { create-tag-for-mono-repo $repo --tags $repo.__target_tags } else { create-tag-for-mono-repo $repo }
     } else {
-      create-tag-for-multi-repo $repo
+      if ($repo.__target_tags? | is-not-empty) { create-tag-for-multi-repo $repo --tags $repo.__target_tags } else { create-tag-for-multi-repo $repo }
     }
     if $push_tags {
       git push origin --tags
