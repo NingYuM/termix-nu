@@ -9,7 +9,7 @@
 # [√] 如果没有源码仓库并且 srcPublished 为 true，则直接从 npm 包中下载源码
 # [√] 为各 Multi Repo NPM 包的每一个发布版本生成 TAG, 不影响已有 Tag，考虑多分支情况
 # [√] 为各 Mono Repo NPM 包的每一个发布版本生成 TAG, 不影响已有 Tag，考虑多分支情况
-# [ ] 创建一个总的压缩包，包含所有源码包和清单文件
+# [√] 创建一个总的压缩包，包含所有源码包和清单文件
 # [ ] 将源码包上传到公司 OSS，并提供下载链接？
 # [ ] 提供工具检查 npm 包发布产物里面是否包含源码
 # Usage:
@@ -316,7 +316,10 @@ export def download-npm-pkgs [pkgs: table, repos: table] {
 }
 
 # 下载所有源码包
-export def download-all-src-pkgs [pkgs: string] {
+export def download-all-src-pkgs [
+  pkgs: string        # Npm pkgs to download, format: pkg1=ver1,pkg2=ver2,...
+  --compress-all(-c)  # Compress pkg-src directory to fe-src.tar.gz
+] {
   renew-erda-session
   let tmpPath = get-tmp-path
   let repos = open repos.toml | get repos
@@ -333,6 +336,12 @@ export def download-all-src-pkgs [pkgs: string] {
   let manifest = $files | each {|f| { file: ($f | path basename), sha256: (open $f | hash sha256) } }
   $manifest | sort-by file | to md -p | save -rf pkg-src/manifest.md
   print $'(ansi g)✓(ansi rst) Manifest saved to (ansi g)pkg-src/manifest.md(ansi rst)'
+
+  if $compress_all {
+    print $'(ansi g)Compressing pkg-src directory to fe-src.tar.gz...(ansi rst)'
+    tar czf fe-src.tar.gz pkg-src
+    print $'(ansi g)✓(ansi rst) Compressed to (ansi g)fe-src.tar.gz(ansi rst)'
+  }
 }
 
 # 根据包名和仓库信息，分类出需要下载源码包的包和没有源码包的包
