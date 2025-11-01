@@ -333,12 +333,19 @@ export def download-all-src-pkgs [pkgs: string] {
 # 根据包名和仓库信息，分类出需要下载源码包的包和没有源码包的包
 export def category-pkgs [pkgs: string, repos: table] {
   # repo 存在表示源码可从仓库获取；repo 缺失表示需从 npm 下载
+  let allPkgs = $repos | get name
   let srcAvailablePkgs = $repos | where {|it| $it.repo? | is-not-empty } | get name
   let srcMissingPkgs = $repos | where {|it| $it.repo? | is-empty } | get name
   let pkgs = $pkgs | split row ,  | each { parse '{name}={version}' | into record }
-  let noSrcPkgs = $pkgs | where $it.name in $srcMissingPkgs
-  let srcPkgs = $pkgs | where $it.name in $srcAvailablePkgs
-  { noSrcPkgs: $noSrcPkgs, srcPkgs: $srcPkgs }
+  let missingPkgs = $pkgs | where $it.name not-in $allPkgs
+  if ($missingPkgs | is-empty) {
+    let noSrcPkgs = $pkgs | where $it.name in $srcMissingPkgs
+    let srcPkgs = $pkgs | where $it.name in $srcAvailablePkgs
+    return { noSrcPkgs: $noSrcPkgs, srcPkgs: $srcPkgs }
+  }
+  print $'(ansi r)ERROR:(ansi rst) The following packages are not found in repos.toml:(char nl)'
+  print $missingPkgs
+  exit $ECODE.INVALID_PARAMETER
 }
 
 # @terminus/mp-barcode=1.0.4,@terminus/trnw-tools=5.0.0-beta2
