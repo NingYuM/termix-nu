@@ -12,6 +12,11 @@
 # [ ] 创建一个总的压缩包，包含所有源码包和清单文件
 # [ ] 将源码包上传到公司 OSS，并提供下载链接？
 # [ ] 提供工具检查 npm 包发布产物里面是否包含源码
+# Usage:
+#   - Format repos.toml: open repos.toml | update repos { sort-by repo } | save -f repos.toml
+#   - Step1: Update repos.toml with the latest repo information
+#   - Step2: Run prepare-repo-tags to create tags for all downloadable and untagged repositories
+#   - Step3: Run download-all-src-pkgs to download all source code packages
 
 use ../utils/common.nu [ECODE get-tmp-path hr-line has-ref]
 use ../utils/erda.nu [ERDA_HOST, get-erda-auth, renew-erda-session]
