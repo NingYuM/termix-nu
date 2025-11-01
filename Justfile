@@ -251,6 +251,12 @@ ls-node *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'ls-node.nu') }}; \
     ls-node-remote {{OPTIONS}}
 
+# Download source code for frontend packages
+[group('-- Frontend --')]
+fe-src *OPTIONS: _setup
+  @overlay use {{ join(_termix, 'git', 'repo-src.nu') }}; \
+    download-all-src-pkgs {{OPTIONS}}
+
 # 按时间顺序列出所有的 git tags, 默认按 `time` 排序，可选按 Tag 名称排序：ls-tags -s tag
 [group('-- Git --')]
 ls-tags *OPTIONS: _setup
