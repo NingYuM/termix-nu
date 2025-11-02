@@ -19,8 +19,8 @@
 #   - Step2: Run prepare-repo-tags to create tags for all downloadable and untagged repositories
 #   - Step3: Run download-all-src-pkgs to download all source code packages
 
-use ../utils/common.nu [ECODE get-tmp-path hr-line has-ref]
 use ../utils/erda.nu [ERDA_HOST, get-erda-auth, renew-erda-session]
+use ../utils/common.nu [ECODE get-tmp-path hr-line has-ref is-lower-ver]
 
 # 最大连续失败次数, 超出则停止为该包创建 Tag
 const MAX_FAILURE = 15
@@ -374,6 +374,28 @@ export def download-all-src-pkgs [
     print $'(ansi g)Compressing pkg-src directory to fe-src.tar.gz...(ansi rst)'
     tar czf fe-src.tar.gz pkg-src
     print $'(ansi g)✓(ansi rst) Compressed to (ansi g)fe-src.tar.gz(ansi rst)'
+  }
+}
+
+# 特殊处理的包名列表
+const SPECIAL_PKGS = [
+  '@terminus/nusi-slim',
+  '@terminus/nusi-saas',
+  '@terminus/nusi-ease',
+  '@terminus/nusi-flex',
+]
+
+# 根据包名和版本号，生成自定义的源码包 URL
+def custom-pkg-url [name: string, ver: string, repos: table] {
+  let repoUrl = $repos | where name == $name
+    | get repo | first
+    | str replace 'terminus/dop' 'api/terminus/repo'
+  match $name {
+    '@terminus/nusi-flex' if (is-lower-ver $ver 1.0.0) => { $'($repoUrl)/archive/v($ver).tar.gz' }
+    '@terminus/nusi-flex' if (is-lower-ver 1.0.0 $ver) => { $'($repoUrl)/archive/next-v($ver).tar.gz' }
+    '@terminus/nusi-slim' if (is-lower-ver $ver 2.0.0) => { $'($repoUrl)/archive/nusi-v($ver).tar.gz' }
+    '@terminus/nusi-slim' if (is-lower-ver 2.0.0 $ver) => { $'($repoUrl)/archive/next-v($ver).tar.gz' }
+    _ => { $'($repoUrl)/archive/($name)@($ver).tar.gz' }
   }
 }
 
