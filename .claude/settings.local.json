@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "mcp__nushell__evaluate"
+      "mcp__nushell__evaluate",
+      "mcp__nushell__command_help"
     ],
     "deny": [],
     "ask": []

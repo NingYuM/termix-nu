@@ -106,7 +106,7 @@ def get-missing-tags [pkg: record] {
         if ($cleaned =~ '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)') { $cleaned } else { null }
       } else { null }
     }
-  } | compact)
+  } | compact -e)
   let missingTags = $versions | where $it not-in $existingVers
   let missingTags = if $hasV { $missingTags | each {|it| $'v($it)' } } else { $missingTags }
   $missingTags
@@ -124,15 +124,37 @@ def normalize-targets [missing: list<string>, tags?: string] {
   }
 }
 
-# Get commit hashes for the given file path across all branches
-def file-commits [path: string] {
-  try { git log --all --format=%H -- $path | lines } catch { [] }
+# Build a version-to-commit map for the given file path
+# Returns: record with version as keys and commit hash as values
+def build-version-commit-map [path: string] {
+  let commits = try { git log --all --format=%H -- $path | lines } catch { [] }
+  if ($commits | is-empty) { return {} }
+
+  # Use git show with batch processing
+  let versionMap = $commits | each {|commit|
+    let content = try { git show $'($commit):($path)' | from json } catch { null }
+    if ($content | is-empty) or ($content.version? | is-empty) {
+      null
+    } else {
+      { version: $content.version, commit: $commit }
+    }
+  } | compact -e
+
+  # Group by version and take the last commit for each version
+  $versionMap | group-by version | items {|ver, entries|
+    { key: $ver, value: ($entries | last | get commit) }
+  } | transpose -r -d | into record
 }
 
 # Find the last commit that updated the file to the specific version in its JSON
 # Returns: commit hash string or null
-def last-commit-for-version [path: string, version: string] {
-  let commits = file-commits $path
+def last-commit-for-version [path: string, version: string, versionMap?: record] {
+  if ($versionMap | is-not-empty) {
+    return ($versionMap | get -o $version)
+  }
+
+  # Fallback to old method if no map provided
+  let commits = try { git log --all --format=%H -- $path | lines } catch { [] }
   let matches = $commits | each {|commit|
     let content = try { git show $'($commit):($path)' | from json } catch { { version: "" } }
     if $content.version? == $version { $commit } else { null }
@@ -152,13 +174,21 @@ export def create-tag-for-multi-repo [pkg: record, --tags(-t): string] {
   print $'(ansi c)Package:(ansi rst) (ansi g)($pkg.name)(ansi rst)'
   print $'(ansi c)Missing tags:(ansi rst) ($targets | length)'
 
-  # 为每个缺失的 Tag 创建标签
+  if ($targets | is-empty) {
+    return { name: $pkg.name, missingTags: $missingTags }
+  }
+
+  # Build version-to-commit map once for all versions
+  print $'(ansi c)Building version-commit map...(ansi rst)'
+  let versionMap = build-version-commit-map package.json
+
+  # Batch create tags
   mut failed = 0
+  mut tagCmds = []
   for tag in ($targets | enumerate) {
     let idx = $'#($tag.index + 1)'
     let version = $tag.item | str trim -c v
-    # 获取指定版本的最后一次变更提交
-    let commitHash = last-commit-for-version package.json $version
+    let commitHash = last-commit-for-version package.json $version $versionMap
 
     if ($commitHash | is-empty) {
       print $'(ansi y)WARNING:(ansi rst) No commit found for version ($version) ($idx) ...'
@@ -170,13 +200,17 @@ export def create-tag-for-multi-repo [pkg: record, --tags(-t): string] {
       continue
     }
 
-    let commitHash = $commitHash
     let message = $'A new release Tag for version: ($tag.item) created by termix-nu'
+    $tagCmds = $tagCmds | append { tag: $tag.item, commit: $commitHash, msg: $message, idx: $idx }
+  }
+
+  # Execute tag creation
+  for cmd in $tagCmds {
     try {
-      git tag -a $tag.item $commitHash -m $message; $failed = 0
-      print $'(ansi g)✓(ansi rst) Created tag ($tag.item) at commit ($commitHash | str substring 0..7) ($idx) ...'
+      git tag -a $cmd.tag $cmd.commit -m $cmd.msg; $failed = 0
+      print $'(ansi g)✓(ansi rst) Created tag ($cmd.tag) at commit ($cmd.commit | str substring 0..7) ($cmd.idx) ...'
     } catch {|e|
-      print $'(ansi r)ERROR:(ansi rst) Failed to create tag ($tag.item): ($e.msg) ($idx) ...'
+      print $'(ansi r)ERROR:(ansi rst) Failed to create tag ($cmd.tag): ($e.msg) ($cmd.idx) ...'
     }
   }
 
@@ -193,22 +227,33 @@ export def create-tag-for-mono-repo [pkg: record, --tags(-t): string] {
   let pkgFile = $pkg.pkgFile?
   let standalone = $pkg.standalone? | default false
 
-  # 为每个缺失的标签创建标签
+  if ($targets | is-empty) {
+    return { name: $pkg.name, missingTags: $missingTags }
+  }
+
+  if ($pkgFile | is-empty) {
+    print $'(ansi y)WARNING:(ansi rst) No pkgFile specified for package: ($pkg.name)'
+    return { name: $pkg.name, missingTags: $missingTags }
+  }
+
+  # Build version-to-commit map once for all versions
+  print $'(ansi c)Building version-commit map...(ansi rst)'
+  let versionMap = build-version-commit-map $pkgFile
+
+  # Batch prepare tag information
   mut failed = 0
+  mut tagCmds = []
   for tag in ($targets | enumerate) {
     let idx = $'#($tag.index + 1)'
     let version = $tag.item | str trim -c v
     let newTag = $'($pkg.name)@($version)'
+
     if (has-ref $newTag) {
       print $'(ansi y)INFO:(ansi rst) Tag ($newTag) already exists, skip ($idx) ...'
       continue
     }
 
-    # 获取指定版本的最后一次变更提交
-    let commitHash = match ($pkgFile | is-not-empty) {
-      true => { last-commit-for-version $pkgFile $version }
-      false => { print $'(ansi y)WARNING:(ansi rst) No pkgFile specified for package: ($pkg.name) ($idx) ...'; null }
-    }
+    let commitHash = last-commit-for-version $pkgFile $version $versionMap
 
     if ($commitHash | is-empty) {
       print $'(ansi y)WARNING:(ansi rst) No commit found for version ($version) ($idx) ...'
@@ -220,18 +265,22 @@ export def create-tag-for-mono-repo [pkg: record, --tags(-t): string] {
       continue
     }
 
-    let commitHash = $commitHash
     # 检查该提交修改的文件，若修改了多个 /package.json 则使用版本标签，否则使用 name@version 标签
     let changedFiles = try { git diff-tree --no-commit-id --name-only -r $commitHash | lines } catch { [] }
     let pkgJsonChangedCnt = $changedFiles | where {|p| $p | str ends-with '/package.json' } | length
     let finalTag = if $pkgJsonChangedCnt == 1 or $standalone { $newTag } else { $tag.item }
     let message = $'A new release Tag for version: ($finalTag) created by termix-nu'
 
+    $tagCmds = $tagCmds | append { tag: $finalTag, commit: $commitHash, msg: $message, idx: $idx }
+  }
+
+  # Execute tag creation
+  for cmd in $tagCmds {
     try {
-      git tag -a $finalTag $commitHash -m $message; $failed = 0
-      print $'(ansi g)✓(ansi rst) Created tag (ansi g)($finalTag)(ansi rst) at commit ($commitHash | str substring 0..7) ($idx) ...'
+      git tag -a $cmd.tag $cmd.commit -m $cmd.msg; $failed = 0
+      print $'(ansi g)✓(ansi rst) Created tag (ansi g)($cmd.tag)(ansi rst) at commit ($cmd.commit | str substring 0..7) ($cmd.idx) ...'
     } catch {|e|
-      print $'(ansi r)ERROR:(ansi rst) Failed to create tag ($finalTag): ($e.msg) ($idx) ...'
+      print $'(ansi r)ERROR:(ansi rst) Failed to create tag ($cmd.tag): ($e.msg) ($cmd.idx) ...'
     }
   }
 
@@ -304,7 +353,7 @@ export def count-latest-tags [--days(-d): int = 2] {
         $lines | each {|l|
           let p = ($l | split row '|')
           if ($p | length) < 2 { null } else { { name: ($p | get 0), date: (($p | get 1) | into datetime) } }
-        } | compact | where date >= $threshold | length)
+        } | compact -e | where date >= $threshold | length)
     $total += $cnt
   }
   $total
