@@ -342,9 +342,10 @@ export def count-latest-tags [--days(-d): int = 2] {
   let tmpPath = get-tmp-path
   let duration = $days * 1day
   let threshold = (date now) - $duration
-  let repos = ls | where type == dir | get name
 
   cd $tmpPath
+  let repos = ls | where type == dir | get name
+
   mut total = 0
   for repo in $repos {
     if not (($tmpPath | path join $repo | path join '.git') | path exists) { continue }
@@ -366,7 +367,12 @@ export def download-src-pkgs [pkgs: table, repos: table] {
   for pkg in $pkgs {
     let name = $pkg.name
     let ver = $pkg.version
-    let repoUrl = $repos | where name == $name | get repo | first | str replace 'terminus/dop' 'api/terminus/repo'
+    let match = $repos | where name == $name
+    if ($match | is-empty) {
+      print $'(ansi r)ERROR:(ansi rst) Repository not found for package: ($name)'
+      continue
+    }
+    let repoUrl = $match | get repo | first | str replace 'terminus/dop' 'api/terminus/repo'
     let dest = $'pkg-src/($name)-($ver).tar.gz'
     let url = $'($repoUrl)/archive/($ver).tar.gz'
     let vUrl = $'($repoUrl)/archive/v($ver).tar.gz'
@@ -450,9 +456,11 @@ const SPECIAL_PKGS = [
 
 # 根据包名和版本号，生成自定义的源码包 URL
 def custom-pkg-url [name: string, ver: string, repos: table] {
-  let repoUrl = $repos | where name == $name
-    | get repo | first
-    | str replace 'terminus/dop' 'api/terminus/repo'
+  let match = $repos | where name == $name
+  if ($match | is-empty) {
+    error make { msg: $'Repository not found for package: ($name)' }
+  }
+  let repoUrl = $match | get repo | first | str replace 'terminus/dop' 'api/terminus/repo'
   match $name {
     '@terminus/nusi-flex' if (is-lower-ver $ver 1.0.0) => { $'($repoUrl)/archive/v($ver).tar.gz' }
     '@terminus/nusi-flex' if (is-lower-ver 1.0.0 $ver) => { $'($repoUrl)/archive/next-v($ver).tar.gz' }
@@ -519,7 +527,8 @@ export def update-pkg-json-for-mono-repos [] {
     print $'(char nl)(ansi c)Processing repository:(ansi rst) (ansi g)($repoUrl)(ansi rst)'; hr-line
 
     clone-repo $repoUrl
-    let repoName = $repoUrl | path basename
+    # 移除可能的 .git 后缀，与 clone-repo 的目录名保持一致
+    let repoName = $repoUrl | path basename | str replace -r '\.git$' ''
     let repoPath = $tmpPath | path join $repoName
 
     # 在最新的 HEAD 中搜索所有 package.json 文件
