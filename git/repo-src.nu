@@ -329,6 +329,19 @@ export def download-src-pkgs [pkgs: table, repos: table] {
   }
 }
 
+# 下载 SPECIAL_PKGS 列表中的包（自定义 URL）
+export def download-custom-pkgs [pkgs: table, repos: table] {
+  let headers = get-erda-auth $ERDA_HOST --type nu
+  for pkg in $pkgs {
+    let name = $pkg.name
+    let ver = $pkg.version
+    let url = custom-pkg-url $name $ver $repos
+    let dest = $'pkg-src/($name)-($ver).tar.gz'
+    try { http get --headers $headers $url } | save -rfp $dest
+    print $'(ansi g)✓(ansi rst) Downloaded (ansi g)($name)@($ver)(ansi rst) source code to (ansi g)($dest)(ansi rst)'
+  }
+}
+
 # 从 npm 下载没有源码包的包，前提是这些包发布的时候附带了源码
 export def download-npm-pkgs [pkgs: table, repos: table] {
   let srcNotPublished = $repos | default false srcPublished | where srcPublished == false | get name
@@ -361,8 +374,9 @@ export def download-all-src-pkgs [
   if ('pkg-src' | path exists) { rm -rf pkg-src }
   mkdir pkg-src/@terminus
   let categoryPkgs = category-pkgs $pkgs $repos
-  download-npm-pkgs $categoryPkgs.noSrcPkgs $repos
   download-src-pkgs $categoryPkgs.srcPkgs $repos
+  download-npm-pkgs $categoryPkgs.noSrcPkgs $repos
+  download-custom-pkgs $categoryPkgs.customPkgs $repos
 
   # 生成下载文件清单：文件名与 sha256 哈希
   let files = glob pkg-src/**/*.tar.gz
@@ -399,7 +413,7 @@ def custom-pkg-url [name: string, ver: string, repos: table] {
   }
 }
 
-# 根据包名和仓库信息，分类出需要下载源码包的包和没有源码包的包
+# 根据包名和仓库信息，分类出需要下载源码包的包、没有源码包的包以及需要自定义 URL 下载的包
 export def category-pkgs [pkgs: string, repos: table] {
   # repo 存在表示源码可从仓库获取；repo 缺失表示需从 npm 下载
   let allPkgs = $repos | get name
@@ -409,8 +423,10 @@ export def category-pkgs [pkgs: string, repos: table] {
   let missingPkgs = $pkgs | where $it.name not-in $allPkgs
   if ($missingPkgs | is-empty) {
     let noSrcPkgs = $pkgs | where $it.name in $srcMissingPkgs
-    let srcPkgs = $pkgs | where $it.name in $srcAvailablePkgs
-    return { noSrcPkgs: $noSrcPkgs, srcPkgs: $srcPkgs }
+    let srcPkgsAll = $pkgs | where $it.name in $srcAvailablePkgs
+    let customPkgs = $srcPkgsAll | where $it.name in $SPECIAL_PKGS
+    let srcPkgs = $srcPkgsAll | where $it.name not-in $SPECIAL_PKGS
+    return { noSrcPkgs: $noSrcPkgs, srcPkgs: $srcPkgs, customPkgs: $customPkgs }
   }
   print $'(ansi r)ERROR:(ansi rst) The following packages are not found in repos.toml:(char nl)'
   print $missingPkgs

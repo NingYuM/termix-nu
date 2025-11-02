@@ -214,6 +214,16 @@ url = "https://erda.cloud/terminus/dop/projects/254/apps/5261/repo"
 repo = "https://erda.cloud/terminus/dop/mobile/react-native-share"
 
 [[repos]]
+name = "@terminus/nusi-slim"
+tagged = true
+monoRepo = true
+standalone = true
+downloadable = true
+pkgFile = "pkg-nusi/package.json"
+repo = "https://erda.cloud/terminus/dop/nusi/nusi-slim"
+url = "https://erda.cloud/terminus/dop/projects/170/apps/11930/repo"
+
+[[repos]]
 name = "@terminus/react-imageview"
 tagged = true
 downloadable = true
