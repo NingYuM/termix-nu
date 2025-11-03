@@ -65,6 +65,35 @@ export def get-repo-maintainers [--show-maintainers(-m)] {
   }
 }
 
+# 检查指定的 npm 包是否发布时附带了源码
+export def check-src-published [--pkgs(-p): string, --clean(-c)] {
+  let tmpPath = get-tmp-path
+  let repos = open repos.toml | get repos
+  let todo = $repos | where ($it.srcPublished? | default false) == false
+  let pkgs = if ($pkgs | is-not-empty) { $pkgs | split row , | compact -e } else { $todo | get name }
+  cd $tmpPath
+  if ('pkg-src' | path exists) { rm -rf pkg-src }
+  mkdir pkg-src
+  cd pkg-src
+  for pkg in $pkgs {
+    let pkgName = get-safe-pkg-name $pkg
+    print $'(ansi c)Checking package: (ansi rst) (ansi g)($pkg)(ansi rst)'
+    let url = npm info $pkg --json | from json | get dist.tarball
+    let dest = $'($pkgName)-latest.tar.gz'
+    try { http get $url } | save -rfp $dest
+    mkdir $pkgName
+    tar xzf $dest -C $pkgName
+    let srcDir = glob ($pkgName)/**/src/*
+    if ($srcDir | is-not-empty) {
+      print $'(ansi g)✓(ansi rst) Package: (ansi g)($pkg)(ansi rst) may have source code'; hr-line
+      print $srcDir
+    } else {
+      print $'(ansi y)WARNING:(ansi rst) Package: (ansi g)($pkg)(ansi rst) is not published with source code'
+    }
+  }
+  if $clean { cd ..; rm -rf pkg-src }
+}
+
 # 列出所有 GitLab 仓库及其内容，保存为 JSON 文件
 export def list-gitlab-repos [] {
   mut repos = {}
