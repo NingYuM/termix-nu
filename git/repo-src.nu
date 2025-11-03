@@ -45,7 +45,7 @@ use ../utils/erda.nu [ERDA_HOST, get-erda-auth, renew-erda-session]
 use ../utils/common.nu [ECODE get-tmp-path hr-line has-ref is-lower-ver]
 
 # 最大连续失败次数, 超出则停止为该包创建 Tag
-const MAX_FAILURE = 15
+const MAX_FAILURE = 20
 
 # Clone a repository and pull all branches and tags
 @example 'Clone a repository and pull all branches and tags' {
@@ -67,11 +67,11 @@ export def --env clone-repo [repo: string] {
   git fetch --all --tags --prune
 
   # Create local tracking branches for all remote branches without overwriting existing ones
-  let remoteBranches = (try { git branch -r | lines | each { str trim } | where {|l| not ($l | str contains '->') } } catch { [] })
+  let remoteBranches = try { git branch -r | lines | each { str trim } | where {|l| ($l !~ '->') } } catch { [] }
   for rb in $remoteBranches {
-    let branch = ($rb | split row '/' | skip 1 | str join '/')
+    let branch = $rb | split row '/' | skip 1 | str join '/'
     if ($branch | is-empty) or ($branch == 'HEAD') { continue }
-    let exists = (try { git show-ref --verify --quiet $'refs/heads/($branch)'; true } catch { false })
+    let exists = try { git show-ref --verify --quiet refs/heads/($branch); true } catch { false }
     if not $exists {
       try {
         git branch --track $branch $rb
@@ -93,7 +93,7 @@ def get-missing-tags [pkg: record] {
   let existingVers = ($tags | each {|t|
     let plain = ($t | str trim -c v)
     if ($plain =~ '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)') { $plain } else {
-      if ($t | str contains '@') {
+      if ($t =~ '@') {
         let last = ($t | split row '@' | last)
         let cleaned = ($last | str trim -c v)
         if ($cleaned =~ '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)') { $cleaned } else { null }
@@ -126,7 +126,7 @@ def build-version-commit-map [path: string] {
 
   # Use git show with batch processing
   let versionMap = $commits | each {|commit|
-    let content = try { git show $'($commit):($path)' | from json } catch { null }
+    let content = try { git show ($commit):($path) | from json } catch { null }
     if ($content | is-empty) or ($content.version? | is-empty) {
       null
     } else {
@@ -150,7 +150,7 @@ def last-commit-for-version [path: string, version: string, versionMap?: record]
   # Fallback to old method if no map provided
   let commits = try { git log --all --format=%H -- $path | lines } catch { [] }
   let matches = $commits | each {|commit|
-    let content = try { git show $'($commit):($path)' | from json } catch { { version: "" } }
+    let content = try { git show ($commit):($path) | from json } catch { { version: "" } }
     if $content.version? == $version { $commit } else { null }
   } | compact
   if ($matches | is-empty) { null } else { $matches | last }
@@ -283,7 +283,10 @@ export def create-tag-for-mono-repo [pkg: record, --tags(-t): string] {
 
 # Create git tags for all downloadable and untagged repositories
 # e.g.: `t tag-repo --pkgs @terminus/bricks=1.1.1,@terminus/mall-utils=1.3.9`
-export def prepare-repo-tags [--push-tags(-p), --pkgs: string] {
+export def prepare-repo-tags [
+  --push-tags(-p),  # Push tags to remote repository after creation
+  --pkgs: string,   # Specify the packages to create tags for, e.g. @terminus/bricks=1.1.1,@terminus/mall-utils=1.3.9
+] {
   update-pkg-json-for-mono-repos
 
   let allRepos = open repos.toml | get repos
@@ -343,7 +346,7 @@ export def count-latest-tags [--days(-d): int = 2] {
   mut total = 0
   for repo in $repos {
     if not (($tmpPath | path join $repo | path join '.git') | path exists) { continue }
-    let lines = (try { git -C ($tmpPath | path join $repo) for-each-ref --format='%(refname:short)|%(creatordate:iso-strict)' refs/tags | lines } catch { [] })
+    let lines = try { git -C ($tmpPath | path join $repo) for-each-ref --format='%(refname:short)|%(creatordate:iso-strict)' refs/tags | lines } catch { [] }
     let cnt = (
         $lines | each {|l|
           let p = ($l | split row '|')
@@ -414,9 +417,9 @@ export def download-npm-pkgs [pkgs: table, repos: table] {
 def get-tar-path [name: string, ver: string, baseDir: string] {
   if ($name | str starts-with '@') {
     let parts = $name | split row '/'
-    $baseDir | path join $'pkg-src/($parts.0)/($parts.1)-($ver).tar.gz'
+    $baseDir | path join pkg-src/($parts.0)/($parts.1)-($ver).tar.gz
   } else {
-    $baseDir | path join $'pkg-src/($name)-($ver).tar.gz'
+    $baseDir | path join pkg-src/($name)-($ver).tar.gz
   }
 }
 
@@ -461,8 +464,8 @@ def clean-single-pkg [pkg: record, pkgFile: string, baseDir: string] {
   }
 
   let safeName = get-safe-pkg-name $name
-  let tmpExtract = $baseDir | path join $'pkg-src/.tmp-extract-($safeName)-($ver)'
-  let tmpClean = $baseDir | path join $'pkg-src/.tmp-clean-($safeName)-($ver)'
+  let tmpExtract = $baseDir | path join pkg-src/.tmp-extract-($safeName)-($ver)
+  let tmpClean = $baseDir | path join pkg-src/.tmp-clean-($safeName)-($ver)
 
   cleanup-temp-dirs [$tmpExtract, $tmpClean]
 
@@ -488,7 +491,7 @@ def clean-single-pkg [pkg: record, pkgFile: string, baseDir: string] {
 
     # Create new archive
     print $'  Creating cleaned archive...'
-    let newTar = $tmpClean | path join 'new.tar.gz'
+    let newTar = $tmpClean | path join new.tar.gz
     do -i { cd $tmpClean; tar czf new.tar.gz $safeName }
 
     if not ($newTar | path exists) {
@@ -630,7 +633,7 @@ export def update-pkg-json-for-mono-repos [] {
 
   # 保存当前工作目录的绝对路径，以便后续保存文件
   let workDir = $env.PWD
-  let reposPath = $workDir | path join 'repos.toml'
+  let reposPath = $workDir | path join repos.toml
   mut data = open $reposPath
   let repos = $data.repos | default false monoRepo
 
@@ -664,7 +667,7 @@ export def update-pkg-json-for-mono-repos [] {
     # 在最新的 HEAD 中搜索所有 package.json 文件
     cd $repoPath
     let pkgJsonFiles = try {
-      glob **/package.json | where {|f| not ($f | str contains 'node_modules') }
+      glob **/package.json | where {|f| ($f !~ node_modules) }
     } catch { [] }
 
     print $'(ansi c)Found ($pkgJsonFiles | length) package.json files(ansi rst)'
@@ -721,8 +724,8 @@ export def get-repo-maintainers [--show-maintainers(-m)] {
     print $'(ansi g)($it.name)(ansi rst)'; hr-line 60;
     print $'(ansi g)Maintainers:(ansi rst)'
     # 使用 --json 让 npm 输出 JSON，再 from json 转成结构化数据，避免 byte stream
-    let raw = (npm view --json $it.name maintainers)
-    let parsed = (try { $raw | from json } catch { [] })
+    let raw = npm view --json $it.name maintainers
+    let parsed = try { $raw | from json } catch { [] }
     $parsed | to yaml | print
   }
 }
@@ -730,7 +733,7 @@ export def get-repo-maintainers [--show-maintainers(-m)] {
 # 检查指定的 npm 包是否发布时附带了源码
 export def check-src-published [--pkgs(-p): string, --clean(-c)] {
   let tmpPath = get-tmp-path
-  let workDir = $tmpPath | path join 'pkg-src-check'
+  let workDir = $tmpPath | path join pkg-src-check
   let repos = open repos.toml | get repos
   let todo = $repos | where ($it.srcPublished? | default false) == false
   let pkgs = if ($pkgs | is-not-empty) { $pkgs | split row , | compact -e } else { $todo | get name }
@@ -754,7 +757,7 @@ export def check-src-published [--pkgs(-p): string, --clean(-c)] {
     let url = $pkgInfo | get dist.tarball
     let pkgName = get-safe-pkg-name $pkg
     let pkgDir = $workDir | path join $pkgName
-    let tarFile = $pkgDir | path join 'package.tar.gz'
+    let tarFile = $pkgDir | path join package.tar.gz
 
     try {
       # Create package directory and download
@@ -764,19 +767,19 @@ export def check-src-published [--pkgs(-p): string, --clean(-c)] {
       tar xzf $tarFile -C $pkgDir
 
       # npm tarball creates a 'package/' subdirectory
-      let extractDir = if (($pkgDir | path join 'package') | path exists) {
-        $pkgDir | path join 'package'
+      let extractDir = if (($pkgDir | path join package) | path exists) {
+        $pkgDir | path join package
       } else {
         $pkgDir
       }
 
       # Check for source code files (TypeScript, JSX)
       let sourceFiles = try {
-        glob ($extractDir)/{src,source}/**/*.{ts,tsx,jsx} | where {|f| not ($f | str contains 'node_modules') } | each {|f| $f | path relative-to $workDir }
+        glob ($extractDir)/{src,source}/**/*.{ts,tsx,jsx} | where {|f| ($f !~ node_modules) } | each {|f| $f | path relative-to $workDir }
       } catch { [] }
 
       # Check for common source directories
-      let srcDirs = ['src', 'source']
+      let srcDirs = [src, source]
         | each {|d| $extractDir | path join $d }
         | where {|p| $p | path exists }
 
