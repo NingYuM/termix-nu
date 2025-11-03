@@ -429,160 +429,125 @@ export def download-npm-pkgs [pkgs: table, repos: table] {
   }
 }
 
+# Helper: Get tar file path for a package (handles scoped packages)
+def get-tar-path [name: string, ver: string, baseDir: string] {
+  if ($name | str starts-with '@') {
+    let parts = $name | split row '/'
+    $baseDir | path join $'pkg-src/($parts.0)/($parts.1)-($ver).tar.gz'
+  } else {
+    $baseDir | path join $'pkg-src/($name)-($ver).tar.gz'
+  }
+}
+
+# Helper: Get safe package name for directory naming
+def get-safe-pkg-name [name: string] {
+  $name | str replace -a '/' '-' | str replace -a '@' ''
+}
+
+# Helper: Find package source directory in extracted tar
+def find-pkg-source-dir [extractDir: string, pkgFile: string] {
+  let pkgRelDir = $pkgFile | path dirname
+  let directPath = $extractDir | path join $pkgRelDir
+
+  if ($directPath | path exists) {
+    return $directPath
+  }
+
+  # Look for single root directory
+  let dirs = try { ls $extractDir | where type == dir } catch { [] }
+  if ($dirs | length) != 1 {
+    return null
+  }
+
+  let rootPath = ($dirs | first).name | path join $pkgRelDir
+  if ($rootPath | path exists) { $rootPath } else { null }
+}
+
+# Helper: Clean up temporary directories
+def cleanup-temp-dirs [dirs: list<string>] {
+  $dirs | each {|dir| try { rm -rf $dir } catch {} } | ignore
+}
+
+# Helper: Clean a single mono repo package
+def clean-single-pkg [pkg: record, pkgFile: string, baseDir: string] {
+  let name = $pkg.name
+  let ver = $pkg.version
+  let tarFile = get-tar-path $name $ver $baseDir
+
+  if not ($tarFile | path exists) {
+    print $'(ansi y)WARNING:(ansi rst) Package file not found: ($tarFile)'
+    return false
+  }
+
+  let safeName = get-safe-pkg-name $name
+  let tmpExtract = $baseDir | path join $'pkg-src/.tmp-extract-($safeName)-($ver)'
+  let tmpClean = $baseDir | path join $'pkg-src/.tmp-clean-($safeName)-($ver)'
+
+  cleanup-temp-dirs [$tmpExtract, $tmpClean]
+
+  try {
+    # Extract
+    print $'  Extracting ($name)@($ver)...'
+    mkdir $tmpExtract
+    tar xzf $tarFile -C $tmpExtract
+
+    # Find source directory
+    let srcDir = find-pkg-source-dir $tmpExtract $pkgFile
+    if ($srcDir | is-empty) {
+      print $'(ansi y)WARNING:(ansi rst) Package directory not found (pkgFile: ($pkgFile))'
+      cleanup-temp-dirs [$tmpExtract]
+      return false
+    }
+
+    # Copy to clean directory
+    print $'  Copying package directory...'
+    mkdir $tmpClean
+    let newPkgDir = $tmpClean | path join $safeName
+    cp -r $srcDir $newPkgDir
+
+    # Create new archive
+    print $'  Creating cleaned archive...'
+    let newTar = $tmpClean | path join 'new.tar.gz'
+    do -i { cd $tmpClean; tar czf new.tar.gz $safeName }
+
+    if not ($newTar | path exists) {
+      print $'(ansi r)ERROR:(ansi rst) Failed to create archive'
+      cleanup-temp-dirs [$tmpExtract, $tmpClean]
+      return false
+    }
+
+    # Replace original
+    mv -f $newTar $tarFile
+    cleanup-temp-dirs [$tmpExtract, $tmpClean]
+
+    print $'(ansi g)✓(ansi rst) Cleaned: (ansi g)($name)@($ver)(ansi rst)'
+    true
+  } catch {|e|
+    print $'(ansi r)ERROR:(ansi rst) Failed to clean ($name)@($ver): ($e.msg)'
+    cleanup-temp-dirs [$tmpExtract, $tmpClean]
+    false
+  }
+}
+
 # Clean mono repo packages to only include the npm package directory
-# This reduces code disclosure by extracting only the specific package from the mono repo
 def clean-mono-repo-pkgs [pkgs: table, repos: table] {
   print $'(ansi c)Cleaning mono repo packages...(ansi rst)'; hr-line
 
   let monoRepos = $repos | default false monoRepo | where monoRepo == true
-  # Get current working directory for absolute paths
   let baseDir = $env.PWD
 
-  for pkg in $pkgs {
-    let name = $pkg.name
-    let ver = $pkg.version
-    let match = $monoRepos | where name == $name
+  $pkgs | each {|pkg|
+    let match = $monoRepos | where name == $pkg.name
+    if ($match | is-empty) { return }
 
-    if ($match | is-empty) { continue }
-
-    let pkgInfo = $match | first
-    let pkgFile = $pkgInfo.pkgFile?
+    let pkgFile = ($match | first).pkgFile?
     if ($pkgFile | is-empty) {
-      print $'(ansi y)WARNING:(ansi rst) No pkgFile specified for mono repo package: ($name), skip cleaning'
-      continue
+      print $'(ansi y)WARNING:(ansi rst) No pkgFile for ($pkg.name)'
+      return
     }
 
-    # Determine tar file path - handle scoped packages like @terminus/foo
-    let tarFile = if ($name | str starts-with '@') {
-      # Scoped package: @scope/name -> pkg-src/@scope/name-ver.tar.gz
-      let parts = $name | split row '/'
-      let scope = $parts | first
-      let pkgName = $parts | last
-      $baseDir | path join $'pkg-src/($scope)/($pkgName)-($ver).tar.gz'
-    } else {
-      # Regular package: name -> pkg-src/name-ver.tar.gz
-      $baseDir | path join $'pkg-src/($name)-($ver).tar.gz'
-    }
-
-    if not ($tarFile | path exists) {
-      print $'(ansi y)WARNING:(ansi rst) Package file not found: ($tarFile), skip'
-      continue
-    }
-
-    # Create unique temporary directory names with absolute paths
-    let safeName = $name | str replace -a '/' '-' | str replace -a '@' ''
-    let tmpExtractDir = $baseDir | path join $'pkg-src/.tmp-extract-($safeName)-($ver)'
-    let tmpCleanDir = $baseDir | path join $'pkg-src/.tmp-clean-($safeName)-($ver)'
-
-    # Cleanup if exists
-    if ($tmpExtractDir | path exists) { rm -rf $tmpExtractDir }
-    if ($tmpCleanDir | path exists) { rm -rf $tmpCleanDir }
-
-    try {
-      mkdir $tmpExtractDir
-
-      # Extract tar.gz to temporary directory
-      print $'  Extracting ($name)@($ver)...'
-      try {
-        tar xzf $tarFile -C $tmpExtractDir
-      } catch {|e|
-        print $'(ansi r)ERROR:(ansi rst) Failed to extract ($tarFile): ($e.msg)'
-        rm -rf $tmpExtractDir
-        continue
-      }
-
-      # pkgFile is relative to repo root, e.g., "packages/foo/package.json"
-      # We want the directory containing package.json
-      let pkgRelDir = $pkgFile | path dirname
-
-      # Determine the actual source directory
-      # Check if files are directly extracted or there's a root directory
-      mut pkgSourceDir = $tmpExtractDir | path join $pkgRelDir
-
-      if not ($pkgSourceDir | path exists) {
-        # Try to find if there's a single root directory
-        let extractedItems = try { ls $tmpExtractDir } catch { [] }
-        let extractedDirs = $extractedItems | where type == dir
-
-        if ($extractedDirs | length) == 1 {
-          # There's a single root directory, use it
-          let extractedRoot = $extractedDirs | first | get name
-          $pkgSourceDir = $extractedRoot | path join $pkgRelDir
-
-          if not ($pkgSourceDir | path exists) {
-            print $'(ansi y)WARNING:(ansi rst) Package directory not found: ($pkgSourceDir) (pkgFile: ($pkgFile))'
-            rm -rf $tmpExtractDir
-            continue
-          }
-        } else {
-          print $'(ansi y)WARNING:(ansi rst) Package directory not found: ($pkgSourceDir) (pkgFile: ($pkgFile))'
-          rm -rf $tmpExtractDir
-          continue
-        }
-      }
-
-      # Create clean directory and copy only the package contents
-      mkdir $tmpCleanDir
-      let newPkgDirName = $safeName
-      let newPkgDir = $tmpCleanDir | path join $newPkgDirName
-
-      # Copy the package directory
-      print $'  Copying package directory...'
-      try {
-        cp -r $pkgSourceDir $newPkgDir
-      } catch {|e|
-        print $'(ansi r)ERROR:(ansi rst) Failed to copy directory: ($e.msg)'
-        rm -rf $tmpExtractDir
-        rm -rf $tmpCleanDir
-        continue
-      }
-
-      # Create new tar.gz using absolute paths
-      let newTarFile = $tmpCleanDir | path join 'new.tar.gz'
-      print $'  Creating cleaned archive...'
-      try {
-        # Use do block to change directory temporarily
-        do -i {
-          cd $tmpCleanDir
-          tar czf new.tar.gz $newPkgDirName
-        }
-      } catch {|e|
-        print $'(ansi r)ERROR:(ansi rst) Failed to create archive: ($e.msg)'
-        rm -rf $tmpExtractDir
-        rm -rf $tmpCleanDir
-        continue
-      }
-
-      # Verify new tar was created
-      if not ($newTarFile | path exists) {
-        print $'(ansi r)ERROR:(ansi rst) New archive was not created: ($newTarFile)'
-        rm -rf $tmpExtractDir
-        rm -rf $tmpCleanDir
-        continue
-      }
-
-      # Replace the original tar.gz
-      try {
-        mv -f $newTarFile $tarFile
-      } catch {|e|
-        print $'(ansi r)ERROR:(ansi rst) Failed to replace original archive: ($e.msg)'
-        rm -rf $tmpExtractDir
-        rm -rf $tmpCleanDir
-        continue
-      }
-
-      # Cleanup temporary directories
-      rm -rf $tmpExtractDir
-      rm -rf $tmpCleanDir
-
-      print $'(ansi g)✓(ansi rst) Cleaned mono repo package: (ansi g)($name)@($ver)(ansi rst)'
-    } catch {|e|
-      print $'(ansi r)ERROR:(ansi rst) Failed to clean package ($name)@($ver): ($e.msg)'
-      # Cleanup on error
-      try { rm -rf $tmpExtractDir } catch {}
-      try { rm -rf $tmpCleanDir } catch {}
-    }
-  }
+    clean-single-pkg $pkg $pkgFile $baseDir
+  } | ignore
 }
 
 # 下载所有源码包, e.g.: `t fe-src @terminus/bricks=1.1.1,@terminus/mall-utils=1.3.9`
