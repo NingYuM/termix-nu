@@ -12,8 +12,8 @@
 # [√] 为各 Mono Repo NPM 包自动查找并更新 pkgFile 字段
 # [√] 创建一个总的压缩包，包含所有源码包和清单文件
 # [√] 为各 Mono Repo NPM 包自动清理源码包，只保留 package.json 所在的目录，最小化源码披露范围
+# [√] 提供工具检查 npm 包发布产物里面是否包含源码
 # [ ] 将源码包上传到公司 OSS，并提供下载链接？
-# [ ] 提供工具检查 npm 包发布产物里面是否包含源码
 # Perf:
 #   性能优化点
 #    - 版本-提交映射缓存 - 新增 build-version-commit-map，一次性构建所有版本到提交的映射表，避免重复扫描 git 历史
@@ -46,64 +46,6 @@ use ../utils/common.nu [ECODE get-tmp-path hr-line has-ref is-lower-ver]
 
 # 最大连续失败次数, 超出则停止为该包创建 Tag
 const MAX_FAILURE = 15
-
-# 列出所有 URL 为空的仓库及其维护者信息
-export def get-repo-maintainers [--show-maintainers(-m)] {
-  let empties = open repos.toml
-    | get repos
-    | where {|it| $it.url? | is-empty }
-
-  $empties | print; print -n (char nl)
-  if not $show_maintainers { return }
-  $empties | each {|it|
-    print $'(ansi g)($it.name)(ansi rst)'; hr-line 60;
-    print $'(ansi g)Maintainers:(ansi rst)'
-    # 使用 --json 让 npm 输出 JSON，再 from json 转成结构化数据，避免 byte stream
-    let raw = (npm view --json $it.name maintainers)
-    let parsed = (try { $raw | from json } catch { [] })
-    $parsed | to yaml | print
-  }
-}
-
-# 检查指定的 npm 包是否发布时附带了源码
-export def check-src-published [--pkgs(-p): string, --clean(-c)] {
-  let tmpPath = get-tmp-path
-  let repos = open repos.toml | get repos
-  let todo = $repos | where ($it.srcPublished? | default false) == false
-  let pkgs = if ($pkgs | is-not-empty) { $pkgs | split row , | compact -e } else { $todo | get name }
-  cd $tmpPath
-  if ('pkg-src' | path exists) { rm -rf pkg-src }
-  mkdir pkg-src
-  cd pkg-src
-  for pkg in $pkgs {
-    let pkgName = get-safe-pkg-name $pkg
-    print $'(ansi c)Checking package: (ansi rst) (ansi g)($pkg)(ansi rst)'
-    let url = npm info $pkg --json | from json | get dist.tarball
-    let dest = $'($pkgName)-latest.tar.gz'
-    try { http get $url } | save -rfp $dest
-    mkdir $pkgName
-    tar xzf $dest -C $pkgName
-    let srcDir = glob ($pkgName)/**/src/*
-    if ($srcDir | is-not-empty) {
-      print $'(ansi g)✓(ansi rst) Package: (ansi g)($pkg)(ansi rst) may have source code'; hr-line
-      print $srcDir
-    } else {
-      print $'(ansi y)WARNING:(ansi rst) Package: (ansi g)($pkg)(ansi rst) is not published with source code'
-    }
-  }
-  if $clean { cd ..; rm -rf pkg-src }
-}
-
-# 列出所有 GitLab 仓库及其内容，保存为 JSON 文件
-export def list-gitlab-repos [] {
-  mut repos = {}
-  let projects = ossutil ls -i $env.OSS_AK -k $env.OSS_SK oss://($env.OSS_BUCKET)/repositories/ -d | lines | drop 3
-  for p in $projects {
-    let r = ossutil ls -i $env.OSS_AK -k $env.OSS_SK $p -d | lines | drop 3
-    $repos = $repos | upsert $p $r
-  }
-  $repos | to json | save -rf tmp/gitlab-repos.json
-}
 
 # Clone a repository and pull all branches and tags
 @example 'Clone a repository and pull all branches and tags' {
@@ -758,4 +700,124 @@ export def update-pkg-json-for-mono-repos [] {
   $data | upsert repos $updatedRepos | update repos { sort-by repo } | save -f $reposPath
   print $'(ansi g)✓(ansi rst) Updated ($updatedList | length) packages in repos.toml:'
   $updatedList | print
+}
+
+# 列出所有 URL 为空的仓库及其维护者信息
+export def get-repo-maintainers [--show-maintainers(-m)] {
+  let empties = open repos.toml
+    | get repos
+    | where {|it| $it.url? | is-empty }
+
+  $empties | print; print -n (char nl)
+  if not $show_maintainers { return }
+  $empties | each {|it|
+    print $'(ansi g)($it.name)(ansi rst)'; hr-line 60;
+    print $'(ansi g)Maintainers:(ansi rst)'
+    # 使用 --json 让 npm 输出 JSON，再 from json 转成结构化数据，避免 byte stream
+    let raw = (npm view --json $it.name maintainers)
+    let parsed = (try { $raw | from json } catch { [] })
+    $parsed | to yaml | print
+  }
+}
+
+# 检查指定的 npm 包是否发布时附带了源码
+export def check-src-published [--pkgs(-p): string, --clean(-c)] {
+  let tmpPath = get-tmp-path
+  let workDir = $tmpPath | path join 'pkg-src-check'
+  let repos = open repos.toml | get repos
+  let todo = $repos | where ($it.srcPublished? | default false) == false
+  let pkgs = if ($pkgs | is-not-empty) { $pkgs | split row , | compact -e } else { $todo | get name }
+
+  # Clean up and create work directory
+  if ($workDir | path exists) { rm -rf $workDir }
+  mkdir $workDir
+
+  # Check each package and collect results
+  let results = $pkgs | each {|pkg|
+    print $'(ansi c)Checking package: (ansi rst) (ansi g)($pkg)(ansi rst)'
+
+    # Get package info
+    let pkgInfo = try {
+      npm info $pkg --json | from json
+    } catch {|e|
+      print $'(ansi r)ERROR:(ansi rst) Failed to get package info: ($e.msg)'
+      return { name: $pkg, hasSource: null, error: $'Failed to get info: ($e.msg)' }
+    }
+
+    let url = $pkgInfo | get dist.tarball
+    let pkgName = get-safe-pkg-name $pkg
+    let pkgDir = $workDir | path join $pkgName
+    let tarFile = $pkgDir | path join 'package.tar.gz'
+
+    try {
+      # Create package directory and download
+      mkdir $pkgDir
+      http get $url | save -f $tarFile
+      # Extract tarball
+      tar xzf $tarFile -C $pkgDir
+
+      # npm tarball creates a 'package/' subdirectory
+      let extractDir = if (($pkgDir | path join 'package') | path exists) {
+        $pkgDir | path join 'package'
+      } else {
+        $pkgDir
+      }
+
+      # Check for source code files (TypeScript, JSX)
+      let sourceFiles = try {
+        glob ($extractDir)/{src,source}/**/*.{ts,tsx,jsx} | where {|f| not ($f | str contains 'node_modules') } | each {|f| $f | path relative-to $workDir }
+      } catch { [] }
+
+      # Check for common source directories
+      let srcDirs = ['src', 'source']
+        | each {|d| $extractDir | path join $d }
+        | where {|p| $p | path exists }
+
+      let hasSource = ($sourceFiles | length) > 0 or ($srcDirs | length) > 0
+
+      if $hasSource {
+        print $'(ansi g)✓(ansi rst) Package: (ansi g)($pkg)(ansi rst) has source code'
+        if ($sourceFiles | length) > 0 {
+          print $'  Source files: ($sourceFiles | length) TypeScript/JSX files'
+        }
+        if ($srcDirs | length) > 0 {
+          print $'  Source dirs: ($srcDirs | each { path basename } | str join ", ")'
+        }
+        hr-line
+        { name: $pkg, hasSource: true, sourceFiles: ($sourceFiles | first 20) }
+      } else {
+        print $'(ansi y)WARNING:(ansi rst) Package:  (ansi g)($pkg)(ansi rst) has no source code'
+        { name: $pkg, hasSource: false }
+      }
+    } catch {|e|
+      print $'(ansi r)ERROR:(ansi rst) Failed to check ($pkg): ($e.msg)'
+      { name: $pkg, hasSource: null, error: $e.msg }
+    }
+  }
+
+  # Summary
+  print $'(char nl)(ansi c)Summary:(ansi rst)'; hr-line
+  let withSource = $results | where hasSource == true | length
+  let withoutSource = $results | where hasSource == false | length
+  let failed = $results | where hasSource == null | length
+
+  print $'Packages with source: (ansi g)($withSource)(ansi rst)'
+  print $'Packages without source: (ansi y)($withoutSource)(ansi rst)'
+  if $failed > 0 { print $'Failed to check: (ansi r)($failed)(ansi rst)' }
+
+  # Clean up
+  if $clean { rm -rf $workDir }
+
+  $results
+}
+
+# 列出所有 GitLab 仓库及其内容，保存为 JSON 文件
+export def list-gitlab-repos [] {
+  mut repos = {}
+  let projects = ossutil ls -i $env.OSS_AK -k $env.OSS_SK oss://($env.OSS_BUCKET)/repositories/ -d | lines | drop 3
+  for p in $projects {
+    let r = ossutil ls -i $env.OSS_AK -k $env.OSS_SK $p -d | lines | drop 3
+    $repos = $repos | upsert $p $r
+  }
+  $repos | to json | save -rf tmp/gitlab-repos.json
 }
