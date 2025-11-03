@@ -597,10 +597,17 @@ def custom-pkg-url [name: string, ver: string, repos: table] {
 export def category-pkgs [pkgs: string, repos: table] {
   # repo 存在表示源码可从仓库获取；repo 缺失表示需从 npm 下载
   let allPkgs = $repos | get name
+  let forbiddenPkgs = $repos | where {|it| $it.downloadable? == false } | get name
   let srcAvailablePkgs = $repos | where {|it| $it.repo? | is-not-empty } | get name
   let srcMissingPkgs = $repos | where {|it| $it.repo? | is-empty } | get name
   let pkgs = $pkgs | split row , | each { parse '{name}={version}' | into record }
   let missingPkgs = $pkgs | where $it.name not-in $allPkgs
+  let forbidden = $pkgs | where $it.name in $forbiddenPkgs
+  if ($forbidden | is-not-empty) {
+    print $'(ansi r)ERROR:(ansi rst) The following packages are forbidden to download source code:(char nl)'
+    print $forbidden
+    exit $ECODE.INVALID_PARAMETER
+  }
   if ($missingPkgs | is-empty) {
     let noSrcPkgs = $pkgs | where $it.name in $srcMissingPkgs
     let srcPkgsAll = $pkgs | where $it.name in $srcAvailablePkgs
