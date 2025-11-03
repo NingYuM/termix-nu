@@ -23,6 +23,16 @@
 #    - Multi-repo: 如果有 100 个 tag 要创建，从调用 100 次 git log 优化为只调用 1 次
 #    - Mono-repo: 同样的优化，大幅减少 git 历史扫描次数
 #    - 实际速度: 对于有大量提交历史的仓库，性能提升可达 10-50 倍
+# REPOS.TOML 字段说明：
+#   - name: npm 包名
+#   - url: 仓库浏览器访问 URL
+#   - repo: 仓库 Git Clone URL
+#   - tagged: 该包是否已经打 Tag
+#   - monoRepo: 是否是 mono repo，默认为 false
+#   - downloadable: 当前 npm 包是否可以下载源码，默认为 true
+#   - srcPublished: npm 包发布的时候是否附带了源码, 默认为 false
+#   - pkgFile: Mono Repo 仓库中子包 package.json 文件路径, 可以借助工具自动更新该字段
+#   - standalone: Mono Repo 仓库是否是独立发包模式，true 表示是，false 表示所有的包可能一起发布新版本，默认为 false
 # Usage:
 #   - Format repos.toml: open repos.toml | update repos { sort-by repo } | save -f repos.toml
 #   - Step1: Update repos.toml with the latest repo information

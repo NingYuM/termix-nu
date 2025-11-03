@@ -1,23 +1,27 @@
 [[repos]]
 name = "@terminus/react-navigation-bottom-tabs"
 repo = ""
+monoRepo = false
 srcPublished = true
 downloadable = true
 
 [[repos]]
 name = "@terminus/rollup-plugin-alias"
 repo = ""
+monoRepo = false
 srcPublished = true
 downloadable = true
 
 [[repos]]
 name = "@terminus/typescript-checker"
 repo = ""
+monoRepo = false
 srcPublished = true
 downloadable = true
 
 [[repos]]
 name = "@terminus/bricks"
+monoRepo = false
 downloadable = true
 repo = "https://erda.cloud/terminus/dop/frontend-product/bricks"
 url = "https://erda.cloud/terminus/dop/projects/213/apps/5317/repo"
@@ -94,6 +98,7 @@ repo = "https://erda.cloud/terminus/dop/frontend-product/mall-base"
 [[repos]]
 name = "@terminus/mp-barcode"
 tagged = true
+monoRepo = false
 downloadable = true
 url = "https://erda.cloud/terminus/dop/projects/213/apps/4205/repo"
 repo = "https://erda.cloud/terminus/dop/frontend-product/mp-barcode"
@@ -101,6 +106,7 @@ repo = "https://erda.cloud/terminus/dop/frontend-product/mp-barcode"
 [[repos]]
 name = "@terminus/mp-calendar"
 tagged = true
+monoRepo = false
 srcPublished = true
 downloadable = true
 url = "https://erda.cloud/terminus/dop/projects/213/apps/4206/repo"
@@ -155,8 +161,8 @@ repo = "https://erda.cloud/terminus/dop/frontend-product/octopus"
 name = "@terminus/rollup-plugin-typescript"
 tagged = true
 monoRepo = true
-srcPublished = false
 downloadable = true
+srcPublished = false
 pkgFile = "packages/typescript/package.json"
 url = "https://erda.cloud/terminus/dop/projects/213/apps/4847/repo"
 repo = "https://erda.cloud/terminus/dop/frontend-product/octopus"
@@ -164,22 +170,25 @@ repo = "https://erda.cloud/terminus/dop/frontend-product/octopus"
 [[repos]]
 name = "@terminus/trnw-design"
 tagged = true
-srcPublished = false
+monoRepo = false
 downloadable = true
+srcPublished = false
 url = "https://erda.cloud/terminus/dop/projects/213/apps/1003444/repo"
 repo = "https://erda.cloud/terminus/dop/frontend-product/trnw-design"
 
 [[repos]]
 name = "@terminus/trnw-package-tools"
 tagged = true
-srcPublished = false
+monoRepo = false
 downloadable = true
+srcPublished = false
 url = "https://erda.cloud/terminus/dop/projects/213/apps/1003446/repo"
 repo = "https://erda.cloud/terminus/dop/frontend-product/trnw-package-tools"
 
 [[repos]]
 name = "@terminus/trnw-tools"
 tagged = true
+monoRepo = false
 srcPublished = true
 downloadable = true
 url = "https://erda.cloud/terminus/dop/projects/213/apps/1003445/repo"
@@ -188,6 +197,7 @@ repo = "https://erda.cloud/terminus/dop/frontend-product/trnw-tools"
 [[repos]]
 name = "@terminus/react-native-amap-sdk"
 tagged = true
+monoRepo = false
 downloadable = true
 url = "https://erda.cloud/terminus/dop/projects/254/apps/5236/repo"
 repo = "https://erda.cloud/terminus/dop/mobile/react-native-amap"
@@ -195,6 +205,7 @@ repo = "https://erda.cloud/terminus/dop/mobile/react-native-amap"
 [[repos]]
 name = "@terminus/rn-b2b2c"
 tagged = true
+monoRepo = false
 downloadable = true
 url = "https://erda.cloud/terminus/dop/projects/254/apps/5308/repo"
 repo = "https://erda.cloud/terminus/dop/mobile/react-native-b2b2c"
@@ -202,6 +213,7 @@ repo = "https://erda.cloud/terminus/dop/mobile/react-native-b2b2c"
 [[repos]]
 name = "@terminus/react-native-camera"
 tagged = true
+monoRepo = false
 downloadable = true
 url = "https://erda.cloud/terminus/dop/projects/254/apps/5264/repo"
 repo = "https://erda.cloud/terminus/dop/mobile/react-native-camera"
@@ -209,6 +221,7 @@ repo = "https://erda.cloud/terminus/dop/mobile/react-native-camera"
 [[repos]]
 name = "@terminus/rn-share"
 tagged = true
+monoRepo = false
 downloadable = true
 url = "https://erda.cloud/terminus/dop/projects/254/apps/5261/repo"
 repo = "https://erda.cloud/terminus/dop/mobile/react-native-share"
@@ -226,6 +239,7 @@ url = "https://erda.cloud/terminus/dop/projects/170/apps/11930/repo"
 [[repos]]
 name = "@terminus/react-imageview"
 tagged = true
+monoRepo = false
 downloadable = true
 url = "https://erda.cloud/terminus/dop/projects/170/apps/5492/repo"
 repo = "https://erda.cloud/terminus/dop/nusi/react-imageview"
@@ -233,6 +247,7 @@ repo = "https://erda.cloud/terminus/dop/nusi/react-imageview"
 [[repos]]
 name = "@terminus/react-underline-tabbar"
 tagged = true
+monoRepo = false
 downloadable = true
 url = "https://erda.cloud/terminus/dop/projects/170/apps/4773/repo"
 repo = "https://erda.cloud/terminus/dop/nusi/react-underline-tabbar"
