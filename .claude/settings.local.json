@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__nushell__evaluate",
+      "mcp__nushell__command_help",
+      "Bash(nu -c \"use /Users/hustcer/iWork/terminus/termix-nu/git/git-pick.nu; ''Syntax check passed ✓''\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
