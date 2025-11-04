@@ -67,6 +67,80 @@ url = "https://erda.cloud/terminus/dop/projects/213/apps/4220/repo"
 repo = "https://erda.cloud/terminus/dop/frontend-product/eevee"
 
 [[repos]]
+name = "@terminus/hot-area-editor"
+tagged = false
+monoRepo = true
+standalone = true
+downloadable = true
+pkgFile = "packages/hot-area-editor/package.json"
+url = "https://erda.cloud/terminus/dop/projects/213/apps/4220/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/eevee"
+
+[[repos]]
+name = "@terminus/eevee-react-components"
+tagged = false
+monoRepo = true
+standalone = true
+downloadable = true
+pkgFile = "packages/eevee-components-react/package.json"
+url = "https://erda.cloud/terminus/dop/projects/213/apps/4220/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/eevee"
+
+[[repos]]
+name = "@terminus/eevee-client-engine-react"
+tagged = false
+monoRepo = true
+standalone = true
+downloadable = true
+pkgFile = "packages/eevee-client-engine-react/package.json"
+url = "https://erda.cloud/terminus/dop/projects/213/apps/4220/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/eevee"
+
+[[repos]]
+name = "@terminus/herd"
+tagged = false
+monoRepo = false
+downloadable = true
+url = "https://erda.cloud/terminus/dop/projects/213/apps/5413/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/herd"
+
+[[repos]]
+name = "@terminus/herd-core"
+tagged = false
+monoRepo = false
+downloadable = true
+url = "https://erda.cloud/terminus/dop/projects/213/apps/5423/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/herd-core"
+
+[[repos]]
+name = "@terminus/jarvisplus"
+tagged = false
+monoRepo = true
+standalone = true
+downloadable = true
+pkgFile = "packages/jarvisplus/package.json"
+url = "https://erda.cloud/terminus/dop/projects/213/apps/9954/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/jarvisplus"
+
+[[repos]]
+name = "@terminus/jarvisplus-runtime"
+tagged = false
+monoRepo = true
+standalone = true
+downloadable = true
+pkgFile = "packages/jarvisplus-runtime/package.json"
+url = "https://erda.cloud/terminus/dop/projects/213/apps/9954/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/jarvisplus"
+
+[[repos]]
+name = "@terminus/koa2-file-upload"
+tagged = false
+monoRepo = false
+downloadable = true
+url = "https://erda.cloud/terminus/dop/projects/213/apps/7452/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/koa2-file-upload"
+
+[[repos]]
 name = "@terminus/termix"
 tagged = true
 monoRepo = true
@@ -168,6 +242,74 @@ url = "https://erda.cloud/terminus/dop/projects/213/apps/4847/repo"
 repo = "https://erda.cloud/terminus/dop/frontend-product/octopus"
 
 [[repos]]
+name = "@terminus/octopus-router"
+tagged = true
+monoRepo = true
+downloadable = true
+pkgFile = "packages/router/package.json"
+url = "https://erda.cloud/terminus/dop/projects/213/apps/4847/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/octopus"
+
+[[repos]]
+name = "@terminus/octopus-hooks"
+tagged = true
+monoRepo = true
+downloadable = true
+pkgFile = "packages/hooks/package.json"
+url = "https://erda.cloud/terminus/dop/projects/213/apps/4847/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/octopus"
+
+[[repos]]
+name = "@terminus/octopus-polyfill"
+tagged = true
+monoRepo = true
+downloadable = true
+pkgFile = "packages/polyfill/package.json"
+url = "https://erda.cloud/terminus/dop/projects/213/apps/4847/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/octopus"
+
+[[repos]]
+name = "@terminus/parkball"
+tagged = false
+monoRepo = false
+downloadable = true
+url = "https://erda.cloud/terminus/dop/projects/213/apps/3370/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/parkball"
+
+[[repos]]
+name = "@terminus/react-native-web"
+tagged = false
+monoRepo = true
+downloadable = true
+pkgFile = "packages/react-native-web/package.json"
+url = "https://erda.cloud/terminus/dop/projects/213/apps/6099/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/react-native-web"
+
+[[repos]]
+name = "@terminus/react-navigation"
+tagged = false
+monoRepo = false
+downloadable = true
+url = "https://erda.cloud/terminus/dop/projects/213/apps/4569/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/react-navigation"
+
+[[repos]]
+name = "@terminus/rn-template"
+tagged = false
+monoRepo = false
+downloadable = true
+url = "https://erda.cloud/terminus/dop/projects/213/apps/7859/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/rn-template"
+
+[[repos]]
+name = "@terminus/invokers"
+tagged = false
+monoRepo = false
+downloadable = true
+url = "https://erda.cloud/terminus/dop/projects/213/apps/5425/repo"
+repo = "https://erda.cloud/terminus/dop/frontend-product/terminus-invokers"
+
+[[repos]]
 name = "@terminus/trnw-design"
 tagged = true
 monoRepo = false
@@ -227,6 +369,58 @@ url = "https://erda.cloud/terminus/dop/projects/254/apps/5261/repo"
 repo = "https://erda.cloud/terminus/dop/mobile/react-native-share"
 
 [[repos]]
+name = "@terminus/nusi"
+tagged = true
+monoRepo = false
+downloadable = true
+repo = "https://erda.cloud/terminus/dop/nusi/nusi"
+url = "https://erda.cloud/terminus/dop/projects/170/apps/2727/repo"
+
+[[repos]]
+name = "@terminus/nusi-flex"
+tagged = true
+monoRepo = false
+downloadable = true
+repo = "https://erda.cloud/terminus/dop/nusi/nusi-flex"
+url = "https://erda.cloud/terminus/dop/projects/170/apps/11688/repo"
+
+[[repos]]
+name = "@terminus/nusi-icons"
+tagged = true
+monoRepo = true
+standalone = true
+downloadable = true
+pkgFile = "packages/icons/package.json"
+url = "https://erda.cloud/terminus/dop/projects/170/apps/3389/repo"
+repo = "https://erda.cloud/terminus/dop/nusi/nusi-icons"
+
+[[repos]]
+name = "@terminus/nusi-icons-react"
+tagged = true
+monoRepo = true
+standalone = true
+downloadable = true
+pkgFile = "packages/icons-react/package.json"
+url = "https://erda.cloud/terminus/dop/projects/170/apps/3389/repo"
+repo = "https://erda.cloud/terminus/dop/nusi/nusi-icons"
+
+[[repos]]
+name = "@terminus/nusi-mobile"
+tagged = true
+monoRepo = false
+downloadable = true
+repo = "https://erda.cloud/terminus/dop/nusi/nusi-mobile"
+url = "https://erda.cloud/terminus/dop/projects/170/apps/4419/repo"
+
+[[repos]]
+name = "@terminus/nusi-pos"
+tagged = false
+monoRepo = false
+downloadable = true
+repo = "https://erda.cloud/terminus/dop/nusi/nusi-pos"
+url = "https://erda.cloud/terminus/dop/projects/170/apps/6372/repo"
+
+[[repos]]
 name = "@terminus/nusi-slim"
 tagged = true
 monoRepo = true
@@ -237,6 +431,54 @@ repo = "https://erda.cloud/terminus/dop/nusi/nusi-slim"
 url = "https://erda.cloud/terminus/dop/projects/170/apps/11930/repo"
 
 [[repos]]
+name = "@terminus/fn-editor"
+tagged = false
+monoRepo = true
+standalone = true
+downloadable = true
+pkgFile = "pkg-editor/package.json"
+repo = "https://erda.cloud/terminus/dop/nusi/nusi-slim"
+url = "https://erda.cloud/terminus/dop/projects/170/apps/11930/repo"
+
+[[repos]]
+name = "@terminus/nusi-slim-icons"
+tagged = false
+monoRepo = true
+standalone = true
+downloadable = true
+pkgFile = "pkg-icon/package.json"
+repo = "https://erda.cloud/terminus/dop/nusi/nusi-slim"
+url = "https://erda.cloud/terminus/dop/projects/170/apps/11930/repo"
+
+[[repos]]
+name = "@terminus/nusi-slim-plugin"
+tagged = false
+monoRepo = true
+standalone = true
+downloadable = true
+pkgFile = "pkg-plugin/package.json"
+repo = "https://erda.cloud/terminus/dop/nusi/nusi-slim"
+url = "https://erda.cloud/terminus/dop/projects/170/apps/11930/repo"
+
+[[repos]]
+name = "@terminus/nusi-preview"
+tagged = false
+monoRepo = true
+standalone = true
+downloadable = true
+pkgFile = "pkg-preview/package.json"
+repo = "https://erda.cloud/terminus/dop/nusi/nusi-slim"
+url = "https://erda.cloud/terminus/dop/projects/170/apps/11930/repo"
+
+[[repos]]
+name = "@terminus/rc-form"
+tagged = false
+monoRepo = false
+downloadable = true
+url = "https://erda.cloud/terminus/dop/projects/170/apps/3664/repo"
+repo = "https://erda.cloud/terminus/dop/nusi/rc-form"
+
+[[repos]]
 name = "@terminus/react-imageview"
 tagged = true
 monoRepo = false
@@ -245,9 +487,25 @@ url = "https://erda.cloud/terminus/dop/projects/170/apps/5492/repo"
 repo = "https://erda.cloud/terminus/dop/nusi/react-imageview"
 
 [[repos]]
+name = "@terminus/react-native-snap-carousel"
+tagged = false
+monoRepo = false
+downloadable = true
+repo = "https://erda.cloud/terminus/dop/nusi/react-native-snap-carousel"
+url = "https://erda.cloud/terminus/dop/projects/170/apps/9311/repo"
+
+[[repos]]
 name = "@terminus/react-underline-tabbar"
 tagged = true
 monoRepo = false
 downloadable = true
 url = "https://erda.cloud/terminus/dop/projects/170/apps/4773/repo"
 repo = "https://erda.cloud/terminus/dop/nusi/react-underline-tabbar"
+
+[[repos]]
+name = "@terminus/rmc-calendar"
+tagged = false
+monoRepo = false
+downloadable = true
+repo = "https://erda.cloud/terminus/dop/nusi/rmc-calendar"
+url = "https://erda.cloud/terminus/dop/projects/170/apps/5562/repo"
