@@ -47,37 +47,113 @@ export def 'git pick' [
   git checkout $options.to --quiet
   mut pickedCount = 0
   mut failedPick = []
+
   for c in $options.matches {
-    # Get raw date with timezone from commit
-    let rawDate = git show -s --format='%ct' $c.sha
-    load-env { GIT_AUTHOR_DATE: $rawDate, GIT_COMMITTER_DATE: $rawDate }
-    let cherryPick = do -i { git cherry-pick $c.sha | complete }
-    if ($cherryPick.exit_code | into int) != 0 {
-      do -i { LANG=en_US git cherry-pick --abort | complete }
-      let error = if ($cherryPick.stderr =~ '--allow-empty') {
-          'EMPTY_COMMIT'
-        } else if ($cherryPick.stderr =~ 'conflict') {
-          'CONFLICT_FOUND'
-        } else if ($cherryPick.stderr =~ 'no -m option was given') {
-          'MERGE_IGNORED'
-        } else { 'UNKNOWN_ERROR' }
+    let result = try-cherry-pick-commit $c.sha --all=$all
 
-      if $error not-in [EMPTY_COMMIT MERGE_IGNORED] {
-        $failedPick ++= [{ sha: $c.sha, error: $error }]
-      } else if $all {
-        $failedPick ++= [{ sha: $c.sha, error: $error }]
-      }
-      continue
+    if $result.success {
+      $pickedCount += 1
+    } else if ($result.error? | is-not-empty) {
+      $failedPick ++= [{ sha: $c.sha, error: $result.error }]
     }
-    $pickedCount += 1
   }
 
-  if $pickedCount > 0 {
-    print $'(char nl)Successfully picked (ansi g)($pickedCount)(ansi rst) commits from (ansi g)($options.from)(ansi rst) to (ansi g)($options.to)(ansi rst)'
+  print-pick-results $pickedCount $failedPick $options.from $options.to $countTip
+}
+
+# Handle lockfile conflicts automatically by regenerating the lockfile.
+# Supports: pnpm-lock.yaml, package-lock.json
+# Returns true if conflict is resolved successfully, false otherwise.
+def handle-lockfile-conflict [sha: string]: nothing -> bool {
+  let conflicts = git diff --name-only --diff-filter=U | lines
+
+  if ($conflicts | length) != 1 { return false }
+  let lockfile = $conflicts | first
+  let lockfileConfig = match $lockfile {
+    'pnpm-lock.yaml' => { file: 'pnpm-lock.yaml', name: 'pnpm' }
+    'package-lock.json' => { file: 'package-lock.json', name: 'npm' }
+    _ => null
   }
-  if ($failedPick | is-empty) { return }
-  print $'(char nl)Failed to pick the following commits from (ansi g)($options.from)(ansi rst) to (ansi g)($options.to) ($countTip)(ansi rst)'; hr-line
-  get-commits $failedPick | print
+
+  if ($lockfileConfig | is-empty) { return false }
+  print $'  (ansi y)Auto-resolving ($lockfileConfig.file) conflict for commit ($sha)...(ansi rst)'
+  # Use current branch version as base
+  git checkout --ours $lockfileConfig.file
+
+  # Regenerate lockfile with corresponding package manager
+  let installResult = match $lockfileConfig.name {
+    'pnpm' => (do -i { pnpm install --lockfile-only | complete })
+    'npm' => (do -i { npm install --package-lock-only | complete })
+    _ => { exit_code: 1 }
+  }
+
+  if ($installResult.exit_code | into int) == 0 {
+    git add $lockfileConfig.file
+    git cherry-pick --continue --no-edit
+    print $'  (ansi g)✓ Successfully resolved and regenerated ($lockfileConfig.file)(ansi rst)'
+    return true
+  } else {
+    # If install fails, abort
+    do -i { git cherry-pick --abort | complete }
+    print $'  (ansi r)✗ Failed to regenerate ($lockfileConfig.file)(ansi rst)'
+    return false
+  }
+}
+
+# Classify cherry-pick error based on stderr message.
+def classify-cherry-pick-error [stderr: string]: nothing -> string {
+  match true {
+    ($stderr =~ 'conflict') => 'CONFLICT_FOUND'
+    ($stderr =~ '--allow-empty') => 'EMPTY_COMMIT'
+    ($stderr =~ 'no -m option was given') => 'MERGE_IGNORED'
+    _ => 'UNKNOWN_ERROR'
+  }
+}
+
+# Try to cherry-pick a single commit with automatic conflict resolution.
+# Returns a record with success status and optional error type.
+def try-cherry-pick-commit [
+  sha: string,      # Commit SHA to pick
+  --all(-a),        # Include all error types
+]: nothing -> record<success: bool, error?: string> {
+  # Get raw date with timezone from commit
+  let rawDate = git show -s --format='%ct' $sha
+  load-env { GIT_AUTHOR_DATE: $rawDate, GIT_COMMITTER_DATE: $rawDate }
+  let cherryPick = do -i { git cherry-pick $sha | complete }
+
+  if ($cherryPick.exit_code | into int) == 0 { return { success: true } }
+  # Try to auto-resolve lockfile conflicts
+  if (handle-lockfile-conflict $sha) { return { success: true } }
+
+  # Classify and handle error
+  do -i { LANG=en_US git cherry-pick --abort | complete }
+  let error = classify-cherry-pick-error $cherryPick.stderr
+
+  # Filter errors based on --all flag
+  if $error in [EMPTY_COMMIT MERGE_IGNORED] and (not $all) {
+    return { success: false, error: null }
+  }
+
+  return { success: false, error: $error }
+}
+
+# Print cherry-pick results summary.
+def print-pick-results [
+  pickedCount: int,         # Number of successfully picked commits
+  failedPick: list,         # List of failed commits with errors
+  fromBranch: string,       # Source branch name
+  toBranch: string,         # Target branch name
+  countTip: string,         # Branch ahead/behind tip
+]: nothing -> nothing {
+  if $pickedCount > 0 {
+    print $'(char nl)Successfully picked (ansi g)($pickedCount)(ansi rst) commits from (ansi g)($fromBranch)(ansi rst) to (ansi g)($toBranch)(ansi rst)'
+  }
+
+  if ($failedPick | is-not-empty) {
+    print $'(char nl)Failed to pick the following commits from (ansi g)($fromBranch)(ansi rst) to (ansi g)($toBranch) ($countTip)(ansi rst)'
+    hr-line
+    get-commits $failedPick | print
+  }
 }
 
 # Get the commits information from a list of commit SHAs.
