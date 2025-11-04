@@ -30,7 +30,11 @@ export def 'git pick' [
   $env.config.table.mode = 'light'
   let options = get-valid-options $match --from $from --to $to --since $since --until $until --ignore-file $ignore_file
   let remoteBranch = git for-each-ref --format='%(upstream:short)' refs/heads/($options.to)
-  let diffCount = git rev-list --left-right --count $'($options.to)...($remoteBranch)' | detect columns -n | rename ahead behind | get -o 0
+  let diffCount = if ($remoteBranch | is-not-empty) {
+    git rev-list --left-right --count $'($options.to)...($remoteBranch)' | detect columns -n | rename ahead behind | get -o 0
+  } else {
+    { ahead: 0, behind: 0 }
+  }
   let countTip = if ($diffCount.ahead? | into int) > 0 { $'[AHEAD: ($diffCount.ahead)]' } else { '' }
   if $list_only and ($options.matches | length) > 0 {
     print $'(char nl)The following commits from (ansi g)($options.from)(ansi rst) need to be picked to (ansi g)($options.to) ($countTip)(ansi rst)'
@@ -42,6 +46,12 @@ export def 'git pick' [
   }
   if ($options.matches | is-not-empty) and $verbose {
     print $'All matched commits of (ansi g)($match)(ansi rst) found from (ansi g)($options.from)(ansi rst) have been  picked to (ansi g)($options.to)(ansi rst)'
+  }
+
+  let status = git status --porcelain
+  if ($status | is-not-empty) {
+    print -e $'(ansi r)Error: Working directory has uncommitted changes. Please commit or stash them first.(ansi rst)'
+    exit $ECODE.CONDITION_NOT_SATISFIED
   }
 
   git checkout $options.to --quiet
@@ -89,9 +99,15 @@ def handle-lockfile-conflict [sha: string]: nothing -> bool {
 
   if ($installResult.exit_code | into int) == 0 {
     git add $lockfileConfig.file
-    git cherry-pick --continue --no-edit
-    print $'  (ansi g)✓ Successfully resolved and regenerated ($lockfileConfig.file)(ansi rst)'
-    return true
+    let continueResult = do -i { git cherry-pick --continue --no-edit | complete }
+    if ($continueResult.exit_code | into int) == 0 {
+      print $'  (ansi g)✓ Successfully resolved and regenerated ($lockfileConfig.file)(ansi rst)'
+      return true
+    } else {
+      do -i { git cherry-pick --abort | complete }
+      print $'  (ansi r)✗ Failed to continue cherry-pick after regenerating lockfile(ansi rst)'
+      return false
+    }
   } else {
     # If install fails, abort
     do -i { git cherry-pick --abort | complete }
