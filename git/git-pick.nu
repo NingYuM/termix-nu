@@ -7,6 +7,8 @@
 #   [√] List the commits that failed to be picked along with the failed reason
 #   [√] Pick commits and keep the order
 #   [√] Pick commits and keep the timestamp unchanged
+#   [√] Automatically skip commits with message starting with 'skip:'
+#   [√] Handle lockfile conflicts automatically by regenerating the lockfile
 #   [ ] Handle the same commit message in the same branch cases
 # Usage:
 #   t git-pick COMMIT-SHA
@@ -222,7 +224,7 @@ def get-valid-options [
     let sourceMatches = git log ...$sourceArgs | lines | split column '---' | rename sha msg date
     let targetMatches = git log ...$targetArgs | lines | split column '---' | rename sha msg
     $matches = ($sourceMatches
-      | where {|it| ($it.msg not-in $targetMatches.msg) and (($it.sha | str substring ..<8) not-in $ignore) and ($it.msg not-in $ignore) }
+      | where {|it| ($it.msg not-in $targetMatches.msg) and (($it.sha | str substring ..<8) not-in $ignore) and ($it.msg not-in $ignore) and ($it.msg !~ '^skip:') }
       | sort-by date
       | select sha
     )
