@@ -46,6 +46,8 @@ const KEY_MAPPING = $"(ansi grey66)\(Space: Select, a: Select All, ESC/q: Quit, 
 
 # Frontend module and descriptions
 const MOD_DESC = {
+    agent: 'agent: AI/智能体/聊天相关 PC 端组件'
+    agent-mobile: 'agent-mobile: AI/智能体/聊天相关移动端组件'
     b2b: 'b2b: B2B & SRM 自定义业务组件'
     base: 'base: PC 端设计器基础组件'
     base-mobile: 'base-mobile: 移动端设计器基础组件'
