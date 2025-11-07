@@ -60,11 +60,13 @@ const STORAGE_PROVIDERS = [
 
 # Warning rules for latest.json response
 const WARNING_RULES = [
+  { key: 'cache-control', condition: 'empty', value: '', message: 'cache-control-warning', tip: '' },
   { key: 'x-trantor-endpoint', condition: 'equals', value: 'local', message: 'latest-local-warning', tip: 'latest-gateway' },
   { key: 'x-trantor-endpoint', condition: 'empty', value: '', message: 'missing-nginx-endpoint', tip: 'latest-endpoint' },
 ]
 
 const FIXING_TIPS = {
+  cache-control-warning: $'(ansi y)[WARN](ansi rst) 缺少 `cache-control` 响应头，建议为该资源添加 `cache-control: no-cache` 响应头',
   invalid-host: $'(ansi r)[ERROR](ansi rst) 无效的 host，请检查并确保以下 host 输入正确(char nl)',
   terp-assets-missing-some: $'(ansi y)[WARN](ansi rst) terp-assets 目录存在，但缺少部分文件，请核查确认是否正常',
   terp-assets-missing: $'(ansi r)[ERROR](ansi rst) terp-assets 目录不存在，请确保该静态资源包已经初始化并且添加了网关转发配置',
@@ -134,7 +136,7 @@ def check-latest-json [host: string, tips: record] {
   print $'(ansi y)云存储: (ansi rst)($provider) (ansi grey66)($ps)(ansi rst)'
 
   # Check essential rules first
-  if not (check-essential-rules $resp latest.json) { print $FIXING_TIPS.latest-resp-error; return }
+  if not (check-essential-rules $resp latest.json) { print $FIXING_TIPS.latest-resp-error }
 
   # Check warning rules
   let warnings = check-warning-rules $resp $tips | append (check-latest-modules $resp)
@@ -173,7 +175,7 @@ def check-warning-rules [resp: record, tips: record] {
     let value = get-header-value $resp $rule.key
     if (check-condition $value $rule.condition $rule.value) {
       $warnings = $warnings | append ($FIXING_TIPS | get $rule.message)
-                            | append (render-ansi ($tips | get $rule.tip))
+                            | append (render-ansi ($tips | get -o $rule.tip | default ''))
     }
   }
   $warnings
