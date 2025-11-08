@@ -1,6 +1,27 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.96.0 - 2025-11-08
+
+**Bug Fixes**
+
+- Fix EMP working hours notification
+- Enhance `trantor-artifact-transfer.sh` script handling
+- Fix potential bugs in `t git-pick` command
+- Fix TERP host diagnosis in `t doctor` command
+
+**Features**
+
+- Improve TUI of `t art` command when operator lacks trantor2 admin auth
+- Add `t ta revert` command to revert TERP assets, powered by `s5cmd`
+- Add `repos.toml` example file
+- Automatically resolve lock file conflicts for `t git-pick` command
+- Ignore commit messages starting with `skip:` in `t git-pick` command
+
+**Miscellaneous Tasks**
+
+- Add description for `agent` and `agent-mobile` modules
+
 ## v1.95.0 - 2025-10-16
 
 **Features**
