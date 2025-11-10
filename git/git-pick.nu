@@ -118,12 +118,13 @@ def handle-lockfile-conflict [sha: string]: nothing -> bool {
   }
 }
 
-# Classify cherry-pick error based on stderr message.
-def classify-cherry-pick-error [stderr: string]: nothing -> string {
-  match true {
-    ($stderr =~ 'conflict') => 'CONFLICT_FOUND'
-    ($stderr =~ '--allow-empty') => 'EMPTY_COMMIT'
-    ($stderr =~ 'no -m option was given') => 'MERGE_IGNORED'
+# Classify cherry-pick error based on stdout and stderr messages.
+def classify-cherry-pick-error [stdout: string, stderr: string]: nothing -> string {
+  let output = ($stdout + $stderr | str downcase)
+  match $output {
+    $o if ($o =~ 'conflict') => 'CONFLICT_FOUND'
+    $o if ($o =~ '--allow-empty') => 'EMPTY_COMMIT'
+    $o if ($o =~ 'no -m option was given') => 'MERGE_IGNORED'
     _ => 'UNKNOWN_ERROR'
   }
 }
@@ -137,7 +138,7 @@ def try-cherry-pick-commit [
   # Get raw date with timezone from commit
   let rawDate = git show -s --format='%ct' $sha
   load-env { GIT_AUTHOR_DATE: $rawDate, GIT_COMMITTER_DATE: $rawDate }
-  let cherryPick = do -i { git cherry-pick $sha | complete }
+  let cherryPick = do -i { LANG=en_US git cherry-pick $sha | complete }
 
   if ($cherryPick.exit_code | into int) == 0 { return { success: true } }
   # Try to auto-resolve lockfile conflicts
@@ -145,7 +146,7 @@ def try-cherry-pick-commit [
 
   # Classify and handle error
   do -i { LANG=en_US git cherry-pick --abort | complete }
-  let error = classify-cherry-pick-error $cherryPick.stderr
+  let error = classify-cherry-pick-error $cherryPick.stdout $cherryPick.stderr
 
   # Filter errors based on --all flag
   if $error in [EMPTY_COMMIT MERGE_IGNORED] and (not $all) {
