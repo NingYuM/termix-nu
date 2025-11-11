@@ -122,8 +122,10 @@ def handle-lockfile-conflict [sha: string]: nothing -> bool {
 def classify-cherry-pick-error [stdout: string, stderr: string]: nothing -> string {
   let output = ($stdout + $stderr | str downcase)
   match $output {
-    $o if ($o =~ 'conflict') => 'CONFLICT_FOUND'
+    # Order matters, empty cherry pick may contains `conflict`, e.g.:
+    # (all conflicts fixed: run "git cherry-pick --continue")
     $o if ($o =~ '--allow-empty') => 'EMPTY_COMMIT'
+    $o if ($o =~ 'conflict') => 'MERGE_CONFLICT'
     $o if ($o =~ 'no -m option was given') => 'MERGE_IGNORED'
     _ => 'UNKNOWN_ERROR'
   }
@@ -153,7 +155,7 @@ def try-cherry-pick-commit [
     return { success: false, error: null }
   }
 
-  return { success: false, error: $error }
+  return { success: false, error: $'(ansi r)($error)(ansi rst)' }
 }
 
 # Print cherry-pick results summary.
@@ -169,7 +171,7 @@ def print-pick-results [
   }
 
   if ($failedPick | is-not-empty) {
-    print $'(char nl)Failed to pick the following commits from (ansi g)($fromBranch)(ansi rst) to (ansi g)($toBranch) ($countTip)(ansi rst)'
+    print $'(char nl)Failed to pick the following commits from (ansi r)($fromBranch)(ansi rst) to (ansi r)($toBranch) ($countTip)(ansi rst)'
     hr-line
     get-commits $failedPick | print
   }
