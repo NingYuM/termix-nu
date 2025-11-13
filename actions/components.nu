@@ -134,7 +134,7 @@ def scan-components-by-json [
 ] {
   glob packages/**/*/*.behavior.json
     | wrap file
-    | upsert cmp {|it| open $it.file | select -i name title group }
+    | upsert cmp {|it| open $it.file | select -o name title group }
     | flatten
     | where {|it| $it.group | is-not-empty }
     | upsert module {|it| $it.file | get-module-name $pkgName }
