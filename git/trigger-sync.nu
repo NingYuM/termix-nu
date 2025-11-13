@@ -109,7 +109,14 @@ def update-branch [
   let current = git branch --show-current | str trim
   # 从远程更新指定分支代码到本地, 如果远程分支存在的话
   if (has-ref origin/($branch)) {
-    if ($current == $branch) { git pull origin $branch } else { git fetch origin $'($branch):($branch)' }
+    if ($current == $branch) {
+      git pull origin $branch
+    } else {
+      # 非当前分支：先 fetch 远程更新，再检查是否需要强制更新本地分支
+      git fetch origin $branch
+      # 使用 --force 参数更新本地分支引用，避免 non-fast-forward 错误
+      git update-ref $'refs/heads/($branch)' $'refs/remotes/origin/($branch)'
+    }
   } else {
     # Remote branch does not exit
     git push origin $branch -u; exit $ECODE.SUCCESS
