@@ -54,12 +54,20 @@ export def 'git trigger-sync' [
 
   let ignored = get-env SYNC_IGNORE_ALIAS ''
   let conf = get-push-config $current --all=$all | get pushConf
-  let repos = $conf | query json 'repos'
-  let allSyncs = $conf | query json 'branches'
+  let repos = $conf | query json 'repos' | default {}
+  let allSyncs = $conf | query json 'branches' | default {}
 
   if $list {
-    show-available-syncs $allSyncs --repos $repos --ignored $ignored
-    exit $ECODE.SUCCESS
+    match ([$repos $allSyncs] | all {|it| ($it | is-empty)}) {
+      true => {
+        print -e $'(ansi y)No sync configuration found in ($CONFIG_FILE). Please add [repos] and [branches] sections.(ansi rst)'
+        exit $ECODE.SUCCESS
+      }
+      false => {
+        show-available-syncs $allSyncs --repos $repos --ignored $ignored
+        exit $ECODE.SUCCESS
+      }
+    }
   }
 
   let candidates = select-candidates $all $allSyncs $branches
@@ -123,15 +131,20 @@ def show-available-syncs [
 ] {
   match ($syncs | is-empty) {
     true => {
-      print $'No available syncing config found, Bye...'
-      exit $ECODE.SUCCESS
+      print -e $'(ansi y)No branch syncing configuration found in ($CONFIG_FILE).(ansi rst)'
+      print -e $'(ansi y)Please add [branches] section with sync rules.(ansi rst)'
     }
     false => {
       print $'(char nl)The following branches have code syncing config:'; hr-line -b
       let results = build-sync-status-table $syncs $ignored
       $results | sort-by Source | print
+
       print $'(char nl)REPO INFO:'; hr-line
-      $repos | table -e | print; print (char nl)
+      match ($repos | is-empty) {
+        false => { $repos | table -e | print }
+        true => { print -e $'(ansi y)No repositories configured in [repos] section.(ansi rst)' }
+      }
+      print (char nl)
     }
   }
 }
@@ -164,8 +177,8 @@ def create-sync-status-row [
     Local: (match (has-ref $branch) { true => $SYNC_MARK.synced, false => $SYNC_MARK.ignored })
     Remote: (match (has-ref $'origin/($branch)') { true => $SYNC_MARK.synced, false => $SYNC_MARK.ignored })
     Update: (match (has-ref $'origin/($branch)') {
-      true => (git show $'origin/($branch)' --no-patch --format=%ci | into datetime)
       false => null
+      true => (git show $'origin/($branch)' --no-patch --format=%ci | into datetime)
     })
   }
 }
@@ -175,12 +188,10 @@ def update-branch [branch: string] {
   match (has-ref $'origin/($branch)') {
     false => {
       # Remote branch does not exist, push local branch
-      git push origin $branch -u
-      exit $ECODE.SUCCESS
+      git push origin $branch -u; exit $ECODE.SUCCESS
     }
     true => {
       update-branch-from-remote $branch
-
       let diff = get-branch-diff $branch
       # If local branch is ahead, push to trigger batch sync
       match ($diff.remote == 0 and $diff.local > 0) {
@@ -194,7 +205,6 @@ def update-branch [branch: string] {
 # Update branch from remote origin
 def update-branch-from-remote [branch: string] {
   let current = git branch --show-current | str trim
-
   match ($current == $branch) {
     true => { git pull origin $branch }
     false => {
@@ -224,8 +234,24 @@ def get-push-config [
   validate-config-branch $confBr
   # Fetch latest commit from config branch
   git fetch origin $confBr -q
-  let pushConf = git show $'origin/($confBr):($CONFIG_FILE)' | from toml | to json
-  { pushConf: $pushConf, confBr: $confBr }
+  # Try to get .termixrc file content
+  let configContent = do -i { git show $'origin/($confBr):($CONFIG_FILE)' } | complete
+
+  match ($configContent.exit_code != 0) {
+    true => {
+      print -e $'(ansi r)Error: ($CONFIG_FILE) file not found in branch (ansi y)origin/($confBr)(ansi rst)'
+      exit $ECODE.MISSING_DEPENDENCY
+    }
+    false => {
+      let pushConf = try {
+        $configContent.stdout | from toml | to json
+      } catch {
+        print -e $'(ansi r)Error: Failed to parse ($CONFIG_FILE) file. Please check TOML syntax.(ansi rst)'
+        exit $ECODE.INVALID_PARAMETER
+      }
+      { pushConf: $pushConf, confBr: $confBr }
+    }
+  }
 }
 
 # Resolve which branch to get configuration from
@@ -237,10 +263,7 @@ def resolve-config-branch [
     true => $DEFAULT_CONF_BRANCH
     false => {
       let useConfBr = get-conf useConfFromBranch
-      match $useConfBr {
-        '_current_' => $branch
-        _ => $DEFAULT_CONF_BRANCH
-      }
+      match $useConfBr { '_current_' => $branch, _ => $DEFAULT_CONF_BRANCH }
     }
   }
 }
