@@ -88,7 +88,9 @@ def handle-lockfile-conflict [sha: string]: nothing -> bool {
   }
 
   if ($lockfileConfig | is-empty) { return false }
-  print $'  (char nl)(ansi y)Auto-resolving ($lockfileConfig.file) conflict for commit ($sha)...(ansi rst)'
+  let hash = git rev-parse --short $sha
+  let message = git show -s --format='%s' $sha
+  print $'  (char nl)(ansi y)Auto-resolving ($lockfileConfig.file) conflict for commit (ansi g)($message)(ansi rst) @ (ansi g)($hash)(ansi rst) ...(ansi rst)'
   # Use current branch version as base
   git checkout --ours $lockfileConfig.file
 
