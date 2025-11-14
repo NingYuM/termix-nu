@@ -43,6 +43,11 @@ export def 'git pick' [
     hr-line
     get-commits $options.matches | reject error | print; exit $ECODE.SUCCESS
   }
+  # Exit early if in list-only mode to avoid branch switching
+  if $list_only {
+    print $'No matched commits found from (ansi g)($options.from)(ansi rst) to pick to (ansi g)($options.to)(ansi rst)'
+    exit $ECODE.SUCCESS
+  }
   if ($options.matches | is-empty) and $verbose {
     print $'No. matched commits of (ansi g)($match)(ansi rst) found from (ansi g)($options.from)(ansi rst) need to be picked to (ansi g)($options.to) ($countTip)(ansi rst)'
   }
