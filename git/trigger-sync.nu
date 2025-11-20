@@ -188,7 +188,7 @@ def update-branch [branch: string] {
   match (has-ref $'origin/($branch)') {
     false => {
       # Remote branch does not exist, push local branch
-      git push origin $branch -u; exit $ECODE.SUCCESS
+      git push origin $branch -u; return
     }
     true => {
       update-branch-from-remote $branch
@@ -196,7 +196,7 @@ def update-branch [branch: string] {
       # If local branch is ahead, push to trigger batch sync
       match ($diff.remote == 0 and $diff.local > 0) {
         false => {}
-        true => { git push origin $branch; exit $ECODE.SUCCESS }
+        true => { git push origin $branch; return }
       }
     }
   }
@@ -296,11 +296,11 @@ def sync-branch [
 
   let dests = resolve-sync-destinations $branch $repo $pushConf
   match ($dests == null) {
-    true => { exit $ECODE.SUCCESS }
+    true => { return }
     false => {
       let syncDests = add-sync-status $dests $branch $ignored
       match ($syncDests | is-empty) {
-        true => { exit $ECODE.SUCCESS }
+        true => { return }
         false => {
           print-sync-header $repo $confBr
           print-sync-dests $syncDests
