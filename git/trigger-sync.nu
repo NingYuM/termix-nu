@@ -210,7 +210,11 @@ def update-branch-from-remote [branch: string] {
     false => {
       # For non-current branch: fetch then force update local ref
       git fetch origin $branch
-      git update-ref $'refs/heads/($branch)' $'refs/remotes/origin/($branch)'
+      let diff = get-branch-diff $branch
+      # Only update local branch if it is strictly behind remote (fast-forward)
+      if $diff.local == 0 and $diff.remote > 0 {
+        git update-ref $'refs/heads/($branch)' $'refs/remotes/origin/($branch)'
+      }
     }
   }
 }
