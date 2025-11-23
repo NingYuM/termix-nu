@@ -37,6 +37,11 @@ export def git-remote-branch [
     }
   )
 
+  if not (has-ref $mainBranch) and not (has-ref $'($remote)/($mainBranch)') {
+    print $'(ansi r)ERROR: The specified main branch (ansi gb)($mainBranch)(ansi r) does not exist locally or on remote (ansi gb)($remote)(ansi red).(ansi rst)'
+    exit $ECODE.INVALID_PARAMETER
+  }
+
   # Print header based on operation mode
   match $clean {
     true => { print $'Delete the branches that have been merged to (ansi gb)($mainBranch)(ansi rst) from remote (ansi gb)($remote)(ansi rst):' },
@@ -57,7 +62,7 @@ export def git-remote-branch [
     let remoteBranch = $'remotes/($remote)/($name)'
     {
       name: $name,
-      local: (if (do -i { has-ref $name } | default false) { '   √' } else { '' }),
+      local: (if (has-ref $name) { '   √' } else { '' }),
       author: (git show -s --format='%an' $remoteBranch | str trim),
       merged: ($name | is-merged $remote --main-branch $mainBranch),
       SHA: (do -i { git rev-parse $'($remote)/($name)' | str substring 0..<9 } | default 'N/A'),
@@ -93,6 +98,7 @@ export def git-remote-branch [
       | rename SHA tag
       | move tag --before SHA
       | update SHA { str substring 0..<9 }
+      | table -t psql
   }
 }
 
@@ -104,10 +110,14 @@ def is-merged [
   let branch = $in
   let remoteBranch = $'($remote)/($branch)'
 
+  # Resolve main branch reference (try local first, then remote)
+  let mainRef = if (has-ref $main_branch) { $main_branch } else { $'($remote)/($main_branch)' }
+
   # 1. Fast check: Git native merge detection (ancestor check)
-  let mainCommit = try { git rev-parse $main_branch } catch { '' }
-  let branchCommit = try { git rev-parse $remoteBranch } catch { '' }
-  let mergeBase = try { git merge-base $remoteBranch $main_branch } catch { '' }
+  let mainCommit = do -i { git rev-parse $mainRef } | complete | get stdout | str trim
+  let branchCommit = do -i { git rev-parse $remoteBranch } | complete | get stdout | str trim
+  if ($mainCommit | is-empty) or ($branchCommit | is-empty) { return '' }
+  let mergeBase = do -i { git merge-base $remoteBranch $mainRef } | complete | get stdout | str trim
   if ($mergeBase == $branchCommit) or ($mainCommit == $branchCommit) { return '√' }
 
   # 2. Slow check: Patch-ID detection (for rebased/cherry-picked branches)
@@ -115,7 +125,7 @@ def is-merged [
   # that do not have an equivalent patch-id in the main branch.
   # If it returns only "-" lines (or empty), it means all commits are effectively merged.
   # Note: This still misses "Squash Merges" where multiple commits are squashed into one with a different patch-ID.
-  let cherry_check = do -i { git cherry $main_branch $remoteBranch } | complete
+  let cherry_check = do -i { git cherry $mainRef $remoteBranch } | complete
   if $cherry_check.exit_code == 0 {
     let unmerged = ($cherry_check.stdout | lines | any {|l| $l starts-with "+" })
     if not $unmerged { return '√' }
