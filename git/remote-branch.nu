@@ -9,7 +9,7 @@
 use ../utils/git.nu [append-desc]
 use ../utils/common.nu [ECODE, has-ref, hr-line, windows?, FZF_DEFAULT_OPTS, FZF_THEME, _TIME_FMT]
 
-const DEFAULT_KEEP_BRANCHES = ['^main$', '^master$', '^develop$', '^release/.*']
+const DEFAULT_KEEP_BRANCHES = ['^main$' '^master$' '^feature/latest$' '^develop$' '^release/.*']
 
 # Listing the remote branches of a git repository and the time of the last commit, etc.
 # Or remove the merged branches
@@ -133,16 +133,18 @@ def remove-remote-branches [
     let date = $b.last-commit | format date $_TIME_FMT
     let name_pad = $b.name | fill -a l -c ' ' -w $max_name
     let author_pad = $b.author | fill -a l -c ' ' -w $max_author
-    $"($name_pad) | ($date) | ($author_pad) | ($b.SHA)"
+    $"($name_pad) | ($b.SHA) | ($date) | ($author_pad)"
   } | str join (char nl))
 
   let header_name = "Name" | fill -a l -c ' ' -w $max_name
+  let header_sha = "SHA" | fill -a l -c ' ' -w 9
   let header_date = "Date" | fill -a l -c ' ' -w 19
   let header_author = "Author" | fill -a l -c ' ' -w $max_author
-  let header = $"($header_name) | ($header_date) | ($header_author) | SHA"
+  let header = $"($header_name) | ($header_sha) | ($header_date) | ($header_author)"
 
   # Run fzf
-  $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --header "($header)" ($FZF_THEME)'
+  const FZF_KEY_BINDING = "--bind ctrl-a:select-all,ctrl-d:deselect-all,ctrl-t:toggle-all"
+  $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --header "($header)" ($FZF_THEME) ($FZF_KEY_BINDING)'
   let selected = try { $input | fzf -m --ansi | lines } catch {
     print $'(ansi red)Failed to run fzf. Please ensure fzf is installed.(ansi rst)'
     return
@@ -153,9 +155,21 @@ def remove-remote-branches [
     print $'(ansi grey66)Operation cancelled...(ansi rst)'; return
   }
 
+  # Extract branch names
+  let removes = $selected | each {|line| $line | split row " | " | first | str trim }
+
+  # Display branches to be deleted
+  print $'(char nl)The following branches will be deleted from remote (ansi gb)($remote)(ansi rst):(char nl)'
+  $removes | table -t psql | print; print -n (char nl)
+  # Confirmation
+  let confirm = input $'(ansi y)Are you sure you want to delete these branches? [y/N] (ansi rst)'
+  if ($confirm | str downcase) != 'y' {
+    print $'(ansi grey66)Operation cancelled...(ansi rst)'
+    return
+  }
+
   # Remove selected branches
-  $selected | each {|line|
-    let branch = ($line | split row " | " | first | str trim)
+  $removes | each {|branch|
     print $'Removing branch (ansi gb)($branch)(ansi rst)...'
     git push $remote --delete $branch
   }
