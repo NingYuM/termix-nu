@@ -9,12 +9,16 @@
 # [√] 新分支名称本地已存在则给予提示;
 # [√] 新分支名称本地不存在但远程存在也应该给予提示;
 # [√] 重命名完毕后远程删除旧分支;
-# Usage:
-#   t rename-branch old-name new-name
 
 use ../utils/common.nu [ECODE has-ref hr-line]
 
 # Rename remote branch, and delete old branch after rename
+@example '将本地与远程分支 `feature/old` 重命名为 `feature/new`' {
+  t rename-branch feature/old feature/new
+} --result '会自动处理本地与远程分支的重命名，并删除远程旧分支'
+@example '在指定远程仓库 `upstream` 上重命名分支' {
+  t rename-branch feature/old feature/new upstream
+}
 export def 'git branch-rename' [
   from: string,               # The old branch name to be renamed
   to: string,                 # The new branch name to rename to
