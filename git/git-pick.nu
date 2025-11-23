@@ -18,6 +18,18 @@
 use ../utils/common.nu [hr-line, has-ref, ECODE]
 
 # Pick matched commits from one branch to another branch.
+@example '将包含关键字 `0330` 的提交从 `release/2.5.24.0330` 分支 Cherry-Pick 到当前分支' {
+  t git-pick 0330 -f release/2.5.24.0330
+} --result '无冲突则自动完成 Cherry-Pick，否则列出失败的提交及原因'
+@example '仅列出包含关键字 `0330` 且需要 Cherry-Pick 的提交，不执行操作' {
+  t git-pick 0330 -lf release/2.5.24.0330
+}
+@example '将指定 SHA 的提交 Cherry-Pick 到当前分支' {
+  t git-pick a1b2c3d
+} --result '支持多个 SHA，用逗号分隔，如 a1b2c3d,bb2c3d5，Pick 时保持时间不变'
+@example '将 `develop` 分支 2025-01-01 之后的包含 `0330` 的提交 Cherry-Pick 到 `release` 分支' {
+  t git-pick 0330 -f develop -t release -s 2025-01-01
+}
 export def 'git pick' [
   match: string,              # The commit SHA or the commits that contain the keyword to pick
   --all(-a),                  # Show error picks of `MERGE_IGNORED` and `EMPTY_COMMIT`
