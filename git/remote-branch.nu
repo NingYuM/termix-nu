@@ -7,7 +7,7 @@
 #   t git-remote-branch origin -t
 
 use ../utils/git.nu [append-desc]
-use ../utils/common.nu [ECODE, has-ref, hr-line, windows?]
+use ../utils/common.nu [ECODE, has-ref, hr-line, windows?, FZF_DEFAULT_OPTS, FZF_THEME, _TIME_FMT]
 
 const DEFAULT_KEEP_BRANCHES = ['^main$', '^master$', '^develop$', '^release/.*']
 
@@ -71,7 +71,6 @@ export def git-remote-branch [
       $basic
         | where {|it| $it.merged == '√' and (not ($DEFAULT_KEEP_BRANCHES | any {|k| $it.name =~ $k }))}
         | sort-by last-commit
-        | get name
     )
     remove-remote-branches $mergedBranches $remote
     return
@@ -125,9 +124,29 @@ def remove-remote-branches [
     print $'(ansi grey66)No branch to remove, Bye...(ansi rst)'; return
   }
 
-  # Prompt for branch selection
-  let prompt = $'Press (ansi g)`a`(ansi rst) to toggle all selections, Abort with (ansi g)`esc`(ansi rst) or (ansi g)`q`(ansi rst)'
-  let selected = $branches | input list --multi $prompt
+  # Calculate column widths
+  let max_name = $branches.name | str length | math max
+  let max_author = $branches.author | str length | append 6 | math max
+
+  # Prepare input for fzf
+  let input = ($branches | each {|b|
+    let date = $b.last-commit | format date $_TIME_FMT
+    let name_pad = $b.name | fill -a l -c ' ' -w $max_name
+    let author_pad = $b.author | fill -a l -c ' ' -w $max_author
+    $"($name_pad) | ($date) | ($author_pad) | ($b.SHA)"
+  } | str join (char nl))
+
+  let header_name = "Name" | fill -a l -c ' ' -w $max_name
+  let header_date = "Date" | fill -a l -c ' ' -w 19
+  let header_author = "Author" | fill -a l -c ' ' -w $max_author
+  let header = $"($header_name) | ($header_date) | ($header_author) | SHA"
+
+  # Run fzf
+  $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --header "($header)" ($FZF_THEME)'
+  let selected = try { $input | fzf -m --ansi | lines } catch {
+    print $'(ansi red)Failed to run fzf. Please ensure fzf is installed.(ansi rst)'
+    return
+  }
 
   # Early return if cancelled
   if ($selected | is-empty) {
@@ -135,7 +154,8 @@ def remove-remote-branches [
   }
 
   # Remove selected branches
-  $selected | each {|branch|
+  $selected | each {|line|
+    let branch = ($line | split row " | " | first | str trim)
     print $'Removing branch (ansi gb)($branch)(ansi rst)...'
     git push $remote --delete $branch
   }
