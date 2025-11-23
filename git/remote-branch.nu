@@ -24,8 +24,12 @@ export def git-remote-branch [
   $env.config.table.mode = 'light'
   cd $env.JUST_INVOKE_DIR
   let remoteUrl = git remote get-url $remote
-  let nameIdx = $remoteUrl | str index-of -e '/'
-  let repoName = $remoteUrl | str substring ($nameIdx + 1).. | str trim
+  let repoName = if ($remoteUrl =~ '/') {
+    let nameIdx = $remoteUrl | str index-of -e '/'
+    $remoteUrl | str substring ($nameIdx + 1).. | str trim
+  } else {
+    $remoteUrl | str trim
+  }
   git fetch $remote -p
   let mainBranch = if (has-ref master) { 'master' } else if (has-ref main) { 'main' } else { 'develop' }
   let mainBranch = if ($main_branch | is-empty) { $mainBranch } else { $main_branch }
@@ -35,16 +39,16 @@ export def git-remote-branch [
     print $'(char nl)Branches of (ansi gb)($repoName)(ansi rst) for remote ($remote)(char nl)'
   }
 
-  mut basic = git ls-remote --heads --refs $remote | lines | par-each -k { str substring 52.. } | wrap name
+  mut basic = git ls-remote --heads --refs $remote | detect columns -n | get column1 | par-each -k { str replace 'refs/heads/' '' } | wrap name
 
   $basic = $basic | enumerate | par-each {|b|
     update item (
-      $b.item |
-        | upsert local { |it|  if (has-ref $it.name) { '   √' }}
-        | upsert author { |it| git show $'remotes/($remote)/($it.name)' -s --format='%an' | str trim }
+      $b.item
+        | upsert local { |it| if (do -i { has-ref $it.name } | default false) { '   √' } else { '' }}
+        | upsert author { |it| git show -s --format='%an' $'remotes/($remote)/($it.name)' | str trim }
         | upsert merged { |it| $it.name | is-merged $remote --main-branch $mainBranch }
-        | upsert SHA {|it| do -i { git rev-parse $'($remote)/($it.name)' | str substring 0..<9 } }
-        | upsert last-commit { |it| git show $'remotes/($remote)/($it.name)' --no-patch --format=%ci | into datetime }
+        | upsert SHA {|it| do -i { git rev-parse $'($remote)/($it.name)' | str substring 0..<9 } | default 'N/A' }
+        | upsert last-commit { |it| git show --no-patch --format=%ci $'remotes/($remote)/($it.name)' | into datetime }
       )
   } | get item
 
@@ -76,8 +80,8 @@ def is-merged [
 ] {
   let branch = $in
   # 获取远程分支和主分支的最新 commit
-  let mainCommit = git rev-parse $main_branch
-  let branchCommit = git rev-parse $'($remote)/($branch)'
+  let mainCommit = try { git rev-parse $main_branch } catch { return '' }
+  let branchCommit = try { git rev-parse $'($remote)/($branch)' } catch { return '' }
   # 获取两个分支的共同祖先
   let mergeBase = try { git merge-base $'($remote)/($branch)' $main_branch } catch { '' }
   # 如果共同祖先等于远程分支的 commit，或者主分支包含远程分支的 commit，说明远程分支已经被合并
@@ -90,7 +94,7 @@ def remove-remote-branches [branches: list, remote: string = 'origin'] {
   if ($branches | is-empty) { print $'(ansi grey66)No branch to remove, Bye...(ansi rst)'; return }
   let prompt = $'Press (ansi g)`a`(ansi rst) to toggle all selections, Abort with (ansi g)`esc`(ansi rst) or (ansi g)`q`(ansi rst)'
   let selected = $branches | input list --multi $prompt
-  if ($selected | is-empty) { print $'(ansi grey66)Operation cancelled...(ansi rst)' }
+  if ($selected | is-empty) { print $'(ansi grey66)Operation cancelled...(ansi rst)'; return }
   for b in $selected {
     print $'Removing branch (ansi gb)($b)(ansi rst)...'
     git push $remote --delete $b
