@@ -9,10 +9,27 @@
 use ../utils/git.nu [append-desc]
 use ../utils/common.nu [ECODE, has-ref, hr-line, windows?, FZF_DEFAULT_OPTS, FZF_THEME, _TIME_FMT]
 
-const DEFAULT_KEEP_BRANCHES = ['^main$' '^master$' '^feature/latest$' '^develop$' '^release/.*']
+const DEFAULT_KEEP_BRANCHES = [
+  '^main$' '^master$' '^feature/latest$' '^feature/develop$' '^develop$' '^release/.*' '^support/.*'
+]
 
 # Listing the remote branches of a git repository and the time of the last commit, etc.
 # Or remove the merged branches
+@example '列出默认远程仓库 `origin` 的所有分支' {
+  t git-remote-branch
+} --result '显示分支名、是否本地存在、最后提交作者、是否已合并、SHA、最后提交时间'
+@example '列出指定远程仓库 `upstream` 的所有分支' {
+  t git-remote-branch upstream
+}
+@example '列出远程仓库 `origin` 的所有分支以及 Tags' {
+  t git-remote-branch -t
+}
+@example '清理远程仓库 `origin` 中已合并到主分支的分支' {
+  t git-remote-branch -c
+} --result '交互式选择要删除的分支，支持多选，选择完毕二次确认后才执行删除操作'
+@example '清理远程仓库 `origin` 中已合并到指定分支 `main` 的分支' {
+  t git-remote-branch -c -m main
+}
 export def git-remote-branch [
   remote: string = 'origin',  # The remote name of git repo, default is 'origin'
   --show-tags(-t),            # Show all the tags
@@ -44,7 +61,7 @@ export def git-remote-branch [
 
   # Print header based on operation mode
   match $clean {
-    true => { print $'Delete the branches that have been merged to (ansi gb)($mainBranch)(ansi rst) from remote (ansi gb)($remote)(ansi rst):' },
+    true => { print $'Detect the branches that have been merged to (ansi gb)($mainBranch)(ansi rst) from remote (ansi gb)($remote)(ansi rst):' },
     false => { print $'(char nl)Branches of (ansi gb)($repoName)(ansi rst) for remote ($remote)(char nl)' }
   }
 
