@@ -9,10 +9,10 @@
 use ../utils/git.nu [append-desc]
 use ../utils/common.nu [ECODE, has-ref, hr-line, windows?]
 
-const DEFAULT_KEEP_BRANCHES = [main master develop release/latest release/develop]
+const DEFAULT_KEEP_BRANCHES = ['^main$', '^master$', '^develop$', '^release/.*']
 
-# Creates a table listing the remote branches of
-# a git repository and the time of the last commit
+# Listing the remote branches of a git repository and the time of the last commit, etc.
+# Or remove the merged branches
 export def git-remote-branch [
   remote: string = 'origin',  # The remote name of git repo, default is 'origin'
   --show-tags(-t),            # Show all the tags
@@ -22,84 +22,121 @@ export def git-remote-branch [
 
   let start = date now
   $env.config.table.mode = 'light'
-  cd $env.JUST_INVOKE_DIR
+  cd ($env.JUST_INVOKE_DIR? | default $env.PWD)
+  # Extract repository name from remote URL
   let remoteUrl = git remote get-url $remote
-  let repoName = if ($remoteUrl =~ '/') {
-    let nameIdx = $remoteUrl | str index-of -e '/'
-    $remoteUrl | str substring ($nameIdx + 1).. | str trim
-  } else {
-    $remoteUrl | str trim
-  }
+  let repoName = $remoteUrl | split row '/' | last | str trim
+
   git fetch $remote -p
-  let mainBranch = if (has-ref master) { 'master' } else if (has-ref main) { 'main' } else { 'develop' }
-  let mainBranch = if ($main_branch | is-empty) { $mainBranch } else { $main_branch }
-  if $clean {
-    print $'Delete the branches that have been merged to (ansi gb)($mainBranch)(ansi rst) from remote (ansi gb)($remote)(ansi rst):'
-  } else {
-    print $'(char nl)Branches of (ansi gb)($repoName)(ansi rst) for remote ($remote)(char nl)'
+  # Determine main branch with match pattern
+  let mainBranch = $main_branch | default (
+    match true {
+      _ if (has-ref master) => 'master',
+      _ if (has-ref main) => 'main',
+      _ => 'develop'
+    }
+  )
+
+  # Print header based on operation mode
+  match $clean {
+    true => { print $'Delete the branches that have been merged to (ansi gb)($mainBranch)(ansi rst) from remote (ansi gb)($remote)(ansi rst):' },
+    false => { print $'(char nl)Branches of (ansi gb)($repoName)(ansi rst) for remote ($remote)(char nl)' }
   }
 
-  mut basic = git ls-remote --heads --refs $remote | detect columns -n | get column1 | par-each -k { str replace 'refs/heads/' '' } | wrap name
+  # Fetch and parse remote branches
+  let branches = (
+    git ls-remote --heads --refs $remote
+      | detect columns -n
+      | rename sha name
+      | get name
+      | each { str replace 'refs/heads/' '' }
+  )
 
-  $basic = $basic | enumerate | par-each {|b|
-    update item (
-      $b.item
-        | upsert local { |it| if (do -i { has-ref $it.name } | default false) { '   √' } else { '' }}
-        | upsert author { |it| git show -s --format='%an' $'remotes/($remote)/($it.name)' | str trim }
-        | upsert merged { |it| $it.name | is-merged $remote --main-branch $mainBranch }
-        | upsert SHA {|it| do -i { git rev-parse $'($remote)/($it.name)' | str substring 0..<9 } | default 'N/A' }
-        | upsert last-commit { |it| git show --no-patch --format=%ci $'remotes/($remote)/($it.name)' | into datetime }
-      )
-  } | get item
+  # Enrich branch information in parallel
+  let basic = $branches | par-each -k {|name|
+    let remoteBranch = $'remotes/($remote)/($name)'
+    {
+      name: $name,
+      local: (if (do -i { has-ref $name } | default false) { '   √' } else { '' }),
+      author: (git show -s --format='%an' $remoteBranch | str trim),
+      merged: ($name | is-merged $remote --main-branch $mainBranch),
+      SHA: (do -i { git rev-parse $'($remote)/($name)' | str substring 0..<9 } | default 'N/A'),
+      last-commit: (git show --no-patch --format=%ci $remoteBranch | into datetime)
+    }
+  }
 
+  # Handle clean mode or display branches
   if $clean {
-    remove-remote-branches ($basic | where merged == '√' and name not-in $DEFAULT_KEEP_BRANCHES | sort-by last-commit | get name) $remote
+    let mergedBranches = (
+      $basic
+        | where {|it| $it.merged == '√' and (not ($DEFAULT_KEEP_BRANCHES | any {|k| $it.name =~ $k }))}
+        | sort-by last-commit
+        | get name
+    )
+    remove-remote-branches $mergedBranches $remote
     return
   }
+
+  # Display branches with description
   print (append-desc $basic)
-  let end = date now
-  print $'(char nl)Total time cost: ($end - $start)'
-  if (not $show_tags) { exit $ECODE.SUCCESS }
+  print $'(char nl)Total time cost: ((date now) - $start)'
 
-  print $'Tags of (ansi gb)($repoName)(ansi rst) for remote ($remote)'; hr-line
-  git ls-remote --tags -q --sort="-v:refname"
-    | lines
-    | where $it !~ '{}'
-    | str join "\n"
-    | str replace -a 'refs/tags/' ''
-    | detect columns -n
-    | rename SHA tag
-    | move tag --before SHA
-    | upsert SHA { |it| str substring 0..<9 }
-}
-
-# 检查分支是否已合并到主分支（main/master）
-def is-merged [
-  remote: string = 'origin',  # The remote name of git repo, default is 'origin'
-  --main-branch(-m): string,  # The base main branch to check merge status
-] {
-  let branch = $in
-  # 获取远程分支和主分支的最新 commit
-  let mainCommit = try { git rev-parse $main_branch } catch { return '' }
-  let branchCommit = try { git rev-parse $'($remote)/($branch)' } catch { return '' }
-  # 获取两个分支的共同祖先
-  let mergeBase = try { git merge-base $'($remote)/($branch)' $main_branch } catch { '' }
-  # 如果共同祖先等于远程分支的 commit，或者主分支包含远程分支的 commit，说明远程分支已经被合并
-  # 即：远程分支是主分支的祖先 或者两个分支指向同一个提交
-  if ($mergeBase == $branchCommit) or ($mainCommit == $branchCommit) { '√' } else { '' }
-}
-
-# Select the branches to remove from remote repo
-def remove-remote-branches [branches: list, remote: string = 'origin'] {
-  if ($branches | is-empty) { print $'(ansi grey66)No branch to remove, Bye...(ansi rst)'; return }
-  let prompt = $'Press (ansi g)`a`(ansi rst) to toggle all selections, Abort with (ansi g)`esc`(ansi rst) or (ansi g)`q`(ansi rst)'
-  let selected = $branches | input list --multi $prompt
-  if ($selected | is-empty) { print $'(ansi grey66)Operation cancelled...(ansi rst)'; return }
-  for b in $selected {
-    print $'Removing branch (ansi gb)($b)(ansi rst)...'
-    git push $remote --delete $b
+  # Show tags if requested
+  if $show_tags {
+    print $'Tags of (ansi gb)($repoName)(ansi rst) for remote ($remote)'
+    hr-line
+    git ls-remote --tags -q --sort="-v:refname"
+      | lines
+      | where $it !~ '{}'
+      | str join "\n"
+      | str replace -a 'refs/tags/' ''
+      | detect columns -n
+      | rename SHA tag
+      | move tag --before SHA
+      | update SHA { str substring 0..<9 }
   }
 }
 
-# $env | transpose
-# git-remote-branch $env.JUST_INVOKE_DIR $env.REMOTE_ALIAS
+# Check if a branch has been merged into the main branch
+def is-merged [
+  remote: string = 'origin',
+  --main-branch(-m): string,
+] {
+  let branch = $in
+  # Get commits for comparison
+  let mainCommit = try { git rev-parse $main_branch } catch { '' }
+  let branchCommit = try { git rev-parse $'($remote)/($branch)' } catch { '' }
+  let mergeBase = try { git merge-base $'($remote)/($branch)' $main_branch } catch { '' }
+
+  # Check if branch is merged (merge-base equals branch commit or commits are identical)
+  match [$mergeBase, $branchCommit, $mainCommit] {
+    [$base, $branch, $main] if $base == $branch or $main == $branch => '√',
+    _ => ''
+  }
+}
+
+# Select and remove branches from remote repository
+def remove-remote-branches [
+  branches: list,
+  remote: string = 'origin'
+] {
+  # Early return if no branches
+  if ($branches | is-empty) {
+    print $'(ansi grey66)No branch to remove, Bye...(ansi rst)'; return
+  }
+
+  # Prompt for branch selection
+  let prompt = $'Press (ansi g)`a`(ansi rst) to toggle all selections, Abort with (ansi g)`esc`(ansi rst) or (ansi g)`q`(ansi rst)'
+  let selected = $branches | input list --multi $prompt
+
+  # Early return if cancelled
+  if ($selected | is-empty) {
+    print $'(ansi grey66)Operation cancelled...(ansi rst)'; return
+  }
+
+  # Remove selected branches
+  $selected | each {|branch|
+    print $'Removing branch (ansi gb)($branch)(ansi rst)...'
+    git push $remote --delete $branch
+  }
+}
