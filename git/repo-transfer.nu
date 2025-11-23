@@ -43,7 +43,7 @@ export def 'git-repo-transfer' [
   if $exists {
     cd $repoName
     # Trim is required here to make it equal to $source
-    let prevFetchUrl = (git remote get-url origin | str trim)
+    let prevFetchUrl = git remote get-url origin | str trim
     if ($prevFetchUrl == $source) {
       print $'Repo ($repoName) already exists, just sync code from source to dest.(char nl)'
       # git remote update
@@ -105,7 +105,7 @@ def handle-existing-repo [
   repoName: string
 ] {
   # Trim is required here to make it equal to $source
-  let prevFetchUrl = (git remote get-url origin | str trim)
+  let prevFetchUrl = git remote get-url origin | str trim
   if ($prevFetchUrl != $source) {
     let tmpPath = get-tmp-path
     let repoName = get-repo-name $source branch-sync

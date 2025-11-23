@@ -18,15 +18,15 @@ export def 'git pull-all' [
 ] {
 
   cd $env.JUST_INVOKE_DIR
-  let currentBranch = (git branch --show-current | str trim)
+  let currentBranch = git branch --show-current | str trim
   # Save changes before switch to other branches
-  let statusCheck = (git status --porcelain)
+  let statusCheck = git status --porcelain
   if not ($statusCheck | is-empty) {
     git stash save 'Stash before running pull-all action'
   }
 
   git fetch $alias -p
-  let available = (git branch | into string | lines | par-each -k { str substring 2.. })
+  let available = git branch | into string | lines | par-each -k { str substring 2.. }
   # `LANG=en_US git` 强制 git 输出语言切换为英文
   let ahead = (LANG=en_US git branch -vv | lines | find -n ': ahead')
   let behind = (LANG=en_US git branch -vv | lines | find -n ': behind')
@@ -36,7 +36,7 @@ export def 'git pull-all' [
     let pattern = $'($alias)/($br):'
     if ($behind | find -r $pattern | length) > 0 or ($ahead | find -r $pattern | length) > 0 {
       git checkout $br
-      let stat = (gstat --no-tag)
+      let stat = gstat --no-tag
       # Just pull if local repo is behind remote
       if ($stat.behind > 0 and $stat.ahead == 0) {
         print $'(ansi p)Start pulling ($br) branch...(ansi rst)'
