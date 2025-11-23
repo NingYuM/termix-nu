@@ -47,7 +47,7 @@ export def 'git branch-rename' [
     exit $ECODE.CONDITION_NOT_SATISFIED
   }
 
-  let statusCheck = (git status --porcelain)
+  let statusCheck = git status --porcelain
   # Stash here, if needed
   if not ($statusCheck | is-empty) {
     git stash save 'Stash before running git-batch-exec'

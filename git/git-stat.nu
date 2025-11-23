@@ -8,6 +8,24 @@
 use ../utils/common.nu [hr-line]
 
 # Show insertions/deletions and number of files changed for each commit
+@example '统计最近 20 次提交的代码变更情况' {
+  t git-stat
+} --result '显示每次提交的增删行数及文件数'
+@example '统计指定作者 `hustcer` 最近 10 次提交的变更情况' {
+  t git-stat -a hustcer -c 10
+}
+@example '统计最近 20 次提交的变更情况并显示汇总信息' {
+  t git-stat -s
+}
+@example '仅显示最近 20 次提交的汇总变更信息（不显示每次提交详情）' {
+  t git-stat --summary-only
+}
+@example '统计变更情况时排除 `pnpm-lock.yaml` 文件' {
+  t git-stat -e pnpm-lock.yaml
+}
+@example '统计 2025 年 1 月份的代码变更情况' {
+  t git-stat -f 2025/01/01 -t 2025/01/31
+}
 export def 'git stat' [
   --json(-j),                   # Output in JSON format
   --summary(-s),                # Show summary
@@ -90,9 +108,9 @@ export def 'git stat' [
         }
       }
 
-  $total.commits = ($stat.commit | uniq | length)
-  $total.uniqFileChanged = ($stat.file | flatten | uniq | length)
-  $total = ($total | select commits deletions insertions fileChanged uniqFileChanged)
+  $total.commits = $stat.commit | uniq | length
+  $total.uniqFileChanged = $stat.file | flatten | uniq | length
+  $total = $total | select commits deletions insertions fileChanged uniqFileChanged
   if $json { return ($total | to json) }
   print $'(char nl)Total Summary: '; hr-line 69
   $total | print

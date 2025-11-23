@@ -55,7 +55,7 @@ export def git-remote-branch [
   )
 
   if not (has-ref $mainBranch) and not (has-ref $'($remote)/($mainBranch)') {
-    print $'(ansi r)ERROR: The specified main branch (ansi gb)($mainBranch)(ansi r) does not exist locally or on remote (ansi gb)($remote)(ansi red).(ansi rst)'
+    print -e $'(ansi r)ERROR: The specified main branch (ansi gb)($mainBranch)(ansi r) does not exist locally or on remote (ansi gb)($remote)(ansi red).(ansi rst)'
     exit $ECODE.INVALID_PARAMETER
   }
 
@@ -158,7 +158,7 @@ def remove-remote-branches [
 ] {
   # Early return if no branches
   if ($branches | is-empty) {
-    print $'(ansi grey66)No branch to remove, Bye...(ansi rst)'; return
+    print -e $'(ansi grey66)No branch to remove, Bye...(ansi rst)'; return
   }
 
   # Calculate column widths
@@ -183,7 +183,7 @@ def remove-remote-branches [
   const FZF_KEY_BINDING = "--bind ctrl-a:select-all,ctrl-d:deselect-all,ctrl-t:toggle-all"
   $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --header "($header)" ($FZF_THEME) ($FZF_KEY_BINDING)'
   let selected = try { $input | fzf -m --ansi | lines } catch {
-    print $'(ansi red)Failed to run fzf. Please ensure fzf is installed.(ansi rst)'
+    print -e $'(ansi red)Failed to run fzf. Please ensure fzf is installed.(ansi rst)'
     return
   }
 
