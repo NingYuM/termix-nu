@@ -102,16 +102,26 @@ def is-merged [
   --main-branch(-m): string,
 ] {
   let branch = $in
-  # Get commits for comparison
-  let mainCommit = try { git rev-parse $main_branch } catch { '' }
-  let branchCommit = try { git rev-parse $'($remote)/($branch)' } catch { '' }
-  let mergeBase = try { git merge-base $'($remote)/($branch)' $main_branch } catch { '' }
+  let remoteBranch = $'($remote)/($branch)'
 
-  # Check if branch is merged (merge-base equals branch commit or commits are identical)
-  match [$mergeBase, $branchCommit, $mainCommit] {
-    [$base, $branch, $main] if $base == $branch or $main == $branch => '√',
-    _ => ''
+  # 1. Fast check: Git native merge detection (ancestor check)
+  let mainCommit = try { git rev-parse $main_branch } catch { '' }
+  let branchCommit = try { git rev-parse $remoteBranch } catch { '' }
+  let mergeBase = try { git merge-base $remoteBranch $main_branch } catch { '' }
+  if ($mergeBase == $branchCommit) or ($mainCommit == $branchCommit) { return '√' }
+
+  # 2. Slow check: Patch-ID detection (for rebased/cherry-picked branches)
+  # If git cherry returns lines starting with "+", it means there are commits in the branch
+  # that do not have an equivalent patch-id in the main branch.
+  # If it returns only "-" lines (or empty), it means all commits are effectively merged.
+  # Note: This still misses "Squash Merges" where multiple commits are squashed into one with a different patch-ID.
+  let cherry_check = do -i { git cherry $main_branch $remoteBranch } | complete
+  if $cherry_check.exit_code == 0 {
+    let unmerged = ($cherry_check.stdout | lines | any {|l| $l starts-with "+" })
+    if not $unmerged { return '√' }
   }
+
+  ''
 }
 
 # Select and remove branches from remote repository
