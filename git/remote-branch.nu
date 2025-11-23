@@ -69,7 +69,7 @@ export def git-remote-branch [
   if $clean {
     let mergedBranches = (
       $basic
-        | where {|it| $it.merged == '√' and (not ($DEFAULT_KEEP_BRANCHES | any {|k| $it.name =~ $k }))}
+        | where {|it| $it.merged == '√' and $it.name != $mainBranch and (not ($DEFAULT_KEEP_BRANCHES | any {|k| $it.name =~ $k }))}
         | sort-by last-commit
     )
     remove-remote-branches $mergedBranches $remote
