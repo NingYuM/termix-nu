@@ -39,16 +39,16 @@ _gstat_plugin := if os_family() == 'windows' { 'nu_plugin_gstat.exe' } else { 'n
 _polars_plugin := if os_family() == 'windows' { 'nu_plugin_polars.exe' } else { 'nu_plugin_polars' }
 
 # Just commands aliases
-# alias pa := pull-all
 # alias rt := tag-redev
-# alias gb := git-branch
 # alias pr := pull-redev
 # alias lt := ls-redev-tags
-# alias rb := git-remote-branch
 alias dp := deploy
+alias pa := pull-all
+alias gb := git-branch
 alias ta := terp-assets
 alias da := detect-assets
 alias dq := deploy-query
+alias rb := git-remote-branch
 
 # To pass arguments to a dependency, put the dependency
 # in parentheses along with the arguments, just like:
@@ -111,7 +111,7 @@ msync *OPTIONS: _setup _setup_fzf
 
 # Download, transfer or sync TERP assets
 [group('-- Frontend --')]
-terp-assets *OPTIONS: _setup
+terp-assets *OPTIONS: _setup _setup_fzf
   @overlay use {{ join(_termix, 'actions', 'terp-assets.nu') }}; \
     terp assets {{OPTIONS}}
 
@@ -188,7 +188,7 @@ git-stat *OPTIONS: _setup
 
 # Listing the remote branches of a git repo with the extra info
 [group('-- Git --')]
-git-remote-branch *OPTIONS: _setup
+git-remote-branch *OPTIONS: _setup _setup_fzf
   @use {{ join(_termix, 'utils', 'common.nu') }} [git-check]; \
     overlay use {{ join(_termix, 'git', 'remote-branch.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; \
