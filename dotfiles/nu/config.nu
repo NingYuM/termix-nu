@@ -493,7 +493,7 @@ def --env load-direnv [] {
 def "from env" []: string -> record {
   lines
     | split column '#' # remove comments
-    | get column1
+    | rename envs | get envs
     | parse "{key}={value}"
     | update value {
         str trim                        # Trim whitespace between value and inline comments
