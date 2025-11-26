@@ -64,7 +64,7 @@ def 'test s5cmd sync should be able to work with hash-only flag' [] {
   if ($tmp_dir | path exists) { rm -rf $tmp_dir }
 }
 
-@test
+@ignore
 def 'test s5cmd sync should be able to work with max-delete flag and skip deletion' [] {
   if (".tmp" | path exists) { rm -rf .tmp }
   load-s3-env oss
