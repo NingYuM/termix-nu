@@ -307,6 +307,67 @@ export def 'from sse' [] {
   }
 }
 
+# Converts a .env file into a record
+# May be used like this: open .env | load-env
+# Works with quoted and unquoted .env files
+export def "from env" []: string -> record {
+  lines
+    | where { |line| not ($line | str trim | str starts-with '#') }
+    | parse "{key}={value}"
+    | update key { |row|
+        $row.key | str trim | str replace -r '^export\s+' ''
+      }
+    | update value { |row|
+        let val = ($row.value | str trim)
+        match $val {
+          # Handle double-quoted values
+          $v if ($v | str starts-with '"') => {
+            let matched = ($v | parse -r '^"(?P<content>(?:[^"\\]|\\.)*)"')
+            if ($matched | is-empty) {
+              $v | str trim -c '"'
+            } else {
+              $matched | get 0.content
+                | str replace -a '\n' (char nl)
+                | str replace -a '\r' (char cr)
+                | str replace -a '\t' (char tab)
+                | str replace -a '\"' '"'
+            }
+          }
+          # Handle single-quoted values
+          $v if ($v | str starts-with "'") => {
+            let match = ($v | parse -r "^'(?P<content>[^']*)'")
+            if ($match | is-empty) { $v | str trim -c "'" } else { $match | get 0.content }
+          }
+          # Handle unquoted values
+          _ => {
+            let chars = ($val | split chars)
+            let total = ($chars | length)
+            mut idx = 0
+            mut acc = ''
+            while $idx < $total {
+              let ch = ($chars | get $idx)
+              if $ch == "\\" {
+                let next = ($chars | get -o ($idx + 1))
+                if $next == '#' {
+                  $acc = $acc + '#'
+                  $idx = $idx + 2
+                  continue
+                }
+                $acc = $acc + $ch
+                $idx = $idx + 1
+                continue
+              }
+              if $ch == '#' { break }
+              $acc = $acc + $ch
+              $idx = $idx + 1
+            }
+            $acc | str trim
+          }
+        }
+      }
+    | transpose -r -d
+}
+
 # Get TERMIX_TMP_PATH from env first and fallback to HOME/.termix-nu
 export def get-tmp-path [] {
   # let homeEnv = if (windows?) { 'USERPROFILE' } else { 'HOME' }

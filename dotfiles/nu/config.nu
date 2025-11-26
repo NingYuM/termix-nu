@@ -488,8 +488,8 @@ def --env load-direnv [] {
 }
 
 # Converts a .env file into a record
-# may be used like this: open .env | load-env
-# works with quoted and unquoted .env files
+# May be used like this: open .env | load-env
+# Works with quoted and unquoted .env files
 export def "from env" []: string -> record {
   lines
     | where { |line| not ($line | str trim | str starts-with '#') }
@@ -502,13 +502,15 @@ export def "from env" []: string -> record {
         match $val {
           # Handle double-quoted values
           $v if ($v | str starts-with '"') => {
-            let match = ($v | parse -r '^"(?P<content>(?:[^"\\]|\\.)*)"')
-            if ($match | is-empty) {
+            let matched = ($v | parse -r '^"(?P<content>(?:[^"\\]|\\.)*)"')
+            if ($matched | is-empty) {
               $v | str trim -c '"'
             } else {
-              $match | get 0.content | str replace -a -r '\\(.)' {|m|
-                match $m { "n" => "\n", "r" => "\r", "t" => "\t", '"' => '"', _ => $m }
-              }
+              $matched | get 0.content
+                | str replace -a '\n' (char nl)
+                | str replace -a '\r' (char cr)
+                | str replace -a '\t' (char tab)
+                | str replace -a '\"' '"'
             }
           }
           # Handle single-quoted values
