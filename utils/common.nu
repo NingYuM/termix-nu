@@ -312,8 +312,13 @@ export def 'from sse' [] {
 # Works with quoted and unquoted .env files
 export def "from env" []: string -> record {
   lines
-    | where { |line| not ($line | str trim | str starts-with '#') }
+    | where { |line|
+        let trimmed = ($line | str trim)
+        # Filter out empty lines and comments
+        ($trimmed | is-not-empty) and (not ($trimmed | str starts-with '#'))
+      }
     | parse "{key}={value}"
+    | where { |row| ($row.key | is-not-empty) }  # Ensure key exists
     | update key { |row|
         $row.key | str trim | str replace -r '^export\s+' ''
       }
@@ -327,16 +332,17 @@ export def "from env" []: string -> record {
               $v | str trim -c '"'
             } else {
               $matched | get 0.content
-                | str replace -a '\n' (char nl)
-                | str replace -a '\r' (char cr)
-                | str replace -a '\t' (char tab)
+                | str replace -a '\\n' (char nl)
+                | str replace -a '\\r' (char cr)
+                | str replace -a '\\t' (char tab)
+                | str replace -a '\\\\' '\'
                 | str replace -a '\"' '"'
             }
           }
-          # Handle single-quoted values
+          # Handle single-quoted values (literal strings, no escape sequences)
           $v if ($v | str starts-with "'") => {
-            let match = ($v | parse -r "^'(?P<content>[^']*)'")
-            if ($match | is-empty) { $v | str trim -c "'" } else { $match | get 0.content }
+            let matched = ($v | parse -r "^'(?P<content>.*?)'")
+            if ($matched | is-empty) { $v | str trim -c "'" } else { $matched | get 0.content }
           }
           # Handle unquoted values
           _ => {
@@ -353,6 +359,7 @@ export def "from env" []: string -> record {
                   $idx = $idx + 2
                   continue
                 }
+                # Keep the backslash for other cases
                 $acc = $acc + $ch
                 $idx = $idx + 1
                 continue
