@@ -16,7 +16,7 @@
 #   [√] Install @terminus/t-package-tools@latest
 #   [√] Change entry to nu
 
-FROM hustcer/debian-nu:0.106-node.20.19-extra
+FROM hustcer/debian-nu:0.108-node.20.19-extra
 
 ARG TARGETARCH
 ARG ARCH=${TARGETARCH/arm64/aarch64}
