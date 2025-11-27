@@ -10,6 +10,7 @@
 const RULES_DIR = '/tmp/ast-grep-color-rules'
 const SOURCE = '/Users/hustcer/iWork/terminus/terp-ui/packages/pc/src'
 const COLOR_IMPORT = "import { COLOR } from '@/constants/style-variables';"
+const EXCLUDE_FILES = ['style-variables.ts', '/dist/', '/node_modules/']
 
 # LESS color variable mapping: css-value -> less-variable
 const LESS_COLOR_MAP = {
@@ -92,13 +93,33 @@ const TS_COLOR_MAP = {
 # ============================================================================
 
 # Generate ast-grep YAML rule for color replacement
-# context: 'jsx' for JSX attributes, 'obj' for object properties
+# lang: 'tsx' for TSX files (needs context), 'typescript' for TS files (simple)
+# context: 'jsx' for JSX attributes, 'obj' for object properties, 'any' for simple
 # quote: 'single' or 'double'
-def make-ast-rule [css: string, color_key: string, context: string, quote: string]: nothing -> string {
+def make-ast-rule [
+  css: string
+  color_key: string
+  lang: string
+  context: string
+  quote: string
+]: nothing -> string {
   let pattern = match $quote {
     'single' => $"\"'($css)'\""
     'double' => ("'\"" + $css + "\"'")
   }
+
+  # For TypeScript files, use simple replacement (no JSX context needed)
+  if $lang == 'typescript' {
+    return ([
+      $"id: ts-($quote)-replace"
+      "language: typescript"
+      "rule:"
+      $"  pattern: ($pattern)"
+      $"fix: ($color_key)"
+    ] | str join "\n")
+  }
+
+  # For TSX files, distinguish between JSX attributes and object pairs
   let fix = match $context {
     'jsx' => $"\"{($color_key)}\""
     'obj' => $color_key
@@ -122,7 +143,8 @@ def make-ast-rule [css: string, color_key: string, context: string, quote: strin
 def run-ast-rule [rule: string, name: string] {
   let rule_file = $'($RULES_DIR)/($name).yml'
   $rule | save -f $rule_file
-  ast-grep scan -r $rule_file $SOURCE -U
+  # Include all ts/tsx files first, then exclude specific files/directories
+  ast-grep scan -r $rule_file $SOURCE -U --globs '**/*.ts' --globs '**/*.tsx' --globs '!**/style-variables.ts' --globs '!**/dist/**' --globs '!**/node_modules/**'
 }
 
 # Check if file already has COLOR import
@@ -187,16 +209,27 @@ def replace-ts-colors [] {
     let color_key = $'COLOR.($key)'
     print $'  ($css) -> ($color_key)'
 
-    # Apply rules for all context/quote combinations
+    # TSX: Apply rules for JSX attributes and object pairs
     for ctx in ['jsx', 'obj'] {
       for quote in ['single', 'double'] {
-        let rule = (make-ast-rule $css $color_key $ctx $quote)
-        run-ast-rule $rule $'($ctx)-($quote)'
+        let rule = (make-ast-rule $css $color_key 'tsx' $ctx $quote)
+        run-ast-rule $rule $'tsx-($ctx)-($quote)'
       }
+    }
+
+    # TypeScript: Simple replacement (no JSX context)
+    for quote in ['single', 'double'] {
+      let rule = (make-ast-rule $css $color_key 'typescript' 'any' $quote)
+      run-ast-rule $rule $'ts-($quote)'
     }
   }
 
   rm -rf $RULES_DIR
+}
+
+# Check if file should be excluded
+def should-exclude [file: string]: nothing -> bool {
+  $EXCLUDE_FILES | any {|pattern| $file | str contains $pattern }
 }
 
 # Add COLOR import to files that need it
@@ -204,8 +237,7 @@ def add-color-imports [] {
   print "Adding COLOR imports..."
 
   glob $'($SOURCE)/**/*.{ts,tsx}'
-    | where { not ($in | str contains 'node_modules') }
-    | where { not ($in | str contains '/dist/') }
+    | where { not (should-exclude $in) }
     | each {|file|
         let content = (open --raw $file)
 
@@ -224,23 +256,18 @@ def add-color-imports [] {
 # ============================================================================
 
 def main [] {
-  print "=== NUSI Color Migration ==="
-  print -n (char nl)
+  print $"(ansi g)=== NUSI Color Migration ===(ansi rst)\n"
 
-  print "Step 1: LESS files"
+  print $"(ansi g)Step 1: LESS files(ansi rst)"
   replace-less-colors
   print -n (char nl)
 
-  print "Step 2: TypeScript/TSX files"
+  print $"(ansi g)Step 2: TypeScript/TSX files(ansi rst)"
   replace-ts-colors
   print -n (char nl)
 
-  print "Step 3: Add COLOR imports"
+  print $"(ansi g)Step 3: Add COLOR imports(ansi rst)"
   add-color-imports
-  print -n (char nl)
 
-  print "=== Done! ==="
+  print $"\n(ansi g)=== Done! ===(ansi rst)"
 }
-
-# Execute main function
-main
