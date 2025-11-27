@@ -307,6 +307,66 @@ export def 'from sse' [] {
   }
 }
 
+# Converts a .env file into a record
+# May be used like this: open .env | load-env
+# Works with quoted and unquoted .env files
+export def "from env" []: string -> record {
+  let input = $in
+
+  # Process escape sequences in double-quoted values using str replace chain
+  # Use NUL char as placeholder to avoid replacement conflicts
+  let process_escapes = {|content: string|
+    $content
+      | str replace -a '\\' (char nul)   # Placeholder for \\ to avoid conflicts
+      | str replace -a '\n' (char nl)
+      | str replace -a '\r' (char cr)
+      | str replace -a '\t' (char tab)
+      | str replace -a '\"' '"'
+      | str replace -a (char nul) '\'    # Restore \\ to single \
+  }
+
+  # Parse double-quoted value with escape sequence support
+  let parse_double_quoted = {|val: string|
+    let matched = ($val | parse -r '^"(?P<content>(?:[^"\\]|\\.)*)"')
+    if ($matched | is-empty) { $val | str trim -c '"' } else { do $process_escapes $matched.0.content }
+  }
+
+  # Parse single-quoted value (no escape processing)
+  let parse_single_quoted = {|val: string|
+    let matched = ($val | parse -r "^'(?P<content>[^']*)'")
+    if ($matched | is-empty) { $val | str trim -c "'" } else { $matched.0.content }
+  }
+
+  # Parse unquoted value: handle escaped hash (\#) and strip inline comments
+  let parse_unquoted = {|val: string|
+    $val
+      | str replace -a '\#' (char nul)    # Placeholder for \#
+      | split row '#'                     # Split by comment delimiter
+      | first                             # Take content before first #
+      | str replace -a (char nul) '#'     # Restore \# to #
+      | str trim
+  }
+
+  # Parse value based on its format
+  let parse_value = {|val: string|
+    match $val {
+      $v if ($v | str starts-with '"') => { do $parse_double_quoted $v }
+      $v if ($v | str starts-with "'") => { do $parse_single_quoted $v }
+      _ => { do $parse_unquoted $val }
+    }
+  }
+
+  let parsed = $input | lines
+    | each { str trim }
+    | compact -e
+    | where {|line| not ($line | str starts-with '#') }
+    | parse "{key}={value}"
+    | update key {|row| $row.key | str trim | str replace -r '^export\s+' '' }
+    | update value {|row| do $parse_value ($row.value | str trim) }
+
+  if ($parsed | is-empty) { {} } else { $parsed | transpose -r -d -l }
+}
+
 # Get TERMIX_TMP_PATH from env first and fallback to HOME/.termix-nu
 export def get-tmp-path [] {
   # let homeEnv = if (windows?) { 'USERPROFILE' } else { 'HOME' }
