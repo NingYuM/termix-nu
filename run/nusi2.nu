@@ -17,6 +17,11 @@ const COLOR_MAP = {
     'rgb(var(--nusi-neutral-5))' : '@middle-5'
     'rgb(var(--nusi-neutral-6))' : '@middle-6'
     'rgb(var(--nusi-neutral-7))' : '@middle-7'
+    'rgb(var(--nusi-neutral-55))' : '@middle-2'
+    'rgb(var(--nusi-neutral-85))' : '@middle-1'
+    'rgb(var(--nusi-neutral-20))' : '@middle-4'
+    'rgb(var(--nusi-neutral-10))' : '@middle-4'
+    'rgb(var(--nusi-neutral-40))' : '@middle-3'
     # 错误色替换
     'rgb(var(--nusi-error))': '@error'
     'rgb(var(--nusi-error-1))': '@error-light'
