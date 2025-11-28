@@ -1,6 +1,46 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.97.0 - 2025-11-28
+
+**Bug Fixes**
+
+- Normalize cherry-pick error detection for `t git-pick` command
+- Fix `t gsync` error when local branch is ahead of remote
+- Fix `t gsync -l` error when `.termixrc` is not found in `origin/i` branch
+- Fix syncing multiple branches for `t gsync` command
+- Fix potential bugs in `t git-remote-branch` command
+- Exclude main branch from selection in `t git-remote-branch -c`
+- Check main branch existence before running `t git-remote-branch -c`
+
+**Documentation**
+
+- Add examples for `t git-remote-branch` command
+- Add examples for `t git-pick` and `t rename-branch` commands
+- Add examples for `t git-stat` command
+
+**Features**
+
+- Improve auto-resolving conflict messages for `t git-pick` command
+- Support branch selection via fzf for `t git-remote-branch -c`
+- Add confirmation prompt before deleting branches in `t git-remote-branch -c`
+- Enhance remote branch merge detection using git cherry patch-id
+
+**Miscellaneous Tasks**
+
+- Improve error display for `t git-pick` command
+- Improve `--list-only` flag behavior for `t git-pick` when no matches found
+- Add `rb`, `gb`, and `pa` aliases
+
+**Refactor**
+
+- Refactor `t gsync` command with Claude 4.5
+- Refactor `t git-remote-branch` command
+
+**Deps**
+
+- Upgrade `actions/checkout` to v6
+
 ## v1.96.0 - 2025-11-08
 
 **Bug Fixes**
