@@ -99,12 +99,12 @@ def "from env with user example structure" [] {
     let input = "
 # TERMIX_DIR=/work
  TERMIX_DIR=/Users/hustcer/iWork/terminus/termix-nu
- ERDA_USERNAME=15988136866
- # ERDA_USERNAME=15195950676
+ USERNAME=159
+ # USERNAME=151
 "
     let expected = {
         TERMIX_DIR: "/Users/hustcer/iWork/terminus/termix-nu",
-        ERDA_USERNAME: "15988136866"
+        USERNAME: "159"
     }
     assert equal ($input | from env) $expected
 }
@@ -132,5 +132,73 @@ LITERAL=foo\\bar
         URL: "https://example.com/#anchor",
         LITERAL: "foo\\bar"
     }
+    assert equal ($input | from env) $expected
+}
+
+@test
+def "from env with empty input" [] {
+    # Issue 1: Empty input should return empty record, not empty list
+    let result = ("" | from env)
+    assert equal $result {}
+    assert equal ($result | describe) "record"
+}
+
+@test
+def "from env with only comments" [] {
+    let input = "
+# Just a comment
+  # Another comment
+"
+    let result = ($input | from env)
+    assert equal $result {}
+    assert equal ($result | describe) "record"
+}
+
+@test
+def "from env with duplicate keys" [] {
+    # Issue 2: Duplicate keys should keep last value (common .env behavior)
+    let input = "
+KEY=first
+KEY=second
+KEY=third
+"
+    let expected = { KEY: "third" }
+    assert equal ($input | from env) $expected
+}
+
+@test
+def "from env with blank lines" [] {
+    # Issue 5: Blank lines (whitespace only) should be skipped
+    let input = "
+KEY1=value1
+
+
+KEY2=value2
+
+KEY3=value3
+"
+    let expected = { KEY1: "value1", KEY2: "value2", KEY3: "value3" }
+    assert equal ($input | from env) $expected
+}
+
+@test
+def "from env with escaped backslash in double quotes" [] {
+    # Double backslash in .env file should become single backslash
+    # In single-quoted nushell string: \\ = 2 literal backslashes = one \\ pair in .env
+    # In .env format, \\ represents one literal backslash
+    let input = 'KEY="path\\to\\file"'
+    # Expected value: path\to\file (single backslashes)
+    let expected = { KEY: "path\\to\\file" }
+    assert equal ($input | from env) $expected
+}
+
+@test
+def "from env with mixed escapes in double quotes" [] {
+    # Test escape sequences in double-quoted values
+    # In .env file: \n = newline, \\n = literal backslash + n
+    # In single-quoted nushell: \n = backslash + n, \\n = two backslashes + n
+    let input = 'KEY="line1\nline2\\nnotanewline"'
+    # Expected: line1 + newline + line2 + backslash + n + notanewline
+    let expected = { KEY: "line1\nline2\\nnotanewline" }
     assert equal ($input | from env) $expected
 }
