@@ -52,7 +52,7 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
-- Improve TUI of `t art` command when operator lacks trantor2 admin auth
+- Improve TUI of `t art` command when the operator lacks Trantor2 admin authorization
 - Add `t ta revert` command to revert TERP assets, powered by `s5cmd`
 - Add `repos.toml` example file
 - Automatically resolve lock file conflicts for `t git-pick` command
@@ -60,21 +60,21 @@ All notable changes to this project will be documented in this file.
 
 **Miscellaneous Tasks**
 
-- Add description for `agent` and `agent-mobile` modules
+- Add descriptions for `agent` and `agent-mobile` modules
 
 ## v1.95.0 - 2025-10-16
 
 **Features**
 
-- Do not sync members by default, use `--sync-member` to turn it on for `t erda-transfer`
+- Do not sync members by default; use `--sync-member` to enable it for `t erda-transfer`
 - Add branch syncing support for `t erda-transfer` command
-- Show more detail for confirmation before running `t erda-transfer` command
+- Show more details for confirmation before running `t erda-transfer` command
 
 **Bug Fixes**
 
 - Fix potential git repo sync error for `t erda-transfer` command
 - Fix EMP working hours query hosts
-- Try to fix "unexpected disconnect while reading sideband packet" error for branch syncing
+- Attempt to fix "unexpected disconnect while reading sideband packet" error during branch syncing
 
 ## v1.93.1 - 2025-09-16
 
@@ -86,20 +86,20 @@ All notable changes to this project will be documented in this file.
 
 **Bug Fixes**
 
-- Try to fix `t upgrade` error for Windows
-- Fix version display of the upgraded tools
+- Attempt to fix `t upgrade` error on Windows
+- Fix version display for upgraded tools
 
 **Features**
 
-- Add `t erda-transfer` command to Transfer Apps between Erda Projects
-- Validate the selected App names to make sure they all exist in the source project
-- Using `fzf` to select APPs to transfer and confirm before transferring
-- Validate and make sure the operator has access to all the selected APPs before transfer
-- Support transfer runtime ENV vars
-- Support transfer pipeline ENV vars
-- Transfer encrypted env vars, and replace the values with a placeholder
+- Add `t erda-transfer` command to transfer apps between Erda projects
+- Validate selected app names to ensure they all exist in the source project
+- Use `fzf` to select apps to transfer and confirm before transferring
+- Validate that the operator has access to all selected apps before transfer
+- Support transferring runtime environment variables
+- Support transferring pipeline environment variables
+- Transfer encrypted environment variables and replace values with placeholders
 - Add members in batch mode for `t erda-transfer` command
-- Speed up APP auth checks via user permissions API
+- Speed up app authorization checks via user permissions API
 
 **Miscellaneous Tasks**
 
@@ -108,14 +108,14 @@ All notable changes to this project will be documented in this file.
 
 **Performance**
 
-- Get brew APPs version from API instead of web crawling
-- Use `par-each` for auth checking of APPs
-- Improve adding members for `t erda-transfer` command
+- Get Homebrew app versions from API instead of web crawling
+- Use `par-each` for app authorization checking
+- Improve member addition for `t erda-transfer` command
 
 **Refactor**
 
 - Refactor `sync-env-vars` helper for better readability
-- Reduce call of `get-app-list` API, especially for querying source APPs
+- Reduce calls to `get-app-list` API, especially when querying source apps
 
 ## v1.92.0 - 2025-09-08
 
@@ -129,9 +129,9 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
-- Update `run/trantor-artifact-transfer.sh` to latest version
+- Update `run/trantor-artifact-transfer.sh` to the latest version
 - Add `tests/test-s5cmd.nu` tests
-- Using forked version of `hustcer/s5cmd` instead of `peak/s5cmd`
+- Use forked version of `hustcer/s5cmd` instead of `peak/s5cmd`
 
 **Deps**
 
@@ -142,20 +142,20 @@ All notable changes to this project will be documented in this file.
 **Bug Fixes**
 
 - Attempt to fix termix-nu upgrade when branches have diverged
-- Fix error in the `t git-stat` command
+- Fix error in `t git-stat` command
 - Add protocol validation for `t doctor $host`
-- Fix Nushell config checks for the `t doctor` command
+- Fix Nushell config checks for `t doctor` command
 - Fix tool installation and upgrades on Ubuntu
 - Fix `t git-branch` path positional argument and add usage examples
-- Fix bucket validation for the `t doctor $host` command
-- Fix Nu config checks in the `t doctor` command
+- Fix bucket validation for `t doctor $host` command
+- Fix Nu config checks in `t doctor` command
 
 **Features**
 
 - Show Homebrew-managed tools required by termix-nu
 - Add `terp-doctor` to diagnose `terp-assets`
 - Add `t doctor ${host}` command
-- Add host pattern validation for the `t doctor $host` command
+- Add host pattern validation for `t doctor $host` command
 - Add CLAUDE.md
 - Update `compare-ver` to support comparing semver, including prereleases
 - Add `--filter` flag for `t ls-tags` command
@@ -166,12 +166,12 @@ All notable changes to this project will be documented in this file.
 - Add usage examples for `t ta` command
 - Add examples for `t gsync` command
 - Add examples for `t tp` and `t dq` commands
-- Update `latest.json` checks for the `t doctor $host` command
-- Add storage provider checks for the `t doctor $host` command
-- Add frontend module checks for the `t doctor $host` command
-- Update fix tips for the `t doctor $host` command
-- Add batch URL check support for the `t doctor` command
-- Add `latest.json` response status checks for the `t doctor` command
+- Update `latest.json` checks for `t doctor $host` command
+- Add storage provider checks for `t doctor $host` command
+- Add frontend module checks for `t doctor $host` command
+- Update fix tips for `t doctor $host` command
+- Add batch URL check support for `t doctor` command
+- Add `latest.json` response status checks for `t doctor` command
 
 **Miscellaneous Tasks**
 
@@ -184,67 +184,67 @@ All notable changes to this project will be documented in this file.
 **Refactor**
 
 - Fix `open-tools.nu` script for Nu 0.105 and later
-- Refactor code for the `t doctor $host` command
+- Refactor code for `t doctor $host` command
 
 ## v1.90.0 - 2025-07-21
 
 **Bug Fixes**
 
-- Fix `t dp -i` add `srcBranch` if differs from syncing source branch
+- Fix `t dp -i` to add `srcBranch` if it differs from the syncing source branch
 - Update type checks to use `describe -d` for erda-pipeline ops
-- Fix `t doctor` for Nu plugins checking
-- Add GitHub token header for fetching nightly release
-- Fix `t go` command for url finding
+- Fix `t doctor` for Nu plugin checking
+- Add GitHub token header for fetching nightly releases
+- Fix `t go` command for URL finding
 - Fix `t msync` command and make `path` optional
 - Trim empty mount point or module for `t ta` command
-- Improve `run/setup-termix.sh` by `shellcheck`
+- Improve `run/setup-termix.sh` with `shellcheck`
 - Fix getting Nu binary path for Nushell 0.106
 - Fix `get-latest-nightly-build` for Nu 0.106
 
 **Features**
 
-- Try using **debian** as the base image of termix-extra
-- Install latest version of `neovim` to termix extra image
+- Try using **debian** as the base image for termix-extra
+- Install the latest version of `neovim` in termix-extra image
 - Add `run/img-check.nu` script
-- Use `erdaOpenApiHost` or fallback to `erdaHost` for session renewing of `t art` command
+- Use `erdaOpenApiHost` or fall back to `erdaHost` for session renewal in `t art` command
 - Use `fzf` to select modules for `t msync` command
 - Query available backend modules from Trantor Console for `t msync` command
 - Add `monitor` custom command to Nu config
-- Try to add `s5cmd` install and upgrade support
-- Add `t ta init` command to init static assets for TERP
+- Attempt to add `s5cmd` installation and upgrade support
+- Add `t ta init` command to initialize static assets for TERP
 - Add progress indicator for `t ta init` command
 
 **Miscellaneous Tasks**
 
-- Add acl control to object
-- Use latest Nu for uploading of binary dependencies
-- Try to add a docker image for runtime
+- Add ACL control to object
+- Use the latest Nu for uploading binary dependencies
+- Attempt to add a Docker image for runtime
 - Fix `fnm` setup for bash
 - Use `ansi rst` instead of `ansi reset` for Nu 0.106.0
-- Replace `get -i` to `get -o` for Nu 0.106
-- Replace `select -i` & `reject -i` for Nu 0.106
+- Replace `get -i` with `get -o` for Nu 0.106
+- Replace `select -i` and `reject -i` for Nu 0.106
 
 **Refactor**
 
 - Extract `enrich-target-data` helper function for `t dp -i` command
-- Refactor `t ta` command by cursor
+- Refactor `t ta` command with Cursor
 
 ## v1.89.2 - 2025-06-24
 
 **Bug Fixes**
 
-- Fix plugin register for Nu 0.106
+- Fix plugin registration for Nu 0.106
 - Fix `t cr` for Nu 0.105.0
 
 **Features**
 
-- Add syncing TERP assets to ifly OSS support
-- Add syncing TERP assets to volcengine OSS support
+- Add support for syncing TERP assets to iFlytek OSS
+- Add support for syncing TERP assets to Volcengine OSS
 
 **Miscellaneous Tasks**
 
 - Update `fnm` config for Nu
-- Add `with-progress` for nu config
+- Add `with-progress` to Nu config
 - Add `simple-pv` helper
 
 ## v1.89.1 - 2025-06-16
@@ -265,11 +265,11 @@ All notable changes to this project will be documented in this file.
 **Features**
 
 - Set default `temperature` to **0.3** for code review
-- Add new Trantor artifact consume support by `t art consume` command
+- Add new Trantor artifact consumption support via `t art consume` command
 
 **Miscellaneous Tasks**
 
-- Fix `pretty-oss` output of Nu config
+- Fix `pretty-oss` output in Nu config
 - Add `charts-mobile` description for terp-assets
 - Add `run/trantor-artifact-transfer.sh`
 - Use `where` instead of `filter` for Nu 0.105
@@ -283,38 +283,38 @@ All notable changes to this project will be documented in this file.
 
 **Bug Fixes**
 
-- Fixed `EMP` cookie key for man-hour query
+- Fix `EMP` cookie key for man-hour query
 - Read default `include` and `exclude` patterns from configuration for code review
 
 **Documentation**
 
-- Updated code review documentation for the `t cr` command
+- Update code review documentation for `t cr` command
 
 **Features**
 
 - Add storage type validation for TERP assets syncing
-- Added local code review support with **DeepSeek** models via the `t cr` command
-- Added support for code review of `git show head:path/to/file` command
-- Added ability to write code review results to markdown file with the `t cr` command
-- Added support for performing code review on specified files using the `--paths` flag
-- Made system prompt optional, now using user prompt instead for the `t cr` command
-- Added default settings for the `t cr` command
+- Add local code review support with **DeepSeek** models via `t cr` command
+- Add support for code review of `git show head:path/to/file` command
+- Add ability to write code review results to markdown file with `t cr` command
+- Add support for code review on specified files using `--paths` flag
+- Make system prompt optional, now using user prompt instead for `t cr` command
+- Add default settings for `t cr` command
 
 **Miscellaneous Tasks**
 
-- Added DeepSeek code review example configurations
-- Updated `t ls-node` command and set minimum query version to v18 by default
-- Improved error handling to print error messages to `stderr`
+- Add DeepSeek code review example configurations
+- Update `t ls-node` command and set minimum query version to v18 by default
+- Improve error handling to print error messages to `stderr`
 
 **Refactor**
 
-- Implemented the new `get-diff` method and removed `AWK` dependency
+- Implement the new `get-diff` method and remove `AWK` dependency
 
 ## v1.87.0 - 2025-03-21
 
 **Bug Fixes**
 
-- Fix `run/setup-termix.sh` setup script in docker
+- Fix `run/setup-termix.sh` setup script in Docker
 
 **Documentation**
 
@@ -322,31 +322,31 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
-- Add import meta data by path or directory support
-- Add `Dockerfile` to create a docker image for termix-nu
+- Add support for importing metadata by path or directory
+- Add `Dockerfile` to create a Docker image for termix-nu
 - Add `docker-compose.yml` example
-- Add GitHub workflow to build termix-nu docker image
-- Push docker image tags according to branch
-- Build docker images for each release tag
-- Add manually specify docker release image tag support
-- Add docker image tests for each build
+- Add GitHub workflow to build termix-nu Docker image
+- Push Docker image tags according to branch
+- Build Docker images for each release tag
+- Add support for manually specifying Docker release image tag
+- Add Docker image tests for each build
 
 **Miscellaneous Tasks**
 
 - Update rio terminal font config
-- Read path from config file for importing meta data by path
+- Read path from config file for importing metadata by path
 - Optimize termix-nu Dockerfile
 - Update docker-compose.yml image address
-- Add openssl to alpine docker image
+- Add openssl to Alpine Docker image
 - Update docker-compose.yml pull policy
-- Remove unnecessary nu plugins
+- Remove unnecessary Nu plugins
 
 ## v1.86.1 - 2025-03-11
 
 **Bug Fixes**
 
 - Fix `run/setup-termix.sh` script
-- Fix DingTalk notify for Nu v0.102
+- Fix DingTalk notification for Nu v0.102
 
 **Features**
 
@@ -354,8 +354,8 @@ All notable changes to this project will be documented in this file.
 
 **Miscellaneous Tasks**
 
-- Add `from env` for Nu config file
-- Add `parse-semver` for nu config
+- Add `from env` to Nu config file
+- Add `parse-semver` to Nu config
 
 ## v1.86.0 - 2025-02-05
 
@@ -368,39 +368,39 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
-- Add merged column to `t git-remote-branch` command
+- Add `merged` column to `t git-remote-branch` command
 - Add `--clean` flag for `t git-remote-branch` command to remove merged branches
 - Add `ignoreHash` config to run Erda pipelines without checking commit hash
-- Add erda interactive batch deploy support for `t dp` command
-- Confirm before running erda pipelines for `t dp -i` command
+- Add Erda interactive batch deploy support for `t dp` command
+- Add confirmation before running Erda pipelines for `t dp -i` command
 - Refactor semver comparison and add `is-semver` common command
 
 **Miscellaneous Tasks**
 
 - Add fix tip for `t doctor` command
-- Fix nushell config for Nu v0.102
+- Fix Nushell config for Nu v0.102
 
 **Performance**
 
-- Use multi threads to speedup branch info collect for `t git-remote-branch` command
+- Use multiple threads to speed up branch info collection for `t git-remote-branch` command
 
 ## v1.85.1 - 2024-12-24
 
 **Bug Fixes**
 
 - Fix possible `t doctor` error
-- Fix create-snapshot error check for meta data syncing
+- Fix create-snapshot error check for metadata syncing
 
 ## v1.85.0 - 2024-12-19
 
 **Bug Fixes**
 
 - Fix table display mode for Nu v0.101.0
-- Fix `t emp` command add staff status checking
+- Fix `t emp` command and add staff status checking
 - Fix `t git-stat` command for Nu v0.101.0
-- Fix `t git-branch` when i:d.toml does not exist
-- Fix permission error of `t nu-use-nightly` command
-- Fix `t nu-use-nightly` for Windows OS
+- Fix `t git-branch` when `i:d.toml` does not exist
+- Fix permission error in `t nu-use-nightly` command
+- Fix `t nu-use-nightly` for Windows
 
 **Documentation**
 
@@ -408,17 +408,17 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
-- Make `t ta detect` support urls without `/fe-resources/` in it
+- Make `t ta detect` support URLs without `/fe-resources/` in them
 - Add `pretty-oss` custom command to Nu config file
 - Add `--install` or `-i` flag for `t msync` command for Trantor 2.5.24.0930 and later
 - Add `install` field for UploadObjectToOSSTask of Trantor 2.5.24.0930 and later
-- Add `fzf` upload support for Github workflow
-- Add `run/setup-termix.sh` to setup termix-nu without homebrew
-- Make `t upgrade` works for users who install termix-nu by `setup.nu` or `setup-termix.sh`
+- Add `fzf` upload support for GitHub workflow
+- Add `run/setup-termix.sh` to set up termix-nu without Homebrew
+- Make `t upgrade` work for users who installed termix-nu via `setup.nu` or `setup-termix.sh`
 - Add `t doctor` command to diagnose and fix termix-nu settings
-- Add Nu config dir checking for `t doctor`
+- Add Nu config directory checking for `t doctor`
 - Add macOS version check for `t doctor` command
-- Add Nu,just,fzf outdated checking for `t doctor` command
+- Add Nu, just, and fzf outdated checking for `t doctor` command
 - Add termix-nu version check for `t doctor` command
 - Add package-tools version check for `t doctor` command
 
@@ -432,7 +432,7 @@ All notable changes to this project will be documented in this file.
 
 **Deps**
 
-- Upgrade min `@terminus/t-package-tools` to v0.5.2
+- Upgrade minimum `@terminus/t-package-tools` to v0.5.2
 
 ## v1.83.0 - 2024-11-13
 
@@ -443,16 +443,16 @@ All notable changes to this project will be documented in this file.
 **Features**
 
 - Add `--tag` flag for `t nu-use-nightly` command
-- `t gsync` support sync multiple branches separated by `,`
+- `t gsync` now supports syncing multiple branches separated by `,`
 
 **Miscellaneous Tasks**
 
-- Update EMP man-hour filling DingTalk notify for the new EMP API
+- Update EMP man-hour filling DingTalk notification for the new EMP API
 - Update Nu config for v0.100.0
 
 **Refactor**
 
-- Adapt to `Nushell` v0.100 use the new `encode` and `decode base64` commands
+- Adapt to `Nushell` v0.100 by using the new `encode` and `decode base64` commands
 
 ## v1.82.2 - 2024-10-23
 
@@ -470,29 +470,29 @@ All notable changes to this project will be documented in this file.
 
 **Breaking Changes**
 
-- Upgrade @terminus/t-package-tools min version to 0.5.0 for terp assets syncing
+- Upgrade @terminus/t-package-tools minimum version to 0.5.0 for TERP assets syncing
 
 **Bug Fixes**
 
 - Fix `t go` error for Nu v0.98
 - Fix upload-tools.yml workflow
-- Fix fzf selection, trim selected item
+- Fix fzf selection and trim selected item
 - Fix bad response check
-- Fix meta data syncing for Trantor v2.5.24.0830
+- Fix metadata syncing for Trantor v2.5.24.0830
 
 **Features**
 
 - Add TERP frontend assets revert command: `t ta revert`
-- Add revert TERP frontend module for Minio support
-- Improve `t ta revert` command, add revert metadata and display it in detect mode
-- Update `t show-env` command add more info
-- Add repo alias arg for `t pull-all` command
+- Add support for reverting TERP frontend modules to Minio
+- Improve `t ta revert` command: add revert metadata and display it in detect mode
+- Update `t show-env` command to add more info
+- Add repo alias argument for `t pull-all` command
 
 **Miscellaneous Tasks**
 
 - Update rio config for v0.16
-- Update commit auto pick tip
-- Update kitty and ghostty conf
+- Update commit auto-pick tip
+- Update kitty and ghostty config
 - Adapt to Nushell v0.99
 - Update @terminus/t-package-tools to 0.5.0
 
@@ -500,7 +500,7 @@ All notable changes to this project will be documented in this file.
 
 **Bug Fixes**
 
-- Fix base64 encode and decode command for Nu v0.98.0
+- Fix base64 encode and decode commands for Nu v0.98.0
 - Fix `fzf` history find for Nu
 - Fix utils/common.nu and update Nu config for v0.98.0
 - Fix `t art` command with `fzf` for Nu v0.98.0
@@ -509,15 +509,15 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
-- Make nu config file work on both macOS and Windows
-- Add consume APP Artifact support for `t art` command
+- Make Nu config file work on both macOS and Windows
+- Add app artifact consumption support for `t art` command
 - Add `gco` to Nu config for checking out git branches with `fzf`
 - Add `base32-hash` command to common.nu
 - Add `charts` module for `t ta transfer` command
 
 **Miscellaneous Tasks**
 
-- Update Nu config file and min just&Nu ver
+- Update Nu config file and minimum just & Nu versions
 - Update cursor config for rio v0.1.12
 - Update zoxide config
 
@@ -530,21 +530,21 @@ All notable changes to this project will be documented in this file.
 **Bug Fixes**
 
 - Fix `t git-branch` error
-- Fix batch deploy and query error for Nu 0.96+
+- Fix batch deploy and query errors for Nu 0.96+
 
 **Features**
 
-- Add lock feature for erda deploy
+- Add lock feature for Erda deploy
 - Add `kitty.conf` for `kitty` terminal
 - Add run/color.nu
 - Add `--verbose` flag for `t git-pick` command
-- Support query and display multiple TERP assets meta info for `t ta detect` command
+- Support querying and displaying multiple TERP assets metadata for `t ta detect` command
 
 **Miscellaneous Tasks**
 
 - Update `Nushell` config
-- Update `wezterm` conf for macOS M1
-- Update minNuVer to v0.97.1, fix grab nu binary commands
+- Update `wezterm` config for macOS M1
+- Update minNuVer to v0.97.1 and fix grab nu binary commands
 - Update minJustVer to 1.33.0
 
 **Performance**
@@ -553,27 +553,27 @@ All notable changes to this project will be documented in this file.
 
 **Deps**
 
-- Update `Nu` in Github workflow
+- Update `Nu` in GitHub workflow
 
 ## v1.79.0 - 2024-06-26
 
 **Bug Fixes**
 
-- Fix version detect of open-tools script
+- Fix version detection in open-tools script
 
 **Features**
 
-- Add `menv` for Nu config
+- Add `menv` to Nu config
 - Add frontend module descriptions for `t ta` command's module selection TUI
-- Add `c` command to nu config for favorite dir jumping
-- Hide deprecated field if none deprecated for `t ta detect` command
+- Add `c` command to Nu config for favorite directory jumping
+- Hide deprecated field if there are no deprecated items for `t ta detect` command
 - Remove `--verbose` and add `--quiet` flag for `t ta` command
 
 **Miscellaneous Tasks**
 
 - Remove deprecated modules for `t ta` command
 - Format module selection descriptions for `t ta` command
-- Adapt to Nu 0.95 use `enumerate` instead of `for -n`
+- Adapt to Nu 0.95 by using `enumerate` instead of `for -n`
 - Update minJustVer config
 - Extract some FZF constants to common.nu
 
@@ -585,20 +585,20 @@ All notable changes to this project will be documented in this file.
 
 **Bug Fixes**
 
-- Fix pipeline query detail url of `t dp` or `t dq` command
-- Fix actions/nu-nightly.nu for `Nu` nightly install
+- Fix pipeline query detail URL for `t dp` or `t dq` command
+- Fix actions/nu-nightly.nu for `Nu` nightly installation
 
 **Features**
 
-- Add `--all` flag to `t git-pick` command to show empty or merged commits picking error
-- Update `t dp` command add `--override` flag
-- Update `t dq` command add `--override` flag
+- Add `--all` flag to `t git-pick` command to show empty or merged commit picking errors
+- Update `t dp` command and add `--override` flag
+- Update `t dq` command and add `--override` flag
 - Add groups for all available just commands
 - Prettify default `just` command output
 
 **Miscellaneous Tasks**
 
-- Add Set proxy for Nu tip for `t git-proxy` command
+- Add set proxy for Nu tip in `t git-proxy` command
 - Update dotfiles/yazi.toml
 - Add dotfiles/lazygit.yml
 - Update `Nu` config for v0.93.1
@@ -608,21 +608,21 @@ All notable changes to this project will be documented in this file.
 **Bug Fixes**
 
 - Fix potential artifact preview error
-- Fix artifact query and show createdBy tip for `t art` command
+- Fix artifact query and show `createdBy` tip for `t art` command
 
 **Features**
 
-- Update `fzf` theme for a better artifact choosing and previewing
+- Update `fzf` theme for better artifact selection and previewing
 
 **Miscellaneous Tasks**
 
-- Update `t git-pick` command, simplify commitAt field and add more error detection
+- Update `t git-pick` command: simplify `commitAt` field and add more error detection
 
 ## v1.77.2 - 2024-05-14
 
 **Features**
 
-- Add Pre check of `TERMIX_DIR` env variable, make sure it is set correctly
+- Add pre-check of `TERMIX_DIR` environment variable to ensure it is set correctly
 
 **Miscellaneous Tasks**
 
@@ -633,7 +633,7 @@ All notable changes to this project will be documented in this file.
 
 **Bug Fixes**
 
-- Make sure that APP artifact version and Project artifact version are different to each other for `t art pack` command
+- Ensure that app artifact version and project artifact version are different for `t art pack` command
 
 ## v1.77.0 - 2024-05-05
 
@@ -643,10 +643,10 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
-- Add `t art pack` command to pack an APP artifact to a project artifact
-- Add `GIT_PICK_IGNORE` env config for `t git-pick` command
-- Add commits ahead counter for `t git-pick` command
-- Add no matched commits tip for `t git-pick` command
+- Add `t art pack` command to pack an app artifact into a project artifact
+- Add `GIT_PICK_IGNORE` environment config for `t git-pick` command
+- Add commits-ahead counter for `t git-pick` command
+- Add tip when no matched commits are found for `t git-pick` command
 - Add `--ignore-file` flag for `t git-pick` command
 - Add `--since` option for `t git-pick` command
 
@@ -658,69 +658,69 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
-- Add `t git-pick` command to do `cherry-pick` automatically
-- Support transfer static assets to multiple mount point for `t ta transfer` command
-- Show failed reason for `t git-pick` command
+- Add `t git-pick` command to perform `cherry-pick` automatically
+- Support transferring static assets to multiple mount points for `t ta transfer` command
+- Show failure reason for `t git-pick` command
 - Add run/auto-pick.nu script and add successfully picked counter for `t git-pick` command
 - Add `resetModuleForInstall` config for `t msync` command
 - Display `Trantor` version for `t msync` command
 
 **Bug Fixes**
 
-- Fix meta data of static assets syncing for `t ta transfer` command
-- Pick commits and keep the order for `t git-pick` command
+- Fix static assets metadata syncing for `t ta transfer` command
+- Pick commits while preserving the order for `t git-pick` command
 - Fix cherry-pick by SHA for `t git-pick` command
 
 ## v1.75.1 - 2024-04-23
 
 **Bug Fixes**
 
-- Fix iam host returned without `https://` error for `t msync` command
+- Fix IAM host returned without `https://` error for `t msync` command
 
 ## v1.75.0 - 2024-04-22
 
 **Bug Fixes**
 
-- Fix dest url output of `latest.json` for `t ta transfer` command
-- Fix Erda pipeline query, add `Born` status check
+- Fix destination URL output of `latest.json` for `t ta transfer` command
+- Fix Erda pipeline query and add `Born` status check
 - Add task execution status check for `t msync` command
 - Add authentication failed tip for `t msync` command
-- Fix upgrading check, set force upgrade if any of the newer version has the force upgrade tag
+- Fix upgrade check: set force upgrade if any newer version has the force upgrade tag
 - Fix backend server error check for `t msync` command
 
 **Documentation**
 
-- Update doc for `t ta detect` command
-- Update doc for `t msync` command
+- Update documentation for `t ta detect` command
+- Update documentation for `t msync` command
 
 **Features**
 
-- Add `t ta detect` command to display the overview of the front-end modules
-- Add user authenticate support for `t msync` command
-- Add security code parameter for meta data importing
+- Add `t ta detect` command to display the overview of frontend modules
+- Add user authentication support for `t msync` command
+- Add security code parameter for metadata importing
 - Add `Trantor2-Team` header for `t msync` command
-- Query and set iam host automatically for `t msync` command
+- Query and set IAM host automatically for `t msync` command
 
 ## v1.73.1 - 2024-04-15
 
 **Features**
 
 - Keep static assets module deprecation status for `t ta transfer` command
-- Remove module alias of `t ta` command for static assets transfer
+- Remove module alias from `t ta` command for static assets transfer
 
 ## v1.73.0 - 2024-04-15
 
 **Bug Fixes**
 
-- Fix `t ls-tags` while no tag exists locally
+- Fix `t ls-tags` when no tag exists locally
 - Fix possible Erda pipeline query error
-- Fix `t upgrade` with the same tag name exists locally
+- Fix `t upgrade` when the same tag name exists locally
 
 **Features**
 
-- Update `t pull-all` command, add colorful output for code changes
+- Update `t pull-all` command and add colorful output for code changes
 - Do not ignore new modules while syncing assets for `t ta` command
-- Add `--from`, `--to` and `--summary-only` option to `t git-stat` command
+- Add `--from`, `--to`, and `--summary-only` options to `t git-stat` command
 - Add `--json` option to `t git-stat` command
 - Update `t ls-node` command and remove `fnm` dependency
 
@@ -732,12 +732,12 @@ All notable changes to this project will be documented in this file.
 
 **Miscellaneous Tasks**
 
-- Use `cd` instead of `enter` to change pwd
+- Use `cd` instead of `enter` to change working directory
 - Register plugins for upgrade
 
 **Performance**
 
-- Add `ellie` custom command and start Nu without loading std lib for a better performance
+- Add `ellie` custom command and start Nu without loading std lib for better performance
 
 ## v1.72.0 - 2024-04-03
 
@@ -751,8 +751,8 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
-- Add `--watch` flag to `t dp` command to watch pipeline status after been started
-- Add `VALIDATE_MODULES` env switch for `t ta` command to turn off module validation
+- Add `--watch` flag to `t dp` command to watch pipeline status after it starts
+- Add `VALIDATE_MODULES` environment switch for `t ta` command to turn off module validation
 - Don't validate module names by default for `t ta` command
 - Ignore new modules while transferring `all` assets for `t ta` command
 - Add total time cost tip for `t ta` command
@@ -762,35 +762,35 @@ All notable changes to this project will be documented in this file.
 
 **Miscellaneous Tasks**
 
-- Fix Nu config file indention and add `yy` command
+- Fix Nu config file indentation and add `yy` command
 - Add dotfiles folder
 
 **Refactor**
 
-- Adapt to Nu v0.92.0, use `print` instead of `echo` to print output to screen
+- Adapt to Nu v0.92.0 by using `print` instead of `echo` to print output to screen
 
 ## v1.71.1 - 2024-03-24
 
 **Bug Fixes**
 
-- Fix `t git-stat` command for none-text file changes
+- Fix `t git-stat` command for non-text file changes
 
 **Features**
 
-- Improve `t git-stat` command, add `uniqFileChanged` stat
+- Improve `t git-stat` command and add `uniqFileChanged` stat
 
 ## v1.71.0 - 2024-03-22
 
 **Features**
 
 - Validate modules before static asset syncing for `t ta` command
-- Add `--summary` and `--exclude` flag to `t git-stat` command
+- Add `--summary` and `--exclude` flags to `t git-stat` command
 
 **Miscellaneous Tasks**
 
 - Add video casts for TERP assets syncing
 - Add Erda pipeline operation related Asciinema casts
-- Update README.md add Asciinema video casts support
+- Update README.md and add Asciinema video casts support
 - Add hash href for video casts
 
 ## v1.70.1 - 2024-03-20
@@ -814,21 +814,21 @@ All notable changes to this project will be documented in this file.
 **Features**
 
 - Remove Nu plugin config file automatically after upgrading Nu
-- Add `t artifact` command with `deploy`,`consume`,`produce` actions supported
-- Add artifact helper related config and args
-- Confirm the deploy order detail before execution
-- Add customize Erda host support for artifact and pipeline related commands
-- Install `fzf` if doesn't exist for artifact version and deploy group selection
+- Add `t artifact` command with `deploy`, `consume`, and `produce` actions supported
+- Add artifact helper related configs and arguments
+- Confirm deploy order details before execution
+- Add custom Erda host support for artifact and pipeline related commands
+- Install `fzf` if it doesn't exist for artifact version and deploy group selection
 - Add `fzf` upgrade support
 - Use `fzf` to select the artifact version to deploy
-- Add select deploy group by fzf and preview support for `t art deploy` command
+- Add deploy group selection by fzf with preview support for `t art deploy` command
 - Add orgAlias config for artifact assistant
-- Add detailUrl to artifact meta output
-- Add select multiple application groups to deploy support for artifact assistant
-- Support `t art deploy --combine` which contains produce and consume
+- Add detailUrl to artifact metadata output
+- Add support for selecting multiple application groups to deploy with artifact assistant
+- Support `t art deploy --combine` which includes produce and consume
 - Add `--list` flag to `t art` command
-- Multiple deploy group separated by comma from setting or input support for artifact assistant
-- Login with username and password from settings support for artifact assistant
+- Support multiple deploy groups separated by comma from settings or input for artifact assistant
+- Support login with username and password from settings for artifact assistant
 
 **Miscellaneous Tasks**
 
@@ -836,7 +836,7 @@ All notable changes to this project will be documented in this file.
 - Add casts/deploy.cast for `t art deploy`
 - Add casts/art-consume.cast for `t art consume` command
 - Add `asciinema` demos for artifact assistant
-- Make sure at most one default was set for source and destination
+- Ensure at most one default is set for source and destination
 
 **Refactor**
 
@@ -846,12 +846,12 @@ All notable changes to this project will be documented in this file.
 
 **Bug Fixes**
 
-- Fix `t ding-msg` show error detail of failed ding notification
-- Fix select of list, use spread operator instead for Nu v0.91
+- Fix `t ding-msg` to show error details for failed DingTalk notifications
+- Fix selection from list by using spread operator instead for Nu v0.91
 
 **Miscellaneous Tasks**
 
-- Update README.md add nu install and upgrade tip
+- Update README.md and add Nu installation and upgrade tips
 - Update Nushell config to v0.91.0
 
 ## v1.68.0 - 2024-02-22
@@ -871,7 +871,7 @@ All notable changes to this project will be documented in this file.
 
 **Bug Fixes**
 
-- Fix `t msync` int to string converting error after upgrading to `Nu` v0.90.1
+- Fix `t msync` int to string conversion error after upgrading to `Nu` v0.90.1
 
 ## v1.67.0 - 2024-02-07
 
@@ -879,22 +879,22 @@ All notable changes to this project will be documented in this file.
 
 - Fix `atAllMinCount` check for `t emp` command
 - Fix `t query-deps` command for Windows
-- Fix last day check of `t emp-daily` command
-- Fix commit meta extract algorithm for `t query-deps` command
+- Fix last day check in `t emp-daily` command
+- Fix commit metadata extraction algorithm for `t query-deps` command
 
 **Documentation**
 
-- Update docs for `t git-branch` and `t emp-daily` commands
-- Update docs for `t query-deps` command
+- Update documentation for `t git-branch` and `t emp-daily` commands
+- Update documentation for `t query-deps` command
 
 **Features**
 
-- Add `WORKDAYS_TILL_MONTH_END` env var to specify total workdays till month end of current week for gap calc
+- Add `WORKDAYS_TILL_MONTH_END` environment variable to specify total workdays until month end for gap calculation
 - Add `--contains` flag for `t git-branch` command
-- Add `t query-deps` command to query node dependencies in all package.json files from the specified branches
-- Add `LAST_DAY`, `LASTDAY_MSG` to `t emp-daily` command for Holidays
+- Add `t query-deps` command to query node dependencies in all package.json files from specified branches
+- Add `LAST_DAY` and `LASTDAY_MSG` to `t emp-daily` command for holidays
 - Add `rc` command to reload Nushell config
-- Add `SKIP_UNTIL` env variable to specify the time to start DingTalk reminding for `t emp-daily` command
+- Add `SKIP_UNTIL` environment variable to specify the time to start DingTalk reminding for `t emp-daily` command
 - Rename `t trigger-sync` command to `t gsync`
 - Add `t desc -a` to show all branch descriptions from the `i` branch
 
@@ -904,80 +904,80 @@ All notable changes to this project will be documented in this file.
 
 **Refactor**
 
-- Update `t query-deps`, remove usage of `grep` command
+- Update `t query-deps` and remove usage of `grep` command
 
 ## v1.66.0 - 2024-01-29
 
 **Bug Fixes**
 
 - Fix working hours rounding bug for `t emp` command
-- Fix query begin and end date calc for `t emp` command
+- Fix query begin and end date calculation for `t emp` command
 - Fix @All checking for `t emp-daily` command
-- Fix type convert error for `t gsync -l` command
-- Fix working-hours polling on monday for `t emp-daily` command
+- Fix type conversion error for `t gsync -l` command
+- Fix working hours polling on Monday for `t emp-daily` command
 
 **Features**
 
-- `t terp-assets` add Syncing modules by their full name support
+- `t terp-assets` now supports syncing modules by their full name
 - `t terp-assets transfer all` will sync all assets registered in `latest.json`
-- Display dest latest.json url after transfer TERP static assets
-- Fallback to get users from API if not configured in `.termixrc` for `t emp` command
-- Add `atAllMinCount` option to mention all if the count of mention users is above specified count for `t emp` command
-- Quit `t emp-daily` scheduled task if all teams have finished filling their working-hours
+- Display destination latest.json URL after transferring TERP static assets
+- Fall back to getting users from API if not configured in `.termixrc` for `t emp` command
+- Add `atAllMinCount` option to mention all if the count of mentioned users exceeds the specified count for `t emp` command
+- Quit `t emp-daily` scheduled task if all teams have finished filling their working hours
 
 ## v1.65.0 - 2024-01-25
 
 **Bug Fixes**
 
-- Fix emp working hours query and display
+- Fix EMP working hours query and display
 
 **Features**
 
-- Valid user mobile number before sending DingTalk Notification for `t emp` command
-- Add `--debug` and `--no-ignore` flag to `t emp` command
-- Check if all working hours have been filled by `surplusPercentage` response for `t emp` command
+- Validate user mobile number before sending DingTalk notification for `t emp` command
+- Add `--debug` and `--no-ignore` flags to `t emp` command
+- Check if all working hours have been filled via `surplusPercentage` response for `t emp` command
 
 **Miscellaneous Tasks**
 
 - Add `Lilex` and `Sarasa Term SC` fonts to terminal configs
-- Update online docs for all refactored commands
+- Update online documentation for all refactored commands
 
 **Refactor**
 
-- Add `-h` for `ls-node`, `release`, `desc`, `git-branch`, `git-remote-branch`, `rename-branch` and `repo-transfer` to show help docs
-- Add `-h` flag for `dir-batch-exec`, `git-batch-exec` and `git-stat` command to show help docs
-- Refactor `t git-branch` and `t git-remote-branch` add `--show-tags` flag
+- Add `-h` flag for `ls-node`, `release`, `desc`, `git-branch`, `git-remote-branch`, `rename-branch`, and `repo-transfer` to show help documentation
+- Add `-h` flag for `dir-batch-exec`, `git-batch-exec`, and `git-stat` commands to show help documentation
+- Refactor `t git-branch` and `t git-remote-branch` and add `--show-tags` flag
 
 ## v1.63.0 - 2024-01-22
 
 **Documentation**
 
-- Update docs for `t brew` and `t upgrade` command
+- Update documentation for `t brew` and `t upgrade` commands
 
 **Features**
 
-- Install `just` and `nushell` by `brew` for `macOS`
-- Add `tuna` mirror support for `t brew` command by adding `--tuna` flag
-- Add `aliyun` mirror support for `t brew` command by adding `--aliyun` flag
+- Install `just` and `nushell` via `brew` on `macOS`
+- Add `tuna` mirror support for `t brew` command with `--tuna` flag
+- Add `aliyun` mirror support for `t brew` command with `--aliyun` flag
 
 ## v1.62.0 - 2024-01-19
 
 **Bug Fixes**
 
-- Allow apps downloaded from anywhere in MacOS
+- Allow apps downloaded from anywhere on macOS
 
 ## v1.61.0 - 2024-01-18
 
 **Bug Fixes**
 
-- Fix WezTerm config for Nushell that installed by Homebrew
-- Fixed DingTalk Robot Ak&Sk env key naming to work properly with EMP man-hour filling notification
-- Try to fix `Nushell` & `just` upgrade for macOS of M chip set
-- Add no emp config tip for `t emp*` command
+- Fix WezTerm config for Nushell installed via Homebrew
+- Fix DingTalk Robot Ak&Sk environment key naming to work properly with EMP man-hour filling notification
+- Attempt to fix `Nushell` and `just` upgrade for macOS with M-series chips
+- Add tip when no EMP config is found for `t emp*` commands
 
 **Features**
 
-- Add `--force` flag to `t upgrade` to do a force upgrade of open source tools
+- Add `--force` flag to `t upgrade` for force upgrading open source tools
 
 ## v1.60.1 - 2024-01-18
 
@@ -989,96 +989,96 @@ All notable changes to this project will be documented in this file.
 
 **Bug Fixes**
 
-- Fix latest version check of termix-nu
+- Fix latest version check for termix-nu
 - Fix Erda pipeline deploy and query for Nu v0.89.1
-- Fix open source tools install for windows
+- Fix open source tools installation on Windows
 
 **Documentation**
 
-- Update doc for `t upgrade` command
-- Update doc for `t emp` and `t emp-daily` command
+- Update documentation for `t upgrade` command
+- Update documentation for `t emp` and `t emp-daily` commands
 
 **Features**
 
 - Don't print the result if `--silent` is set for `t emp` command
-- Notify the members who didn't fill the working hours by DingTalk Robot for `t emp -n` command
-- Add `EMP_WORKING_HOURS_NOTIFY` env var to turn on or off EMP working hour notify by DingTalk Robot
-- Add `working-hours-daily-checking` job for EMP working hours notify
-- Last day(Monday and Month end) keep on polling and notify with specified interval for `t emp-daily`
-- Add Github action to upload latest version of `nushell` and `just` packages to Aliyun OSS everyday automatically
-- Add `t upgrade` command to upgrade `nushell`, `just` or `termix-nu`
-- Ignore teams with `ignore = true` in config file for EMP working hours query and notify
-- Add `t upgrade --all` command to upgrade `Nushell`, `Just` and `Termix-nu` all at once
+- Notify members who didn't fill working hours via DingTalk Robot for `t emp -n` command
+- Add `EMP_WORKING_HOURS_NOTIFY` environment variable to turn on or off EMP working hours notification via DingTalk Robot
+- Add `working-hours-daily-checking` job for EMP working hours notification
+- On last day (Monday and month end), keep polling and notify with specified interval for `t emp-daily`
+- Add GitHub action to upload the latest version of `nushell` and `just` packages to Aliyun OSS daily
+- Add `t upgrade` command to upgrade `nushell`, `just`, or `termix-nu`
+- Ignore teams with `ignore = true` in config file for EMP working hours query and notification
+- Add `t upgrade --all` command to upgrade `Nushell`, `Just`, and `Termix-nu` all at once
 
 **Miscellaneous Tasks**
 
-- Add a config file for `ghostty` terminal (beta)
-- Add `publishAt` and `repo` fields for `latest.json` of uploaded open source tools
-- Standardize released package names of open tools
-- Add upgrade nu and just cast
+- Add config file for `ghostty` terminal (beta)
+- Add `publishAt` and `repo` fields to `latest.json` of uploaded open source tools
+- Standardize released package names for open tools
+- Add upgrade Nu and Just cast
 
 **Refactor**
 
-- Simplify the usage of query working hours by `t emp` command
+- Simplify the usage of working hours query via `t emp` command
 
 ## v1.55.0 - 2024-01-09
 
 **Features**
 
-- Add initial meta data syncing feature
-- Enable import specified modules for `meta sync`
-- Add module select support for `meta sync`
-- Add meta data syncing related configs and validate it before synchronization
-- Select and show selected modules before confirmation of meta syncing
-- Must specify `source` and `destination` if no default source and destination was set for `meta sync`
-- Add `teamId`, `teamCode`, `host` checking for each source and destination before running `meta sync`
-- Add `asciinema` casts for meta data syncing operations
+- Add initial metadata syncing feature
+- Enable importing specified modules for `meta sync`
+- Add module selection support for `meta sync`
+- Add metadata syncing related configs and validate them before synchronization
+- Select and show selected modules before confirmation of metadata syncing
+- Require specifying `source` and `destination` if no default source and destination is set for `meta sync`
+- Add `teamId`, `teamCode`, and `host` checking for each source and destination before running `meta sync`
+- Add `asciinema` casts for metadata syncing operations
 - Show git commit SHA in `meta sync` command
-- Remove `resetModuleForInstall` param for meta data importing
+- Remove `resetModuleForInstall` parameter for metadata importing
 - Add `--list` flag support for `meta sync` command
-- Support adding `ddlAutoUpdate` param in `.termixrc` config for meta data syncing
-- Add `--snapshot` flag to create and upload snapshot of `TERP` meta data without importing
-- Add ansi links to task id for `t msync` command
+- Support adding `ddlAutoUpdate` parameter in `.termixrc` config for metadata syncing
+- Add `--snapshot` flag to create and upload snapshot of `TERP` metadata without importing
+- Add ANSI links to task ID for `t msync` command
 - Add tab completion support for `meta sync` command in Nushell REPL
 - Add `terp assets` command for static assets synchronization of `TERP`
-- Update `terp assets` command, add syncing meta data to `latest.json`
+- Update `terp assets` command and add syncing metadata to `latest.json`
 - Add common `progress` custom command
 
 **Bug Fixes**
 
 - Fix default source and destination filter for `meta sync`
-- Fix meta data syncing with `--selected` flag
-- Handle 500 error properly for the last step of meta data syncing
+- Fix metadata syncing with `--selected` flag
+- Handle 500 error properly for the last step of metadata syncing
 - Fix `zoxide` init script for Nu v0.89.0
-- Fix `just ver` error for unpublished release
+- Fix `just ver` error for unpublished releases
 - Fix `nu-use-nightly` command
 
 **Miscellaneous Tasks**
 
 - Adapt `rio` config file to v0.0.33
-- Sync doc from feature/extra
-- Adapt bool flags for Nu v0.89.0
+- Sync documentation from feature/extra
+- Adapt boolean flags for Nu v0.89.0
 - Update .env-example
-- Encode `syncBy` field of `terp-assets` syncing meta data
-- Upgrade min Nushell and Just version
+- Encode `syncBy` field for `terp-assets` syncing metadata
+- Upgrade minimum Nushell and Just versions
 
 **Refactor**
 
 - Refactor `compare-ver` and `is-lower-ver`
-- Use readable exit code by string enums
+- Use readable exit codes with string enums
 
 **Documentation**
 
-- Update docs for `t msync`(meta data synchronization) command
+- Update documentation for `t msync` (metadata synchronization) command
 - Update FAQ.md and CHANGELOG.md
-- Update FAQ.md add `.env` config error case
-- Update FAQ.md, add running Erda pipeline failed case
+- Update FAQ.md and add `.env` config error case
+- Update FAQ.md and add running Erda pipeline failure case
 
 ## v1.53.0 - 2023-12-13
 
 **Bug Fixes**
 
-- Fix upsert input param for Nu v0.88
+- Fix upsert input parameter for Nu v0.88
 - Fix git-diff-commit for Nu v0.88
 
 **Miscellaneous Tasks**
@@ -1090,8 +1090,8 @@ All notable changes to this project will be documented in this file.
 
 **Bug Fixes**
 
-- Fix printing of `pull-all` detail output
-- Fix `trigger-sync` command when no syncing config available
+- Fix printing of `pull-all` detailed output
+- Fix `trigger-sync` command when no syncing config is available
 
 **Features**
 
@@ -1102,28 +1102,28 @@ All notable changes to this project will be documented in this file.
 
 **Bug Fixes**
 
-- Fix `git-proxy` error for the latest clashX version
+- Fix `git-proxy` error for the latest ClashX version
 - Fix commit SHA detection for `just ver` command
-- Fix `t go` error for Nu v0.86.1, should work for Nu v0.86.0
-- Add empty response check for ERDA pipeline related commands
-- Fix `t nu-use-nightly` for nu binaries that installed by `brew` and add non-aria2c install support
+- Fix `t go` error for Nu v0.86.1 (should work for Nu v0.86.0)
+- Add empty response check for Erda pipeline related commands
+- Fix `t nu-use-nightly` for Nu binaries installed via `brew` and add non-aria2c installation support
 - Fix `t nu-use-nightly` for Windows
 
 **Documentation**
 
 - Update FAQ.md
-- Update README.md add DingTalk related doc
+- Update README.md and add DingTalk related documentation
 - Update README.md
-- Add doc for `git-diff-commit` command
+- Add documentation for `git-diff-commit` command
 
 **Features**
 
-- Add `t git-diff-commit` command to Show commit info diff between two commits, support grep in Author,SHA,Date and Message
-- Update `git-diff-commit` command add `--not-contain`, `--exclude-shas` and `--exclude-authors` flags
-- Add stop pipeline support by running command like `t dp --stop-by-id 123`
+- Add `t git-diff-commit` command to show commit info diff between two commits, with grep support for Author, SHA, Date, and Message
+- Update `git-diff-commit` command and add `--not-contain`, `--exclude-shas`, and `--exclude-authors` flags
+- Add stop pipeline support by running `t dp --stop-by-id 123`
 - Add manual link to `t ver` and `t go`
-- Add sending messages to multiple DingTalk robots support
-- Add ansi link for querying latest CICDs
+- Add support for sending messages to multiple DingTalk robots
+- Add ANSI link for querying latest CICDs
 - Add `t nu-use-nightly` private command
 - Add empty description tip for `t desc`
 - Fetch latest full release for `nu-fetch-latest` in config.nu
@@ -1132,7 +1132,7 @@ All notable changes to this project will be documented in this file.
 
 - Add `nu-fetch-nightly` and `nu-use-nightly` to config.nu
 - Update Nu config to nushell/nushell SHA: e8e0526f5
-- Update termix-nu docs
+- Update termix-nu documentation
 
 **Refactor**
 
@@ -1144,7 +1144,7 @@ All notable changes to this project will be documented in this file.
 
 - Fix `get-tmp-path` for Windows
 - Fix hide-env tip for `git-proxy off`
-- Fix `gsync -a` error when the remote branch does not exists
+- Fix `gsync -a` error when the remote branch does not exist
 
 **Documentation**
 
@@ -1154,46 +1154,46 @@ All notable changes to this project will be documented in this file.
 **Features**
 
 - Add `get-ip` custom command to Nu config
-- Make `TERMIX_TMP_PATH` env config optional and fallback to `($env.HOME)/.termix-nu`
-- Add `dingtalk notify` command to send a message to DingTalk Group by custom robot, see `t ding-msg -h` for more help
+- Make `TERMIX_TMP_PATH` environment config optional and fall back to `($env.HOME)/.termix-nu`
+- Add `dingtalk notify` command to send messages to DingTalk groups via custom robot (see `t ding-msg -h` for more help)
 - Add `--force` or `-f` switch to `trigger-sync` command
-- Add `trigger-sync -l` to list all branch syncing configs of current repo
+- Add `trigger-sync -l` to list all branch syncing configs of the current repo
 - Add `gsync` as an alias for `trigger-sync`
-- Render pipeline ID as a clickable link while querying latest CICDs
-- Show the latest pipeline link while querying latest CICDs
-- Fetch remote head before running pipelines or syncing branches
+- Render pipeline ID as a clickable link when querying latest CICDs
+- Show the latest pipeline link when querying latest CICDs
+- Fetch remote HEAD before running pipelines or syncing branches
 - Add description field to available deploy targets for `dp -l`
 
 **Miscellaneous Tasks**
 
-- Adapt to Nu v0.86.0, use `bool` type for flags
+- Adapt to Nu v0.86.0 by using `bool` type for flags
 - Update `Nushell` config
-- Adapt to Nu v0.86, use `def --env` instead of `def-env`
+- Adapt to Nu v0.86 by using `def --env` instead of `def-env`
 
 **Refactor**
 
 - Change `$nothing` to `null` for Nu v0.86
-- Fix some `any` type
+- Fix some `any` types
 
 ## v1.38.1 - 2023-09-20
 
 **Bug Fixes**
 
-- Fix Nushell version check, do not exit if we don't have to update
+- Fix Nushell version check so it does not exit if an update is not required
 
 ## v1.38.0 - 2023-09-20
 
 **Features**
 
 - Add `Rio.toml` config file for Rio terminal
-- Add `--all(-a)` flag to `trigger-sync` command to sync all local branches that have a syncing config
+- Add `--all(-a)` flag to `trigger-sync` command to sync all local branches that have syncing configs
 
 **Miscellaneous Tasks**
 
 - Use `eza` instead of `exa` in Nu config
 - Adapt to Nu v0.85 for `echo` command
 - Use `std repeat` instead of string multiply operator
-- Update brew env for Nu config
+- Update Homebrew environment for Nu config
 - Update Nushell config for v0.85
 - Set `$env.config.color_config.leading_trailing_space_bg` for Nu v0.85
 - Update code formatting
@@ -1207,7 +1207,7 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
-- Add merge quick navs from local `.termixrc` file support
+- Add support for merging quick navs from local `.termixrc` file
 
 **Miscellaneous Tasks**
 
@@ -1217,11 +1217,11 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
-- Renew Erda session automatically if expired by username and password
+- Renew Erda session automatically if expired using username and password
 
 **Miscellaneous Tasks**
 
-- Update README.md and use build-query for session renew
+- Update README.md and use build-query for session renewal
 
 ## v1.35.0 - 2023-08-30
 
@@ -1237,8 +1237,8 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
-- Add `symlink` and `unpack` custom command
-- Enable reading `.termixrc` from `termix-nu` dir while running Erda pipelines
+- Add `symlink` and `unpack` custom commands
+- Enable reading `.termixrc` from `termix-nu` directory when running Erda pipelines
 
 **Miscellaneous Tasks**
 
@@ -1248,8 +1248,8 @@ All notable changes to this project will be documented in this file.
 
 **Bug Fixes**
 
-- Fix common version compare algorithm
-- Fix `Nushell` install with dataframe feature
+- Fix common version comparison algorithm
+- Fix `Nushell` installation with dataframe feature
 
 **Chore**
 
@@ -1258,13 +1258,13 @@ All notable changes to this project will be documented in this file.
 **Features**
 
 - Fix spawn of Nu and launcher menu for `wezterm`
-- Add `ua` and `hr-line` custom utils
+- Add `ua` and `hr-line` custom utilities
 
 **Miscellaneous Tasks**
 
 - Add `wezterm` config file
 - Add `atuin` setup for `Nushell` config
-- Adapt to nu v0.84, change `date format` to `format date`
+- Adapt to Nu v0.84 by changing `date format` to `format date`
 - Add ignore as a workaround for unnecessary each output
 - Update command palette config for `wezterm`
 - Add key mapping config for `wezterm`
@@ -1274,28 +1274,28 @@ All notable changes to this project will be documented in this file.
 - Update `zoxide` config for Nu 0.83.1
 - Update config for `wezterm`
 - Update launch menu config for `wezterm`
-- Update Nu config, Disable the date & time displaying on the right of prompt
+- Update Nu config: disable date & time display on the right side of prompt
 - Update config for `fnm`
 - Update comments for some custom commands
 - Add `--plugin-only` for `install-all-nu` command
 - Update `.termixrc-example`
-- Add comments for alias in nu config file
+- Add comments for aliases in Nu config file
 
 **Refactor**
 
-- Adapt to Nu v0.84 and use const and module if possible
+- Adapt to Nu v0.84 and use const and modules where possible
 
 ## v1.31.0 - 2023-08-01
 
 **Miscellaneous Tasks**
 
 - Adapt to Nushell v0.82.1
-- Fix compare-ver, Ignore `-beta` or `-rc` suffix
-- Update config add `install-all-nu` command
+- Fix compare-ver to ignore `-beta` or `-rc` suffix
+- Update config and add `install-all-nu` command
 
 **Refactor**
 
-- Use `not` if necessary
+- Use `not` where necessary
 
 ## v1.30.0 - 2023-07-10
 
@@ -1308,21 +1308,21 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
-- Add deploy or query multiple apps support with local `.termixrc` config
-- Print available deploy targets and apps with more detail
-- Add help tips for `erda-deploy` and `erda-query` command
+- Add support for deploying or querying multiple apps with local `.termixrc` config
+- Print available deploy targets and apps with more details
+- Add help tips for `erda-deploy` and `erda-query` commands
 
 **Miscellaneous Tasks**
 
 - Add deploy config for multiple apps
-- Adapt to `nushell` v0.82
+- Adapt to `Nushell` v0.82
 - Add `.termixrc-example` config for batch deploy
 
 ## v1.28.0 - 2023-07-06
 
 **Features**
 
-- Support query the latest 10 pipeline running results by `t dq` or `t dq test`, etc.
+- Support querying the latest 10 pipeline running results via `t dq` or `t dq test`, etc.
 
 **Miscellaneous Tasks**
 
@@ -1330,23 +1330,23 @@ All notable changes to this project will be documented in this file.
 
 **Refactor**
 
-- Use module if possible
+- Use modules where possible
 - Extract some small custom commands
 
 ## v1.27.0 - 2023-07-04
 
 **Bug Fixes**
 
-- Fix the display of git committer for the pipeline check
+- Fix the display of git committer for pipeline check
 
 **Features**
 
-- Checking if a commit has been deployed before running a new pipeline
+- Check if a commit has been deployed before running a new pipeline
 - Check remote branch SHA instead of local SHA before running the pipeline
 
 **Miscellaneous Tasks**
 
-- Change the column header of the running pipelines to title case
+- Change column header of running pipelines to title case
 - Adapt to Nushell v0.82.1 and above
 
 ## v1.26.0 - 2023-07-01
@@ -1357,20 +1357,20 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
-- Check if there is any running pipeline before running it
-- Use `--force` or `-f` to run a pipeline even if there is already one running
-- Enable set default value for `deploy` command
+- Check if there is any running pipeline before starting a new one
+- Use `--force` or `-f` to run a pipeline even if one is already running
+- Enable setting default value for `deploy` command
 
 **Refactor**
 
-- Some code refactor, extract Erda host variable, etc.
+- Code refactoring: extract Erda host variable, etc.
 
 ## v1.25.0 - 2023-06-30
 
 **Features**
 
-- Add query deploy targets by `t dp -l` support
-- Enable query pipeline running status from any directory
+- Add query deploy targets support via `t dp -l`
+- Enable querying pipeline running status from any directory
 
 **Miscellaneous Tasks**
 
@@ -1386,26 +1386,26 @@ All notable changes to this project will be documented in this file.
 
 **Miscellaneous Tasks**
 
-- Remove unnecessary ERDA_TOKEN env var for Erda pipelines
+- Remove unnecessary ERDA_TOKEN environment variable for Erda pipelines
 
 ## v1.21.0 - 2023-06-29
 
 **Bug Fixes**
 
-- Make sure origin/i branch exits before deploy or query pipeline
+- Ensure origin/i branch exists before deploying or querying pipeline
 
 **Features**
 
 - Add Erda pipeline `run` and `query` feature
-- Read Erda pipeline config from `.termixrc` to run the CICDs
-- Output pipeline detail url while creating and running it
-- Check if the pipeline config exists before running it
+- Read Erda pipeline config from `.termixrc` to run CICDs
+- Output pipeline detail URL while creating and running it
+- Check if pipeline config exists before running it
 
 **Miscellaneous Tasks**
 
-- Add Erda auth env config examples
+- Add Erda auth environment config examples
 - Bump version to v1.21.0
-- Fix code indention for actions/pipeline.nu
+- Fix code indentation for actions/pipeline.nu
 - Refactor code
 
 ## v1.20.0 - 2023-06-28
@@ -1416,13 +1416,13 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
-- Add `nun` custom command for nu config
-- Add `nuc` and `nucc` command alias for Nushell config
+- Add `nun` custom command to Nu config
+- Add `nuc` and `nucc` command aliases for Nushell config
 
 **Miscellaneous Tasks**
 
-- Update config for nu v0.82 and update quick navs
-- Upgrade min required Nushell version to v0.82
+- Update config for Nu v0.82 and update quick navs
+- Upgrade minimum required Nushell version to v0.82
 
 **Breaking**
 
@@ -1433,7 +1433,7 @@ All notable changes to this project will be documented in this file.
 **Bug Fixes**
 
 - Fix `nudown` command
-- Add a small patch for nushell #9265 issue
+- Add a small patch for Nushell #9265 issue
 
 **Miscellaneous Tasks**
 
@@ -1443,59 +1443,59 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
-- Add some nu related custom commands
+- Add some Nu-related custom commands
 - Add sort by tag support for `ls-tags` command
 - Add `parallel` common helper and `gh-pr` custom command
-- Add `topf` for nu config
+- Add `topf` to Nu config
 
 **Miscellaneous Tasks**
 
-- Adapted to nushell v0.78.1+
-- Optimize semver comparing algorithm
-- Update nushell config file to v0.79.1
-- Fix `exit --now `breaking change for v0.80
+- Adapt to Nushell v0.78.1+
+- Optimize semver comparison algorithm
+- Update Nushell config file to v0.79.1
+- Fix `exit --now` breaking change for v0.80
 - Fix git/remote-branch.nu
-- Update min nu ver to v0.80
+- Update minimum Nu version to v0.80
 
 ## v1.17.0 - 2023-04-10
 
 **Bug Fixes**
 
-- Fix `git-proxy` for windows
+- Fix `git-proxy` for Windows
 
 **Features**
 
 - Add proxy support for v2ray
-- Update `git-proxy` command add ClashX support, works on mac
+- Update `git-proxy` command and add ClashX support (works on Mac)
 - Add `ls-tags` command
-- Hide some rarely used commands most of them are gaia or gaia redev related
+- Hide some rarely used commands (most of them are gaia or gaia-redev related)
 
 **Miscellaneous Tasks**
 
-- Adapted to Nushell v0.78, set min required Nushell version to v0.78
-- Adapted to nu v0.78 fix `expected operator` error
+- Adapt to Nushell v0.78 and set minimum required Nushell version to v0.78
+- Adapt to Nu v0.78 and fix `expected operator` error
 
 ## v1.16.0 - 2023-03-21
 
 **Bug Fixes**
 
-- Fix str trim for nu v0.77
-- Update `has-ref` git util helper
-- Fix `emp` and `prune-synced-branches` command
+- Fix str trim for Nu v0.77
+- Update `has-ref` git utility helper
+- Fix `emp` and `prune-synced-branches` commands
 
 **Miscellaneous Tasks**
 
-- Add ignore patch for nu v0.76
-- Update nushell config for v0.76.1
-- Adapt to nu v0.77.1+, use `print` explicitly
+- Add ignore patch for Nu v0.76
+- Update Nushell config for v0.76.1
+- Adapt to Nu v0.77.1+ by using `print` explicitly
 - Bump version v1.16.0
 
 ## v1.15.0 - 2023-02-23
 
 **Bug Fixes**
 
-- Adapt to nu v0.75.1+
-- Fix `emp` command for nu v0.76, after dataframe commands changed
+- Adapt to Nu v0.75.1+
+- Fix `emp` command for Nu v0.76 after dataframe commands changed
 
 **Features**
 
@@ -1503,68 +1503,68 @@ All notable changes to this project will be documented in this file.
 
 **Miscellaneous Tasks**
 
-- Update nu install command
+- Update Nu installation command
 
 ## v1.13.0 - 2023-02-01
 
 **Bug Fixes**
 
-- Fix home env var for Windows
+- Fix HOME environment variable for Windows
 
 **Features**
 
-- Update nushell config, enable fuzzy search for history
+- Update Nushell config to enable fuzzy search for history
 
 **Miscellaneous Tasks**
 
-- Update nushell config file
-- Update nushell cursor shape config
-- Bump version v1.13 for nu v0.75
-- Adapt to nu v0.75
+- Update Nushell config file
+- Update Nushell cursor shape config
+- Bump version v1.13 for Nu v0.75
+- Adapt to Nu v0.75
 
 ## v1.12.0 - 2023-01-13
 
 **Bug Fixes**
 
-- Fix mall/redevelop-all.nu script for nu v0.73
-- Fix mall/redevelop-main.nu script for nu v0.73
-- Fix `emp` command with empty response of working hours or leaving records case
-- Fix plugin register for nushell v0.74
-- Fix tilde expansion issue for nu v0.75
+- Fix mall/redevelop-all.nu script for Nu v0.73
+- Fix mall/redevelop-main.nu script for Nu v0.73
+- Fix `emp` command for empty response of working hours or leaving records case
+- Fix plugin registration for Nushell v0.74
+- Fix tilde expansion issue for Nu v0.75
 
 **Opt**
 
-- Optimize plugin register for nu v0.74
+- Optimize plugin registration for Nu v0.74
 
 ## v1.11.0 - 2022-12-26
 
 **Bug Fixes**
 
-- Fix `pull-all` command, use `git branch` instead of `git br`
-- Fix config saving for nu v0.72
+- Fix `pull-all` command by using `git branch` instead of `git br`
+- Fix config saving for Nu v0.72
 
 **Features**
 
 - Update upgrade tips
-- Update nushell config file, add carapace completer support
+- Update Nushell config file and add carapace completer support
 
 **Miscellaneous Tasks**
 
-- Fix config, re-register plugins needed for v0.71+
-- Adapt to nu v0.72
-- Update config file for nu v0.72
-- Update min nu version to v0.72 and min just version to v1.9, bump version to v1.10.0
-- Adapt to nu version v0.73
-- Fix emp command for nu v0.73
+- Fix config: re-register plugins needed for v0.71+
+- Adapt to Nu v0.72
+- Update config file for Nu v0.72
+- Update minimum Nu version to v0.72 and minimum just version to v1.9; bump version to v1.10.0
+- Adapt to Nu version v0.73
+- Fix emp command for Nu v0.73
 - Bump v1.11.0
-- Fix `prune-synced-branches` for nu v0.73.1
+- Fix `prune-synced-branches` for Nu v0.73.1
 
 ## v1.10.0 - 2022-12-02
 
 **Bug Fixes**
 
-- Fix `pull-all` command, use git branch instead of git br
-- Fix config saving for nu v0.72
+- Fix `pull-all` command by using `git branch` instead of `git br`
+- Fix config saving for Nu v0.72
 
 **Features**
 
@@ -1572,78 +1572,78 @@ All notable changes to this project will be documented in this file.
 
 **Miscellaneous Tasks**
 
-- Fix config, re-register plugins needed for v0.71+
-- Adapt to nu v0.72
-- Update config file for nu v0.72
-- Update min nu version to v0.72 and min just version to v1.9, bump version to v1.10.0
+- Fix config: re-register plugins needed for v0.71+
+- Adapt to Nu v0.72
+- Update config file for Nu v0.72
+- Update minimum Nu version to v0.72 and minimum just version to v1.9; bump version to v1.10.0
 
 ## v1.9.0 - 2022-09-29
 
 **Miscellaneous Tasks**
 
 - Change default history format to sqlite
-- Remove protocol for plugin register with nu 0.68.1
-- Change `str collect` to `str join` for nu 0.68.2+
+- Remove protocol for plugin registration with Nu 0.68.1
+- Change `str collect` to `str join` for Nu 0.68.2+
 - Update bump version custom command
 
 ## v1.8.0 - 2022-09-08
 
 **Bug Fixes**
 
-- Fix some variable names for nu v0.66.1 or above
+- Fix some variable names for Nu v0.66.1 or above
 - Fix `git-remote-branch` command
-- Fix error of run `git-proxy off` multiple times
-- Fix emp working hours query
+- Fix error when running `git-proxy off` multiple times
+- Fix EMP working hours query
 
 **Features**
 
 - Upgrade mall/redevelop-main.nu script to deploy from generated redevelop source
-- Update `tag-redev` and `gaia-release` command, add enable field filter
+- Update `tag-redev` and `gaia-release` commands and add enable field filter
 
 **Miscellaneous Tasks**
 
-- Fix plugin register protocol
-- Rename variable name for flags
-- Adapted to Nu v0.68
+- Fix plugin registration protocol
+- Rename variable names for flags
+- Adapt to Nu v0.68
 
 ## v1.7.0 - 2022-07-27
 
 **Features**
 
 - Rename `git-age` to `git-branch` and `git-remote-age` to `git-remote-branch`
-- Add query working hours of previous week support for `emp` command
-- Rename `check-desc` to `check-branch`, display removed branches who have syncing configs
+- Add support for querying working hours from previous week for `emp` command
+- Rename `check-desc` to `check-branch` and display removed branches that have syncing configs
 
 **Bug Fixes**
 
-- Fix query working hours and `pull-redev` command for nu v0.65
+- Fix working hours query and `pull-redev` command for Nu v0.65
 - Improve `git-age`/`git-remote-age` and `check-desc` command output
-- Improve redevelop all script, exit if termix exec failed
-- Improve redevelop main script, exit if termix exec failed
+- Improve redevelop-all script: exit if termix exec failed
+- Improve redevelop-main script: exit if termix exec failed
 
 **Miscellaneous Tasks**
 
-- Try to use bare string if possible
-- Update config for nu v0.65.1
+- Try to use bare string where possible
+- Update config for Nu v0.65.1
 - Update default config to the latest sample
 - Update git branch sorting output when descriptions are not available
-- Remove unnecessary brackets if possible
-- Upgrade min nu version to v0.66, and min just version to v1.3.0, bump to v1.7.0
+- Remove unnecessary brackets where possible
+- Upgrade minimum Nu version to v0.66 and minimum just version to v1.3.0; bump to v1.7.0
 
 ## v1.6.0 - 2022-06-22
 
 **Bug Fixes**
 
 - Improve redevelop-all script
-- Mall/redevelop-main.nu
-- Update nu-stat script use `size` instead of `wc`
-- Fix emp auth check for working hours query
-- Add code syncing support for branches whose name contain `.`
+- Fix mall/redevelop-main.nu
+- Update nu-stat script to use `size` instead of `wc`
+- Fix EMP auth check for working hours query
+- Add code syncing support for branches whose names contain `.`
 - Fix `pull-redev` command
 
 **Documentation**
 
-- Add doc for `git-stat` command
+- Add documentation for `git-stat` command
 
 **Features**
 
@@ -1652,103 +1652,103 @@ All notable changes to this project will be documented in this file.
 - Add mall/clean-locale.nu script
 - Add mall/redevelop-all.nu script
 - Add mall/redevelop-main.nu script
-- Add run/nu-stat.nu of source line counter for nushell
-- Add command `load-direnv`
+- Add run/nu-stat.nu for source line counter for Nushell
+- Add `load-direnv` command
 - Update zoxide and other configs
 - Add multiple team support for `emp` command
 - Add `git stat` command to display modification stats for each commit
 - Add light theme related config
-- Upgrade for nu v0.64
+- Upgrade for Nu v0.64
 
 **Miscellaneous Tasks**
 
-- Adapt to nushell v0.61.0
-- Update config to nushell v0.61.1
+- Adapt to Nushell v0.61.0
+- Update config to Nushell v0.61.1
 
 **Refactor**
 
-- Simplify bool flags for scripts
-- Optimize plugin register for nushell v0.61.0
+- Simplify boolean flags for scripts
+- Optimize plugin registration for Nushell v0.61.0
 
 ## v1.5.0 - 2022-03-26
 
 **Bug Fixes**
 
 - Disable `_check-ver` for `upgrade` command
-- Fix bug of semver compare
-- Rename nu plugins for register, fix `git proxy` command for nu 0.60
+- Fix bug in semver comparison
+- Rename Nu plugins for registration and fix `git proxy` command for Nu 0.60
 - Update the new `each` syntax
-- Adapt `gaia-release` for nu v0.59+
-- Change bool flags from string to bool, fix plugin import for windows
-- `git-age`, `git-remote-age`, `show-env` commands for Windows
-- Fix table layout broken for `ls-redev-refs`, `check-desc` on windows, fix `go` command
+- Adapt `gaia-release` for Nu v0.59+
+- Change boolean flags from string to bool and fix plugin import for Windows
+- Fix `git-age`, `git-remote-age`, and `show-env` commands for Windows
+- Fix table layout broken for `ls-redev-refs` and `check-desc` on Windows; fix `go` command
 - Adapt `emp` command again to v0.59+
-- Remove unnecessary hack for windows by using latest main branch
-- Fix `emp` command for windows with nu v0.59+
+- Remove unnecessary hack for Windows by using latest main branch
+- Fix `emp` command for Windows with Nu v0.59+
 - Use true/false instead of $true/$false and fix `trigger-sync` command
-- Adapt `go` and `tag-redev` command for nu v0.60
-- Update default just file path for windows, fix `tag-redev` command for win
-- `prune-synced-branches` command for windows
+- Adapt `go` and `tag-redev` commands for Nu v0.60
+- Update default just file path for Windows and fix `tag-redev` command for Windows
+- Fix `prune-synced-branches` command for Windows
 - Fix `repo-transfer` and git repo check strategy
 - Fix `trigger-sync` and `git sync-branch` commands' lock issue
-- Update query emp working hours related config
+- Update query EMP working hours related config
 - Fix zoxide script
-- Adapt the new `default` syntax
-- Ignore the repos that don't have access permission for `prune-synced-branches` command
+- Adapt to the new `default` syntax
+- Ignore repos without access permission for `prune-synced-branches` command
 - Update oh-my-posh prompt command
-- Remove unnecessary hacks for Win, fix `trigger-sync` command
-- Update `pull-all` command ignore i branch when possible
-- Change capnp to json for plugin register
-- Fix `repo-transfer` issue, output sync messages should be displayed
+- Remove unnecessary hacks for Windows and fix `trigger-sync` command
+- Update `pull-all` command to ignore i branch when possible
+- Change capnp to json for plugin registration
+- Fix `repo-transfer` issue: output sync messages should be displayed
 - Fix `brew-speed-up off` command
-- `emp` command
+- Fix `emp` command
 
 **Features**
 
-- Add pull-all for local ahead support
-- Add config file for nu 0.60, fix `check-desc` command
+- Add pull-all support for local branches ahead of remote
+- Add config file for Nu 0.60 and fix `check-desc` command
 - Add `!` command for common
-- Update termix-nu related docs
+- Update termix-nu related documentation
 - Add get-icon.nu script for gaia-mobile
 - Add mall/upload-image.nu script
 - Add mall/compress-image.nu script
-- Update config for nu, add `cargo search` custom command
+- Update config for Nu and add `cargo search` custom command
 
 **Miscellaneous Tasks**
 
-- Update nushell min version check
-- Upgrade min just version to v 0.11.0
-- Lots of modification in order to adapt to nushell v0.60
-- Adapt to nu v0.60
+- Update Nushell minimum version check
+- Upgrade minimum just version to v0.11.0
+- Numerous modifications to adapt to Nushell v0.60
+- Adapt to Nu v0.60
 - Remove unnecessary print command usage
-- Adapt to latest nushell
-- Update `nu` and `just` version, fix version check
+- Adapt to the latest Nushell
+- Update `nu` and `just` versions and fix version check
 - Update `release` command
-- Update nu config, fix `go` command
+- Update Nu config and fix `go` command
 - Remove unnecessary hacks
-- Update nushell config to the latest version
-- Update nushell config file
+- Update Nushell config to the latest version
+- Update Nushell config file
 - Add `#!/usr/bin/env nu` header for each script
-- Adapt to the latest nu syntax, and change `update` to `upsert`
-- Fix script indention and refactor by using `into duration`
-- Update minimum just and nu version required
+- Adapt to the latest Nu syntax and change `update` to `upsert`
+- Fix script indentation and refactor by using `into duration`
+- Update minimum just and Nu versions required
 
 **Refactor**
 
-- Adapt to nu v0.60, add log util, fix Justfile
-- Adapt `check-ver` and `quick-nav` command to nu v0.60
-- Adapt `pull-all` command with nu 0.60.0, use $false check instead of empty blocks
-- Adapt `tag-redev`, `check-desc`, `desc`, `repo-transfer` commands to nu v0.59
-- Adapt `emp` cmd to nu v0.60
-- Adapt `dir-batch-exec` for nu v0.60
+- Adapt to Nu v0.60: add log utility and fix Justfile
+- Adapt `check-ver` and `quick-nav` commands to Nu v0.60
+- Adapt `pull-all` command to Nu 0.60.0 by using $false check instead of empty blocks
+- Adapt `tag-redev`, `check-desc`, `desc`, and `repo-transfer` commands to Nu v0.59
+- Adapt `emp` command to Nu v0.60
+- Adapt `dir-batch-exec` for Nu v0.60
 - Some optimization
 
 **Opt**
 
-- Adapt to nushell next release v0.60
-- Adapt `git-proxy`, `trigger-sync`, `sync-branch`, and `release` command for nushell v0.60
-- Use just to register plugin dynamically for nushell
-- Add common host os checking command
+- Adapt to Nushell next release v0.60
+- Adapt `git-proxy`, `trigger-sync`, `sync-branch`, and `release` commands for Nushell v0.60
+- Use just to register plugins dynamically for Nushell
+- Add common host OS checking command
 - Improve get-icon.nu for a better user experience
 
 ## v1.2.12 - 2022-01-17
@@ -1786,11 +1786,11 @@ All notable changes to this project will be documented in this file.
 
 **Bug Fixes**
 
-- Fix emp working hours query while there are leaving records
+- Fix EMP working hours query when there are leaving records
 
 **Documentation**
 
-- Add lock related docs for git auto sync and trigger-sync
+- Add lock-related documentation for git auto sync and trigger-sync
 
 **Features**
 
@@ -1805,28 +1805,28 @@ All notable changes to this project will be documented in this file.
 
 **Bug Fixes**
 
-- Fix empty working-hours exception for `t emp`
+- Fix empty working hours exception for `t emp`
 
 **Documentation**
 
-- Add `brew-speed-up` related docs
+- Add `brew-speed-up` related documentation
 
 **Features**
 
-- Add feature of checking if local branch exists in remote repo for `git-age` command
-- Add `brew-speed-up` command to set much faster brew mirrors quickly
+- Add feature to check if local branch exists in remote repo for `git-age` command
+- Add `brew-speed-up` command to quickly set faster Homebrew mirrors
 
 ## v1.2.11 - 2022-01-04
 
 **Bug Fixes**
 
 - Fix repo syncing with lock error when the remote branch does not exist
-- Fix force upgrade feature, make its config compatible with previous version
-- Fix force upgrading feature, improve version check strategy
+- Fix force upgrade feature to make its config compatible with previous versions
+- Fix force upgrade feature and improve version check strategy
 
 **Features**
 
-- Add force upgrade feature, if a force-upgrade version was released all commands will stop running before upgrading termix-nu
+- Add force upgrade feature: if a force-upgrade version is released, all commands will stop running before upgrading termix-nu
 
 **Miscellaneous Tasks**
 
@@ -1836,11 +1836,11 @@ All notable changes to this project will be documented in this file.
 
 **Bug Fixes**
 
-- Fix emp working hours query while there are leaving records
+- Fix EMP working hours query when there are leaving records
 
 **Documentation**
 
-- Add lock related docs for git auto sync and trigger-sync
+- Add lock-related documentation for git auto sync and trigger-sync
 
 **Features**
 
@@ -1855,7 +1855,7 @@ All notable changes to this project will be documented in this file.
 
 **Bug Fixes**
 
-- Fix emp query error while there is no leaving record
+- Fix EMP query error when there is no leaving record
 
 **Features**
 
@@ -1863,32 +1863,32 @@ All notable changes to this project will be documented in this file.
 
 **Miscellaneous Tasks**
 
-- REMOVE unused files
-- Update min nushell version to v0.42.0, bump version v1.2.9
+- Remove unused files
+- Update minimum Nushell version to v0.42.0; bump version v1.2.9
 
 ## v1.2.8 - 2021-12-23
 
 **Bug Fixes**
 
-- Fix error of fatal: could not open '<' for reading: No such file or directory
-- Fix repo syncing issue while doing a redirect push like `git push origin a:b`
+- Fix error: fatal: could not open '<' for reading: No such file or directory
+- Fix repo syncing issue when doing a redirect push like `git push origin a:b`
 
 **Documentation**
 
-- Add `prune-synced-branches` related docs
-- Update docs for redevelop related commands
+- Add `prune-synced-branches` related documentation
+- Update documentation for redevelop related commands
 
 **Features**
 
 - Add `prune-synced-branches` command
-- Add gap column for emp working hours stat table
+- Add gap column for EMP working hours stat table
 - Add redevelop repos for mbr/brand and point malls
 - Add b2b mobile to redevelop repos
-- Update redevelop related commands add grouping support
+- Update redevelop related commands and add grouping support
 
 **Miscellaneous Tasks**
 
-- Change FORCE_PUSH to FORCE, make it more simple to do a force push
+- Change FORCE_PUSH to FORCE for simpler force push
 - Use internal `str find-replace` instead of external `tr`
 
 ## v1.2.7 - 2021-12-16
@@ -1897,51 +1897,51 @@ All notable changes to this project will be documented in this file.
 
 - Fix `check-desc` command when all branches have been described
 - Fix some issues for `pull-redev` command
-- Fix default command list display issue while another justfile exists in invoke dir
-- Fix `emp` working hour query command for the new emp
+- Fix default command list display issue when another justfile exists in the invoke directory
+- Fix `emp` working hours query command for the new EMP
 
 **Documentation**
 
-- Update nav menu of README.md
-- Add `git-proxy` related docs, update `emp` doc
+- Update nav menu in README.md
+- Add `git-proxy` related documentation and update `emp` documentation
 
 **Features**
 
-- `check-desc` command add checking branches that have a description but were removed from remote support
+- `check-desc` command now supports checking branches that have a description but were removed from remote
 - Add b2c brand site related config
-- Add `git-proxy` command only works when AliLang speed up was enabled
-- Add git proxy status for `show-env` command
+- Add `git-proxy` command (only works when AliLang speed up is enabled)
+- Add git proxy status to `show-env` command
 
 **Miscellaneous Tasks**
 
 - Add b2b/srm/mbr repo navs
-- Update min nushell version to v0.41.0
+- Update minimum Nushell version to v0.41.0
 
 ## v1.2.6 - 2021-12-06
 
 **Bug Fixes**
 
-- Add temp dir existence check, notify user if it does not exist.
+- Add temp directory existence check and notify user if it does not exist
 - Fix `error: Coercion error` for `sync-branch` and `trigger-sync`
 
 **Documentation**
 
-- Update readme.md add .env and git branch sync related tips
+- Update README.md and add .env and git branch sync related tips
 
 **Features**
 
 - Add source branch name to branch syncing summary table
-- Add `trigger-sync` feature for repo syncing and related docs
-- Add `SYNC_IGNORE_ALIAS` in `show-env` output
+- Add `trigger-sync` feature for repo syncing and related documentation
+- Add `SYNC_IGNORE_ALIAS` to `show-env` output
 
 **Miscellaneous Tasks**
 
 - Add source code counter for each folder or file
-- Move temp git.nu to run dir
+- Move temp git.nu to run directory
 
 **Refactor**
 
-- Add global date format constant: \_DATE_FMT
+- Add global date format constant: _DATE_FMT
 
 ## v1.2.5 - 2021-12-02
 
@@ -1951,56 +1951,56 @@ All notable changes to this project will be documented in this file.
 
 **Documentation**
 
-- Update readme.md, add `Just` & `nu` upgrade check related docs
-- Reorder command docs
-- Improve docs
+- Update README.md and add `Just` & `nu` upgrade check related documentation
+- Reorder command documentation
+- Improve documentation
 
 **Features**
 
-- Add min just version check, add warning tips to upgrade just if required
-- Add source repo release new version support by `gaia-release` command
+- Add minimum just version check and add warning tips to upgrade just if required
+- Add source repo release new version support via `gaia-release` command
 - Add latest termix-nu version check support
-- Add git repo transfer feature by `git repo-transfer` command
-- Improve `git-age` command add last commit author name
+- Add git repo transfer feature via `git repo-transfer` command
+- Improve `git-age` command and add last commit author name
 
 **Refactor**
 
-- Change `REDEV_REPO_PATH` to `TERMIX_TMP_PATH` in .env config, and `redevRepoPath` to `termixTmpPath` in toml conf
+- Change `REDEV_REPO_PATH` to `TERMIX_TMP_PATH` in .env config, and `redevRepoPath` to `termixTmpPath` in TOML config
 - Add $TERMIX_CONF constant and get-tmp-path helper
 - Use `path join` instead of string concatenation
-- Move redev related scripts from git to actions dir
+- Move redev related scripts from git to actions directory
 
 ## v1.2.3 - 2021-11-26
 
 **Bug Fixes**
 
-- Fix `check-desc` command, do fetch remote before check
+- Fix `check-desc` command: fetch remote before checking
 - Fix CHANGELOG.md commit message
-- Update pre push hook demo in README file, fix for remote branch deleting
+- Update pre-push hook demo in README file and fix for remote branch deletion
 - Ignore code syncing when remote branch of origin does not exist
 - Fix `rename-branch` command source branch check
 
 **Documentation**
 
-- Update recipes list for readme.md
-- Format docs by prettier
+- Update recipes list in README.md
+- Format documentation with Prettier
 - Update README.md
 
 **Features**
 
 - Update CHANGELOG.md automatically for `release` command
-- Add a switch to update CHANGELOG.md, and update `release` command related docs
-- Change branch description file from json to toml format for `desc` related commands
-- Add url nav alias anchor for readme.md
+- Add switch to update CHANGELOG.md and update `release` command related documentation
+- Change branch description file from JSON to TOML format for `desc` related commands
+- Add URL nav alias anchor for README.md
 - Add force push support for branch syncing
 - Use remote branch syncing config instead of local
-- Add web nav url output support in terminal for branch syncing
-- Add code syncing .env config `SYNC_IGNORE_ALIAS` to ignore syncing of some repo
-- Add read conf from origin/i branch support
+- Add web nav URL output support in terminal for branch syncing
+- Add code syncing .env config `SYNC_IGNORE_ALIAS` to ignore syncing for some repos
+- Add support for reading config from origin/i branch
 
 **Miscellaneous Tasks**
 
-- Remove unused termix conf of macCliApps
+- Remove unused termix config for macCliApps
 
 **Refactor**
 
@@ -2010,17 +2010,17 @@ All notable changes to this project will be documented in this file.
 
 **Bug Fixes**
 
-- Fix `upgrade` command for termix-nu: use latest release tag instead of master branch as upgrading source
+- Fix `upgrade` command for termix-nu: use latest release tag instead of master branch as upgrade source
 
 **Features**
 
 - Bump version v1.2.2
-- Use `git cliff --output CHANGELOG.md` to generate a change log
+- Use `git cliff --output CHANGELOG.md` to generate a changelog
 
 **Miscellaneous Tasks**
 
 - Update CHANGELOG.md to v1.2.2
-- Add changelog create instruction
+- Add changelog creation instructions
 - Update CHANGELOG.md
 
 ## v1.2.1 - 2021-11-22
@@ -2028,13 +2028,13 @@ All notable changes to this project will be documented in this file.
 **Features**
 
 - Add `release` command for termix-nu
-- Update `check-desc` command: add more branch info to cmd output
+- Update `check-desc` command: add more branch info to command output
 
 **Miscellaneous Tasks**
 
-- Fix some code indentions
-- Update doc for release command
-- Update min nushell version from `0.39.0` to `v0.40.0`
+- Fix some code indentation
+- Update documentation for release command
+- Update minimum Nushell version from `0.39.0` to `v0.40.0`
 
 **Refactor**
 
@@ -2045,44 +2045,44 @@ All notable changes to this project will be documented in this file.
 **Bug Fixes**
 
 - Fix git age and remote age date display
-- Git-remote-age git check issue
-- Fix git check on windows
-- Empty check for working hours
-- Fix weekday calc for working hours
-- Improve join after upgrade just to v0.10.3
+- Fix git-remote-age git check issue
+- Fix git check on Windows
+- Fix empty check for working hours
+- Fix weekday calculation for working hours
+- Improve join after upgrading just to v0.10.3
 - Add invalid login info check for working hours
 - Update tag-redev command
 - Find navs from key only
-- Fix open quick nav for win
+- Fix open quick nav for Windows
 - Fix check-desc
 
 **Features**
 
 - Add mall related scripts
-- Add show git repo tags support
-- Add latest nushell version check
+- Add git repo tags display support
+- Add latest Nushell version check
 - Add git command and git repo check
-- Add show redevelop branches support
-- Update README.md docs
-- Update Readme.md and add `working-hours` script
-- Add emp working hours script
-- Add lts support for `ls-node`
-- Update docs
+- Add redevelop branches display support
+- Update README.md documentation
+- Update README.md and add `working-hours` script
+- Add EMP working hours script
+- Add LTS support for `ls-node`
+- Update documentation
 - Update emp
 - Add just upgrade feature
 - Add view git branch description command
 - Add `just go` command for quick navigation
-- Update readme.md add sync-branch docs
-- Update emp docs
+- Update README.md and add sync-branch documentation
+- Update EMP documentation
 - Add `just check-desc` command
 - Bump version v1.2.0
 
 **Miscellaneous Tasks**
 
-- Change command name of rename branch
+- Change command name for rename branch
 - Update emp query command
 - Bump version to v1.1.0
-- Fix some code indentions
+- Fix some code indentation
 
 **Refactor**
 
@@ -2090,7 +2090,7 @@ All notable changes to this project will be documented in this file.
 
 **Opt**
 
-- Add has-ref utils
+- Add has-ref utilities
 - Refactor show nav items
 
 ## v1.0.0 - 2021-10-12
@@ -2098,49 +2098,49 @@ All notable changes to this project will be documented in this file.
 **Bug Fixes**
 
 - Fix git/remote-age.nu
-- Git pre push hooks works now!!
-- List remote tag and sorting by creator date
-- Update path for windows
+- Git pre-push hooks now work!
+- List remote tags and sort by creator date
+- Update path for Windows
 - Fix just invocation directory
-- Update justfile for windows compatibility
-- Update justfile, all works on macOS
-- Use open and save instead of bat for windows
+- Update justfile for Windows compatibility
+- Update justfile: all works on macOS
+- Use open and save instead of bat for Windows
 - Fix dir-batch-exec
-- Fix justfile for empty args or args with spaces in it
-- Add command available check
+- Fix justfile for empty args or args with spaces
+- Add command availability check
 - Fix pull-redev script
-- Ls-redev-tags for windows
-- Ls-redev-tags sort by tag version for windows
+- Fix ls-redev-tags for Windows
+- Fix ls-redev-tags sort by tag version for Windows
 - Update pull-redev script
 - Update git branch rename
 
 **Features**
 
 - Add `git-age` command to show local branch age information
-- Add `pull-all` command to update all local branches to latest commit
+- Add `pull-all` command to update all local branches to the latest commit
 - Add `git-remote-age` command to show all remote branch info
 - Add `ls-redev-tags` to show all tags for redevelop repos
 - Add `show-env` to show local environment information
 - Add `ls-node` to query node versions
-- Add `pull-redev` to pull latest commit for all redevelop repos
-- Add `tag-redev` to create tag for redevelop repos
+- Add `pull-redev` to pull the latest commit for all redevelop repos
+- Add `tag-redev` to create tags for redevelop repos
 - Add `git-sync-branch` for git branch syncing support
-- Add `git-batch-exec` to execute custom command for specified branches
-- Add `dir-batch-exec` to execute custom command for specified dirs
-- Add branch selection for redev repo ops
+- Add `git-batch-exec` to execute custom commands for specified branches
+- Add `dir-batch-exec` to execute custom commands for specified directories
+- Add branch selection for redev repo operations
 - Update sync command
 - Add git alias and config script
 - Add .env example file
 - Add custom shell support for git-batch-exec
-- Update dir-batch-exec add custom shell support
-- Use bat instead of cat for windows compatibility
+- Update dir-batch-exec and add custom shell support
+- Use bat instead of cat for Windows compatibility
 - Add REDEV_REPO_PATH config in .env
-- Add show version and env command related script
-- Add merge perf
-- Add nu config init script
+- Add show version and env command related scripts
+- Add merge performance
+- Add Nu config init script
 - Add query node version support
-- Add actions/setup-mac.nu script, rename actions.toml to termix.toml
-- Add soft link example for windows
+- Add actions/setup-mac.nu script; rename actions.toml to termix.toml
+- Add soft link example for Windows
 - Add version command to show termix-nu version
 - Add git rename remote branch feature
 
@@ -2148,27 +2148,27 @@ All notable changes to this project will be documented in this file.
 
 - Refactor commands
 - Change ls-remote-tag to ls-redev-tag
-- Remove unnecessary semicolon and echo
+- Remove unnecessary semicolons and echo
 
 **Refactor**
 
-- Optimize branch syncing for pre push hooks, use query json instead of table
-- Add common helper for utils
-- Change some file dirs
+- Optimize branch syncing for pre-push hooks by using query JSON instead of table
+- Add common helper for utilities
+- Change some file directories
 
 **Opt**
 
 - Use structured redevRepos config for redev related commands
-- Enable common utils script sharing
-- Refactor show-env, add get-ver and get-env helper
-- Refactor script calling use source in some cases
-- Refactor code use source and then call commands
-- REFACTOR git/git-batch-exec.nu USE SOURCE INSTEAD OF SCRIPT CONCATENATION
-- Update dir-batch-exec action, use source instead of file concatenation
+- Enable common utilities script sharing
+- Refactor show-env and add get-ver and get-env helpers
+- Refactor script calling to use source in some cases
+- Refactor code to use source and then call commands
+- Refactor git/git-batch-exec.nu to use source instead of script concatenation
+- Update dir-batch-exec action to use source instead of file concatenation
 
 **Update**
 
-- Use bash instead of nu for user specified command
+- Use bash instead of Nu for user-specified commands
 
 <!-- generated by git-cliff -->
 <!-- Generate new changelog: `git cliff --output CHANGELOG.md` -->
