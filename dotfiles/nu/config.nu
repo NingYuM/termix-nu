@@ -493,16 +493,16 @@ def --env load-direnv [] {
 export def "from env" []: string -> record {
   let input = $in
 
-  # Process escape sequences in double-quoted values using str replace chain
-  # Use NUL char as placeholder to avoid replacement conflicts
+  # Process escape sequences in double-quoted values using regex with closure
   let process_escapes = {|content: string|
-    $content
-      | str replace -a '\\' (char nul)   # Placeholder for \\ to avoid conflicts
-      | str replace -a '\n' (char nl)
-      | str replace -a '\r' (char cr)
-      | str replace -a '\t' (char tab)
-      | str replace -a '\"' '"'
-      | str replace -a (char nul) '\'    # Restore \\ to single \
+    $content | str replace -a -r '\\(.)' {|c|
+      match $c {
+        'n' => (char nl),
+        'r' => (char cr),
+        't' => (char tab),
+        _ => $c
+      }
+    }
   }
 
   # Parse double-quoted value with escape sequence support
