@@ -313,16 +313,16 @@ export def 'from sse' [] {
 export def "from env" []: string -> record {
   let input = $in
 
-  # Process escape sequences in double-quoted values using str replace chain
-  # Use NUL char as placeholder to avoid replacement conflicts
+  # Process escape sequences in double-quoted values using regex with closure
   let process_escapes = {|content: string|
-    $content
-      | str replace -a '\\' (char nul)   # Placeholder for \\ to avoid conflicts
-      | str replace -a '\n' (char nl)
-      | str replace -a '\r' (char cr)
-      | str replace -a '\t' (char tab)
-      | str replace -a '\"' '"'
-      | str replace -a (char nul) '\'    # Restore \\ to single \
+    $content | str replace -a -r '\\(.)' {|c|
+      match $c {
+        'n' => (char nl),
+        'r' => (char cr),
+        't' => (char tab),
+        _ => $c
+      }
+    }
   }
 
   # Parse double-quoted value with escape sequence support
@@ -577,15 +577,14 @@ export def hr-line [
 
 # 渲染 ANSI 颜色代码
 export def render-ansi [text: string] {
-  $text
-    | str replace -a '(ansi g)' $'(ansi g)'
-    | str replace -a '(ansi r)' $'(ansi r)'
-    | str replace -a '(ansi y)' $'(ansi y)'
-    | str replace -a '(ansi cb)' $'(ansi cb)'
-    | str replace -a '(ansi p)' $'(ansi p)'
-    | str replace -a '(ansi gr)' $'(ansi grey66)'
-    | str replace -a '(ansi rst)' $'(ansi reset)'
-    | str replace -a '(ansi reset)' $'(ansi reset)'
+  # Map of color codes: short name -> actual ansi code
+  const ANSI_MAP = {
+    g: 'g', r: 'r', y: 'y', cb: 'cb', p: 'p',
+    gr: 'grey66', rst: 'reset', reset: 'reset'
+  }
+  $text | str replace -a -r '\(ansi ([a-z]+)\)' {|code|
+    ansi ($ANSI_MAP | get -o $code | default $code)
+  }
 }
 
 # Check if a path can be written
