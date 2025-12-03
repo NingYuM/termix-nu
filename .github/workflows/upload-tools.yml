@@ -27,7 +27,6 @@ jobs:
       - name: Setup Nu
         uses: hustcer/setup-nu@v3
         with:
-          version: nightly
           check-latest: true
 
       - name: Handle Upload
