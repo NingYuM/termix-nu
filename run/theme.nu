@@ -98,6 +98,11 @@ const TS_COLOR_MAP = {
 # lang: 'tsx' for TSX files (needs context), 'typescript' for TS files (simple)
 # context: 'jsx' for JSX attributes, 'obj' for object properties, 'any' for simple
 # quote: 'single' or 'double'
+#
+# YAML quoting strategy for ast-grep patterns:
+# - Single-quote patterns ('value'): use YAML block literal (|) to preserve exactly
+# - Double-quote patterns ("value"): use YAML single quotes to wrap ('"value"')
+# This avoids YAML parsing issues with nested quotes.
 def make-ast-rule [
   css: string
   color_key: string
@@ -105,9 +110,11 @@ def make-ast-rule [
   context: string
   quote: string
 ]: nothing -> string {
-  let pattern = match $quote {
-    'single' => $"\"'($css)'\""
-    'double' => ("'\"" + $css + "\"'")
+  # For single-quote patterns, use block literal (|)
+  # For double-quote patterns, use YAML single-quote wrapper
+  let pattern_line = match $quote {
+    'single' => ["  pattern: |", $"    '($css)'"]
+    'double' => [$"  pattern: '\"($css)\"'"]
   }
 
   # For TypeScript files, use simple replacement (no JSX context needed)
@@ -116,29 +123,38 @@ def make-ast-rule [
       $"id: ts-($quote)-replace"
       "language: typescript"
       "rule:"
-      $"  pattern: ($pattern)"
-      $"fix: ($color_key)"
-    ] | str join "\n")
+    ] | append $pattern_line | append [$"fix: ($color_key)"] | str join "\n")
   }
 
-  # For TSX files, distinguish between JSX attributes and object pairs
+  # For TSX files with JSX attributes, keep the inside constraint
+  # For object properties, remove inside constraint due to complex expressions
+  # (e.g., ternary expressions where string is not direct child of pair)
   let fix = match $context {
     'jsx' => $"\"{($color_key)}\""
     'obj' => $color_key
   }
-  let kind = match $context {
-    'jsx' => 'jsx_attribute'
-    'obj' => 'pair'
-  }
-  [
+
+  # Build the rule based on context
+  let base_rule = [
     $"id: ($context)-($quote)-replace"
     "language: tsx"
     "rule:"
-    $"  pattern: ($pattern)"
-    "  inside:"
-    $"    kind: ($kind)"
-    $"fix: ($fix)"
-  ] | str join "\n"
+  ] | append $pattern_line
+
+  match $context {
+    'jsx' => {
+      # JSX attributes: keep the inside constraint
+      $base_rule | append [
+        "  inside:"
+        "    kind: jsx_attribute"
+        $"fix: ($fix)"
+      ] | str join "\n"
+    }
+    'obj' => {
+      # Object properties: no inside constraint to handle complex expressions
+      $base_rule | append [$"fix: ($fix)"] | str join "\n"
+    }
+  }
 }
 
 # Execute ast-grep rule from a YAML string
