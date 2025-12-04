@@ -178,6 +178,7 @@ def remove-remote-branches [
   let header_date = "Date" | fill -a l -c ' ' -w 19
   let header_author = "Author" | fill -a l -c ' ' -w $max_author
   let header = $"($header_name) | ($header_sha) | ($header_date) | ($header_author)"
+  print $'(ansi grey66)Shortcuts: TAB: Select, CTRL-A: Select All, CTRL-D: Deselect All, CTRL-T: Toggle All(ansi rst)(char nl)'
 
   # Run fzf
   const FZF_KEY_BINDING = "--bind ctrl-a:select-all,ctrl-d:deselect-all,ctrl-t:toggle-all"
