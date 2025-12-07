@@ -154,6 +154,8 @@ words:
 - webgpu
 - wezterm
 - WGPU
+- trnw
+- amap
 - winget
 - worktime
 - wqtest
@@ -171,6 +173,12 @@ words:
 - deepseek
 - nutest
 - Ollama
+- eevee
+- jssdk
+- tabbar
+- rollup
+- Flytek
+- imageview
 - OPENROUTER
 - shellcheck
 - initialised
@@ -187,3 +195,4 @@ ignorePaths:
 - dotfiles/clifmrc
 - dotfiles/kitty.conf
 - tests/test-s5cmd.nu
+- tests/test-from-env.nu
