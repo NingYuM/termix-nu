@@ -9,7 +9,7 @@
 
 const RULES_DIR = '/tmp/ast-grep-color-rules'
 const SOURCE = '/Users/hustcer/iWork/terminus/terp-ui/packages/pc/src'
-const COLOR_IMPORT = "import { COLOR } from '@/constants/style-variables';"
+const COLOR_IMPORT = "import { COLOR } from '@terminus/nusi-slim';"
 const EXCLUDE_FILES = ['style-variables.ts', '/dist/', '/node_modules/']
 
 # LESS color variable mapping: css-value -> less-variable
@@ -56,6 +56,9 @@ const LESS_COLOR_MAP = {
   # Other colors
   'rgb(var(--nusi-text))'        : '@color-text'
   'rgb(var(--nusi-color-white))' : '@color-white'
+  'rgb(var(--nusi-chart-4))'     : '@accent-4'
+  'rgb(var(--nusi-chart-5))'     : '@accent-5'
+  'rgb(var(--nusi-chart-10))'    : '@accent-10'
 }
 
 # TypeScript COLOR constant mapping: COLOR.KEY -> css-value
