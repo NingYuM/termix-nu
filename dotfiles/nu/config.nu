@@ -11,7 +11,7 @@
 use std [repeat]
 
 # use ~/github/terminus/termix-nu/run/zoxide-eq.nu [z, zi]
-source $'($nu.home-path)/.zoxide.nu'
+source $'($nu.home-dir)/.zoxide.nu'
 
 # ---------------------- Aliases -------------------------
 # List files and display one entry per line with `eza`
@@ -780,8 +780,8 @@ $env.config.keybindings ++= [{
 
 # REF: https://github.com/atuinsh/atuin
 # atuin init nu --disable-up-arrow | save -rf ~/.local/share/atuin/init.nu
-source $'($nu.home-path)/.atuin.nu'
-source $'($nu.home-path)/.config/carapace/init.nu'
+source $'($nu.home-dir)/.atuin.nu'
+source $'($nu.home-dir)/.config/carapace/init.nu'
 
 # ----------------------- ENV VARS ------------------------
 $env.EDITOR = 'hx'
