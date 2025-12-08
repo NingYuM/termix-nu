@@ -101,7 +101,7 @@ def check-config [description: string, --fix, --debug, --recheck = false] {
   # Check config file syntax
   try {
     # help commands | where is_const
-    const IGNORE = ($nu.home-path | str contains $IGNORE_USER) or not ($nu.config-path | path exists)
+    const IGNORE = ($nu.home-dir | str contains $IGNORE_USER) or not ($nu.config-path | path exists)
     const file = if $IGNORE { null } else { $nu.config-path }
     source $file
     return { status: $STATUS.OK }

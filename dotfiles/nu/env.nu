@@ -4,12 +4,12 @@
 
 # ----------------------- Begin customization -----------------------
 $env.GPG_TTY = (tty)
-$env.PNPM_HOME = $'($nu.home-path)/Library/pnpm'
-$env.ANDROID_HOME = $'($nu.home-path)/Library/Android/sdk'
+$env.PNPM_HOME = $'($nu.home-dir)/Library/pnpm'
+$env.ANDROID_HOME = $'($nu.home-dir)/Library/Android/sdk'
 $env.HOMEBREW_BOTTLE_DOMAIN = 'https://mirrors.ustc.edu.cn/homebrew-bottles/bottles'
 
-$env.XDG_CONFIG_HOME = $'($nu.home-path)/.config'
-$env.CODEX_HOME = $'($nu.home-path)/.config/codex'
+$env.XDG_CONFIG_HOME = $'($nu.home-dir)/.config'
+$env.CODEX_HOME = $'($nu.home-dir)/.config/codex'
 
 # To add entries to PATH (on Windows you might use Path), you can use the following pattern:
 # $env.PATH = ($env.PATH | split row (char esep) | prepend '/some/path')
@@ -24,16 +24,16 @@ $env.PATH = (
   $env.PATH
     | split row (char esep)
     | prepend $env.PNPM_HOME
-    | prepend $'($nu.home-path)/.local/bin'
+    | prepend $'($nu.home-dir)/.local/bin'
     | prepend '/usr/local/bin'
     | prepend '/opt/homebrew/bin'
     | prepend '/Library/TeX/texbin'
     | prepend '/usr/local/opt/ruby/bin'
-    | prepend $'($nu.home-path)/.bun/bin'
-    | prepend $'($nu.home-path)/.moon/bin'
-    | prepend $'($nu.home-path)/.cargo/bin'
+    | prepend $'($nu.home-dir)/.bun/bin'
+    | prepend $'($nu.home-dir)/.moon/bin'
+    | prepend $'($nu.home-dir)/.cargo/bin'
     | append `/Applications/Ghostty.app/Contents/MacOS/`
-    | append $'($nu.home-path)/Library/Android/sdk/platform-tools'
+    | append $'($nu.home-dir)/Library/Android/sdk/platform-tools'
 )
 
 if not (which fnm | is-empty) {

@@ -370,7 +370,7 @@ export def "from env" []: string -> record {
 # Get TERMIX_TMP_PATH from env first and fallback to HOME/.termix-nu
 export def get-tmp-path [] {
   # let homeEnv = if (windows?) { 'USERPROFILE' } else { 'HOME' }
-  let DEFAULT_TMP = [$nu.home-path '.termix-nu'] | path join
+  let DEFAULT_TMP = [($nu.home-dir? | default $nu.home-path?) '.termix-nu'] | path join
   # 先从环境变量里面查找临时文件路径
   let tmpDir = (get-env TERMIX_TMP_PATH '')
   # 如果环境变量里面没有配置临时文件路径，则使用 HOME 目录下的 .termix 目录
