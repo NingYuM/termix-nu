@@ -557,19 +557,31 @@ def --env menv [
   use std null-device
   let currentDir = (pwd)
   z share-nu o+e> (null-device)
-  let envs = if $encrypted {
-      openssl enc -d -aes-256-cbc -a -pbkdf2 -iter 100 -in conf/sec.enc | from toml | get envs
-    } else { open conf/sec.toml | get envs }
+  let envs = match $encrypted {
+    true => (openssl enc -d -aes-256-cbc -a -pbkdf2 -iter 100 -in conf/sec.enc | from toml | get envs)
+    _ => (open conf/sec.toml | get envs)
+  }
   if $list { $envs | columns | sort | print; return }
 
   let profile = if ($profile | is-empty) {
-      $envs | columns | sort | str join (char nl) | fzf --layout=reverse --height=50%
+      let profiles = $envs | columns | sort
+      let maxLen = $profiles | each { str length } | math max
+      $profiles
+        | each {|name|
+            let desc = $envs | get $name | get -o description | default ''
+            $'($name | fill -w $maxLen) │ (ansi grey66)($desc)(ansi rst)'
+          }
+        | str join (char nl)
+        | fzf --ansi --layout=reverse --height=50%
+        | split row ' │ '
+        | first
+        | str trim
     } else { $profile }
   if ($profile | is-empty) { return }
   let setting = $envs | get -o $profile
   if ($setting | is-empty) { print $'Environment Profile (ansi r)($profile)(ansi rst) not found.'; return }
-  if not $silent { print $setting }
-  load-env $setting; cd $currentDir
+  if not $silent { print ($setting | reject -o description) }
+  load-env ($setting | reject -o description); cd $currentDir
   print $'Eniroment of (ansi g)($profile)(ansi rst) loaded.'
 }
 

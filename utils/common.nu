@@ -21,8 +21,8 @@
 #   7: Missing dependency
 #   8: Condition not satisfied
 
-export const _DATE_FMT  = '%Y.%m.%d'
-export const _TIME_FMT =  '%Y/%m/%d %H:%M:%S'
+export const _DATE_FMT = '%Y.%m.%d'
+export const _TIME_FMT = '%Y/%m/%d %H:%M:%S'
 export const _UPGRADE_TAG = '$-FORCE-UPGRADE-$'
 
 # Host pattern for http url
