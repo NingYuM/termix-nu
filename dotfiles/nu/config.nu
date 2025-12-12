@@ -572,12 +572,12 @@ def --env menv [
             $'($name | fill -w $maxLen) │ (ansi grey66)($desc)(ansi rst)'
           }
         | str join (char nl)
-        | fzf --ansi --layout=reverse --height=50%
+        | fzf --ansi --layout=reverse --height=50% --highlight-line
         | split row ' │ '
         | first
         | str trim
     } else { $profile }
-  if ($profile | is-empty) { return }
+  if ($profile | is-empty) { cd $currentDir; return }
   let setting = $envs | get -o $profile
   if ($setting | is-empty) { print $'Environment Profile (ansi r)($profile)(ansi rst) not found.'; return }
   if not $silent { print ($setting | reject -o description) }
