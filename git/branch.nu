@@ -5,15 +5,15 @@
 #   t git-branch
 
 use ../utils/git.nu [append-desc]
-use ../utils/common.nu [ECODE, has-ref, hr-line, windows?]
+use ../utils/common.nu [has-ref, hr-line, windows?]
 
 # Creates a table listing the branches of a git repository and the day of the last commit
 @example '查看本地 Git 仓库分支及最后提交时间' {
   t git-branch
 } --result '按最后提交时间升序显示各分支，远程存在的分支 remote 列会被标记为 √'
 @example '根据提交信息关键字筛选包含该提交的分支' {
-  t git-branch -c "'deps-0330: upgrade nusi-slim to v2.2.22'"
-} --result '仅显示提交信息包含指定关键字的分支列表, 提交信息中有空格时需要用两重引号包裹'
+  t git-branch -c "deps-0330: upgrade nusi-slim to v2.2.22"
+} --result '仅显示提交信息包含指定关键字的分支列表'
 @example '显示当前仓库所有本地 Tags' {
   t git-branch -t
 } --result '按创建时间显示本地 Tag 列表'
@@ -28,7 +28,14 @@ export def git-branch [
 
   $env.config.table.mode = 'light'
   $env.config.color_config.leading_trailing_space_bg = { attr: n }
-  let path = if ($path | is-empty) { $env.JUST_INVOKE_DIR } else { $path }
+  # Handle case where justfile splits "-c 'multi word'" into separate args
+  let args = if ($contains | is-not-empty) and ($path | is-not-empty) and (not (($path | path exists) and (($path | path type) == 'dir'))) {
+    { contains: $"($contains) ($path)", path: null }
+  } else {
+    { contains: $contains, path: $path }
+  }
+  let contains = $args.contains
+  let path = if ($args.path | is-empty) { $env.JUST_INVOKE_DIR } else { $args.path }
   let title = if ($contains | is-empty) {
       $'(ansi p)(char nl)Last commit info of local branches: (ansi rst)(char nl)'
     } else {
@@ -38,19 +45,21 @@ export def git-branch [
   cd $path
   let branches = git branch | lines | par-each -k { str substring 2.. }
   let branches = if ($contains | is-empty) { $branches } else {
-    $branches | where { |it| not (git log $it --grep $contains | is-empty) }
+    $branches | where { |it| not (git log $it $"--grep=($contains)" | is-empty) }
   }
-  let basic = (
-    $branches
-      | wrap name
-      | upsert remote {|it| if (has-ref origin/($it.name)) { '   √' } else { '' } }
-      | upsert author {|it| git show $it.name -s --format='%an' | str trim }
-      | upsert SHA {|it| do -i { git rev-parse $it.name | str substring 0..<9 } }
-      | upsert last-commit {|it| git show $it.name --no-patch --format=%ci | into datetime }
+  let basic = ($branches | par-each -k {|name|
+      {
+        name: $name,
+        remote: (if (has-ref $'origin/($name)') { '   √' } else { '' }),
+        author: (git show $name -s --format='%an' | str trim),
+        SHA: (do -i { git rev-parse $name | str substring 0..<9 }),
+        last-commit: (git show $name --no-patch --format=%ci | into datetime)
+      }
+    }
   )
   print (append-desc $basic)
 
-  if (not $show_tags) { exit $ECODE.SUCCESS }
+  if (not $show_tags) { return }
 
   print $'(char nl)Tags of current repo:'; hr-line
   # Git for Windows does't support sort by `creatordate` field?
