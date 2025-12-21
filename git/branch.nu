@@ -21,21 +21,35 @@ use ../utils/common.nu [has-ref, hr-line, windows?]
   t git-branch /path/to/repo
 } --result '在指定路径下统计并展示分支信息'
 export def git-branch [
-  path?: string,            # The path of the git repository, current directory by default
+  ...rest: string,          # Extra arguments (to handle justfile word splitting)
   --show-tags(-t),          # Show all the local tags
   --contains(-c): string,   # Show only branches that contain the specified keyword in their commit messages
 ] {
 
   $env.config.table.mode = 'light'
   $env.config.color_config.leading_trailing_space_bg = { attr: n }
-  # Handle case where justfile splits "-c 'multi word'" into separate args
-  let args = if ($contains | is-not-empty) and ($path | is-not-empty) and (not (($path | path exists) and (($path | path type) == 'dir'))) {
-    { contains: $"($contains) ($path)", path: null }
-  } else {
-    { contains: $contains, path: $path }
+  # Handle justfile splitting "-c 'multi word'" into separate args
+  # Also restore backticks for args that were parsed as raw strings (contain spaces)
+  let parsed = $rest | reduce --fold { path: null, extra: [] } {|arg, acc|
+    let is_new_path = ($acc.path == null) and ($arg | path exists) and (($arg | path type) == 'dir')
+    match $is_new_path {
+      true => { path: $arg, extra: $acc.extra }
+      # Wrap in backticks if arg contains space (was likely a raw string `...`)
+      _ => {
+        let val = if ($arg =~ ' ') { $"`($arg)`" } else { $arg }
+        { path: $acc.path, extra: ($acc.extra | append $val) }
+      }
+    }
   }
-  let contains = $args.contains
-  let path = if ($args.path | is-empty) { $env.JUST_INVOKE_DIR } else { $args.path }
+  let contains = match [($contains | is-empty), ($parsed.extra | is-empty)] {
+    [true, true] => null
+    _ => ([$contains, ...$parsed.extra] | compact | str join ' ')
+  }
+  # Strip wrapping single quotes if present (from `"'...'"` form)
+  let contains = if ($contains | is-not-empty) and ($contains =~ "^'") and ($contains =~ "'$") {
+    $contains | str substring 1..-2
+  } else { $contains }
+  let path = $parsed.path | default $env.JUST_INVOKE_DIR
   let title = if ($contains | is-empty) {
       $'(ansi p)(char nl)Last commit info of local branches: (ansi rst)(char nl)'
     } else {
