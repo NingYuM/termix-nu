@@ -419,7 +419,7 @@ t ls-node 16 --lts
 **参数说明**:
 
 - `path` - 可选，Git 仓库路径，默认为当前路径
-- `-c` 或 `--contains` - 在分支上查询是否有 Commit Message 里面包含指定字符串的提交，有则在结果中显示，如果要查找的字符串包含空格需要用两重引号，比如：`-c '"A B C"'`，如果你希望知道某一个 Commit 被 `cherry-pick` 到了哪些分支上可以使用此参数；
+- `-c` 或 `--contains` - 在分支上查询是否有 Commit Message 里面包含指定字符串的提交，有则在结果中显示，如果你希望知道某一个 Commit 被 `cherry-pick` 到了哪些分支上可以使用此参数；
 - `-t` 或 `--show-tags` - 按时间倒序显示所有本地 Tag
 - `-h` 或 `--help `- 显示此命令相关帮助文档
 
@@ -429,7 +429,7 @@ t ls-node 16 --lts
 # 查看本地 Git 仓库分支及最后提交时间
 t git-branch
 # 根据提交信息查询某一个 Commit 被 `cherry-pick` 到哪些分支上
-t git-branch --contains '"这是一个重要的补丁，需要被 cherry-pick 到多个分支"'
+t git-branch --contains "这是一个重要的补丁，需要被 cherry-pick 到多个分支"
 ```
 
 **输出样例**:
