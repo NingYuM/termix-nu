@@ -40,9 +40,12 @@ export def 'query deps' [
     $pkgs | par-each {|pkg|
       let content = git show $'($br):($pkg)'
       if ($content | is-empty) { return null }
+      # Early filter: skip files that don't contain the dependency name
+      if not ($content =~ $dep) { return null }
       let ver = $content | query json $query
       if ($ver | is-empty) { return null }
       let commit = get-commit-meta $br $pkg $dep
+      if ($commit | is-empty) { return null }
       { branch: $br, file: $pkg, dependency: $dep, version: $ver, ...$commit }
     }
   } | flatten | compact
@@ -89,7 +92,9 @@ def get-commit-summary [branch: string, file: string, keyword: string] {
 # Get the commit meta of the specified file and keyword
 def get-commit-meta [branch: string, file: string, keyword: string] {
   let blame = git blame $branch -- $file | lines | find -n $'"($keyword)"'
-                      | split column ')' | rename meta content | get 0
+                      | split column ')' | rename meta content
+  if ($blame | is-empty) { return null }
+  let blame = $blame | get 0
   let meta = $blame.meta | detect columns -n
   let meta = if ($meta | columns | length) == 2 { $meta | rename SHA commit } else { $meta | rename SHA file commit }
   let commit = $meta.commit.0 | split row ' ' | compact --empty
