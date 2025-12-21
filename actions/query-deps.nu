@@ -33,19 +33,19 @@ export def 'query deps' [
   let rootDir = git rev-parse --show-toplevel
   cd $rootDir
   let branchCandidates = get-branches --branches $branches --all-local-branches=$all_local_branches --all-remote-branches=$all_remote_branches
-  mut result = []
   let query = if $dev { $'devDependencies.\($dep)' } else { $'dependencies.\($dep)' }
-  for br in $branchCandidates {
+  # Parallel processing of branches and packages for better performance
+  let result = $branchCandidates | par-each {|br|
     let pkgs = git ls-tree -r --name-only $br | lines | where $it ends-with package.json
-    for pkg in $pkgs {
+    $pkgs | par-each {|pkg|
       let content = git show $'($br):($pkg)'
-      if ($content | is-empty) { continue }
+      if ($content | is-empty) { return null }
       let ver = $content | query json $query
-      if ($ver | is-empty) { continue }
+      if ($ver | is-empty) { return null }
       let commit = get-commit-meta $br $pkg $dep
-      $result ++= [{ branch: $br, file: $pkg, dependency: $dep, version: $ver, ...$commit }]
+      { branch: $br, file: $pkg, dependency: $dep, version: $ver, ...$commit }
     }
-  }
+  } | flatten | compact
   let end = date now
   print $'(char nl)Query node dependencies for (ansi p)($dep)(ansi rst) from all `package.json` files:'; hr-line
   if ($result | is-empty) {
