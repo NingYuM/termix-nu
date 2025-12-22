@@ -1,5 +1,7 @@
 
+const EXTRA_KEEP = [versions.json latest.json]
 const OSS_PREFIX = 'oss://terminus-new-trantor/fe-resources'
+const OSS_HTTP_PREFIX = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/fe-resources'
 
 const ITERATIONS = [
   2.5.23.1228
@@ -32,7 +34,7 @@ export def oss-du [mountpoint: string] {
   let mount = match ($mountpoint =~ '/$') { true => $mountpoint, false => $'($mountpoint)/' }
   ossutil du ($OSS_PREFIX)/($mount)
     | complete | get stdout | lines | where {|it| $it =~ '^total du size'}
-    | first | split row  : | last
+    | first | split row ':' | last
     | into filesize
 }
 
@@ -51,4 +53,37 @@ export def oss-stat [limit: int = 3] {
   print $"(ansi g)Time: ($endTime - $time)(ansi rst)"
 }
 
-alias main = oss-stat
+# 删除 OSS 上过期的静态资源，只保留最近一个版本
+export def oss-clean-deprecated-statics [mountpoint: string = 'ttt0'] {
+  $env.config.table.mode = 'psql'
+  let start = date now
+  let mp = $mountpoint | str trim -c /
+  let keep_modules = http get ($OSS_HTTP_PREFIX)/($mp)/latest.json | values | get dirname
+  print $'Keeping the following modules for (ansi g)($mp)(ansi rst): (char nl)'
+  print $keep_modules
+  let remove_candidates = get-remove-candidates $mp $keep_modules
+  print $'(char nl)Removing the following objects for (ansi g)($mp)(ansi rst): (char nl)'
+  print $remove_candidates; print -n (char nl)
+
+  let confirm  = input $'Are you sure to remove the above objects? (ansi g)[Y/n](ansi rst) '
+  if $confirm != 'Y' { print $'Aborted by user, Bye...'; exit 0 }
+  $remove_candidates | par-each {|it| ossutil rm -rf $it }
+  let end = date now
+  print $'Cleaned (ansi g)($remove_candidates | length)(ansi rst) objects successfully!'
+  print $"(ansi g)Time: ($end - $start)(ansi rst)"
+}
+
+# Get direct children objects of a mountpoint
+def get-direct-children [mountpoint: string] {
+  let mount = match ($mountpoint =~ '/$') { true => $mountpoint, false => $'($mountpoint)/' }
+  ossutil ls ($OSS_PREFIX)/($mount) -d | lines | where $it =~ '^oss://'
+}
+
+# Get remove candidates by mountpoint and keep modules
+def get-remove-candidates [mountpoint: string, keep_modules: list<string>] {
+  let children = get-direct-children $mountpoint
+  let keep = $keep_modules | append $EXTRA_KEEP
+  $children | where {|it| ($it | str trim -c / | split row / | last) not-in $keep }
+}
+
+alias main = oss-clean-deprecated-statics
