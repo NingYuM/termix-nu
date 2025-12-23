@@ -26,6 +26,13 @@ const ITERATIONS = [
   3.0.2508
   3.0.2509
   3.0.2512
+  dev
+  test
+  staging
+  terp-dev
+  terp-test
+  terp-prod
+  terp-staging
 ]
 
 # oss-du 2.5.23.1228 --> Output: 3.0 GB
@@ -46,7 +53,7 @@ export def oss-stat [
   let time = date now
   $env.config.table.mode = 'psql'
   let stats = $ITERATIONS | last $limit | par-each -k {|it|
-    { iteration: $it, size: (oss-du $it) }
+    { mountpoint: $it, size: (oss-du $it) }
   }
   let total = $stats | get size | math sum
   # Print the table
@@ -194,6 +201,18 @@ def get-remove-candidates [
 }
 
 # Main entry point for OSS tools
+@example '统计最近 3 个迭代版本的 OSS 存储使用量' {
+  nu run/oss-tool.nu stat
+}
+@example '统计最近 5 个迭代版本的 OSS 存储使用量' {
+  nu run/oss-tool.nu stat -l 5
+}
+@example '清理指定 mountpoint 的过期静态资源' {
+  nu run/oss-tool.nu clean -m dev
+} --result '显示待删除对象列表，确认后执行删除'
+@example '交互式选择 mountpoint 进行清理' {
+  nu run/oss-tool.nu clean -i
+} --result '通过 fzf 多选 mountpoint，汇总显示后确认删除'
 export def oss-tool [
   action: string@['stat', 'clean'],   # Action to perform: `stat`, `clean`
   --limit(-l): int = 3,               # Number of recent iterations to stat for `stat` action
