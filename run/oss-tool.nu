@@ -31,7 +31,7 @@ const ITERATIONS = [
 
 # oss-du 2.5.23.1228 --> Output: 3.0 GB
 export def oss-du [mountpoint: string] {
-  let mount = match ($mountpoint =~ '/$') { true => $mountpoint, false => $'($mountpoint)/' }
+  let mount = $mountpoint | str trim -c / | ($in)/
   ossutil du ($OSS_PREFIX)/($mount)
     | complete | get stdout | lines | where {|it| $it =~ '^total du size'}
     | first | split row ':' | last
@@ -42,7 +42,7 @@ export def oss-du [mountpoint: string] {
 export def oss-stat [limit: int = 3] {
   let time = date now
   $env.config.table.mode = 'psql'
-  let stats = $ITERATIONS | first $limit | par-each -k {|it|
+  let stats = $ITERATIONS | last $limit | par-each -k {|it|
     { iteration: $it, size: (oss-du $it) }
   }
   let total = $stats | get size | math sum
@@ -56,9 +56,15 @@ export def oss-stat [limit: int = 3] {
 # 删除 OSS 上过期的静态资源，只保留最近一个版本
 export def oss-clean-deprecated-statics [mountpoint: string = 'ttt0'] {
   $env.config.table.mode = 'psql'
+  print $'Current size of (ansi g)($mountpoint)(ansi rst) before cleaning: (ansi g)(oss-du $mountpoint)(ansi rst)'
   let start = date now
   let mp = $mountpoint | str trim -c /
-  let keep_modules = http get ($OSS_HTTP_PREFIX)/($mp)/latest.json | values | get dirname
+  let keep_modules = try {
+    http get ($OSS_HTTP_PREFIX)/($mp)/latest.json | values | get dirname
+  } catch {
+    print $"(ansi r)Failed to fetch latest.json for ($mp), please check network or path.(ansi rst)"
+    return
+  }
   print $'Keeping the following modules for (ansi g)($mp)(ansi rst): (char nl)'
   print $keep_modules
   let remove_candidates = get-remove-candidates $mp $keep_modules
@@ -66,16 +72,24 @@ export def oss-clean-deprecated-statics [mountpoint: string = 'ttt0'] {
   print $remove_candidates; print -n (char nl)
 
   let confirm  = input $'Are you sure to remove the above objects? (ansi g)[Y/n](ansi rst) '
-  if $confirm != 'Y' { print $'Aborted by user, Bye...'; exit 0 }
-  $remove_candidates | par-each {|it| ossutil rm -rf $it }
+  if ($confirm | str downcase) != 'y' { print $'(ansi grey66)Aborted by user, Bye...(ansi rst)'; exit 0 }
+  let results = $remove_candidates | par-each {|it|
+    { path: $it, result: (ossutil rm -rf $it | complete) }
+  }
+  let failures = $results | where { $in.result.exit_code != 0 }
+  if ($failures | length) > 0 {
+    print $"(ansi r)Failed to remove ($failures | length) objects:(ansi rst)"
+    print ($failures | get path)
+  }
   let end = date now
-  print $'Cleaned (ansi g)($remove_candidates | length)(ansi rst) objects successfully!'
+  print $'Cleaned (ansi g)(($remove_candidates | length) - ($failures | length))(ansi rst) objects successfully!'
   print $"(ansi g)Time: ($end - $start)(ansi rst)"
+  print $'Current size of (ansi g)($mountpoint)(ansi rst) after cleaning: (ansi g)(oss-du $mountpoint)(ansi rst)'
 }
 
 # Get direct children objects of a mountpoint
 def get-direct-children [mountpoint: string] {
-  let mount = match ($mountpoint =~ '/$') { true => $mountpoint, false => $'($mountpoint)/' }
+  let mount = $mountpoint | str trim -c / | ($in)/
   ossutil ls ($OSS_PREFIX)/($mount) -d | lines | where $it =~ '^oss://'
 }
 
