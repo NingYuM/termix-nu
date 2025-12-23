@@ -5,12 +5,9 @@ const OSS_HTTP_PREFIX = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.c
 
 const ITERATIONS = [
   2.5.23.1228
-  2.5.24.0115
   2.5.24.0130
   2.5.24.0228
-  2.5.24.0315
   2.5.24.0330
-  2.5.24.0415
   2.5.24.0430
   2.5.24.0530
   2.5.24.0630
