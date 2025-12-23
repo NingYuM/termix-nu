@@ -1,4 +1,6 @@
 
+use ../utils/common.nu [FZF_DEFAULT_OPTS, FZF_THEME]
+
 const EXTRA_KEEP = [versions.json latest.json]
 const OSS_PREFIX = 'oss://terminus-new-trantor/fe-resources'
 const OSS_HTTP_PREFIX = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/fe-resources'
@@ -57,37 +59,120 @@ export def oss-stat [
 # 删除 OSS 上过期的静态资源，只保留最近一个版本
 export def oss-clean-deprecated-statics [
   mountpoint: string = 'ttt0',  # OSS mount point: dev, terp-test, 2.5.24.0330, etc. Default is ttt0
+  --interactive(-i),            # Interactive mode: select mountpoints via fzf
 ] {
   $env.config.table.mode = 'psql'
-  print $'Current size of (ansi g)($mountpoint)(ansi rst) before cleaning: (ansi g)(oss-du $mountpoint)(ansi rst)'
   let start = date now
+
+  # Get mountpoints to clean
+  let mountpoints = if $interactive { select-mountpoints } else { [$mountpoint] }
+  if ($mountpoints | is-empty) {
+    print $'(ansi grey66)No mountpoint selected, Bye...(ansi rst)'
+    return
+  }
+
+  # Collect cleanup info for all mountpoints
+  let cleanup_infos = $mountpoints | each {|mp| get-mountpoint-clean-info $mp } | compact
+  if ($cleanup_infos | is-empty) {
+    print $'(ansi grey66)No objects to clean, Bye...(ansi rst)'
+    return
+  }
+
+  # Display summary and confirm
+  print $'(char nl)(ansi gb)=== Cleanup Summary ===(ansi rst)(char nl)'
+  for info in $cleanup_infos {
+    print $'Mountpoint: (ansi g)($info.mountpoint)(ansi rst)'
+    print $'  Current size: (ansi y)($info.size)(ansi rst)'
+    print $'  Objects to remove: (ansi r)($info.remove_candidates | length)(ansi rst)'
+    print ($info.remove_candidates | table)
+    print ''
+  }
+
+  let total_objects = $cleanup_infos | get remove_candidates | flatten | length
+  let confirm = input $'(ansi y)Remove ($total_objects) objects from ($cleanup_infos | length) mountpoints? [y/N] (ansi rst)'
+  if ($confirm | str downcase) != 'y' {
+    print $'(ansi grey66)Aborted by user, Bye...(ansi rst)'
+    return
+  }
+
+  # Execute cleanup for each mountpoint
+  for info in $cleanup_infos {
+    clean-mountpoint-objects $info.mountpoint $info.remove_candidates
+  }
+
+  print $"(ansi g)Total time: ((date now) - $start)(ansi rst)"
+}
+
+# Get cleanup info for a single mountpoint
+def get-mountpoint-clean-info [
+  mountpoint: string,  # OSS mount point to analyze
+] {
   let mp = $mountpoint | str trim -c /
+  let size = oss-du $mp
+
   let keep_modules = try {
     http get ($OSS_HTTP_PREFIX)/($mp)/latest.json | values | get dirname
   } catch {
-    print $"(ansi r)Failed to fetch latest.json for ($mp), please check network or path.(ansi rst)"
-    return
+    print $"(ansi r)Failed to fetch latest.json for ($mp), skipping...(ansi rst)"
+    return null
   }
-  print $'Keeping the following modules for (ansi g)($mp)(ansi rst): (char nl)'
-  print $keep_modules
-  let remove_candidates = get-remove-candidates $mp $keep_modules
-  print $'(char nl)Removing the following objects for (ansi g)($mp)(ansi rst): (char nl)'
-  print $remove_candidates; print -n (char nl)
 
-  let confirm  = input $'Are you sure to remove the above objects? (ansi g)[Y/n](ansi rst) '
-  if ($confirm | str downcase) != 'y' { print $'(ansi grey66)Aborted by user, Bye...(ansi rst)'; exit 0 }
+  let remove_candidates = get-remove-candidates $mp $keep_modules
+  if ($remove_candidates | is-empty) {
+    print $"(ansi grey66)No deprecated objects in ($mp), skipping...(ansi rst)"
+    return null
+  }
+
+  {
+    mountpoint: $mp,
+    size: $size,
+    keep_modules: $keep_modules,
+    remove_candidates: $remove_candidates
+  }
+}
+
+# Clean objects from a single mountpoint
+def clean-mountpoint-objects [
+  mountpoint: string,           # OSS mount point
+  remove_candidates: list<any>, # List of objects to remove
+] {
+  print $'(char nl)Cleaning (ansi g)($mountpoint)(ansi rst)...'
+
   let results = $remove_candidates | par-each {|it|
     { path: $it, result: (ossutil rm -rf $it | complete) }
   }
+
   let failures = $results | where { $in.result.exit_code != 0 }
+  let success_count = ($remove_candidates | length) - ($failures | length)
+
   if ($failures | length) > 0 {
     print $"(ansi r)Failed to remove ($failures | length) objects:(ansi rst)"
     print ($failures | get path)
   }
-  let end = date now
-  print $'Cleaned (ansi g)(($remove_candidates | length) - ($failures | length))(ansi rst) objects successfully!'
-  print $"(ansi g)Time: ($end - $start)(ansi rst)"
-  print $'Current size of (ansi g)($mountpoint)(ansi rst) after cleaning: (ansi g)(oss-du $mountpoint)(ansi rst)'
+
+  print $'Cleaned (ansi g)($success_count)(ansi rst) objects from (ansi g)($mountpoint)(ansi rst)'
+  print $'New size of (ansi g)($mountpoint)(ansi rst): (ansi g)(oss-du $mountpoint)(ansi rst)'
+}
+
+# Interactive mountpoint selection via fzf
+def select-mountpoints [] {
+  let input = $ITERATIONS | str join (char nl)
+  let header = "Select mountpoint(s) to clean"
+
+  print $'(ansi grey66)Shortcuts: TAB: Select, CTRL-A: Select All, CTRL-D: Deselect All, CTRL-T: Toggle All(ansi rst)(char nl)'
+
+  # Run fzf for selection
+  const FZF_KEY_BINDING = "--bind ctrl-a:select-all,ctrl-d:deselect-all,ctrl-t:toggle-all"
+  $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --header "($header)" ($FZF_THEME) ($FZF_KEY_BINDING)'
+
+  let selected = try { $input | fzf -m --ansi | lines } catch {
+    print -e $'(ansi r)Failed to run fzf. Please ensure fzf is installed.(ansi rst)'
+    return []
+  }
+
+  if ($selected | is-empty) { return [] }
+
+  $selected | each { str trim }
 }
 
 # Get direct children objects of a mountpoint
@@ -111,12 +196,13 @@ def get-remove-candidates [
 # Main entry point for OSS tools
 export def oss-tool [
   action: string@['stat', 'clean'],   # Action to perform: `stat`, `clean`
-  --limit(-l): int = 3,               # Number of recent iterations to stat
-  --mountpoint(-m): string = 'ttt0',  # OSS mount point: `dev`, `terp-test`, `2.5.25.0330`, etc.
+  --limit(-l): int = 3,               # Number of recent iterations to stat for `stat` action
+  --mountpoint(-m): string = 'ttt0',  # OSS mount point for `clean` action: `dev`, `terp-test`, `2.5.25.0330`, etc.
+  --interactive(-i),                  # Interactive mode for `clean` action
 ] {
   match $action {
     'stat' => { oss-stat $limit }
-    'clean' => { oss-clean-deprecated-statics $mountpoint }
+    'clean' => { oss-clean-deprecated-statics $mountpoint --interactive=$interactive }
     _ => { print $'(ansi r)Invalid action: ($action)(ansi rst)'; exit 1 }
   }
 }
