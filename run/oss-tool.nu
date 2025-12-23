@@ -27,7 +27,9 @@ const ITERATIONS = [
 ]
 
 # oss-du 2.5.23.1228 --> Output: 3.0 GB
-export def oss-du [mountpoint: string] {
+export def oss-du [
+  mountpoint: string,  # OSS path to calculate disk usage for
+] {
   let mount = $mountpoint | str trim -c / | ($in)/
   ossutil du ($OSS_PREFIX)/($mount)
     | complete | get stdout | lines | where {|it| $it =~ '^total du size'}
@@ -36,7 +38,9 @@ export def oss-du [mountpoint: string] {
 }
 
 # oss-stat --> Output: table with size of each iteration and total
-export def oss-stat [limit: int = 3] {
+export def oss-stat [
+  limit: int = 3,  # Number of recent iterations to stat
+] {
   let time = date now
   $env.config.table.mode = 'psql'
   let stats = $ITERATIONS | last $limit | par-each -k {|it|
@@ -51,7 +55,9 @@ export def oss-stat [limit: int = 3] {
 }
 
 # 删除 OSS 上过期的静态资源，只保留最近一个版本
-export def oss-clean-deprecated-statics [mountpoint: string = 'ttt0'] {
+export def oss-clean-deprecated-statics [
+  mountpoint: string = 'ttt0',  # OSS mount point: dev, terp-test, 2.5.24.0330, etc. Default is ttt0
+] {
   $env.config.table.mode = 'psql'
   print $'Current size of (ansi g)($mountpoint)(ansi rst) before cleaning: (ansi g)(oss-du $mountpoint)(ansi rst)'
   let start = date now
@@ -85,16 +91,34 @@ export def oss-clean-deprecated-statics [mountpoint: string = 'ttt0'] {
 }
 
 # Get direct children objects of a mountpoint
-def get-direct-children [mountpoint: string] {
+def get-direct-children [
+  mountpoint: string,  # OSS mount point to list children from
+] {
   let mount = $mountpoint | str trim -c / | ($in)/
   ossutil ls ($OSS_PREFIX)/($mount) -d | lines | where $it =~ '^oss://'
 }
 
 # Get remove candidates by mountpoint and keep modules
-def get-remove-candidates [mountpoint: string, keep_modules: list<string>] {
+def get-remove-candidates [
+  mountpoint: string,         # OSS mount point to scan
+  keep_modules: list<string>, # List of module names to keep
+] {
   let children = get-direct-children $mountpoint
   let keep = $keep_modules | append $EXTRA_KEEP
   $children | where {|it| ($it | str trim -c / | split row / | last) not-in $keep }
 }
 
-alias main = oss-clean-deprecated-statics
+# Main entry point for OSS tools
+export def oss-tool [
+  action: string@['stat', 'clean'],   # Action to perform: `stat`, `clean`
+  --limit(-l): int = 3,               # Number of recent iterations to stat
+  --mountpoint(-m): string = 'ttt0',  # OSS mount point: `dev`, `terp-test`, `2.5.25.0330`, etc.
+] {
+  match $action {
+    'stat' => { oss-stat $limit }
+    'clean' => { oss-clean-deprecated-statics $mountpoint }
+    _ => { print $'(ansi r)Invalid action: ($action)(ansi rst)'; exit 1 }
+  }
+}
+
+alias main = oss-tool
