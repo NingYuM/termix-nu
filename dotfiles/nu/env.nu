@@ -8,6 +8,7 @@ $env.PNPM_HOME = $'($nu.home-dir)/Library/pnpm'
 $env.ANDROID_HOME = $'($nu.home-dir)/Library/Android/sdk'
 $env.HOMEBREW_BOTTLE_DOMAIN = 'https://mirrors.ustc.edu.cn/homebrew-bottles/bottles'
 
+$env.CLAUDE_CODE_SHELL = $nu.current-exe
 $env.XDG_CONFIG_HOME = $'($nu.home-dir)/.config'
 $env.CODEX_HOME = $'($nu.home-dir)/.config/codex'
 
