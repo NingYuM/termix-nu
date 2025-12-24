@@ -164,6 +164,12 @@ ding-msg *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'dingtalk-notify.nu') }}; \
     dingtalk notify {{OPTIONS}}
 
+# OSS cleanup and stats for TERP assets
+[group('-- Common  --')]
+oss-ta *OPTIONS: _setup
+  @overlay use {{ join(_termix, 'run', 'oss-tool.nu') }}; \
+    oss-ta {{OPTIONS}}
+
 # Query node dependencies in all package.json files on specified branches
 [group('-- Frontend --')]
 query-deps *OPTIONS: _setup
@@ -356,6 +362,7 @@ gsync *OPTIONS: _setup
     git trigger-sync {{OPTIONS}}
 
 # 扫描源码并列出所有自定义组件清单, 目前支持 terp-ui/service-ui/b2b-ui/material-ui etc.
+[group('-- Frontend --')]
 cmp *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'components.nu') }}; \
     get components {{OPTIONS}}

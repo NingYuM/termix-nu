@@ -48,7 +48,7 @@ export def oss-du [
 
 # oss-stat --> Output: table with size of each iteration and total
 export def oss-stat [
-  limit: int = 3,  # Number of recent iterations to stat
+  limit: int = 9,  # Number of recent iterations to stat
 ] {
   let time = date now
   $env.config.table.mode = 'psql'
@@ -201,21 +201,21 @@ def get-remove-candidates [
 }
 
 # Main entry point for OSS tools
-@example '统计最近 3 个迭代版本的 OSS 存储使用量' {
-  nu run/oss-tool.nu stat
+@example '统计最近 9 个迭代版本的 OSS 存储使用量' {
+  t oss-ta stat
 }
 @example '统计最近 5 个迭代版本的 OSS 存储使用量' {
-  nu run/oss-tool.nu stat -l 5
+  t oss-ta stat -l 5
 }
 @example '清理指定 mountpoint 的过期静态资源' {
-  nu run/oss-tool.nu clean -m dev
+  t oss-ta clean -m dev
 } --result '显示待删除对象列表，确认后执行删除'
 @example '交互式选择 mountpoint 进行清理' {
-  nu run/oss-tool.nu clean -i
-} --result '通过 fzf 多选 mountpoint，汇总显示后确认删除'
-export def oss-tool [
+  t oss-ta clean -i
+} --result '通过 fzf 选择一个或者多个 mountpoint，汇总显示后确认删除'
+export def oss-ta [
   action: string@['stat', 'clean'],   # Action to perform: `stat`, `clean`
-  --limit(-l): int = 3,               # Number of recent iterations to stat for `stat` action
+  --limit(-l): int = 9,               # Number of recent iterations to stat for `stat` action
   --mountpoint(-m): string = 'ttt0',  # OSS mount point for `clean` action: `dev`, `terp-test`, `2.5.25.0330`, etc.
   --interactive(-i),                  # Interactive mode for `clean` action
 ] {
@@ -226,4 +226,4 @@ export def oss-tool [
   }
 }
 
-alias main = oss-tool
+alias main = oss-ta
