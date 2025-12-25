@@ -238,14 +238,14 @@ def init-assets [
   http get $ASSETS_URL | save -rpf $'($tmp)/terp-assets.tar.gz'
   cd $tmp; tar -xzf terp-assets.tar.gz
   print $'Assets downloaded successfully to ($tmp)!'
-  if (s5cmd --json ls $s3_dest | complete | get stderr | from json | get -o error | default '') =~ 'no object' {
+  if (run-s5cmd '--json' ls $s3_dest | get stderr | from json | get -o error | default '') =~ 'no object' {
     let msg = $'Uploading assets to (ansi p)($dest_store)(ansi rst)...'
     with-progress $msg {
-      $ASSETS | each {|it| s5cmd sync $it $'($s3_dest)/($it)' }
+      $ASSETS | each {|it| run-s5cmd sync $it $'($s3_dest)/($it)' }
     }
   }
   let dry_run = $ASSETS | reduce -f '' {|it, acc|
-    [$acc (s5cmd --dry-run sync $it $'($s3_dest)/($it)')] | str join "\n"
+    [$acc (run-s5cmd '--dry-run' sync $it $'($s3_dest)/($it)' | get stdout)] | str join "\n"
   } | str trim
 
   if ($dry_run | is-empty) {
@@ -259,7 +259,7 @@ def init-assets [
   let confirm = input $'Are you sure to sync the assets? (ansi g)[y/n](ansi rst) '
   if ($confirm | str upcase) != 'Y' { exit $ECODE.SUCCESS }
   print $'Syncing assets...'
-  $ASSETS | each {|it| s5cmd sync $it $'($s3_dest)/($it)' }
+  $ASSETS | each {|it| run-s5cmd sync $it $'($s3_dest)/($it)' }
   print $'Assets have been synced successfully!'
 }
 
@@ -433,7 +433,7 @@ def revert-precheck [module: string, to: string, ossConf: record] {
 def select-revert-revision [module: string, remoteURI: string, localPath: string, destStore: string, ossConf: record] {
   # Use s5cmd to list namespace.json under each revision directory, then extract revision names
   let pattern = $'($remoteURI)/($module)-*/namespace.json'
-  let lines = s5cmd ls $pattern | complete
+  let lines = run-s5cmd ls $pattern
   if $lines.exit_code != 0 {
     print -e $'Failed to list revisions via s5cmd:'
     print $lines.stderr; exit $lines.exit_code
@@ -507,16 +507,26 @@ def execute-revert [
 # ------------------------------ Storage Abstractions ---------------------------------
 # ***************************************************************************************
 
+# Run s5cmd with auto-retry using virtual addressing style on path-style failure, e.g.:
+# SecondLevelDomainForbidden: Please use virtual hosted style to access. status code: 403
+def run-s5cmd [...args: string] {
+  let result = ^s5cmd ...$args | complete
+  if $result.exit_code == 0 and ($result.stderr !~ 'SecondLevelDomainForbidden|virtual') {
+    $result
+  } else {
+    ^s5cmd --addressing-style=virtual ...$args | complete
+  }
+}
+
 # Copy assets from source to dest，s5cmd ENV vars should be set by caller
 def do-storage-cp [source: string, dest: string] {
   # Use s5cmd for both upload and download; credentials must be set by caller
-  # Note: s5cmd overwrites by default
   let empties = get-empty-keys $env [AWS_REGION AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY S3_ENDPOINT_URL]
   if ($empties | is-not-empty) {
     print -e $'Please set (ansi r)($empties | str join ", ")(ansi rst) in your environment first...'
     exit $ECODE.INVALID_PARAMETER
   }
-  s5cmd cp $source $dest | complete
+  run-s5cmd cp $source $dest
 }
 
 # ***************************************************************************************
