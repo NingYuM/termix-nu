@@ -18,37 +18,40 @@ export def check-erda-envs [] {
   }
 }
 
-# Get Erda OpenAPI session token from .termix-conf file
+# Get Erda OpenAPI auth token from .termix-conf file
 export def get-erda-auth [host: string = $ERDA_HOST, --type: string = 'curl'] {
-  const NA = 'N/A'
-  let sessionKey = if $host == $ERDA_HOST { 'erdaSession' } else { $host | encode base64 }
+  let tokenKey = if $host == $ERDA_HOST { 'erdaToken' } else { $'($host | encode base64)_token' }
   let TERMIX_CONF = $'(get-tmp-path)/.termix-conf'
-  let erdaSession = open $TERMIX_CONF | from json | get -o $sessionKey | default $NA
+  let tokenInfo = open $TERMIX_CONF | from json | get -o $tokenKey
+  let tokenInfo = match $tokenInfo { '' => {{}}, _ => $tokenInfo }
+  let tokenType = $tokenInfo | get -o token_type | default 'Bearer'
+  let accessToken = $tokenInfo | get -o access_token | default ''
   if $type == 'nu' {
-    return ['cookie' $'OPENAPISESSION=($erdaSession)' ...$HTTP_HEADERS]
+    return ['Authorization' $'($tokenType) ($accessToken)' ...$HTTP_HEADERS]
   }
-  $'cookie: OPENAPISESSION=($erdaSession)'
+  $'Authorization: ($tokenType) ($accessToken)'
 }
 
-# Renew Erda session by username and password if expired
+# Renew Erda auth token by username and password if expired
 export def renew-erda-session [host: string = $ERDA_HOST, --get-uid] {
-  if not $get_uid { print 'Renewing Erda session...' }
+  if not $get_uid { print 'Renewing Erda auth token...' }
   let TERMIX_CONF = $'(get-tmp-path)/.termix-conf'
-  let sessionKey = if $host == $ERDA_HOST { 'erdaSession' } else { $host | encode base64 }
-  let query = { username: $env.ERDA_USERNAME, password: $env.ERDA_PASSWORD } | url build-query
+  let tokenKey = if $host == $ERDA_HOST { 'erdaToken' } else { $'($host | encode base64)_token' }
   let openApiHost = if ($host =~ 'openapi') { $host } else { $host | str replace '://' '://openapi.' }
-  let RENEW_URL = $'($openApiHost)/login?($query)'
-  let renew = curl --silent -X POST $RENEW_URL | from json
-  if ($renew | is-empty) { print 'Try renew Erda session again...'; renew-erda-session $host }
+  let LOGIN_URL = $'($openApiHost)/login'
+  let payload = { username: $env.ERDA_USERNAME, password: $env.ERDA_PASSWORD }
+  let renew = http post --content-type application/json $LOGIN_URL $payload
+  if ($renew | is-empty) { print 'Try renew Erda auth token again...'; renew-erda-session $host }
   if ($renew | describe) == 'string' {
-    print -e $'Erda session renew failed with message: (ansi r)($renew)(ansi rst)'
-    print -e $'Session Renew URL: (ansi r)($RENEW_URL)(ansi rst).'
+    print -e $'Erda auth token renew failed with message: (ansi r)($renew)(ansi rst)'
+    print -e $'Login URL: (ansi r)($LOGIN_URL)(ansi rst).'
     exit $ECODE.AUTH_FAILED
   }
+  let tokenInfo = $renew | get -o token | default {}
   open $TERMIX_CONF | from json
-    | upsert $sessionKey $renew.sessionid | to json
+    | upsert $tokenKey $tokenInfo | to json
     | save -rf $TERMIX_CONF
-  if $get_uid { return $renew.id }
+  if $get_uid { return $renew.user.id }
 }
 
 # 判断是否需要重试，如果返回 true 则重试，否则不重试
