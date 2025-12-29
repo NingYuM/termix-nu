@@ -1,6 +1,12 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.97.1 - 2025-12-29
+
+**Bug Fixes**
+
+- Adapt to the new erda auth OpenAPI
+
 ## v1.97.0 - 2025-11-28
 
 **Bug Fixes**
