@@ -7,7 +7,30 @@ set -euo pipefail
 DEST_DIR='/usr/local/bin/'
 BASE_URL='https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/open-tools/nushell'
 
+# 显示帮助信息
+function show_help() {
+  echo "Usage: $0 [OPTIONS] [DEST_DIR]"
+  echo ""
+  echo "Install or update nushell (nu) binary on macOS or Linux."
+  echo ""
+  echo "Arguments:"
+  echo "  DEST_DIR    Installation directory (default: /usr/local/bin/)"
+  echo ""
+  echo "Options:"
+  echo "  -h, --help  Show this help message and exit"
+  echo ""
+  echo "Examples:"
+  echo "  $0                    # Install to /usr/local/bin/"
+  echo "  $0 /opt/bin           # Install to /opt/bin/"
+  echo "  $0 ~/bin              # Install to ~/bin/"
+}
+
 # 处理命令行参数
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  show_help
+  exit 0
+fi
+
 if [ $# -eq 1 ]; then
   DEST_DIR=$1
   # Make sure DEST_DIR ends with a slash
@@ -104,7 +127,8 @@ function install_or_update() {
     fi
   fi
   rm "$pkg"
-  rm "$DEST_DIR"/nu_*cust* "$DEST_DIR"/nu_*exam* "$DEST_DIR"/nu_*str*
+  # 删除不需要的插件文件，忽略不存在的情况
+  rm -f "$DEST_DIR"/nu_*cust* "$DEST_DIR"/nu_*exam* "$DEST_DIR"/nu_*str* 2>/dev/null || true
   echo "Successfully installed $bin with version $version"
 }
 
