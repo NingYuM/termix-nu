@@ -38,7 +38,7 @@ export def termix-ver [] {
   let checkDate = date now | format date $_DATE_FMT
   if ($confName | path exists) {
     let conf = open -r $confName | from json
-    let latestVer = $conf.latestVer?
+    let latestVer = $conf.latestVer? | default $currentVer
     if $conf.checkDate? == $checkDate {
       upgrade-tip termix-nu $latestVer $currentVer
     } else {
@@ -71,6 +71,7 @@ def query-ver [
   let checkDate = date now | format date $_DATE_FMT
   let currentVer = get-conf version
   let versions = git tag -l --sort=-v:refname | lines
+  if ($versions | is-empty) { return $currentVer }
   let latestVer = $versions.0
   let newVersions = $versions | where {|it| is-lower-ver $currentVer $it }
   let forceUpgrade = $newVersions | any {|it| git show --oneline --no-patch $it | str contains $_UPGRADE_TAG }
