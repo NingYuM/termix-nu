@@ -24,11 +24,12 @@ export def just-ver [] {
 }
 
 # Force Upgrade Test Case:
-# [√] 兼容老的配置项: 没有 forceUpgrade 配置项时正常执行;
+# [√] 兼容老的配置项: 没有 forceUpgradeVer 配置项时正常执行;
 # [√] 发布**非强制更新新版本**的时候不升级的情况下可以正常执行当前命令;
 # [√] 发布新的强制更新版本时：
 #     [√] 可以检测到并在第二次执行命令时强制更新否则退出;
 #     [√] 当用户升级到最新版本后所有命令可以正常执行；
+#     [√] 当用户升级到超过强制更新版本后所有命令可以正常执行（即使未升级到最新版本）；
 #     [√] 当删除掉最新的强制更新版本 Release Tag 时用户端可以检测到并在不升级的情况下恢复正常使用；
 # Check latest termix-nu version and show upgrading tips if there is a new release
 export def termix-ver [] {
@@ -45,15 +46,20 @@ export def termix-ver [] {
       upgrade-tip termix-nu (query-ver $confName) $currentVer
     }
 
-    # Parse conf as JSON and check forceUpgrade column
-    let hasForceUpgrade = $conf.forceUpgrade? != null
-    let forceUpgrade = (if $hasForceUpgrade { $conf.forceUpgrade? and (is-lower-ver $currentVer $latestVer) } else { false })
+    # Check if force upgrade is required
+    let forceUpgradeVer = $conf.forceUpgradeVer?
+    let forceUpgrade = match [$forceUpgradeVer, $conf.forceUpgrade?] {
+      [$v, _] if ($v | is-not-empty) => (is-lower-ver $currentVer $v),
+      [_, true] => (is-lower-ver $currentVer $latestVer),  # Backward compatibility
+      _ => false
+    }
     # Quit command right now if it's a force upgrade
     if $forceUpgrade {
       print $'(ansi r)很抱歉，为了更好地为您提供服务请先执行 `just upgrade -a` 更新 termix-nu 并重试...(ansi rst)(char nl)(char nl)'
       (query-ver $confName | ignore); exit $ECODE.OUTDATED    # Query and update latest version again.
     }
-    if not $hasForceUpgrade { query-ver $confName | ignore }
+    # Trigger query-ver for old configs without forceUpgradeVer field
+    if ($forceUpgradeVer | is-empty) and ($conf.forceUpgrade? | is-empty) { query-ver $confName | ignore }
   } else {
     upgrade-tip termix-nu (query-ver $confName) $currentVer
   }
@@ -74,8 +80,10 @@ def query-ver [
   if ($versions | is-empty) { return $currentVer }
   let latestVer = $versions.0
   let newVersions = $versions | where {|it| is-lower-ver $currentVer $it }
-  let forceUpgrade = $newVersions | any {|it| git show --oneline --no-patch $it | str contains $_UPGRADE_TAG }
-  let config = { latestVer: $latestVer, checkDate: $checkDate, forceUpgrade: $forceUpgrade }
+  # Find the highest force upgrade version (newVersions is sorted descending)
+  let forceUpgradeVersions = $newVersions | where {|it| git show --oneline --no-patch $it | str contains $_UPGRADE_TAG }
+  let forceUpgradeVer = match $forceUpgradeVersions { [$first, ..$_] => $first, _ => null }
+  let config = { latestVer: $latestVer, checkDate: $checkDate, forceUpgradeVer: $forceUpgradeVer }
   if ($conf | path exists) {
     open $conf | from json | merge $config | to json | save -f $conf
   } else {
@@ -91,18 +99,20 @@ def upgrade-tip [
   current: string,   # Current version of the command or binary
 ] {
   if (is-lower-ver $current $min) {
-    if $cmd == 'termix-nu' {
-      print $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi rst)(char nl)'
-      print $'        -----> Your ($cmd) is (ansi r)OUTDATED(ansi rst), latest ver: (ansi p)($min)(ansi rst) <----- (char nl)'
-      print $'         Please run (ansi g)`just upgrade`(ansi rst) to upgrade to the latest version.(char nl)'
-      print $'(ansi lpr)      You may need to run `t upgrade -a` to upgrade `nu` and `just`, too.      (ansi rst)'
-      print $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi rst)(char nl)'
-    } else {
-      print $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi rst)(char nl)'
-      print $'      Min required ($cmd) ver: (ansi r)($min)(ansi rst), current ($cmd) ver: ($current)(char nl)'
-      print $'        ------------> Your ($cmd) is (ansi r)OUTDATED(ansi rst) <------------ (char nl)'
-      print $'(ansi lpr)       Please run `t upgrade ($cmd)` to upgrade to the latest version.        (ansi rst)(char nl)'
-      print $'(ansi g)───────────────────────────────────────────────────────────────────────────────(ansi rst)(char nl)'
+    let line = '───────────────────────────────────────────────────────────────────────────────'
+    print $'(ansi g)($line)(ansi rst)(char nl)'
+    match $cmd {
+      'termix-nu' => {
+        print $'        -----> Your ($cmd) is (ansi r)OUTDATED(ansi rst), latest ver: (ansi p)($min)(ansi rst) <----- (char nl)'
+        print $'         Please run (ansi g)`just upgrade`(ansi rst) to upgrade to the latest version.(char nl)'
+        print $'(ansi lpr)      You may need to run `t upgrade -a` to upgrade `nu` and `just`, too.      (ansi rst)'
+      },
+      _ => {
+        print $'      Min required ($cmd) ver: (ansi r)($min)(ansi rst), current ($cmd) ver: ($current)(char nl)'
+        print $'        ------------> Your ($cmd) is (ansi r)OUTDATED(ansi rst) <------------ (char nl)'
+        print $'(ansi lpr)       Please run `t upgrade ($cmd)` to upgrade to the latest version.        (ansi rst)(char nl)'
+      }
     }
+    print $'(ansi g)($line)(ansi rst)(char nl)'
   }
 }
