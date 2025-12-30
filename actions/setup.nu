@@ -80,7 +80,9 @@ export def upgrade-termix-nu [] {
   # Fetch all tags and branches
   git fetch origin --tags --force
   git checkout master
-  git reset --hard (git tag -l --sort=-v:refname | lines | select 0).0
+  let tags = git tag -l --sort=-v:refname | lines
+  if ($tags | is-empty) { print -e $'(ansi r)No tags found, upgrade skipped.(ansi rst)'; return }
+  git reset --hard $tags.0
 }
 
 # Get current installed versions of nushell, fzf, and just

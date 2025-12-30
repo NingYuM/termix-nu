@@ -48,7 +48,11 @@ export def upgrade-tool [
     upgrade-termix-nu
     exit $ECODE.SUCCESS
   }
-  let tool = if $tool == 'just' { $tool } else { 'nushell' }
-  upgrade-latest-tool $tool --no-aria2c --force=$force
+  let tool = if $tool in ['nu', 'nushell'] { 'nushell' } else { $tool }
+  if $tool == 'nushell' {
+    upgrade-latest-tool $tool --no-aria2c --force=$force --post-install { rm $nu.plugin-path }
+  } else {
+    upgrade-latest-tool $tool --no-aria2c --force=$force
+  }
 }
 

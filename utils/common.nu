@@ -619,6 +619,7 @@ export def progress [
 # Get the value of key from ~/.termix-nu/.termix-conf
 export def get-dot-conf [key: string, default?: any] {
   let TERMIX_CONF = $'(get-tmp-path)/.termix-conf'
+  if not ($TERMIX_CONF | path exists) { return $default }
   open $TERMIX_CONF | from json | get -o $key | default $default
 }
 
