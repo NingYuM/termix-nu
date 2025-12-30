@@ -8,6 +8,7 @@ SERVER_URL=${SERVER_URL:-"http://trantor2-installer.app.terminus.io"}
 SMART_MODE=false
 NON_INTERACTIVE=false
 ERDA_COOKIE=""
+ERDA_TOKEN=""
 ERDA_BASE_URL="https://erda.cloud"
 ORG_NAME="terminus"
 PROJECT_ID=""
@@ -354,6 +355,7 @@ erda_api_curl() {
   local local_base_url=""
   local local_org_name=""
   local local_cookie=""
+  local local_token=""
   local has_url=false
   local url=""
 
@@ -374,11 +376,12 @@ erda_api_curl() {
 
   # Parse credentials into local variables
   local_cookie=$(cat "$creds_file" | parse_json_field "erda_cookie")
+  local_token=$(cat "$creds_file" | parse_json_field "erda_token")
   local_org_name=$(cat "$creds_file" | parse_json_field "org_name")
   local_base_url=$(cat "$creds_file" | parse_json_field "base_url")
 
   # Check that we got all required credentials
-  if [ -z "$local_cookie" ] || [ -z "$local_org_name" ] || [ -z "$local_base_url" ]; then
+  if [ -z "$local_org_name" ] || [ -z "$local_base_url" ] || { [ -z "$local_cookie" ] && [ -z "$local_token" ]; }; then
     log "Error: Could not parse credentials from '$creds_file'"
     return 1
   fi
@@ -431,8 +434,12 @@ erda_api_curl() {
     curl_args+=("-o" "$temp_response")
   fi
 
-  # Add cookie authentication
-  curl_args+=("--cookie" "$local_cookie")
+  # Add authentication header (prefer token when available)
+  if [ -n "$local_token" ]; then
+    curl_args+=("-H" "Authorization: Bearer $local_token")
+  elif [ -n "$local_cookie" ]; then
+    curl_args+=("--cookie" "$local_cookie")
+  fi
 
   # Add header dump to analyze content type
   curl_args+=("--dump-header" "$headers_file")
@@ -549,28 +556,42 @@ erda_login() {
     return 1
   fi
 
-  # Extract session ID using parse_json_field
+  # Extract session ID and token from response
   local session_id=$(cat "$temp_response" | parse_json_field "sessionid")
-  if [ -z "$session_id" ]; then
-    log "Error: Failed to extract session ID from response"
+  local access_token=$(cat "$temp_response" | parse_json_field "token.access_token")
+  local token_type=$(cat "$temp_response" | parse_json_field "token.token_type")
+
+  if [ -z "$session_id" ] && [ -z "$access_token" ]; then
+    log "Error: Failed to extract session ID or access token from response"
     cat "$temp_response" | format_json >&2
     rm -f "$temp_response"
     return 1
   fi
 
   # Extract user ID using parse_json_field
-  local user_id=$(cat "$temp_response" | parse_json_field "id")
+  local user_id=$(cat "$temp_response" | parse_json_field "user.id")
+  if [ -z "$user_id" ]; then
+    user_id=$(cat "$temp_response" | parse_json_field "id")
+  fi
 
   # Extract username from response using parse_json_field
-  local username_resp=$(cat "$temp_response" | parse_json_field "username")
+  local username_resp=$(cat "$temp_response" | parse_json_field "user.username")
+  if [ -z "$username_resp" ]; then
+    username_resp=$(cat "$temp_response" | parse_json_field "username")
+  fi
 
-  # Create the cookie value
-  local cookie="OPENAPISESSION=$session_id"
+  # Create the cookie value if session exists
+  local cookie=""
+  if [ -n "$session_id" ]; then
+    cookie="OPENAPISESSION=$session_id"
+  fi
 
   # Store credentials in the output file, including org_name
   cat > "$output_file" << EOF
 {
   "erda_cookie": "$cookie",
+  "erda_token": "$access_token",
+  "erda_token_type": "$token_type",
   "user_id": "$user_id",
   "username": "$username_resp",
   "base_url": "$base_url",
@@ -1364,6 +1385,7 @@ upload_release() {
 
   # Extract credentials
   local erda_cookie=$(cat "$creds_file" | parse_json_field "erda_cookie")
+  local erda_token=$(cat "$creds_file" | parse_json_field "erda_token")
   local base_url=$(cat "$creds_file" | parse_json_field "base_url")
   local org_name=$(cat "$creds_file" | parse_json_field "org_name")
 
@@ -1374,6 +1396,7 @@ upload_release() {
   cat > "$temp_creds" << EOF
 {
   "erda_cookie": "$erda_cookie",
+  "erda_token": "$erda_token",
   "org_name": "$org_name",
   "base_url": "$base_url"
 }
@@ -1646,6 +1669,7 @@ EOF
 
   return 0
 }
+
 # End content from: erda-func-ext.sh
 
 
@@ -1661,6 +1685,7 @@ show_help() {
   echo "  --smart                     Enable smart mode for interactive parameter input"
   echo "  --non-interactive           Enable non-interactive mode (skip confirmations, return pipeline info only)"
   echo "  --erda-cookie COOKIE        Erda cookie for authentication (bypasses credential management)"
+  echo "  --erda-token TOKEN          Erda access token for authentication (bypasses credential management)"
   echo "  --base-url URL              Erda base URL (default: $ERDA_BASE_URL)"
   echo "  --org-name ORG_NAME         Erda organization name (default: $ORG_NAME)"
   echo "  --project-id ID             Project ID"
@@ -1678,7 +1703,7 @@ show_help() {
   echo "  When --non-interactive is used:"
   echo "  - All user confirmations and interactions are skipped"
   echo "  - Returns pipeline_id and build_id immediately without waiting for completion"
-  echo "  - Works best with --erda-cookie to bypass authentication prompts"
+  echo "  - Works best with --erda-cookie or --erda-token to bypass authentication prompts"
   echo "  - Requires all necessary parameters to be provided via command line"
   echo
   echo "Examples:"
@@ -1708,6 +1733,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --erda-cookie)
       ERDA_COOKIE="$2"
+      shift 2
+      ;;
+    --erda-token)
+      ERDA_TOKEN="$2"
       shift 2
       ;;
     --base-url)
@@ -1956,23 +1985,29 @@ CREDS_FILE=$(mktemp)
 trap 'rm -f "$CREDS_FILE"' EXIT
 
 # Credential management
-if [ -n "$ERDA_COOKIE" ]; then
-  # Use provided cookie directly
-  log "Using provided Erda cookie for authentication"
+if [ -n "$ERDA_COOKIE" ] || [ -n "$ERDA_TOKEN" ]; then
+  # Use provided cookie/token directly
+  if [ -n "$ERDA_TOKEN" ]; then
+    log "Using provided Erda token for authentication"
+  else
+    log "Using provided Erda cookie for authentication"
+  fi
   
-  # Create a minimal credentials file with the provided cookie
+  # Create a minimal credentials file with the provided cookie/token
   cat > "$CREDS_FILE" << EOF
 {
   "base_url": "$ERDA_BASE_URL",
   "org_name": "$ORG_NAME",
   "erda_cookie": "$ERDA_COOKIE",
-  "username": "provided-via-cookie",
+  "erda_token": "$ERDA_TOKEN",
+  "username": "provided-via-auth",
   "user_id": "unknown"
 }
 EOF
   
-  # Extract the cookie for later use
+  # Extract the cookie/token for later use
   ERDA_COOKIE=$(cat "$CREDS_FILE" | parse_json_field "erda_cookie")
+  ERDA_TOKEN=$(cat "$CREDS_FILE" | parse_json_field "erda_token")
 else
   # Interactive credential management
   log "Accessing Erda at $ERDA_BASE_URL (organization: $ORG_NAME)"
@@ -1986,8 +2021,9 @@ else
   USER_ID=$(cat "$CREDS_FILE" | parse_json_field "user_id")
   log "Successfully logged in as $USERNAME_RESP (ID: $USER_ID)"
 
-  # Extract the cookie from credentials file
+  # Extract the cookie/token from credentials file
   ERDA_COOKIE=$(cat "$CREDS_FILE" | parse_json_field "erda_cookie")
+  ERDA_TOKEN=$(cat "$CREDS_FILE" | parse_json_field "erda_token")
 fi
 
 # Step 1: Prepare the application by creating/updating the pipeline YAML
@@ -2071,9 +2107,8 @@ fi
 
 # Get org ID
 ORG_INFO_RESPONSE=$(mktemp)
-if ! curl -s -f -X GET \
-  -H "Cookie: $ERDA_COOKIE" \
-  "$ERDA_BASE_URL/api/$ORG_NAME/orgs" -o "$ORG_INFO_RESPONSE"; then
+if ! erda_api_curl --creds "$CREDS_FILE" -s -f -X GET \
+  "{base_url}/api/{org_name}/orgs" -o "$ORG_INFO_RESPONSE"; then
   log "Error: Failed to get organization information"
   rm -f "$ORG_INFO_RESPONSE"
   exit 1

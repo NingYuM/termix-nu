@@ -51,7 +51,7 @@ export def renew-erda-session [host: string = $ERDA_HOST, --get-uid] {
   open $TERMIX_CONF | from json
     | upsert $tokenKey $tokenInfo | to json
     | save -rf $TERMIX_CONF
-  if $get_uid { return $renew.user.id }
+  match $get_uid { true => { $renew.user.id }, _ => { $tokenInfo.access_token } }
 }
 
 # 判断是否需要重试，如果返回 true 则重试，否则不重试
