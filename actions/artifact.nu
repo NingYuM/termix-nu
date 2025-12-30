@@ -494,7 +494,7 @@ def consume-trantor-artifact [
   --deploy-group(-g): string, # The app group to deploy for the specified artifact, `all` by default
 ] {
   let metaPath = $'(get-tmp-path)/($RELEASE_META_PATH)/releases.json'
-  let auth = get-erda-auth $destSetting.erdaHost | str replace 'cookie: ' ''
+  let token = renew-erda-session
   let selected = open $metaPath | where metadata?.erda_release_version? == $version | get 0
   let respBegin = $'Shell stderr:(char nl)(ansi grey66)--- Begin Response from Trantor Bash Script ---- (char nl)'
   let respEnd = $'--- End Response from Trantor Bash Script ---- (char nl)(ansi rst)'
@@ -504,7 +504,7 @@ def consume-trantor-artifact [
   if ($preCheck | is-empty) {
     let artifactUrl = $'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/($selected.path)'
     let pipeline = (bash run/trantor-artifact-transfer.sh
-        --erda-cookie $auth
+        --erda-token $token
         --artifact-url $artifactUrl
         --base-url $destSetting.erdaHost
         --org-name $destSetting.orgAlias
