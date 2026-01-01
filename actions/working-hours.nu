@@ -60,7 +60,7 @@ export def working-hours-daily-checking [--debug(-d)] {
     exit $ECODE.SUCCESS
   }
   # 非周五、六、日、一直接返回
-  if not (($weekday in $messages) or $isMonthEnd or $isLastDay) {
+  if not (should-notify $checkPoint $messages) {
     print $'Skip notify at (ansi p)($weekday)(ansi rst)...';
     exit $ECODE.SUCCESS
   }
@@ -156,10 +156,13 @@ export def query-monthly-hours-by-team [
   let staffs = query-staffs-by-team $team.code $monday $sunday --token=$token
 
   let iptMonth = $month | fill --alignment right -w 2 -c '0'
-  let nextMonth = ($month + 1) | fill --alignment right -w 2 -c '0'
-  let monthStart = (date now) | format date $'%Y-($iptMonth)-01 00:00:00'
-  let monthEnd = if ($month + 1) == 13 { ($monthStart | into datetime) + 31day } else { ((date now) | format date $'%Y-($nextMonth)-01 00:00:00' | into datetime) }
-  let monthEnd = $monthEnd - 1sec | format date $_TIME_FMT
+  let year = date now | format date %Y | into int
+  let monthStart = $'($year)-($iptMonth)-01 00:00:00'
+  # 跨年处理：12月的下一个月是次年1月
+  let nextYear = if $month == 12 { $year + 1 } else { $year }
+  let nextMonthNum = if $month == 12 { 1 } else { $month + 1 }
+  let nextMonthStr = $nextMonthNum | fill --alignment right -w 2 -c '0'
+  let monthEnd = ($'($nextYear)-($nextMonthStr)-01 00:00:00' | into datetime) - 1sec | format date $_TIME_FMT
   print $'Query working hours from ($monthStart) to ($monthEnd) for team (ansi p)($team.name)(ansi rst)'
   let title = $"($team.name) (ansi g)($month)(ansi rst) 月工时填报\(人/天\)"
   print $"\n-------------------------> (ansi p)($title) <-------------------------(ansi rst)\n"
@@ -294,10 +297,9 @@ export def query-hours-by-team [
     )}
 
   if $debug { log 'allStaffs' $allStaffs; log 'workingHours' $workingHours }
-  let leavingHours = $leaves | get data.data
-
-  # Set a default leaving record
-  let leavingHours = if ($leavingHours | is-empty) { [[beginTime, duration, staffId]; [0, 0, 0]] } else {
+  let leavingHours = $leaves | get data.data | default []
+  # 处理请假数据，空表时直接使用空表
+  let leavingHours = if ($leavingHours | is-empty) { [] } else {
       $leavingHours | select beginTime duration staff | upsert staffId {|staff| $staff.staff.id } | reject staff
     }
 
@@ -331,26 +333,27 @@ def handle-working-hours [
   let week = [Mon, Tue, Wen, Thu, Fri, Sat, Sun]
   # 当前是一年中的第几周
   let weekNo = if $show_prev == true { (date now) - 7day | format date %V } else { date now | format date %V }
-  # 此刻是一周中的第几天，周一为第 1 天
-  mut weekDay = date now | format date %u | into int
-  $weekDay = if $weekDay > 5 { 5 } else { $weekDay }
+  # 此刻是一周中的第几天，周一为第 1 天，最大为 5（周五）
+  let weekDay = date now | format date %u | into int | [5, $in] | math min
   let totalDays = $env.WORKDAYS_TILL_MONTH_END? | default '0' | into int
   let totalDays = if $totalDays == 0 { $weekDay } else { $totalDays }
   let isMonthEnd = is-month-end ((date now) + $CHECK_DURATION)
 
-  # Set a default working hour record
-  let workingHours = if ($workingHours | compact | length) == 0 { [[fillDate, percentage, staffId]; [0, 0, 0]] } else { $workingHours }
-
-  let hours = $workingHours
+  # 处理工时数据，过滤 null 值后若为空则使用空表
+  let workingHours = $workingHours | default [] | compact
+  let hours = if ($workingHours | is-empty) { [] } else {
+    $workingHours
       | upsert day { |work|
           if ($work.fillDate? | is-empty) { 'N/A' } else {
             let day = $work.fillDate * 1000_000 | into datetime
-            let idx = ([$day] | polars into-df | polars get-weekday).0 mod 7
-            ($week | select $idx).0
+            # %u: 1=Monday, 7=Sunday; 减1后得到 0-6 的索引
+            let idx = ($day | format date %u | into int) - 1
+            ($week | get $idx)
           }
         }
       | upsert Hrs { |work| ($work.percentage * 8) | into int }
       | select staffId day Hrs
+  }
 
   let allMembers = $allStaffs
       | upsert Mon { |staff| get-hr-per-staff $staff.id Mon $hours }
@@ -361,12 +364,15 @@ def handle-working-hours [
       | upsert 'WeekNO.' $weekNo
       | upsert Leave { |staff|
           let leaves = ($leavingHours | where staffId == $staff.id)
-          if ($leaves | length) == 0 { 0 } else { ($leaves | get duration | math sum) * 8 | into int }
+          if ($leaves | is-empty) { 0 } else { ($leaves | get duration | math sum) * 8 | into int }
         }
       | upsert Gap { |staff|
-          let staffDetail = $hourSummary | where $it.staffBO.name == $staff.Name | get 0
-          let calcRemain = ($totalDays - $staffDetail.actual - $staffDetail.leave) * 8
-          if $isMonthEnd { $calcRemain } else { $staffDetail.surplus * 8 }
+          let staffDetail = $hourSummary | where $it.staffBO.name == $staff.Name | first
+          # 如果找不到员工详情，默认返回0
+          if ($staffDetail | is-empty) { 0 } else {
+            let calcRemain = ($totalDays - $staffDetail.actual - $staffDetail.leave) * 8
+            if $isMonthEnd { $calcRemain } else { $staffDetail.surplus * 8 }
+          }
         }
       | upsert WARN { |it| if ($it.Gap > 0) { $'(ansi r)('*' | fill -a r -w 6 -c $'(char sp)')(ansi rst)' } }
       | sort-by WARN Gap Name
@@ -377,13 +383,11 @@ def handle-working-hours [
   if ($result | is-empty) { print $'(ansi g)  Bravo! all filled! Bye...(char nl)(ansi rst)'; return true }
 
   if not $silent { print $result }
-  let empSwitchEnv = $env.EMP_WORKING_HOURS_NOTIFY? | default 'off'
-  if $notify and $empSwitchEnv == 'off' {
-    print $'WARN: `EMP_WORKING_HOURS_NOTIFY` is (ansi p)off(ansi rst), stop sending notifications...(char nl)'
-    return false
-  }
-  if $notify and $empSwitchEnv == 'on' {
-    notify-filling-hours $allMembers --team $team --debug=$debug
+  if $notify {
+    match ($env.EMP_WORKING_HOURS_NOTIFY? | default 'off') {
+      'on' => { notify-filling-hours $allMembers --team $team --debug=$debug }
+      _ => { print $'WARN: `EMP_WORKING_HOURS_NOTIFY` is (ansi p)off(ansi rst), stop sending notifications...(char nl)' }
+    }
   }
   false
 }
@@ -416,12 +420,10 @@ def notify-filling-hours [hours: any, --team: record, --debug] {
   print 'Try to send notifications by DingTalk Robot...'
   let checkPoint = (date now) + $CHECK_DURATION
   let messages = $env.EMP_CONF | get settings?.messages? | default {}
-  # Get monday, ..., friday, saturday, sunday
   let weekday = $checkPoint | format date $_WEEK_FMT | str downcase
-  let isMonthEnd = is-month-end $checkPoint
   let isLastDay = $env.LAST_DAY? == 'on'
   # 非周五、六、日、一直接返回
-  if not (($weekday in $messages) or $isMonthEnd or $isLastDay) {
+  if not (should-notify $checkPoint $messages) {
     print $'Skip notify at (ansi p)($weekday)(ansi rst)...';
     return $ECODE.SUCCESS
   }
@@ -451,8 +453,10 @@ def notify-filling-hours [hours: any, --team: record, --debug] {
   if ($notifyCount == ($hours | length) or $notifyCount >= ($team.atAllMinCount? | default 30)) {
     dingtalk notify --text $message --at-all; return
   }
+  # 预先加载员工数据，避免在循环中重复打开文件
+  let staffsData = if ($STAFFS_FILE | path exists) { open $STAFFS_FILE } else { [] }
   let mentions = $notifyCandidates | upsert Mobile {|m|
-    let mobileFetched = open $STAFFS_FILE | where name == $m.Name | get phone
+    let mobileFetched = $staffsData | where name == $m.Name | get -o phone
     let mobileFilled = $users | where name == $m.Name | get -o 0 | get -o mobile
     ($mobileFilled | default $mobileFetched)
   }
@@ -475,10 +479,10 @@ def valid-user-mobiles [users: any] {
 def get-hr-per-staff [
   id: int,
   weekDay: string,
-  hours: any,
+  hours: list,
 ] {
   let hour = $hours | default 'N/A' day | where staffId == $id and day == $weekDay
-  if ($hour | length) == 0 { 0 } else { ($hour | select 0).0.Hrs }
+  if ($hour | is-empty) { 0 } else { $hour | first | get Hrs }
 }
 
 # Get the beginning time of monday, like 2021-12-06 00:00:00
@@ -504,6 +508,14 @@ def get-sunday [
 # 判断是否是月底
 def is-month-end [time: datetime] {
   ($time | format date $_MONTH_FMT) != (($time + 1day) | format date $_MONTH_FMT)
+}
+
+# 判断是否应该发送通知（周五、六、日、一、月底或最后一天）
+def should-notify [checkPoint: datetime, messages: record]: nothing -> bool {
+  let weekday = $checkPoint | format date $_WEEK_FMT | str downcase
+  let isMonthEnd = is-month-end $checkPoint
+  let isLastDay = $env.LAST_DAY? == 'on'
+  ($weekday in $messages) or $isMonthEnd or $isLastDay
 }
 
 
@@ -551,17 +563,20 @@ def get-user-auth [
 def handle-exception [
   res: record
 ] {
-
-  # 未登录或者Cookie过期提示, use `do -i` to ignore 'error: Coercion error'
-  do -i {
-    if ($res | is-empty) or ($res | get status) == 401 {
-      print -e $'(ansi r)You did`t have permission to call this API !(char nl)(ansi rst)'
+  if ($res | is-empty) {
+    print -e $'(ansi r)Empty response from API!(char nl)(ansi rst)'
+    exit $ECODE.SERVER_ERROR
+  }
+  match ($res | get -o status) {
+    401 => {
+      print -e $"(ansi r)You didn't have permission to call this API!(char nl)(ansi rst)"
       exit $ECODE.AUTH_FAILED
     }
-    if (($res | get status) == 500) {
-      print -e $'(ansi r)Backend internal server error，please try again later!(char nl)(ansi rst)'
+    500 => {
+      print -e $'(ansi r)Backend internal server error, please try again later!(char nl)(ansi rst)'
       exit $ECODE.SERVER_ERROR
     }
+    _ => {}
   }
 }
 
