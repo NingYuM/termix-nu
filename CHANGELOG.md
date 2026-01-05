@@ -1,6 +1,12 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.97.2 - 2026-01-05
+
+**Miscellaneous Tasks**
+
+- Update `trantor-artifact-transfer.sh` & fix artifact consume
+
 ## v1.97.1 - 2025-12-29
 
 **Bug Fixes**
