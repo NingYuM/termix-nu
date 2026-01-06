@@ -357,6 +357,12 @@ def cargo-clippy [] {
   cargo clippy --all --all-features -- -D warnings -D clippy::unwrap_used -A clippy::needless_collect
 }
 
+# Modify the latest commit's commit date to now
+def gtouch [] {
+  let now = date now | format date '%Y-%m-%dT%H:%M:%S'
+  GIT_COMMITTER_DATE=$now git commit --amend --no-edit --date $now
+}
+
 # Example usage: `$nu.config-path | goto`
 def --env goto [] {
   let input = $in
