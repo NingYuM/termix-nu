@@ -12,7 +12,7 @@ use ../utils/common.nu [ECODE, is-installed, hr-line, can-write, linux?]
 export def get-latest-nightly-build [
   --list(-l),           # list all the available binary packages
   --interactive(-i),    # ask the user to choose the target architecture
-  --tag(-t): string,    # the tag name of the release, e.g. 'nightly-eedf833'
+  --tag(-t): string,    # the tag name of the release, e.g. '0.109.2-nightly.31+99c5c5f'
   target: string = ''   # the target architecture, matches all of them by default
 ]: nothing -> nothing {
 
@@ -22,6 +22,10 @@ export def get-latest-nightly-build [
   let latest = if ($tag | is-empty) { $latest } else {
       $latest | where { $in.tag_name | str contains $tag }
     } | sort-by published_at --reverse | first
+
+  if ($latest | is-empty) {
+    error make --unspanned { msg: $"(ansi r)No release found matching tag `($tag)`(ansi rst)" }
+  }
 
   if $list {
     print 'Available packages:'; hr-line
@@ -79,8 +83,8 @@ export def get-latest-nightly-build [
 
   let build = $target.name
       | wrap name
-      | insert hash { $latest.tag_name | parse '{version}-nightly.{build}+{hash}' | get 0.hash }
-      | insert version { $latest.tag_name | parse '{version}-nightly.{build}+{hash}' | get 0.version }
+      | insert hash { $latest.tag_name | parse '{version}-nightly.{build}+{hash}' | get 0?.hash? | default 'unknown' }
+      | insert version { $latest.tag_name | parse '{version}-nightly.{build}+{hash}' | get 0?.version? | default 'unknown' }
       | insert extension { $target.name | path parse | get extension }
 
   let destDir = mktemp -d | path join 'nu-nightly'
