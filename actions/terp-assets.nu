@@ -175,7 +175,26 @@ export def fzf-preview [revision: string, localPath: string, remoteURI: string, 
     | merge { revision: $revision, remoteURI: $remoteURI }
     | select module revision remoteURI metadata
     | upsert metadata.syncBy {|it| $it.metadata?.syncBy? | show }
-    | table -e -t compact
+    | table -e -t compact | print
+
+  # Show static assets statistics for this revision
+  let manifestDest = $'($localPath)/($revision)/manifest.json'
+  let manifestRemote = $'($remoteURI)/($revision)/manifest.json'
+  let manifestResult = do-storage-cp $manifestRemote $manifestDest
+  if $manifestResult.exit_code == 0 and ($manifestDest | path exists) {
+    let manifest = open $manifestDest
+    let assets = $manifest | get -o assets | default []
+    if ($assets | is-not-empty) {
+      let byExt = $assets
+        | each { |a| $a | path parse | get -o extension | default 'other' | str downcase }
+        | group-by
+        | items {|k, v| { ext: $k, count: ($v | length) } }
+        | sort-by -r count
+      print $'(char nl)(ansi g)Static Assets:(ansi rst)'; hr-line 30
+      $byExt | table -t psql | print
+      print $'(char nl)(ansi g)Total: ($assets | length)(ansi rst)'
+    }
+  }
 }
 
 alias main = fzf-preview
