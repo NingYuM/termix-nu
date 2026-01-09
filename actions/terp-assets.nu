@@ -105,6 +105,9 @@ const TOOL_INSTALL_TIP = {
 @example '通过自定义 `latest.json` 完整 URL 查看资源摘要' {
   t ta detect -f https://portal-test.app.terminus.io/latest.json
 } --result '从指定 URL 读取 latest.json 并显示模块列表及状态'
+@example '查看指定挂载点的静态资源统计信息(按模块和文件类型分类)' {
+  t ta detect -f dev --stat
+} --result '显示各模块的 js/css/json 等文件数量统计表格及总数'
 @example '回滚 `terp-dev` 环境的 `base` 模块到之前的版本' {
   t ta revert base -t terp-dev -d oss
 } --result '目前只支持回滚单个模块，交互式选择要回滚的版本，确认后执行回滚操作'
@@ -118,6 +121,7 @@ export def 'terp assets' [
   --to(-t): string,               # Destination mount point
   --quiet(-q),                    # Show less info
   --dest-store(-d): string,       # Destination store, should be configured in .termixrc
+  --stat(-s),                     # Show static assets statistics info in detect action
 ] {
   cd $env.TERMIX_DIR
   # Handle revert action
@@ -133,7 +137,7 @@ export def 'terp assets' [
     revert-module $modules $to $dest_store; return
   }
 
-  if ($from | default '') =~ ',' and ($action == 'detect') { detect-multiple-assets $from; return }
+  if ($from | default '') =~ ',' and ($action == 'detect') { detect-multiple-assets $from --stat=$stat; return }
   pre-check $action --to $to --dest-store $dest_store
 
   if $action == 'init' { init-assets --dest-store $dest_store --quiet=$quiet; return }
@@ -142,7 +146,7 @@ export def 'terp assets' [
   confirm-action $action $modules --to $to --dest-store $dest_store
 
   match $action {
-    'detect' => { detect $latestMeta },
+    'detect' => { detect $latestMeta --stat=$stat },
     'download' => { download $modules $latestMeta $to --quiet=$quiet },
     'transfer' => { transfer $modules $latestMeta $to --dest-store $dest_store --quiet=$quiet },
   }
@@ -181,11 +185,11 @@ alias main = fzf-preview
 # ***************************************************************************************
 
 # Detect multiple static assets and display the metadata
-def detect-multiple-assets [from: string] {
+def detect-multiple-assets [from: string, --stat(-s)] {
   let mountPoints = $from | split row , | compact -e
   for mp in $mountPoints {
     let latestMeta = get-latest-meta $mp
-    detect $latestMeta; print -n (char nl)
+    detect $latestMeta --stat=$stat; print -n (char nl)
   }
 }
 
@@ -373,7 +377,7 @@ def transfer [
 }
 
 # Display front end module meta data
-def detect [latestMeta: record] {
+def detect [latestMeta: record, --stat(-s)] {
   const TIME_FMT = '%m/%d %H:%M:%S'
   print $'Latest metadata of (ansi g)($latestMeta.latestUrl)(ansi rst)'; hr-line 108
   let modules = $latestMeta.latest
@@ -402,6 +406,8 @@ def detect [latestMeta: record] {
       | rename module revertBy revertAt revertFrom revertTo | sort-by module
       | upsert revertBy {|it| $it.revertBy? | show } | print; print -n (char nl)
   }
+  # Show static assets statistics if --stat is provided
+  if $stat { show-assets-stat $latestMeta }
 }
 
 # ***************************************************************************************
@@ -535,6 +541,56 @@ def do-storage-cp [source: string, dest: string] {
 
 # Decode base64 encoded string, show default as `-`
 def show [] { $in | default 'LQ==' | decode base64 | decode }
+
+# Count static assets from manifest.json URL and return statistics by extension
+def count-module-assets [manifestUrl: string] {
+  let manifest = try { http get $manifestUrl } catch { return null }
+  let assets = $manifest | get -o assets | default []
+  if ($assets | is-empty) { return null }
+  # Count by extension and calculate total
+  let byExt = $assets
+    | each { |a| $a | path parse | get -o extension | default 'other' | str downcase }
+    | group-by
+    | items {|k, v| { ext: $k, count: ($v | length) } }
+    | sort-by -r count
+  { total: ($assets | length), byExt: $byExt }
+}
+
+# Aggregate and display assets statistics for all modules
+def show-assets-stat [latestMeta: record] {
+  let fromUrl = $latestMeta.latestUrl
+  let assetUrlPrefix = $fromUrl | split row '/fe-resources' | get 0
+  let modules = $latestMeta.latest | transpose key val
+
+  print $'(char nl)(ansi g)Static Assets Statistics:(ansi rst)'; hr-line 88
+
+  # Collect stats for all modules
+  let allStats = $modules | each {|m|
+    let prefix = $m.val | get prefix
+    let dirname = $m.val | get dirname
+    let manifestUrl = $'($assetUrlPrefix)/($prefix)/($dirname)/manifest.json'
+    let stats = count-module-assets $manifestUrl
+    if ($stats | is-empty) { null } else { { module: $m.key, ...$stats } }
+  } | compact
+
+  if ($allStats | is-empty) { print 'No assets found'; return }
+
+  # Get all unique extensions across all modules
+  let allExts = $allStats | each {|s| $s.byExt | get ext } | flatten | uniq | sort
+
+  # Build table rows with module name, each extension count, and total
+  let rows = $allStats | each {|s|
+    let extCounts = $s.byExt | reduce --fold {} {|e, acc| $acc | upsert $e.ext $e.count }
+    let row = $allExts | reduce --fold { module: $s.module } {|ext, acc|
+      $acc | upsert $ext ($extCounts | get -o $ext | default 0)
+    }
+    $row | upsert total $s.total
+  } | sort-by module
+
+  $rows | move module js css --first | table -t light | print
+  let grandTotal = $allStats | each {|s| $s.total } | math sum
+  print $'(char nl)(ansi g)Total static assets: ($grandTotal)(ansi rst)'
+}
 
 # Format module descriptions for display
 def format-desc [] {
