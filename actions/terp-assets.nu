@@ -302,6 +302,7 @@ def init-assets [
 
   if ($dry_run | is-empty) {
     print $'(ansi g)Assets have already been uploaded to (ansi p)($dest_store)(ansi rst) (ansi g)successfully!(ansi rst)'
+    show-terp-assets-stat $style $s3_dest
     exit $ECODE.SUCCESS
   }
 
@@ -322,10 +323,58 @@ def init-assets [
   }
   let failed = $results | where exit_code != 0
   if ($failed | length) > 0 {
-    print -e $'(ansi r)($failed | length) asset(s) failed to sync!(ansi rst)'
+    print -e $'(ansi r)($failed | length) assets failed to sync!(ansi rst)'
     exit $ECODE.COMMAND_FAILED
   }
   print $'Assets have been synced successfully!'
+  show-terp-assets-stat $style $s3_dest
+}
+
+# Show terp-assets statistics from cloud storage
+def show-terp-assets-stat [style: list, s3_dest: string] {
+  print $'(char nl)(ansi g)Terp Assets Statistics:(ansi rst)'; hr-line 60
+  # s5cmd uses glob pattern for recursive listing, not --recursive flag
+  let lsResult = run-s5cmd $style ls $'($s3_dest)/**'
+  if $lsResult.exit_code != 0 {
+    print -e $'Failed to list assets: ($lsResult.stderr)'
+    return
+  }
+  # Parse s5cmd ls output: each line is like "2024/01/01 12:00:00  12345  s3://bucket/path/file.js"
+  let files = $lsResult.stdout | str trim | lines
+    | where { $in | is-not-empty }
+    | each {|line|
+        let parts = $line | split row -r '\s+' | last
+        { path: $parts, ext: ($parts | path parse | get -o extension | default 'other' | str downcase) }
+      }
+
+  if ($files | is-empty) { print 'No assets found in cloud storage'; return }
+
+  # Group by top-level directory (js/, fonts/, monaco-editor/)
+  let byDir = $files | each {|f|
+      let rel = $f.path | str replace $'($s3_dest)/' ''
+      let dir = $rel | split row '/' | first
+      { dir: $dir, ext: $f.ext }
+    }
+    | group-by dir
+
+  # Statistics by directory
+  let dirStats = $byDir | items {|dir, items|
+    let byExt = $items | get ext | group-by | items {|k, v| { ext: $k, count: ($v | length) } } | sort-by -r count
+    { dir: $dir, total: ($items | length), byExt: $byExt }
+  } | sort-by dir
+
+  # Display per-directory stats
+  for stat in $dirStats {
+    print $'(char nl)(ansi p)($stat.dir)/(ansi rst) - (ansi g)($stat.total)(ansi rst) files'
+    $stat.byExt | take 5 | table -t compact | print
+  }
+
+  # Summary
+  let grandTotal = $dirStats | each {|s| $s.total } | math sum
+  let allExts = $files | get ext | group-by | items {|k, v| { ext: $k, count: ($v | length) } } | sort-by -r count
+  print $'(char nl)(ansi g)Summary:(ansi rst)'; hr-line 40
+  $allExts | table -t psql | print
+  print $'(char nl)(ansi g)Total files in terp-assets: ($grandTotal)(ansi rst)'
 }
 
 # Download static assets from OSS to specified directory
