@@ -253,36 +253,47 @@ def init-assets [
   let s3_dest = $'s3://($ossConf.OSS_BUCKET)/terp-assets'
   let required = [OSS_AK OSS_SK OSS_BUCKET]
   let missing = $required | where {|it| $ossConf | get -o $it | is-empty }
-  if ($missing | length) > 0 {
+  if ($missing | is-not-empty) {
     print -e $'The following required config is missing: (ansi r)($missing | str join ", ")(ansi rst)'
     exit $ECODE.INVALID_PARAMETER
   }
+
+  # Detect addressing style before any S3 operations
+  let style = detect-addressing-style $s3_dest
+  if ($style | is-not-empty) { print $'(ansi grey66)Using virtual-hosted-style for S3 access(ansi rst)' }
+
   print $'Downloading assets from (ansi g)($ASSETS_URL)(ansi rst)...'
   http get $ASSETS_URL | save -rpf $'($tmp)/terp-assets.tar.gz'
   cd $tmp; tar -xzf terp-assets.tar.gz
   print $'Assets downloaded successfully to ($tmp)!'
-  if (run-s5cmd '--json' ls $s3_dest | get stderr | from json | get -o error | default '') =~ 'no object' {
-    let msg = $'Uploading assets to (ansi p)($dest_store)(ansi rst)...'
-    with-progress $msg {
-      $ASSETS | each {|it| run-s5cmd sync $it $'($s3_dest)/($it)' }
+
+  # Initial upload if bucket is empty
+  let lsCheck = run-s5cmd $style '--json' ls $s3_dest
+  if ($lsCheck.stderr | from json | get -o error | default '') =~ 'no object' {
+    with-progress $'Uploading assets to (ansi p)($dest_store)(ansi rst)...' {
+      $ASSETS | each {|it| run-s5cmd $style sync $it $'($s3_dest)/($it)' }
     }
   }
-  let dry_run = $ASSETS | reduce -f '' {|it, acc|
-    [$acc (run-s5cmd '--dry-run' sync $it $'($s3_dest)/($it)' | get stdout)] | str join "\n"
-  } | str trim
+
+  # Check what needs to be synced
+  let dry_run = $ASSETS
+    | each {|it| run-s5cmd $style '--dry-run' sync $it $'($s3_dest)/($it)' | get stdout }
+    | str join "\n" | str trim
 
   if ($dry_run | is-empty) {
     print $'(ansi g)Assets have already been uploaded to (ansi p)($dest_store)(ansi rst) (ansi g)successfully!(ansi rst)'
     exit $ECODE.SUCCESS
   }
-  let dry_run = if ($dry_run | lines | length) > 5 {
-      $'($dry_run | lines | take 5 | str join "\n")(char nl)...'
-    } else { $dry_run }
-  print $'Actions to be performed:(char nl)(ansi g)($dry_run)(ansi rst)'
+
+  # Show preview (max 5 lines)
+  let preview = $dry_run | lines | if ($in | length) > 5 { $in | take 5 | append '...' } else { $in } | str join "\n"
+  print $'Actions to be performed:(char nl)(ansi g)($preview)(ansi rst)'
+
+  # Confirm and sync
   let confirm = input $'Are you sure to sync the assets? (ansi g)[y/n](ansi rst) '
   if ($confirm | str upcase) != 'Y' { exit $ECODE.SUCCESS }
   print $'Syncing assets...'
-  $ASSETS | each {|it| run-s5cmd sync $it $'($s3_dest)/($it)' }
+  $ASSETS | each {|it| run-s5cmd $style sync $it $'($s3_dest)/($it)' }
   print $'Assets have been synced successfully!'
 }
 
@@ -458,7 +469,7 @@ def revert-precheck [module: string, to: string, ossConf: record] {
 def select-revert-revision [module: string, remoteURI: string, localPath: string, destStore: string, ossConf: record] {
   # Use s5cmd to list namespace.json under each revision directory, then extract revision names
   let pattern = $'($remoteURI)/($module)-*/namespace.json'
-  let lines = run-s5cmd ls $pattern
+  let lines = s5cmd-auto ls $pattern
   if $lines.exit_code != 0 {
     print -e $'Failed to list revisions via s5cmd:'
     print $lines.stderr; exit $lines.exit_code
@@ -532,15 +543,31 @@ def execute-revert [
 # ------------------------------ Storage Abstractions ---------------------------------
 # ***************************************************************************************
 
-# Run s5cmd with auto-retry using virtual addressing style on path-style failure, e.g.:
-# SecondLevelDomainForbidden: Please use virtual hosted style to access. status code: 403
-def run-s5cmd [...args: string] {
+const VIRTUAL_STYLE_ERR = 'SecondLevelDomainForbidden|virtual'
+
+# Check if the error indicates virtual-hosted-style is required
+def needs-virtual-style [result: record] {
+  $result.exit_code != 0 or ($result.stderr =~ $VIRTUAL_STYLE_ERR)
+}
+
+# Detect the correct addressing style for the given S3 endpoint
+# Returns: [] for path-style (default), [--addressing-style=virtual] for virtual-hosted
+def detect-addressing-style [s3_dest: string] {
+  let result = ^s5cmd ls $s3_dest | complete
+  if (needs-virtual-style $result) { [--addressing-style=virtual] } else { [] }
+}
+
+# Run s5cmd with the specified addressing style (accepts list of extra flags)
+def run-s5cmd [style: list, ...args: string] {
+  ^s5cmd ...$style ...$args | complete
+}
+
+# Run s5cmd with auto-retry using virtual addressing style on path-style failure
+def s5cmd-auto [...args: string] {
   let result = ^s5cmd ...$args | complete
-  if $result.exit_code == 0 and ($result.stderr !~ 'SecondLevelDomainForbidden|virtual') {
-    $result
-  } else {
+  if (needs-virtual-style $result) {
     ^s5cmd --addressing-style=virtual ...$args | complete
-  }
+  } else { $result }
 }
 
 # Copy assets from source to dest，s5cmd ENV vars should be set by caller
@@ -551,7 +578,7 @@ def do-storage-cp [source: string, dest: string] {
     print -e $'Please set (ansi r)($empties | str join ", ")(ansi rst) in your environment first...'
     exit $ECODE.INVALID_PARAMETER
   }
-  run-s5cmd cp $source $dest
+  s5cmd-auto cp $source $dest
 }
 
 # ***************************************************************************************
