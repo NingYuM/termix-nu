@@ -271,14 +271,34 @@ def init-assets [
   let lsCheck = run-s5cmd $style '--json' ls $s3_dest
   if ($lsCheck.stderr | from json | get -o error | default '') =~ 'no object' {
     with-progress $'Uploading assets to (ansi p)($dest_store)(ansi rst)...' {
-      $ASSETS | each {|it| run-s5cmd $style sync $it $'($s3_dest)/($it)' }
+      let results = $ASSETS | each {|it|
+        let r = run-s5cmd $style sync $it $'($s3_dest)/($it)'
+        if $r.exit_code != 0 {
+          print -e $'Failed to upload ($it): ($r.stderr)'
+        }
+        $r
+      }
+      let failed = $results | where exit_code != 0
+      if ($failed | length) > 0 {
+        print -e $'(ansi r)($failed | length) asset(s) failed to upload!(ansi rst)'
+        exit $ECODE.COMMAND_FAILED
+      }
     }
   }
 
   # Check what needs to be synced
-  let dry_run = $ASSETS
-    | each {|it| run-s5cmd $style '--dry-run' sync $it $'($s3_dest)/($it)' | get stdout }
-    | str join "\n" | str trim
+  let dry_run_results = $ASSETS
+    | each {|it| run-s5cmd $style '--dry-run' sync $it $'($s3_dest)/($it)' }
+
+  # Check for errors in dry-run
+  let dry_run_errors = $dry_run_results | where exit_code != 0
+  if ($dry_run_errors | length) > 0 {
+    print -e $'(ansi r)Failed to check assets status:(ansi rst)'
+    $dry_run_errors | each {|e| print -e $e.stderr }
+    exit $ECODE.COMMAND_FAILED
+  }
+
+  let dry_run = $dry_run_results | get stdout | str join "\n" | str trim
 
   if ($dry_run | is-empty) {
     print $'(ansi g)Assets have already been uploaded to (ansi p)($dest_store)(ansi rst) (ansi g)successfully!(ansi rst)'
@@ -293,7 +313,18 @@ def init-assets [
   let confirm = input $'Are you sure to sync the assets? (ansi g)[y/n](ansi rst) '
   if ($confirm | str upcase) != 'Y' { exit $ECODE.SUCCESS }
   print $'Syncing assets...'
-  $ASSETS | each {|it| run-s5cmd $style sync $it $'($s3_dest)/($it)' }
+  let results = $ASSETS | each {|it|
+    let r = run-s5cmd $style sync $it $'($s3_dest)/($it)'
+    if $r.exit_code != 0 {
+      print -e $'Failed to sync ($it): ($r.stderr)'
+    }
+    $r
+  }
+  let failed = $results | where exit_code != 0
+  if ($failed | length) > 0 {
+    print -e $'(ansi r)($failed | length) asset(s) failed to sync!(ansi rst)'
+    exit $ECODE.COMMAND_FAILED
+  }
   print $'Assets have been synced successfully!'
 }
 
