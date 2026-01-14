@@ -271,18 +271,7 @@ def init-assets [
   let lsCheck = run-s5cmd $style '--json' ls $s3_dest
   if ($lsCheck.stderr | from json | get -o error | default '') =~ 'no object' {
     with-progress $'Uploading assets to (ansi p)($dest_store)(ansi rst)...' {
-      let results = $ASSETS | each {|it|
-        let r = run-s5cmd $style sync $it $'($s3_dest)/($it)'
-        if $r.exit_code != 0 {
-          print -e $'Failed to upload ($it): ($r.stderr)'
-        }
-        $r
-      }
-      let failed = $results | where exit_code != 0
-      if ($failed | length) > 0 {
-        print -e $'(ansi r)($failed | length) asset(s) failed to upload!(ansi rst)'
-        exit $ECODE.COMMAND_FAILED
-      }
+      sync-assets $style $ASSETS $s3_dest 'upload'
     }
   }
 
@@ -292,7 +281,7 @@ def init-assets [
 
   # Check for errors in dry-run
   let dry_run_errors = $dry_run_results | where exit_code != 0
-  if ($dry_run_errors | length) > 0 {
+  if ($dry_run_errors | is-not-empty) {
     print -e $'(ansi r)Failed to check assets status:(ansi rst)'
     $dry_run_errors | each {|e| print -e $e.stderr }
     exit $ECODE.COMMAND_FAILED
@@ -307,25 +296,15 @@ def init-assets [
   }
 
   # Show preview (max 5 lines)
-  let preview = $dry_run | lines | if ($in | length) > 5 { $in | take 5 | append '...' } else { $in } | str join "\n"
+  let lines = $dry_run | lines
+  let preview = if ($lines | length) > 5 { $lines | take 5 | append '...' } else { $lines } | str join "\n"
   print $'Actions to be performed:(char nl)(ansi g)($preview)(ansi rst)'
 
   # Confirm and sync
   let confirm = input $'Are you sure to sync the assets? (ansi g)[y/n](ansi rst) '
   if ($confirm | str upcase) != 'Y' { exit $ECODE.SUCCESS }
   print $'Syncing assets...'
-  let results = $ASSETS | each {|it|
-    let r = run-s5cmd $style sync $it $'($s3_dest)/($it)'
-    if $r.exit_code != 0 {
-      print -e $'Failed to sync ($it): ($r.stderr)'
-    }
-    $r
-  }
-  let failed = $results | where exit_code != 0
-  if ($failed | length) > 0 {
-    print -e $'(ansi r)($failed | length) assets failed to sync!(ansi rst)'
-    exit $ECODE.COMMAND_FAILED
-  }
+  sync-assets $style $ASSETS $s3_dest 'sync'
   print $'Assets have been synced successfully!'
   show-terp-assets-stat $style $s3_dest
 }
@@ -364,10 +343,10 @@ def show-terp-assets-stat [style: list, s3_dest: string] {
   } | sort-by dir
 
   # Display per-directory stats
-  for stat in $dirStats {
-    print $'(char nl)(ansi p)($stat.dir)/(ansi rst) - (ansi g)($stat.total)(ansi rst) files'
-    $stat.byExt | take 5 | table -t compact | print
-  }
+  # for stat in $dirStats {
+  #   print $'(char nl)(ansi p)($stat.dir)/(ansi rst) - (ansi g)($stat.total)(ansi rst) files'
+  #   $stat.byExt | take 5 | table -t compact | print
+  # }
 
   # Summary
   let grandTotal = $dirStats | each {|s| $s.total } | math sum
@@ -628,6 +607,20 @@ const VIRTUAL_STYLE_ERR = 'SecondLevelDomainForbidden|virtual'
 # Check if the error indicates virtual-hosted-style is required
 def needs-virtual-style [result: record] {
   $result.exit_code != 0 or ($result.stderr =~ $VIRTUAL_STYLE_ERR)
+}
+
+# Run s5cmd sync for each asset and check for failures, exit on error
+def sync-assets [style: list, assets: list, s3_dest: string, action: string] {
+  let results = $assets | each {|it|
+    let r = run-s5cmd $style sync $it $'($s3_dest)/($it)'
+    if $r.exit_code != 0 { print -e $'Failed to ($action) ($it): ($r.stderr)' }
+    $r
+  }
+  let failed = $results | where exit_code != 0
+  if ($failed | is-not-empty) {
+    print -e $'(ansi r)($failed | length) asset(s) failed to ($action)!(ansi rst)'
+    exit $ECODE.COMMAND_FAILED
+  }
 }
 
 # Detect the correct addressing style for the given S3 endpoint
