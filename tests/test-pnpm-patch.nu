@@ -7,7 +7,7 @@
 #   PROJECT_ROOT=/path/to/project nu tools/tests/test-pnpm-patch.nu
 
 use std assert
-use ../pnpm-patch.nu [
+use ../actions/pnpm-patch.nu [
   hash-md5
   hash-sha256
   detect-lockfile-version

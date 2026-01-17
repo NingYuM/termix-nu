@@ -675,6 +675,19 @@ def cleanup [tmp_dir: string] {
 # Main entry point
 # ============================================
 
+# Create pnpm patch for a specified package in offline mode
+@example '为 scoped package 创建 patch' {
+  t pnpm-patch @alife/stage-supplier-selector@2.5.0
+} --result '在 patches/ 目录创建 @alife__stage-supplier-selector@2.5.0.patch 并更新 `pnpm-lock.yaml`'
+@example '为普通 package 创建 patch' {
+  t pnpm-patch lodash@4.17.21
+} --result '在 patches/ 目录创建 lodash@4.17.21.patch 并更新 `pnpm-lock.yaml`'
+@example '指定项目根目录创建 patch' {
+  t pnpm-patch moment@2.30.1 -p /path/to/project
+} --result '在指定项目的 patches/ 目录创建 patch 文件'
+@example '为已有 patch 的包添加新修改（累积模式）' {
+  t pnpm-patch @ali/u-touch@2.1.5
+} --result '基于现有 patch 累积新的修改，生成包含所有变更的新 patch'
 def main [
   package_spec: string  # Package specification: @scope/name@version or name@version
   --project-root (-p): string  # Project root directory (default: current directory)
