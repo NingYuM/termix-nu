@@ -45,6 +45,7 @@ _polars_plugin := if os_family() == 'windows' { 'nu_plugin_polars.exe' } else { 
 alias dp := deploy
 alias pa := pull-all
 alias gb := git-branch
+alias pp := pnpm-patch
 alias ta := terp-assets
 alias da := detect-assets
 alias dq := deploy-query
@@ -127,6 +128,11 @@ detect-assets *OPTIONS: _setup _setup_fzf
 mod *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'deprecated-mod.nu') }}; \
     deprecated-modules {{OPTIONS}}
+
+# Create pnpm patches in offline mode
+[group('-- Frontend --')]
+pnpm-patch *OPTIONS: _setup
+  @nu {{ join(_termix, 'actions', 'pnpm-patch.nu') }} {{OPTIONS}}
 
 # Create, download, upload and deploy from the artifacts
 [group('-- Common  --')]
