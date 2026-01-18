@@ -1,6 +1,46 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.98.0 - 2026-01-18
+
+**Bug Fixes**
+
+- Fix `t git-branch -c` flag to correctly handle multi-word arguments
+- Add more corner case checks for `t query-deps` command
+- Fix `SecondLevelDomainForbidden` error in `t ta` command for certain edge cases
+- Fix `t upgrade` command to support more tools and improve robustness
+- Improve latest version check by adding default version as fallback
+- Fix force upgrade behavior in specific edge cases
+- Auto-detect S3 addressing style for `s5cmd` related operations
+- Add error checking for `t ta init` command
+
+**Documentation**
+
+- Add shortcut usage tips for `t git-remote-branch` command
+- Update artifact deployment documentation
+
+**Features**
+
+- Add `--stat` flag to `t ta detect` command
+- Show asset statistics in `t ta revert` preview panel
+
+**Miscellaneous Tasks**
+
+- Adapt to Nu 0.110 regarding `$nu` changes
+- Add `--help` to `setup-termix.sh` and enhance nu plugin removal
+- Refactor `actions/working-hours.nu` and fix potential bugs
+- Improve `t ta init` command
+- Show less detail for `t ta init` and refactor code
+
+**Performance**
+
+- Optimize performance for `t query-deps` command
+- Optimize performance for `t git-remote-branch` command
+
+**Refactor**
+
+- Improve string replacement logic for Nu 0.109.0
+
 ## v1.97.2 - 2026-01-05
 
 **Miscellaneous Tasks**
