@@ -41,8 +41,10 @@ Termix-Nu is a comprehensive command-line toolkit written in Nushell (0.110.0+) 
   1. **Bare word**: `hello` - for simple word-character-only strings in data contexts
   2. **Raw string**: `r#'pattern with 'quotes''#` - for regex, paths with quotes, or multi-line
   3. **Single-quoted**: `'simple string'` - for strings without single quotes
-  4. **Backtick**: `` `path with spaces` `` - for paths/globs with spaces
-  5. **Double-quoted/Interpolation**: `$"value: ($var)"` - only when escapes or interpolation needed
+  4. **Single-quoted interpolation**: `$'value: ($var)'` - for interpolation without escape sequences
+  5. **Backtick**: `` `path with spaces` `` - for paths/globs with spaces
+  6. **Double-quoted**: `"line1\nline2"` - only when escape sequences (`\n`, `\t`, `\"`, etc.) are needed
+  7. **Double-quoted interpolation**: `$"value: ($var)\n"` - only when both interpolation and escapes are needed
 
   ```nushell
   # PREFER: Bare words and single quotes
@@ -53,11 +55,21 @@ Termix-Nu is a comprehensive command-line toolkit written in Nushell (0.110.0+) 
   let pattern = r#'(?:a/|b/)?(?:original|modified)/'#
   $content | str replace -ar $pattern 'replacement'
 
+  # PREFER: Single-quoted interpolation (no escape sequences needed)
+  let result = $'Hello ($name), you have ($count) items'
+  let path = [$project_root pnpm-lock.yaml] | path join
+  info $'Package: ($pkg.name)'
+
   # PREFER: Backticks for paths with spaces
   ls `./my directory/*.nu`
 
-  # ONLY WHEN NEEDED: Interpolation for dynamic content
-  let result = $"Hello ($name), you have ($count) items"
+  # ONLY WHEN NEEDED: Double-quoted for escape sequences
+  let multiline = "line1\nline2"
+  print "Tab:\there"
+
+  # ONLY WHEN NEEDED: Double-quoted interpolation with escapes
+  info $"\nNext steps:"
+  print $"Result: ($value)\n"
   ```
 - **Modern Features**:
   - Use closure-based `str replace` for complex replacements:
