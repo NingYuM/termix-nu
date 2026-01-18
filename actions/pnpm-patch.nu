@@ -14,10 +14,10 @@
 # Color helpers for consistent output
 # ============================================
 
-def err [msg: string] { print -e $"(ansi r)($msg)(ansi reset)" }
-def warn [msg: string] { print $"(ansi y)($msg)(ansi reset)" }
-def info [msg: string] { print $"(ansi c)($msg)(ansi reset)" }
-def success [msg: string] { print $"(ansi g)($msg)(ansi reset)" }
+def err [msg: string] { print -e $"(ansi r)($msg)(ansi rst)" }
+def warn [msg: string] { print $"(ansi y)($msg)(ansi rst)" }
+def info [msg: string] { print $"(ansi c)($msg)(ansi rst)" }
+def success [msg: string] { print $"(ansi g)($msg)(ansi rst)" }
 def separator [] { success "============================================" }
 
 # ============================================
@@ -102,7 +102,8 @@ export def parse-package-spec [spec: string]: nothing -> record<name: string, ve
 # For non-scoped packages (name): name@version.patch
 export def build-patch-filename [pkg_name: string, pkg_version: string]: nothing -> string {
   let is_scoped = $pkg_name starts-with '@'
-  let name_part = $pkg_name | str replace -a '/' '__' | str replace -a '@' ''
+  # Use closure to combine two replacements: '/' -> '__' and '@' -> ''
+  let name_part = $pkg_name | str replace -ar '[/@]' { if $in == '/' { '__' } else { '' } }
   let prefix = if $is_scoped { "@" } else { "" }
   let version_suffix = if ($pkg_version | is-empty) { "" } else { $"@($pkg_version)" }
 
@@ -141,11 +142,14 @@ export def generate-patch [tmp_dir: string, basename: string]: nothing -> string
   } | complete
 
   # Format paths: replace temp directory paths with standard a/ and b/ prefixes
-  $result.stdout
-    | str replace -a $"a/original/($basename)/" "a/"
-    | str replace -a $"b/modified/($basename)/" "b/"
-    | str replace -a $"original/($basename)/" "a/"
-    | str replace -a $"modified/($basename)/" "b/"
+  # Use closure to combine four replacements into one:
+  # - a/original/basename/ or original/basename/ -> a/
+  # - b/modified/basename/ or modified/basename/ -> b/
+  # Note: Use string concatenation to avoid nushell parsing (?:) as a command
+  let path_pattern = [r#'(?:a/|b/)?(?:original|modified)/'# $basename '/'] | str join
+  $result.stdout | str replace -ar $path_pattern {
+    if ($in | str contains 'original') { 'a/' } else { 'b/' }
+  }
 }
 
 # Merge patch configuration into package.json data (pure function)
