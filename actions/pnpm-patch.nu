@@ -14,11 +14,11 @@
 # Color helpers for consistent output
 # ============================================
 
-def err [msg: string] { print -e $"(ansi r)($msg)(ansi rst)" }
-def warn [msg: string] { print $"(ansi y)($msg)(ansi rst)" }
-def info [msg: string] { print $"(ansi c)($msg)(ansi rst)" }
-def success [msg: string] { print $"(ansi g)($msg)(ansi rst)" }
-def separator [] { success "============================================" }
+def err [msg: string] { print -e $'(ansi r)($msg)(ansi rst)' }
+def warn [msg: string] { print $'(ansi y)($msg)(ansi rst)' }
+def info [msg: string] { print $'(ansi c)($msg)(ansi rst)' }
+def success [msg: string] { print $'(ansi g)($msg)(ansi rst)' }
+def separator [] { success '============================================' }
 
 # ============================================
 # Pure utility functions (exported for testing)
@@ -26,21 +26,21 @@ def separator [] { success "============================================" }
 
 # Normalize input: accept argument or pipeline, normalize line endings
 def normalize-input [content?: string]: nothing -> string {
-  let input = if ($content != null) { $content } else if ($in | describe) == "string" { $in } else { "" }
-  if ($input | is-empty) { "" } else { $input | str replace -a "\r\n" "\n" }
+  let input = if ($content != null) { $content } else if ($in | describe) == 'string' { $in } else { '' }
+  if ($input | is-empty) { '' } else { $input | str replace -a "\r\n" "\n" }
 }
 
 # Calculate the base32 hash of a string using MD5 (pnpm 9.x compatible)
 export def hash-md5 [content?: string] {
   let input = normalize-input $content
-  if ($input | is-empty) { return "" }
+  if ($input | is-empty) { return '' }
   $input | hash md5 --binary | encode base32 --nopad | str downcase
 }
 
 # Calculate the hex hash of a string using SHA256 (pnpm 10.x compatible)
 export def hash-sha256 [content?: string] {
   let input = normalize-input $content
-  if ($input | is-empty) { return "" }
+  if ($input | is-empty) { return '' }
   $input | hash sha256 --binary | encode hex | str downcase
 }
 
@@ -51,7 +51,7 @@ export def hash-sha256 [content?: string] {
 export def detect-lockfile-version [lock_content: string, --skip-cli]: nothing -> int {
   # First, try to detect from pnpm CLI version (most reliable)
   if not $skip_cli {
-    let pnpm_version = try { ^pnpm --version | str trim } catch { "" }
+    let pnpm_version = try { ^pnpm --version | str trim } catch { '' }
     if ($pnpm_version | is-not-empty) {
       let major = $pnpm_version | split row '.' | first | into int
       if $major >= 10 { return 10 }
@@ -61,7 +61,7 @@ export def detect-lockfile-version [lock_content: string, --skip-cli]: nothing -
 
   # Fallback: check lockfile version string
   let version_line = $lock_content | lines | first
-  match [($version_line has "'10"), ($version_line has "\"10")] {
+  match [($version_line has "'10"), ($version_line has '"10')] {
     [true, _] | [_, true] => 10
     _ => 9
   }
@@ -82,18 +82,18 @@ export def calculate-patch-hash [patch_file: string, pnpm_version: int = 9]: not
 export def parse-package-spec [spec: string]: nothing -> record<name: string, version: string> {
   let spec = $spec | str trim
   if ($spec | is-empty) {
-    return { name: "", version: "" }
+    return { name: '', version: '' }
   }
 
   let is_scoped = $spec starts-with '@'
   let parts = $spec | split row '@'
 
   match [$is_scoped, ($parts | length)] {
-    [true, 3] => { name: $"@($parts.1)", version: $parts.2 }
-    [true, 2] => { name: $"@($parts.1)", version: "" }  # Scoped package without version
+    [true, 3] => { name: $'@($parts.1)', version: $parts.2 }
+    [true, 2] => { name: $'@($parts.1)', version: '' }  # Scoped package without version
     [false, 2] => { name: $parts.0, version: $parts.1 }
-    [false, 1] => { name: $parts.0, version: "" }  # Simple package without version
-    _ => { name: "", version: "" }
+    [false, 1] => { name: $parts.0, version: '' }  # Simple package without version
+    _ => { name: '', version: '' }
   }
 }
 
@@ -104,17 +104,17 @@ export def build-patch-filename [pkg_name: string, pkg_version: string]: nothing
   let is_scoped = $pkg_name starts-with '@'
   # Use closure to combine two replacements: '/' -> '__' and '@' -> ''
   let name_part = $pkg_name | str replace -ar '[/@]' { if $in == '/' { '__' } else { '' } }
-  let prefix = if $is_scoped { "@" } else { "" }
-  let version_suffix = if ($pkg_version | is-empty) { "" } else { $"@($pkg_version)" }
+  let prefix = if $is_scoped { '@' } else { '' }
+  let version_suffix = if ($pkg_version | is-empty) { '' } else { $'@($pkg_version)' }
 
-  $"($prefix)($name_part)($version_suffix).patch"
+  $'($prefix)($name_part)($version_suffix).patch'
 }
 
 # Build patch key for package.json and pnpm-lock.yaml
 export def build-patch-key [pkg_name: string, pkg_version: string]: nothing -> string {
   match ($pkg_version | is-empty) {
     true => $pkg_name
-    false => $"($pkg_name)@($pkg_version)"
+    false => $'($pkg_name)@($pkg_version)'
   }
 }
 
@@ -123,8 +123,8 @@ export def build-patch-key [pkg_name: string, pkg_version: string]: nothing -> s
 export def find-package-dir [pnpm_dir: string, pkg_name: string, pkg_version: string]: nothing -> string {
   let pkg_name_plus = $pkg_name | str replace '/' '+'
   let search_prefix = match ($pkg_version | is-empty) {
-    true => $"($pkg_name_plus)@"
-    false => $"($pkg_name_plus)@($pkg_version)"
+    true => $'($pkg_name_plus)@'
+    false => $'($pkg_name_plus)@($pkg_version)'
   }
 
   ls $pnpm_dir
@@ -138,7 +138,7 @@ export def find-package-dir [pnpm_dir: string, pkg_name: string, pkg_version: st
 export def generate-patch [tmp_dir: string, basename: string]: nothing -> string {
   let result = do {
     cd $tmp_dir
-    GIT_CONFIG_NOSYSTEM=1 git diff --no-index --text --full-index $"original/($basename)" $"modified/($basename)"
+    GIT_CONFIG_NOSYSTEM=1 git diff --no-index --text --full-index $'original/($basename)' $'modified/($basename)'
   } | complete
 
   # Format paths: replace temp directory paths with standard a/ and b/ prefixes
@@ -203,7 +203,7 @@ export def update-lock-content [content: string, patch_key: string, new_hash: st
     return { updated: false, content: $content, old_hash: $old_hash, new_hash: $new_hash }
   }
 
-  let new_content = $content | str replace $"($key_line)($old_hash)" $"($key_line)($new_hash)"
+  let new_content = $content | str replace $'($key_line)($old_hash)' $'($key_line)($new_hash)'
   { updated: true, content: $new_content, old_hash: $old_hash, new_hash: $new_hash }
 }
 
@@ -239,7 +239,7 @@ export def insert-lock-entry [content: string, patch_key: string, new_hash: stri
   let before = $content | str substring ..<$insert_pos
   let after = $content | str substring $insert_pos..
 
-  { inserted: true, content: $"($before)($new_entry)($after)" }
+  { inserted: true, content: $'($before)($new_entry)($after)' }
 }
 
 # Inject patch_hash suffix into all version references in lockfile (pure function)
@@ -366,11 +366,11 @@ export def inject-patch-hash-to-versions [
 # Convert integrity hash (sha512-base64) to pnpm store hex path
 # Returns: { bucket: "xx", hash: "remaining_hash" } or null if invalid
 export def integrity-to-store-path [integrity: string]: nothing -> record {
-  if ($integrity | is-empty) or ($integrity not-starts-with "sha512-") {
+  if ($integrity | is-empty) or ($integrity not-starts-with 'sha512-') {
     return null
   }
 
-  let base64_part = $integrity | str replace "sha512-" ""
+  let base64_part = $integrity | str replace 'sha512-' ''
 
   # Decode base64 to binary, then encode as hex
   let hex = try {
@@ -399,7 +399,7 @@ export def get-package-integrity [lock_content: string, pkg_name: string, pkg_ve
   # Note: There may be multiple entries with the same name (e.g., in patchedDependencies and packages sections)
   # We need to find the one with resolution/integrity
   let pkg_marker_quoted = $"'($pkg_name)@($pkg_version)':"
-  let pkg_marker_plain = $"($pkg_name)@($pkg_version):"
+  let pkg_marker_plain = $'($pkg_name)@($pkg_version):'
   let lines = $lock_content | lines
 
   mut found_pkg = false
@@ -408,16 +408,16 @@ export def get-package-integrity [lock_content: string, pkg_name: string, pkg_ve
     if $found_pkg {
       $search_depth = $search_depth + 1
       # Look for resolution line with integrity
-      if ($line has "resolution:") and ($line has "integrity:") {
+      if ($line has 'resolution:') and ($line has 'integrity:') {
         # Extract the integrity hash using parse
-        let match = $line | parse -r 'integrity:\s*(sha512-[A-Za-z0-9+/=]+)' | first
+        let match = $line | parse -r r#'integrity:\s*(sha512-[A-Za-z0-9+/=]+)'# | first
         if ($match | is-not-empty) {
           return $match.capture0
         }
       }
       # If we hit a non-indented line (next package) without finding resolution,
       # reset and continue searching for another matching entry
-      if ($line not-starts-with " ") and ($line | is-not-empty) {
+      if ($line not-starts-with ' ') and ($line | is-not-empty) {
         $found_pkg = false
         $search_depth = 0
         # Check if this line itself is a matching entry
@@ -441,7 +441,7 @@ export def get-package-integrity [lock_content: string, pkg_name: string, pkg_ve
     }
   }
 
-  ""
+  ''
 }
 
 # Restore package from pnpm store to target directory
@@ -457,7 +457,7 @@ export def restore-from-store [
   }
 
   # Find the index.json file in store
-  let index_file = [$store_path, "files", $store_info.bucket, $"($store_info.hash)-index.json"] | path join
+  let index_file = [$store_path files $store_info.bucket $'($store_info.hash)-index.json'] | path join
 
   if not ($index_file | path exists) {
     return false
@@ -494,9 +494,9 @@ export def restore-from-store [
       continue
     }
 
-    let src_file = [$store_path, "files", $file_store_info.bucket, $file_store_info.hash] | path join
-    let src_file_exec = $"($src_file)-exec"
-    let dst_file = [$target_dir, $file_name] | path join
+    let src_file = [$store_path files $file_store_info.bucket $file_store_info.hash] | path join
+    let src_file_exec = $'($src_file)-exec'
+    let dst_file = [$target_dir $file_name] | path join
 
     # pnpm store uses -exec suffix for executable files (mode 0755)
     # Try both regular and -exec versions
@@ -534,7 +534,7 @@ export def restore-from-store [
 def check-dependencies [] {
   for tool in [git patch] {
     if (which $tool | first) == null {
-      err $"Error: ($tool) is not installed. Please install ($tool) first."
+      err $'Error: ($tool) is not installed. Please install ($tool) first.'
       exit 1
     }
   }
@@ -545,11 +545,11 @@ def check-dependencies [] {
 # Revert a patch to get the original unpatched version
 # Returns true on success, false on failure
 export def revert-patch [pkg_dir: string, patch_file: string]: nothing -> bool {
-  warn "Found existing patch, reverting to get original version..."
+  warn 'Found existing patch, reverting to get original version...'
 
   # Ensure absolute paths for use inside cd block
   let abs_patch_file = match ($patch_file | path type) {
-    "absolute" => $patch_file
+    absolute => $patch_file
     _ => ([(pwd), $patch_file] | path join)
   }
 
@@ -562,7 +562,7 @@ export def revert-patch [pkg_dir: string, patch_file: string]: nothing -> bool {
 
   match $result.exit_code {
     0 => {
-      success "Successfully reverted to original version"
+      success 'Successfully reverted to original version'
       true
     }
     _ => {
@@ -573,12 +573,12 @@ export def revert-patch [pkg_dir: string, patch_file: string]: nothing -> bool {
       } | complete
 
       if $result2.exit_code == 0 {
-        success "Reverted with some warnings"
+        success 'Reverted with some warnings'
         true
       } else {
-        err "Error: Could not revert patch. The installed package may not match the patch."
-        err "This can happen if the patch was created for a different version of the package."
-        err $"Details: ($result.stderr)"
+        err 'Error: Could not revert patch. The installed package may not match the patch.'
+        err 'This can happen if the patch was created for a different version of the package.'
+        err $'Details: ($result.stderr)'
         false
       }
     }
@@ -588,7 +588,7 @@ export def revert-patch [pkg_dir: string, patch_file: string]: nothing -> bool {
 # Update package.json with patch configuration
 def update-package-json [path: string, patch_key: string, patch_value: string] {
   if not ($path | path exists) {
-    warn "Warning: package.json not found"
+    warn 'Warning: package.json not found'
     return
   }
 
@@ -596,13 +596,13 @@ def update-package-json [path: string, patch_key: string, patch_value: string] {
   let updated = merge-patch-config $pkg $patch_key $patch_value
 
   if ($updated == null) {
-    success "Patch already configured in package.json"
+    success 'Patch already configured in package.json'
     return
   }
 
-  info "Updating package.json..."
+  info 'Updating package.json...'
   $updated | save -f $path
-  success "Added patch configuration to package.json"
+  success 'Added patch configuration to package.json'
 }
 
 # Update the patch hash in pnpm-lock.yaml
@@ -616,11 +616,11 @@ def update-lock-hash [
   pkg_version: string
 ] {
   if not ($lock_file | path exists) {
-    warn "Warning: pnpm-lock.yaml not found, skipping hash update"
+    warn 'Warning: pnpm-lock.yaml not found, skipping hash update'
     return
   }
 
-  info "Updating hash in pnpm-lock.yaml..."
+  info 'Updating hash in pnpm-lock.yaml...'
 
   let content = open $lock_file --raw | decode utf-8
 
@@ -628,28 +628,28 @@ def update-lock-hash [
   let update_result = update-lock-content $content $patch_key $new_hash
 
   mut final_content = $content
-  mut old_hash_value = ""
+  mut old_hash_value = ''
 
   if ($update_result != null) {
     if not $update_result.updated {
-      success $"Hash unchanged: ($new_hash)"
+      success $'Hash unchanged: ($new_hash)'
     } else {
       $final_content = $update_result.content
       $old_hash_value = $update_result.old_hash
-      success $"Updated hash: ($update_result.old_hash) -> ($new_hash)"
+      success $'Updated hash: ($update_result.old_hash) -> ($new_hash)'
     }
   } else {
     # Entry doesn't exist, try to insert new one
     let insert_result = insert-lock-entry $content $patch_key $new_hash $patch_path
 
     if ($insert_result == null) {
-      warn "Warning: patchedDependencies section not found in pnpm-lock.yaml"
+      warn 'Warning: patchedDependencies section not found in pnpm-lock.yaml'
       warn "You may need to run 'pnpm install' first to initialize the lock file"
       return
     }
 
     $final_content = $insert_result.content
-    success $"Added new patch entry: ($patch_key)"
+    success $'Added new patch entry: ($patch_key)'
   }
 
   # Inject patch_hash into version references (for offline patching support)
@@ -657,7 +657,7 @@ def update-lock-hash [
     let inject_result = inject-patch-hash-to-versions $final_content $pkg_name $pkg_version $new_hash $old_hash_value
     if $inject_result.updated {
       $final_content = $inject_result.content
-      success "Injected patch_hash into version references"
+      success 'Injected patch_hash into version references'
     }
   }
 
@@ -704,28 +704,28 @@ def main [
     true => $project_root
     false => (pwd)
   }
-  let patches_dir = [$project_root, "patches"] | path join
-  let tmp_dir = [$project_root, ".pnpm-patch-tmp"] | path join
-  let pnpm_dir = [$project_root, "node_modules", ".pnpm"] | path join
+  let patches_dir = [$project_root patches] | path join
+  let tmp_dir = [$project_root '.pnpm-patch-tmp'] | path join
+  let pnpm_dir = [$project_root node_modules '.pnpm'] | path join
 
   # Parse and validate package spec
   let pkg = parse-package-spec $package_spec
 
   if ($pkg.name | is-empty) {
-    err "Error: Invalid package specification. Use format: @scope/name@version or name@version"
+    err 'Error: Invalid package specification. Use format: @scope/name@version or name@version'
     exit 1
   }
 
-  info $"Package: ($pkg.name)"
+  info $'Package: ($pkg.name)'
   if ($pkg.version | is-not-empty) {
-    info $"Version: ($pkg.version)"
+    info $'Version: ($pkg.version)'
   } else {
-    warn "Warning: No version specified, will match any version"
+    warn 'Warning: No version specified, will match any version'
   }
 
   # Validate pnpm directory exists
   if not ($pnpm_dir | path exists) {
-    err "Error: node_modules/.pnpm not found. Run pnpm install first."
+    err 'Error: node_modules/.pnpm not found. Run pnpm install first.'
     exit 1
   }
 
@@ -733,30 +733,30 @@ def main [
   let pkg_pnpm_dir = find-package-dir $pnpm_dir $pkg.name $pkg.version
 
   if ($pkg_pnpm_dir == null) {
-    err $"Error: Package ($pkg.name)@($pkg.version) not found in node_modules/.pnpm"
+    err $'Error: Package ($pkg.name)@($pkg.version) not found in node_modules/.pnpm'
     exit 1
   }
 
-  let pkg_source_dir = [$pkg_pnpm_dir, "node_modules", $pkg.name] | path join
+  let pkg_source_dir = [$pkg_pnpm_dir node_modules $pkg.name] | path join
 
   if not ($pkg_source_dir | path exists) {
-    err $"Error: Package directory not found at ($pkg_source_dir)"
+    err $'Error: Package directory not found at ($pkg_source_dir)'
     exit 1
   }
 
-  info $"Found package at: ($pkg_source_dir)"
+  info $'Found package at: ($pkg_source_dir)'
 
   # Setup patch paths
   let basename = $pkg.name | path basename
   let patch_filename = build-patch-filename $pkg.name $pkg.version
-  let patch_file = [$patches_dir, $patch_filename] | path join
+  let patch_file = [$patches_dir $patch_filename] | path join
   let patch_key = build-patch-key $pkg.name $pkg.version
-  let original_dir = [$tmp_dir, "original", $basename] | path join
-  let modified_dir = [$tmp_dir, "modified", $basename] | path join
+  let original_dir = [$tmp_dir original $basename] | path join
+  let modified_dir = [$tmp_dir modified $basename] | path join
 
   # Prepare temp directories
   cleanup $tmp_dir
-  mkdir ([$tmp_dir, "original"] | path join) ([$tmp_dir, "modified"] | path join)
+  mkdir ([$tmp_dir original] | path join) ([$tmp_dir modified] | path join)
 
   let has_existing_patch = ($patch_file | path exists)
 
@@ -765,23 +765,23 @@ def main [
   mut got_original_from_store = false
 
   if ($pkg.version | is-not-empty) {
-    let lock_file_path = [$project_root, "pnpm-lock.yaml"] | path join
+    let lock_file_path = [$project_root pnpm-lock.yaml] | path join
     if ($lock_file_path | path exists) {
       let lock_content = open $lock_file_path --raw | decode utf-8
       let pkg_integrity = get-package-integrity $lock_content $pkg.name $pkg.version
 
       if ($pkg_integrity | is-not-empty) {
-        let store_path = try { ^pnpm store path | str trim } catch { "" }
+        let store_path = try { ^pnpm store path | str trim } catch { '' }
 
         if ($store_path | is-not-empty) and ($store_path | path exists) {
-          info "Trying to restore original from pnpm store..."
+          info 'Trying to restore original from pnpm store...'
           let store_success = restore-from-store $store_path $pkg_integrity $original_dir
 
           if $store_success {
-            success "Successfully restored original from pnpm store"
+            success 'Successfully restored original from pnpm store'
             $got_original_from_store = true
           } else {
-            warn "Could not restore from store, falling back to node_modules copy..."
+            warn 'Could not restore from store, falling back to node_modules copy...'
           }
         }
       }
@@ -790,7 +790,7 @@ def main [
 
   # Fallback: Copy from node_modules if store restore failed
   if not $got_original_from_store {
-    info "Copying original from node_modules..."
+    info 'Copying original from node_modules...'
     copy-dir-contents $pkg_source_dir $original_dir
   }
 
@@ -798,7 +798,7 @@ def main [
   # - If existing patch: copy from node_modules (which has patch applied)
   # - If no existing patch: copy from original (both start the same)
   if $has_existing_patch {
-    info "Copying patched version to modified directory..."
+    info 'Copying patched version to modified directory...'
     copy-dir-contents $pkg_source_dir $modified_dir
   } else {
     copy-dir-contents $original_dir $modified_dir
@@ -809,20 +809,20 @@ def main [
   if $has_existing_patch and (not $got_original_from_store) {
     let revert_success = revert-patch $original_dir $patch_file
     if not $revert_success {
-      err "Cannot create cumulative patch: failed to revert existing patch."
-      err "Please ensure the installed package matches the existing patch version."
+      err 'Cannot create cumulative patch: failed to revert existing patch.'
+      err 'Please ensure the installed package matches the existing patch version.'
       cleanup $tmp_dir
       exit 1
     }
   }
 
   if $has_existing_patch {
-    info "Cumulative mode: original restored, existing patch preserved in modified/"
+    info 'Cumulative mode: original restored, existing patch preserved in modified/'
   }
 
   # Prompt user to edit
   separator
-  success "Ready for editing!"
+  success 'Ready for editing!'
   separator
   info "\nEdit the files in:"
   print $"  ($modified_dir)\n"
@@ -835,41 +835,41 @@ def main [
   warn "Press Enter when you have finished editing, or press Esc to cancel..."
 
   let key_event = input listen --types [key]
-  if $key_event.code == "escape" {
+  if $key_event.code == escape {
     warn "\nPatch creation cancelled."
     cleanup $tmp_dir
     exit 0
   }
 
   # Generate patch
-  info "Generating patch..."
+  info 'Generating patch...'
   mkdir $patches_dir
   let patch_content = generate-patch $tmp_dir $basename
 
   if ($patch_content | is-empty) {
-    warn "No changes detected. No patch file created."
+    warn 'No changes detected. No patch file created.'
     cleanup $tmp_dir
     exit 0
   }
 
   $patch_content | save -f $patch_file
-  success $"Patch saved to: ($patch_file)"
+  success $'Patch saved to: ($patch_file)'
 
   # Detect pnpm version from lockfile and calculate hash
-  let lock_file = [$project_root, "pnpm-lock.yaml"] | path join
+  let lock_file = [$project_root pnpm-lock.yaml] | path join
   let lock_content = match ($lock_file | path exists) {
     true => (open $lock_file --raw | decode utf-8)
-    false => ""
+    false => ''
   }
   let pnpm_version = detect-lockfile-version $lock_content
-  info $"Detected pnpm lockfile version: ($pnpm_version)"
+  info $'Detected pnpm lockfile version: ($pnpm_version)'
 
   let patch_hash = calculate-patch-hash $patch_file $pnpm_version
-  info $"Patch hash: ($patch_hash)"
+  info $'Patch hash: ($patch_hash)'
 
   # Update configurations
-  let package_json = [$project_root, "package.json"] | path join
-  let patch_rel_path = $"patches/($patch_filename)"
+  let package_json = [$project_root package.json] | path join
+  let patch_rel_path = $'patches/($patch_filename)'
 
   update-package-json $package_json $patch_key $patch_rel_path
   update-lock-hash $lock_file $patch_key $patch_hash $patch_rel_path $pkg.name $pkg.version
@@ -879,10 +879,10 @@ def main [
 
   # Show next steps
   separator
-  success "Done!"
+  success 'Done!'
   separator
   info "\nNext steps:"
-  print "  1. The patch hash has been updated in pnpm-lock.yaml"
+  print '  1. The patch hash has been updated in pnpm-lock.yaml'
   print "  2. Run 'pnpm install --offline' to apply the patch offline"
   print "  3. Verify the changes work as expected\n"
 }
