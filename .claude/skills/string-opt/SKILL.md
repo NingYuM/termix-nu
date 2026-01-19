@@ -61,6 +61,26 @@ let marker = $"'($pkg)@($ver)':"
 let marker = $'\'($pkg)@($ver)\':'  # This produces literal backslashes!
 ```
 
+### IMPORTANT: Nushell command expressions require `$` prefix
+
+Strings containing Nushell command expressions wrapped in `()` MUST keep the `$` prefix for interpolation. Common examples include:
+
+- `(ansi g)`, `(ansi r)`, `(ansi rst)` - ANSI color codes
+- `(char nl)`, `(char tab)` - special characters
+- Any other command call like `(date now)`, `(pwd)`, etc.
+
+```nushell
+# Correct - $ prefix required for command expressions
+print $'(char nl)Artifact created successfully:'
+print $'(ansi g)Success!(ansi rst)'
+
+# Wrong - without $ these are literal text, not command calls
+print '(char nl)Artifact created successfully:'  # Prints literal "(char nl)"
+print '(ansi g)Success!(ansi rst)'               # Prints literal "(ansi g)"
+```
+
+**Rule**: If a string contains `(...)` that should be evaluated as a command, always use `$'...'` or `$"..."`.
+
 ## English Text Proofreading
 
 Check and improve English in:
