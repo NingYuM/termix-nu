@@ -241,7 +241,7 @@ def init-assets [
   --dest-store(-d): string,   # Destination store, should be configured in .termixrc
   --quiet(-q),                # Show less info
 ] {
-  const ASSETS = [js/ fonts/ monaco-editor/]
+  const ASSETS = [js/ fonts/ monaco-editor/ geojson/]
   let tmp = $'(get-tmp-path)/static'
   if not ($tmp | path exists) { mkdir $tmp }
   rm -rf ($'($tmp)/*' | into glob)
@@ -295,10 +295,11 @@ def init-assets [
     exit $ECODE.SUCCESS
   }
 
-  # Show preview (max 5 lines)
+  # Show preview (max 7 lines)
   let lines = $dry_run | lines
-  let preview = if ($lines | length) > 5 { $lines | take 5 | append '...' } else { $lines } | str join "\n"
+  let preview = if ($lines | length) > 7 { $lines | take 7 | append '...' } else { $lines } | str join "\n"
   print $'Actions to be performed:(char nl)(ansi g)($preview)(ansi rst)'
+  print $'Total files to be synced: (ansi g)($lines | length)(ansi rst)'
 
   # Confirm and sync
   let confirm = input $'Are you sure to sync the assets? (ansi g)[y/n](ansi rst) '

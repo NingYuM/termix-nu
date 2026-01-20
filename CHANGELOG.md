@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
+- Add geojson data syncing support for `t ta init` command
 - Add `--stat` flag to `t ta detect` command
 - Show asset statistics in `t ta revert` preview panel
 
