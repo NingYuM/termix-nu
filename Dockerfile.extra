@@ -2,11 +2,10 @@
 
 # A termix-nu image with Nushell and Node installed based on debian
 
-# Nu: 0.105.1, Node: v20.19.2 LTS, npm: 10.8.2, pnpm: 9.15.9, Git: 2.39.5, fnm 1.38.1
-# GNU bash: 5.2.15, Wget 1.21.3, aria2: 1.36.0, curl: 7.88.1, ripgrep 13.0.0, sd 1.0.0
-# fd 10.2.0, just 1.40.0, ossutil v1.7.19, ast-grep(sg) 0.33.0
-# /etc/os-release: Debian GNU/Linux 12 (bookworm)
-# Kernel: Linux bdbfa1bb3a92 6.4.16-linuxkit #1 SMP PREEMPT_DYNAMIC Thu Nov 16 10:55:59 UTC 2023 x86_64 GNU/Linux
+# Nu: 0.110.0, Node: v22.22.0, npm: 10.9.4, pnpm: 10.28.0, Git: 2.47.3, fnm: 1.38.1
+# Bash: 5.2.37, Wget: 1.25.0, aria2c: 1.37.0, curl: 8.14.1, rg: 14.1.1, sd: 1.0.0
+# /etc/os-release: Debian GNU/Linux 13 (trixie)
+# Kernel: Linux a086add21b9a 6.11.0-1018-azure #18~24.04.1-Ubuntu SMP Sat Jun 28 04:46:03 UTC 2025 x86_64 GNU/Linux
 # Build cmd: docker build . -t hustcer/termix:bleeding-extra --no-cache
 # docker buildx build --platform linux/amd64,linux/arm64 . -t hustcer/termix:bleeding-extra --no-cache
 # docker build --no-cache . -t hustcer/termix:latest-extra -f Dockerfile.extra
@@ -16,7 +15,7 @@
 #   [√] Install @terminus/t-package-tools@latest
 #   [√] Change entry to nu
 
-FROM hustcer/debian-nu:0.108-node.20.19-extra
+FROM hustcer/debian-nu:0.110-node.20.18-extra
 
 ARG TARGETARCH
 ARG ARCH=${TARGETARCH/arm64/aarch64}
