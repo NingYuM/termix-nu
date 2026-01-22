@@ -116,6 +116,11 @@ terp-assets *OPTIONS: _setup _setup_fzf
   @overlay use {{ join(_termix, 'actions', 'terp-assets.nu') }}; \
     terp assets {{OPTIONS}}
 
+# Convert RGBA color to HEX format
+[group('-- Frontend --')]
+rgba2h *OPTIONS: _setup _setup_fzf
+  @nu {{ join(_termix, 'actions', 'color.nu') }} {{OPTIONS}}
+
 # Preview TERP assets status
 [private]
 [group('-- Frontend --')]
