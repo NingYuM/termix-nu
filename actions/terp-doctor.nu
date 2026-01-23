@@ -160,7 +160,13 @@ def check-essential-rules [resp: record, file: string] {
   mut all_passed = true
   for rule in ($ESSENTIAL_RULES | where $it.file == $file) {
     let value = get-header-value $resp $rule.key
-    if $value not-in $rule.value {
+    let valid = if $rule.key == 'content-type' {
+      $rule.value | any { |v| $value | str starts-with $v }
+    } else {
+      $value in $rule.value
+    }
+
+    if not $valid {
       $all_passed = false
       print -e $'Response header `($rule.key)` expected: (ansi g)($rule.value)(ansi rst), actual: (ansi r)($value)(ansi rst)'
     }
@@ -271,7 +277,7 @@ def parse-response [resp: record] {
 
 # Get header value from response
 def get-header-value [resp: record, name: string] {
-  let matches = $resp.headers.response | where name == $name
+  let matches = $resp.headers.response | where { |h| ($h.name | str downcase) == ($name | str downcase) }
   match $matches {
     [] => '',
     $m => ($m | first | get value)
