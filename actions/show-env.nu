@@ -30,7 +30,7 @@ export def main [] {
   let gitVer = (get-ver git "git --version | str trim | str substring 12..")
   let s5cmdVer = (get-ver s5cmd "s5cmd version | split row - | str trim --left -c v | str join '  (' | append ')' | str join")
   let time = (date now | format date '%Y/%m/%d %H:%M:%S')
-  let gitProxy = if (git config --global --list | grep proxy | is-empty) { 'Off' } else { 'On' }
+  let gitProxy = if (git config --global --list | find proxy | is-empty) { 'Off' } else { 'On' }
 
   print -n (char nl)
   version | select version commit_hash build_time installed_plugins
@@ -77,6 +77,6 @@ export def main [] {
 def get-brew-installed-bins [] {
   if (windows?) { return [N/A] }
   [fzf s5cmd nushell just]
-    | where {|bin| (brew list $bin | complete | get exit_code) == 0 }
+    | where {|bin| (try { do { ^brew list $bin } | complete | get exit_code } catch { 1 }) == 0 }
     | default -e [N/A]
 }
