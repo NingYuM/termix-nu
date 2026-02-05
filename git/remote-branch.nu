@@ -137,7 +137,7 @@ def is-merged [
   if ($main_commit | is-empty) or ($branchCommit | is-empty) { return '' }
 
   # 1. Fast check: Git native merge detection (ancestor check)
-  let mergeBase = do -i { git merge-base $remoteBranch $main_ref } | complete | get stdout | str trim
+  let mergeBase = try { ^git merge-base $remoteBranch $main_ref | complete } catch { { stdout: '' } } | get stdout | str trim
   if ($mergeBase == $branchCommit) or ($main_commit == $branchCommit) { return '√' }
 
   # 2. Slow check: Patch-ID detection (for rebased/cherry-picked branches)
