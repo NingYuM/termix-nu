@@ -64,10 +64,14 @@ export def append-desc [
   } else {
     # 本地 i 分支优先级高于远程
     let querySource = if $localIExists { 'i' } else { 'origin/i' }
-    let descriptions = (git show $'($querySource):($descFile)' | complete | get stdout | from toml | to json)
+    let descResult = try { ^git show $'($querySource):($descFile)' | complete } catch { { stdout: '', exit_code: 128 } }
+    if $descResult.exit_code != 0 or ($descResult.stdout | is-empty) {
+      return ($records | sort-by last-commit)
+    }
+    let descriptions = ($descResult.stdout | from toml | to json)
     let summary = (
       $records | insert has-desc { |it|
-        # 处理分支名称包含‘.’的情况: `support/release-2.4`
+        # 处理分支名称包含'.'的情况: `support/release-2.4`
         let escapedBranch = ($it.name | str replace -a '.' '\.')
         let desc = ($descriptions | query json $'descriptions.($escapedBranch)')
         if ($desc | is-empty) { '' } else { '   √' }

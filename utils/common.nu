@@ -400,11 +400,10 @@ export def get-ver [
 export def has-ref [
   ref: string   # The git ref to check
 ] {
-  let checkRepo = (do -i { git rev-parse --is-inside-work-tree } | complete)
+  let checkRepo = git rev-parse --is-inside-work-tree | complete
   if not ($checkRepo.stdout =~ 'true') { return false }
-  # Brackets were required here, or error will occur
-  let parse = (do -i { git rev-parse --verify -q $ref } | complete)
-  if ($parse.stdout | is-empty) { false } else { true }
+  let parse = try { ^git rev-parse --verify -q $ref | complete } catch { { stdout: '' } }
+  ($parse.stdout | is-not-empty)
 }
 
 # A custom command to check if a string is a valid SemVer version
