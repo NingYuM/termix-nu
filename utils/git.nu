@@ -26,7 +26,7 @@ export def do-sync [
     # You MUST use '--no-verify' to prevent infinite loops!!!
     git push --no-verify --force $gitUrl $'($syncFrom):refs/heads/($repo.dest)'
   } else {
-    let tryPush = git push --no-verify $gitUrl $'($syncFrom):refs/heads/($repo.dest)' | complete
+    let tryPush = do { ^git push --no-verify $gitUrl $'($syncFrom):refs/heads/($repo.dest)' | complete }
     if $tryPush.exit_code != 0 { print -e $'(ansi y)($tryPush.stderr)(ansi rst)' }
   }
 }
@@ -64,11 +64,7 @@ export def append-desc [
   } else {
     # 本地 i 分支优先级高于远程
     let querySource = if $localIExists { 'i' } else { 'origin/i' }
-    let descResult = try { ^git show $'($querySource):($descFile)' | complete } catch { { stdout: '', exit_code: 128 } }
-    if $descResult.exit_code != 0 or ($descResult.stdout | is-empty) {
-      return ($records | sort-by last-commit)
-    }
-    let descriptions = ($descResult.stdout | from toml | to json)
+    let descriptions = do { git show $'($querySource):($descFile)' | complete } | get stdout | from toml | to json
     let summary = (
       $records | insert has-desc { |it|
         # 处理分支名称包含'.'的情况: `support/release-2.4`

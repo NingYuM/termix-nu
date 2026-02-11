@@ -402,7 +402,7 @@ export def has-ref [
 ] {
   let checkRepo = git rev-parse --is-inside-work-tree | complete
   if not ($checkRepo.stdout =~ 'true') { return false }
-  let parse = try { ^git rev-parse --verify -q $ref | complete } catch { { stdout: '' } }
+  let parse = do { ^git rev-parse --verify -q $ref | complete }
   ($parse.stdout | is-not-empty)
 }
 
