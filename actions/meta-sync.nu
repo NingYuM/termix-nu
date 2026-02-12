@@ -243,8 +243,7 @@ def build-tag-and-install [
 
   let metaUrl = handle-build-tag $source $sourceAuth $tag
   hr-line
-  print $'Tag built successfully, meta data url:'
-  print $'(ansi p)($metaUrl)(ansi rst)'
+  print $'Tag built successfully!'
 
   if ($to | is-not-empty) and $install {
     handle-import-metadata $dest '' $metaUrl $destAuth --install=$install --modules $moduleList
@@ -252,6 +251,29 @@ def build-tag-and-install [
 
   let end = date now
   print $'Total time consumed: (ansi p)($end - $start)(ansi rst)'
+}
+
+# Poll a task until completion, printing progress along the way and return the final task detail
+def poll-task [
+  taskId: int,       # The task ID to poll
+  host: string,         # The host URL for fetching task details
+  auth: record,         # Authentication record
+  --break-on-fail,      # Break the polling loop early if task status is 'Failed'
+] {
+  mut detail = fetch-task-detail $taskId $host $auth
+  print 'Task running detail:'; hr-line
+  mut stats = $detail.progress
+  print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi rst) is ($detail.status): [Total: ($stats.total), Success: ($stats.success), Failed: ($stats.failed)]'
+  while $stats.success + $stats.failed < $stats.total {
+    if $break_on_fail and $detail.status == 'Failed' { break }
+    $detail = (fetch-task-detail $taskId $host $auth)
+    $stats = $detail.progress
+    sleep $QUERY_INTERVAL
+    print -n $POLL_TICK_CHAR
+  }
+  print -n (char nl)
+  print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi rst) is ($detail.status): [Total: ($stats.total), Success: ($stats.success), Failed: ($stats.failed)]'
+  $detail
 }
 
 # Build tag for meta data and wait for the task to finish
@@ -263,20 +285,9 @@ def handle-build-tag [
   let start = date now
   let taskId = build-tag $source $auth $tag
   print $'(ansi pr) TAG: (ansi rst) Tag building task started, id: (ansi p)(get-detail-link $source.host $taskId)(ansi rst)'
-  mut detail = fetch-task-detail $taskId $source.host $auth
-  print 'Task running detail:'; hr-line
-  mut stats = $detail.progress
-  print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi rst) is ($detail.status): [Total: ($stats.total), Success: ($stats.success), Failed: ($stats.failed)]'
-  while $stats.success + $stats.failed < $stats.total {
-    if $detail.status == 'Failed' { break }
-    $detail = (fetch-task-detail $taskId $source.host $auth)
-    $stats = $detail.progress
-    sleep $QUERY_INTERVAL
-    print -n $POLL_TICK_CHAR
-  }
+  let detail = poll-task $taskId $source.host $auth --break-on-fail
+  let stats = $detail.progress
   let end = date now
-  print -n (char nl)
-  print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi rst) is ($detail.status): [Total: ($stats.total), Success: ($stats.success), Failed: ($stats.failed)]'
   print ($detail.outputs | table -e)
   print $'Time consumed for tag building: ($end - $start)'
   if ($stats.failed > 0) {
@@ -487,19 +498,9 @@ def handle-create-snapshot [
   let total = if $snapshot_only { 2 } else { 3 }
   let taskId = create-snapshot $source $auth
   print $'(ansi pr) STEP 1/($total): (ansi rst) Snapshot creating task started, id: (ansi p)(get-detail-link $source.host $taskId)(ansi rst)'
-  mut detail = fetch-task-detail $taskId $source.host $auth
-  print 'Task running detail:'; hr-line
-  mut stats = $detail.progress
-  print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi rst) is ($detail.status): [Total: ($stats.total), Success: ($stats.success), Failed: ($stats.failed)]'
-  while $stats.success + $stats.failed < $stats.total {
-    $detail = (fetch-task-detail $taskId $source.host $auth)
-    $stats = $detail.progress
-    sleep $QUERY_INTERVAL
-    print -n $POLL_TICK_CHAR
-  }
+  let detail = poll-task $taskId $source.host $auth
+  let stats = $detail.progress
   let end = date now
-  print -n (char nl)
-  print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi rst) is ($detail.status): [Total: ($stats.total), Success: ($stats.success), Failed: ($stats.failed)]'
   print 'Task output:'; hr-line
   print ($detail.outputs | table -e)
   print $'Time consumed for 1st step: ($end - $start)'
@@ -523,21 +524,9 @@ def handle-upload-snapshot [
   let taskId = upload-snapshot $source $rootOid $auth --install=$install
   print -n (char nl)
   print $'(ansi pr) STEP 2/($total): (ansi rst) Snapshot uploading task started, id: (ansi p)(get-detail-link $source.host $taskId)(ansi rst)'
-  mut detail = fetch-task-detail $taskId $source.host $auth
-  print 'Task running detail:'; hr-line
-  mut stats = $detail.progress
-  print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi rst) is ($detail.status): [Total: ($stats.total), Success: ($stats.success), Failed: ($stats.failed)]'
-  while $stats.success + $stats.failed < $stats.total {
-    $detail = (fetch-task-detail $taskId $source.host $auth)
-    $stats = $detail.progress
-    sleep $QUERY_INTERVAL
-    print -n $POLL_TICK_CHAR
-  }
+  let detail = poll-task $taskId $source.host $auth
+  let stats = $detail.progress
   let end = date now
-  print -n (char nl)
-  print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi rst) is ($detail.status): [Total: ($stats.total), Success: ($stats.success), Failed: ($stats.failed)]'
-  # print 'Task output:'; hr-line
-  # print ($detail.outputs | table -e)
   print $'Time consumed for 2nd step: ($end - $start)'
   if ($stats.failed > 0) {
     print -e $'Failed to upload snapshot, please try again later.'
@@ -704,7 +693,7 @@ def install-metadata [
   }
   if not ($modules | is-empty) {
     $installPayload.moduleKeys = $modules
-    print $'Going to install modules: (ansi g)($modules | str join ",")(ansi rst)'
+    print $'Start to install modules: (ansi g)($modules | str join ",")(ansi rst)'
   }
   let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team $dest.teamCode, ...$HTTP_HEADERS]
   let resp = http post --content-type application/json --headers $headers $'($dest.host)($destInstallApi)' $installPayload
