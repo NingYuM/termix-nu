@@ -66,6 +66,18 @@ const LEGACY_L1_VERSIONS = [2.5.24.0830 2.5.24.0930 2.5.24.1030]
 @example '安装或者升级标准模块的元数据到目标，支持 Trantor 2.5.24.0930 及以后版本，表示安装为非原生模块' {
   t msync --install --to test
 } --result '执行安装/升级任务而非普通导入'
+@example '在源项目中为元数据创建指定版本的标签' {
+  t msync --tag '20260202.0935'
+} --result '调用 BuildTagTask 在源项目中创建标签'
+@example '指定源项目创建元数据标签' {
+  t msync --tag '20260202.0935' --from dev
+}
+@example '创建元数据制品并安装到目标环境，未指定模块时会进入交互式选择模式' {
+  t msync --from terp-saas --install --to sanlux-dev --tag 20260212.1730
+}
+@example '创建制品并将指定模块安装到目标环境' {
+  t msync SCM_DEL,ERP_FI,ERP_FIN --from terp-saas --install --to sanlux-dev --tag 20260212.1730
+}
 export def 'meta sync' [
   modules?: string,      # Specify the modules to sync, multiple modules separated by commas
   --from(-f): string@'nu-complete source',  # Specify the source meta data provider name from meta.source config
@@ -74,6 +86,7 @@ export def 'meta sync' [
   --list(-l),           # List all the available sources and destinations
   --install(-i),        # Install or upgrade the standard modules to the dest project, for 2.5.24.0930 or later
   --snapshot(-S),       # Only create and upload snapshot for meta data
+  --tag(-T): string,    # Build a tag for meta data with the specified version, e.g. '20260202.0935'
 ] {
   cd $env.TERMIX_DIR
   let currentBranch = git branch --show-current
@@ -83,6 +96,7 @@ export def 'meta sync' [
   let confMeta = load-meta-conf
   if $list { show-available-providers $confMeta; exit $ECODE.SUCCESS }
   if $snapshot { create-and-upload-snapshot --from $from --install=$install; exit $ECODE.SUCCESS }
+  if ($tag | is-not-empty) { build-tag-and-install --from $from --to $to --tag $tag --install=$install --modules $modules; exit $ECODE.SUCCESS }
   let usedSetting = get-meta-setting --from $from --to $to
   let dest = $usedSetting.dest
   let source = $usedSetting.source
@@ -154,23 +168,33 @@ def get-providers [type: string, metaConf: record] {
     | upsert host {|it| $it.host | trim-host }
 }
 
+# Resolve and validate a meta data provider (source or destination) by name or default
+def resolve-provider [
+  type: string,         # Provider type: 'source' or 'destination'
+  name?: string,        # Provider name, from --from or --to flag
+] {
+  let metaConf = $env.META_CONF
+  check-required $type
+  let defaults = $metaConf | get $type | values | default false default | where default == true
+  if $type == 'source' { provider-check $type $defaults --from $name } else { provider-check $type $defaults --to $name }
+  let provider = if ($name | is-empty) { $defaults | get 0 } else { $metaConf | get $type | get $name }
+  let $provider = ($provider
+    | upsert username {|it| $it.username? | default $metaConf.settings?.username? }
+    | upsert password {|it| $it.password? | default $metaConf.settings?.password? }
+    | upsert cookie {|it| $it.cookie? | default $metaConf.settings?.cookie? })
+  check-user-auth $provider
+  $provider
+}
+
 # Create and upload meta data snapshot
 def create-and-upload-snapshot [
   --from: string
   --install(-i),        # Install or upgrade the standard modules to the dest project, for 2.5.24.0930 or later
 ] {
-  let metaConf = $env.META_CONF
-  check-required source
-  let defaultSource = $metaConf.source | values | default false default | where default == true
-  provider-check 'source' $defaultSource --from $from
-  let source = if ($from | is-empty) { $defaultSource | get 0 } else { $metaConf.source | get $from }
-  let $source = ($source
-    | upsert username {|it| $it.username? | default $metaConf.settings?.username? }
-    | upsert password {|it| $it.password? | default $metaConf.settings?.password? })
-  check-user-auth $source
+  let source = resolve-provider source $from
   confirm-snapshot --from $source
   let start = date now
-  let authentication = get-user-auth $source
+  let authentication = get-user-auth ($env.META_CONF.settings? | default {} | merge $source)
   let snapshotOid = handle-create-snapshot $source $authentication --snapshot-only
   hr-line
   print $'Snapshot created successfully with RootOID: (ansi p)($snapshotOid)(ansi rst)'
@@ -179,6 +203,112 @@ def create-and-upload-snapshot [
   print $'(ansi p)($downloadUrl)(ansi rst)'
   let end = date now
   print $'Total time consumed: (ansi p)($end - $start)(ansi rst)'
+}
+
+# Build tag for meta data, optionally install to destination
+def build-tag-and-install [
+  --from: string,
+  --to: string,
+  --tag: string,
+  --modules: string,    # Comma-separated module keys, e.g. 'HR_ATT,HR_PER'
+  --install,
+] {
+  let metaConf = $env.META_CONF
+  let source = resolve-provider source $from
+  if ($to | is-not-empty) and (not $install) {
+    print $'(ansi y)Warning: --to is specified but --install is not set, destination will be ignored.(ansi rst)'
+  }
+  if $install and ($to | is-empty) {
+    print $'(ansi y)Warning: --install is set but --to is not specified, skipping installation.(ansi rst)'
+  }
+  let start = date now
+  let sourceAuth = get-user-auth ($metaConf.settings? | default {} | merge $source)
+
+  # Resolve destination and select modules upfront before tag building
+  mut dest = {}
+  mut destAuth = {}
+  mut moduleList = []
+  if ($to | is-not-empty) and $install {
+    $dest = (resolve-provider destination $to)
+    $destAuth = (get-user-auth ($metaConf.settings? | default {} | merge $dest))
+    $moduleList = if ($modules | is-not-empty) { $modules | split row , } else {
+      get-selected-modules --from $source --auth $sourceAuth
+    }
+    if ($moduleList | is-empty) {
+      print -e $'(ansi r)No modules specified, please specify modules to install.(ansi rst)'
+      exit $ECODE.INVALID_PARAMETER
+    }
+    print $'Going to install modules: (ansi g)($moduleList | str join ",")(ansi rst)'
+  }
+
+  let metaUrl = handle-build-tag $source $sourceAuth $tag
+  hr-line
+  print $'Tag built successfully, meta data url:'
+  print $'(ansi p)($metaUrl)(ansi rst)'
+
+  if ($to | is-not-empty) and $install {
+    handle-import-metadata $dest '' $metaUrl $destAuth --install=$install --modules $moduleList
+  }
+
+  let end = date now
+  print $'Total time consumed: (ansi p)($end - $start)(ansi rst)'
+}
+
+# Build tag for meta data and wait for the task to finish
+def handle-build-tag [
+  source: record,       # Specify the meta source config
+  auth: record,         # A authentication record contains user and cookie info
+  tag: string,          # Specify the tag version string
+] {
+  let start = date now
+  let taskId = build-tag $source $auth $tag
+  print $'(ansi pr) TAG: (ansi rst) Tag building task started, id: (ansi p)(get-detail-link $source.host $taskId)(ansi rst)'
+  mut detail = fetch-task-detail $taskId $source.host $auth
+  print 'Task running detail:'; hr-line
+  mut stats = $detail.progress
+  print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi rst) is ($detail.status): [Total: ($stats.total), Success: ($stats.success), Failed: ($stats.failed)]'
+  while $stats.success + $stats.failed < $stats.total {
+    if $detail.status == 'Failed' { break }
+    $detail = (fetch-task-detail $taskId $source.host $auth)
+    $stats = $detail.progress
+    sleep $QUERY_INTERVAL
+    print -n $POLL_TICK_CHAR
+  }
+  let end = date now
+  print -n (char nl)
+  print $'(ansi p)($detail.taskName)@($detail.taskRunId)(ansi rst) is ($detail.status): [Total: ($stats.total), Success: ($stats.success), Failed: ($stats.failed)]'
+  print ($detail.outputs | table -e)
+  print $'Time consumed for tag building: ($end - $start)'
+  if ($stats.failed > 0) {
+    print -e $'Failed to build tag, please try again later.'
+    exit $ECODE.SERVER_ERROR
+  }
+  print 'Task output:'; hr-line
+  print ($detail.result.files | first)
+  $detail.result.files | first | get url
+}
+
+# Build a tag for meta data by calling BuildTagTask API
+def build-tag [
+  source: record,       # Specify the meta source of the tag to build
+  auth: record,         # A authentication record contains user and cookie info
+  tag: string,          # Specify the tag version string
+] {
+  const buildTagApi = '/api/trantor/task/exec/BuildTagTask'
+  let query = { teamId: $source.teamId, teamCode: $source.teamCode, userId: $auth.user.id, verbose: 'false' } | url build-query
+  let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team $source.teamCode ...$HTTP_HEADERS]
+  let payload = { version: $tag }
+  let resp = http post --content-type application/json --headers $headers -e $'($source.host)($buildTagApi)?($query)' $payload
+  if $resp.status? == 401 {
+    print -e $'Build tag failed with error: (ansi r)($resp.error)(ansi rst)'
+    print -e $'Make sure you have set the username and password correctly and try again...'
+    exit $ECODE.AUTH_FAILED
+  }
+  if ($resp.success? | is-empty) or (not $resp.success?) {
+    print -e $'Failed to build tag, error: ($resp.error)'
+    exit $ECODE.SERVER_ERROR
+  }
+  $resp.data.taskId
 }
 
 # Make sure you know what you are doing
@@ -208,26 +338,8 @@ def get-meta-setting [
   --from(-f): string,   # Specify the source meta data provider name from meta.source config
   --to(-t): string,     # Specify the destination meta data provider name from meta.destination config
 ] {
-  let metaConf = $env.META_CONF
-  # print ($metaConf | table -e)
-
-  check-required source
-  check-required destination
-  let defaultSource = $metaConf.source | values | default false default | where default == true
-  let defaultDest = $metaConf.destination | values | default false default | where default == true
-  # CHECK: Make sure at most one default source and destination was set
-  provider-check 'source' $defaultSource --from $from
-  provider-check 'destination' $defaultDest --to $to
-  let source = if ($from | is-empty) { $defaultSource | get 0 } else { $metaConf.source | get $from }
-  let destination = if ($to | is-empty) { $defaultDest | get 0 } else { $metaConf.destination | get $to }
-  let $source = ($source
-    | upsert username {|it| $it.username? | default $metaConf.settings?.username? }
-    | upsert password {|it| $it.password? | default $metaConf.settings?.password? })
-  let $destination = ($destination
-    | upsert username {|it| $it.username? | default $metaConf.settings?.username? }
-    | upsert password {|it| $it.password? | default $metaConf.settings?.password? })
-  check-user-auth $source
-  check-user-auth $destination
+  let source = resolve-provider source $from
+  let destination = resolve-provider destination $to
   { source: $source, dest: $destination }
 }
 
@@ -243,11 +355,12 @@ def check-required [name: string] {
   }
 }
 
-# Make sure user has configured username and password
+# Make sure user has configured username/password or cookie for authentication
 def check-user-auth [settings: record] {
+  if ($settings.cookie? | is-not-empty) { return }
   let authEmpty = [username password] | any {|it| $settings | get -o $it | is-empty }
   if $authEmpty {
-    print -e $'(ansi r)Please config your username and password for the following setting:(ansi rst)'
+    print -e $'(ansi r)Please config your username and password (or cookie) for the following setting:(ansi rst)'
     $settings | table -e | print
     exit $ECODE.INVALID_PARAMETER
   }
@@ -382,7 +495,7 @@ def handle-create-snapshot [
     $detail = (fetch-task-detail $taskId $source.host $auth)
     $stats = $detail.progress
     sleep $QUERY_INTERVAL
-    print -n '█'
+    print -n $POLL_TICK_CHAR
   }
   let end = date now
   print -n (char nl)
@@ -418,7 +531,7 @@ def handle-upload-snapshot [
     $detail = (fetch-task-detail $taskId $source.host $auth)
     $stats = $detail.progress
     sleep $QUERY_INTERVAL
-    print -n '█'
+    print -n $POLL_TICK_CHAR
   }
   let end = date now
   print -n (char nl)
@@ -591,7 +704,7 @@ def install-metadata [
   }
   if not ($modules | is-empty) {
     $installPayload.moduleKeys = $modules
-    print $'Going to install modules: ($modules | str join ",")'
+    print $'Going to install modules: (ansi g)($modules | str join ",")(ansi rst)'
   }
   let headers = [Cookie $auth.cookie Referer $auth.iamHost Trantor2-Team $dest.teamCode, ...$HTTP_HEADERS]
   let resp = http post --content-type application/json --headers $headers $'($dest.host)($destInstallApi)' $installPayload
@@ -649,6 +762,12 @@ def get-user-auth [
   if $platform.status? in [401 404] {
     return { user: { id: 1 }, iamHost: '', cookie: '' }
   }
+  # 如果已配置 cookie 则跳过账密登录流程
+  if ($settings.cookie? | is-not-empty) {
+    mut iamHost = $platform.iamDomain?
+    if not ($iamHost | str starts-with http) { $iamHost = $'https://($iamHost)' }
+    return { user: { id: 1 }, iamHost: $iamHost, version: $platform.version?.number?, cookie: $settings.cookie }
+  }
   # OpenSSL Check
   if not (is-installed openssl) {
     print -e $'(ansi r)Please install openssl@3 first by `brew install openssl@3` and try again...(ansi rst)'
@@ -675,6 +794,13 @@ def get-user-auth [
   let payload = { account: $settings.username, password: $password }
 
   let resp = http post --headers $IAM_HEADER --full --content-type application/json -e $'($iamHost)/iam/api/v1/user/login/account' $payload
+  # 应用未开启账密登录功能, 需要在 .termixrc 对应的 source/destination 中配置 cookie
+  if $resp.body.code? == 'B0001' {
+    print -e $'(ansi r)Account/password login is not available for (ansi p)($settings.host)(ansi r).(ansi rst)'
+    print -e $'Please configure (ansi p)cookie(ansi rst) in the corresponding meta source/destination in (ansi p).termixrc(ansi rst), e.g.:'
+    print -e $'  cookie = "t_iam_dev=eyJ0eXAiOiJKV1QiLCJh..."'
+    exit $ECODE.AUTH_FAILED
+  }
   if not $resp.body.success {
     print -e $'Login failed with error: (ansi r)($resp.body.message)(ansi rst)'
     print -e $'Please check your auth info at (ansi g)($iamHost)/login(ansi rst)'

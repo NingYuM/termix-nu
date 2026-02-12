@@ -129,6 +129,8 @@ teamCode = 'TERP'
 # 用户名和密码此处如果配置了则会覆盖 meta.settings 中的配置，如果未配置则使用 meta.settings 中的配置
 username = 'your-username'
 password = 'your-password'
+# 如果源环境未开启账密登录，可以在此配置 cookie 进行认证，也可以在具体的 source/destination 中单独配置
+# cookie = 't_iam_dev=eyJ0eXAiOiJKV1QiLCJh...'
 # 同步源 Console 地址，后面不要加 `/`
 host = 'https://abc-console-dev.app.terminus.io'
 # 此描述信息会在使用 --list Flag时展示
@@ -164,6 +166,8 @@ resetModuleForInstall = false
 # 用户名和密码此处如果配置了则会覆盖 meta.settings 中的配置，如果未配置则使用 meta.settings 中的配置
 username = 'your-username'
 password = 'your-password'
+# 如果目标环境未开启账密登录，可以在此配置 cookie 进行认证，也可以在具体的 source/destination 中单独配置
+# cookie = 't_iam_dev=eyJ0eXAiOiJKV1QiLCJh...'
 # 同步目标 Console 地址，后面不要加 `/`
 host = 'https://abc-console-test.app.terminus.io'
 # 此描述信息会在使用 --list Flag 时展示
