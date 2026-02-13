@@ -93,6 +93,7 @@ winget install Nushell.Nushell
     [-- Common  --]
     art *OPTIONS               # Create, download, upload and deploy from the artifacts
     brew *OPTIONS              # 通过 Brew 国内镜像加速执行 brew 相关命令
+    cr *OPTIONS                # Perform code review locally with DeepSeek models
     default                    # List available commands by default
     deploy *OPTIONS            # 执行Erda流水线,可通过`dp -l`列出所有部署目标,在批量部署模式下通过`--app`指定待部署应用
     dp *OPTIONS                # alias for `deploy`
@@ -100,7 +101,9 @@ winget install Nushell.Nushell
     dq *OPTIONS                # alias for `deploy-query`
     ding-msg *OPTIONS          # Send a message to DingTalk Group by a custom robot
     dir-batch-exec *OPTIONS    # 在指定目录(支持'*'通配符)或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
+    doctor *OPTIONS            # 检查 termix-nu 的配置问题，并尝试修复; 诊断 TERP App 的配置问题，并给出修复建议
     emp *OPTIONS               # 查询团队本周工时填报情况
+    erda-transfer *OPTIONS     # Transfer Apps between Erda Projects
     go nav=('list')            # 快速在默认浏览器里打开匹配的链接
     show-env                   # 显示本机安装应用版本及环境变量相关信息
     upgrade *OPTIONS           # Upgrade termix-nu repo, just or nushell to the latest version
@@ -116,15 +119,18 @@ winget install Nushell.Nushell
     check-branch               # 分支检查: 检查是否所有分支都有描述信息以及是否有可同步分支在远程仓库被删除
     git-batch-exec *OPTIONS    # 在指定git分支上执行指定命令,cmd为待执行命令字符串,多个分支用`,`分隔
     git-branch *OPTIONS        # Listing the branches of a git repo and the time of the last commit
+    gb *OPTIONS                # alias for `git-branch`
     git-desc *OPTIONS          # Show branch description from branch description file `d` of `i` branch
     git-diff-commit *OPTIONS   # Show commit info diff between two commits, e.g. t git-diff-commit 051da464 0ab1df2d
     git-pick *OPTIONS          # Pick matched commits from one branch to another branch.
     git-proxy status=('on')    # 开启或者关闭 git 代理, 目前仅支持在阿里郎加速模式下开启 git 代理
     git-remote-branch *OPTIONS # Listing the remote branches of a git repo with the extra info
+    rb *OPTIONS                # alias for `git-remote-branch`
     git-stat *OPTIONS          # Show insertions/deletions and number of files changed for each commit
     gsync *OPTIONS             # 手工触发批量同步本地分支到远程指定分支
-    ls-tags by=('time')        # 按时间顺序列出所有的 git tags, 默认按 `time` 排序，可选按 `tag` 排序：ls-tags tag
-    pull-all                   # Pull all local branches from remote repo
+    ls-tags *OPTIONS           # 按时间顺序列出所有的 git tags, 默认按 `time` 排序，可选按 Tag 名称排序：ls-tags -s tag
+    pull-all *OPTIONS          # Pull all local branches from remote repo
+    pa *OPTIONS                # alias for `pull-all`
     rename-branch *OPTIONS     # Rename remote branch, and delete old branch after rename
     repo-transfer *OPTIONS     # Transfer a git repo from source to the dest
    ```
@@ -230,7 +236,7 @@ services:
 
 而对于 `MacOS` 会使用 `brew` 命令通过国内的镜像升级`nushell` & `just`，这样由于二进制文件是从国内镜像下载的，更新速度依然飞快，眨眼间即可完成。
 
-终极更新大法：`t upgrade --all` 或 `t upgrade -a` 同时更新 `termix-nu`, `just` & `nushell`，从此升级不用愁。
+终极更新大法：`t upgrade --all` 或 `t upgrade -a` 同时更新 `termix-nu`, `just` & `nushell`，从此升级不用愁。如果已经是最新版本但仍想强制重新安装可以加上 `--force` 或 `-f` 参数。
 
 :::info
 
@@ -391,21 +397,21 @@ t dir-batch-exec 'pwd;ncu'
 
 **参数说明**:
 
-- `minVer`: 可选，指定查询`Node.js`的最小起始版本号，可以为空，默认值为 `16`, 版本号前面可以加`v`也可以不加;
+- `minVer`: 可选，指定查询`Node.js`的最小起始版本号，可以为空，默认值为 `18`, 版本号前面可以加`v`也可以不加;
 - `--lts`: 是否只查询`LTS`版本;
 - `-h` 或 `--help`: 查看帮助文档;
 
 **使用举例**:
 
 ```bash
-# 查询`16`及以后的已经发布的Node版本号
-t ls-node
 # 查询`18`及以后的已经发布的Node版本号
-t ls-node 18
+t ls-node
+# 查询`20`及以后的已经发布的Node版本号
+t ls-node 20
 # OR
-t ls-node v18
-# 查询`16`及以后已经发布的Node LTS 版本号
-t ls-node 16 --lts
+t ls-node v20
+# 查询`18`及以后已经发布的Node LTS 版本号
+t ls-node 18 --lts
 ```
 
 ---
@@ -927,6 +933,7 @@ t git-diff-commit -f HEAD~9 -A author1,author2
 
 **参数说明**:
 
+- `-a`, `--all` - 显示 `MERGE_IGNORED` 和 `EMPTY_COMMIT` 类型的 pick 错误信息
 - `-v`, `--verbose` - 显示更多信息
 - `-l`, `--list-only` - 只显示匹配到的 Commit 列表，不执行 `cherry-pick` 操作
 - `-f`, `--from <String>` - 待**Pick**的源分支，默认为当前分支
@@ -1097,13 +1104,14 @@ t dp test -o {branch: 'release/2.5.24.0330'}
 
 **命令格式**:
 
-- 根据 ID 查询单条部署记录：`deploy-query [id]`;
+- 根据 ID 查询单条部署记录：`deploy-query [id]` 或 `deploy-query --cid [id]`;
 - 单应用查询最近 10 条部署记录：`deploy-query test`;
 - 多应用查询最近 10 条部署记录：`deploy-query test -a all`;
 
 **参数说明**:
 
-- `id`: 选填，待查询的目标流水线对应的 ID，比如上图中的 **988218150879331**; 如果不填则查询默认目标的最近**10**条部署记录
+- `dest`: 选填，待查询的部署目标，默认值为 `dev`; 也可以直接传入流水线 ID（工具会自动判断）
+- `--cid` 或 `-I` 通过流水线的执行 ID 查询 CICD 执行结果，如果指定该参数则忽略 `dest` 参数
 - `--watch` 或者 `-w` 持续轮询并显示指定流水线各个 Stage 的执行信息，轮询间隔 2秒
 - `--apps` 或者 `-a` 指定需要批量查询的应用，多个应用以","分隔，在多应用模式下必须指定(`-a all`或者`--apps all`代表查询指定目标下的所有应用)，单应用模式忽略
 - `--override` 或 `-o` 该参数的格式为 JS Object, 用于覆盖部署配置里面的同名配置项, 比如已有部署目标 `prod` 对应的部署分支是 `master`, 但是你需要查询 `hotfix/abc` 分支的部署记录，由于这是个临时分支如果为查询这个分支的部署记录去改配置还是比较麻烦的，此时可以通过 `t dq prod -o {branch: 'hotfix/abc'}` 来查询，表示除了分支不一样外其他的查询配置跟 `prod` 保持一致。该参数在 `sh/bash/fish/nushell` 下可以正常使用，但是 `zsh` 因为 `{}` 解析问题貌似不支持
@@ -1369,6 +1377,7 @@ alias main = dingtalk notify
 - `-f, --from <String>` - 资源的源挂载目录或者源 `latest.json` 完整 URL 地址，`from` 的 host 为 `https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com` 时可以只指定资源挂载的目录，否则需要 `latest.json` 的完整 URL 地址。对于 `detect` 操作的 `--from` 可以指定多个源，多个源之间用 `,` 分隔；
 - `-t, --to <String>` - 对于 `download` 代表资源下载保存的本机路径，对于 `transfer` 代表资源上传到云存储后的目标挂载目录
 - `-q`, `--quiet` - 不显示资源下载明细信息
+- `-s`, `--stat` - 在 `detect` 操作中显示静态资源统计信息
 - `-d, --dest-store <String>` - 对于 `transfer` 命令必须在 `.termixrc` 里面配置对应云存储的秘钥等信息
 - `-h, --help` - 显示本帮助信息
 
@@ -1741,6 +1750,7 @@ t art deploy --combine --from terp-runtime --branch release/millgrid-uat --to mi
 - `-a`, `--apps <string>`: 指定要迁移的应用名，多个应用之间用英文逗号分隔，未指定该参数则进入交互式选择应用界面
 - `-m`, `--sync-member`: 同步项目成员和应用成员
 - `-b`, `--branches <string>`: 指定要同步的分支，多个分支之间用英文逗号分隔：e.g. main,develop
+- `-d`, `--debug`: 调试模式，输出更多调试信息
 - `-h`, `--help`: 显示该命令的帮助文档
 
 **使用举例**:
@@ -1965,6 +1975,8 @@ t cr -c 'git diff 2393375 71f5a31 :!nu/*'
 - `-n`, `--notify` - 通过钉钉群机器人@工时没填满的同学提醒其填报工时
 - `-p`, `--show-prev` - 查询前一周的工时填表情况，通常周一会有这个需求
 - `-a`, `--show-all` - 显示所有团队成员工时填报情况，哪怕其已经填满了工时（但是提醒仍然只针对工时没填满的人）
+- `-d`, `--debug` - 打印更多调试信息
+- `-I`, `--no-ignore` - 不忽略配置文件中 `ignore = true` 的团队，查询所有团队的工时
 - `-m`, `--month <Int>` - 按月份查询团队工时填报情况, 可以搭配 `--show-all` 参数一起使用
 - `--keep-polling` - 持续轮询查询或提醒，直到团队所有成员都已经填满了工时
 - `-h`, `--help` - 显示帮助文档
@@ -2050,7 +2062,9 @@ t emp -a -p
 
 **参数说明**:
 
-- `--tuna`: 通过清华大学镜像加速, 默认使用中科大镜像加速;
+- `--tuna`: 通过清华大学镜像加速;
+- `--aliyun`: 通过阿里云镜像加速;
+- 默认使用中科大(USTC)镜像加速;
 
 **使用举例**:
 
@@ -2059,6 +2073,8 @@ t emp -a -p
 t brew install docker
 # 通过清华镜像加速安装 nushell
 t brew install --tuna nushell
+# 通过阿里云镜像加速安装 nushell
+t brew install --aliyun nushell
 ```
 
 ---
