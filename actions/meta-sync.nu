@@ -35,7 +35,8 @@
 #   t msync --selected
 #   t msync --all --from a --to b
 
-use ../utils/common.nu [ECODE, HTTP_HEADERS, FZF_DEFAULT_OPTS, FZF_THEME, hr-line, ellie, is-installed, is-lower-ver]
+use ../utils/iam.nu [iam-login]
+use ../utils/common.nu [ECODE, HTTP_HEADERS, FZF_DEFAULT_OPTS, FZF_THEME, hr-line, ellie]
 
 const POLL_TICK_CHAR = '*'
 const QUERY_INTERVAL = 1sec
@@ -335,6 +336,7 @@ def build-tag [
   if $resp.status? == 401 {
     print -e $'Build tag failed with error: (ansi r)($resp.error)(ansi rst)'
     print -e $'Make sure you have set the username and password correctly and try again...'
+    print -e $'If you use cookie for authentication, please make sure it is valid and not expired...'
     exit $ECODE.AUTH_FAILED
   }
   if ($resp.success? | is-empty) or (not $resp.success?) {
@@ -736,6 +738,7 @@ def fetch-task-detail [
   taskId: int,          # Specify the task id of the detail to fetch
   queryHost: string,    # Specify the query url prefix of the detail to fetch
   auth: record,         # A authentication record contains user and cookie info
+  --retries: int = 5,   # Max retry count for transient server errors
 ] {
   const queryApi = '/api/trantor/task/run-detail'
   let DETAIL_URL = $'($queryHost)($queryApi)/($taskId)'
@@ -748,8 +751,12 @@ def fetch-task-detail [
   if not $resp.success {
     # 对于“服务器异常”，需要重试
     if $resp.err.code == 'O0003' {
+      if $retries <= 0 {
+        print -e $'(char nl)Max retries reached for fetching task detail, error: ($resp.err.msg)'
+        exit $ECODE.SERVER_ERROR
+      }
       print -e $'(char nl)Fetch task detail failed with error: ($resp.err.msg), retrying...'
-      return (fetch-task-detail $taskId $queryHost $auth)
+      return (fetch-task-detail $taskId $queryHost $auth --retries ($retries - 1))
     }
     print -e $'Fetch task detail failed with error: ($resp.err)'
   }
@@ -773,53 +780,15 @@ def get-user-auth [
   if $platform.status? in [401 404] {
     return { user: { id: 1 }, iamHost: '', cookie: '' }
   }
-  # 如果已配置 cookie 则跳过账密登录流程
-  if ($settings.cookie? | is-not-empty) {
-    mut iamHost = $platform.iamDomain?
-    if not ($iamHost | str starts-with http) { $iamHost = $'https://($iamHost)' }
-    return { user: { id: 1 }, iamHost: $iamHost, version: $platform.version?.number?, cookie: $settings.cookie }
-  }
-  # OpenSSL Check
-  if not (is-installed openssl) {
-    print -e $'(ansi r)Please install openssl@3 first by `brew install openssl@3` and try again...(ansi rst)'
-    exit $ECODE.MISSING_BINARY
-  }
-  let opensslVer = openssl version | detect columns -n | rename bin ver | get ver.0
-  if (is-lower-ver $opensslVer '3.0.0') {
-    print -e $'(ansi r)Openssl v3 or above is required, please install it by `brew install openssl@3` and try again...(ansi rst)'
-    exit $ECODE.MISSING_BINARY
-  }
-
-  cd $env.TERMIX_DIR
   mut iamHost = $platform.iamDomain?
   if not ($iamHost | str starts-with http) { $iamHost = $'https://($iamHost)' }
-  const PUB_KEY_FILE = 'tmp/pub.key'
-  let IAM_HEADER = [Referer $iamHost ...$HTTP_HEADERS]
-  let pubKey = http get --headers $IAM_HEADER $'($iamHost)/iam/api/v1/user/common/front-end-config'
-      | get data.transmissionCryptoProps?.publicKey?
-
-  if not ('tmp/' | path exists) { mkdir tmp }
-  echo ['-----BEGIN PUBLIC KEY-----' $pubKey '-----END PUBLIC KEY-----'] | str join (char nl) | save -rf $PUB_KEY_FILE
-  let password = $settings.password | openssl pkeyutl -encrypt -pubin -inkey $PUB_KEY_FILE | openssl base64
-
-  let payload = { account: $settings.username, password: $password }
-
-  let resp = http post --headers $IAM_HEADER --full --content-type application/json -e $'($iamHost)/iam/api/v1/user/login/account' $payload
-  # 应用未开启账密登录功能, 需要在 .termixrc 对应的 source/destination 中配置 cookie
-  if $resp.body.code? == 'B0001' {
-    print -e $'(ansi r)Account/password login is not available for (ansi p)($settings.host)(ansi r).(ansi rst)'
-    print -e $'Please configure (ansi p)cookie(ansi rst) in the corresponding meta source/destination in (ansi p).termixrc(ansi rst), e.g.:'
-    print -e $'  cookie = "t_iam_dev=eyJ0eXAiOiJKV1QiLCJh..."'
-    exit $ECODE.AUTH_FAILED
+  # 如果已配置 cookie 则跳过账密登录流程
+  if ($settings.cookie? | is-not-empty) {
+    return { user: { id: 1 }, iamHost: $iamHost, version: $platform.version?.number?, cookie: $settings.cookie }
   }
-  if not $resp.body.success {
-    print -e $'Login failed with error: (ansi r)($resp.body.message)(ansi rst)'
-    print -e $'Please check your auth info at (ansi g)($iamHost)/login(ansi rst)'
-    exit $ECODE.AUTH_FAILED
-  }
-  let user = $resp.body.data.user
-  let cookie = $resp.headers.response | where name == 'set-cookie' | get value.0 | split row ';' | get 0
-  { user: $user, iamHost: $iamHost, version: $platform.version?.number?, cookie: $cookie }
+  let cookieHint = $'Please configure (ansi p)cookie(ansi rst) in the corresponding meta source/destination in (ansi p).termixrc(ansi rst), e.g.:'
+  let result = iam-login $settings.username $settings.password $iamHost --host $settings.host --cookie-hint $cookieHint
+  { user: $result.user, iamHost: $result.iamHost, version: $platform.version?.number?, cookie: $result.cookie }
 }
 
 alias main = meta sync
