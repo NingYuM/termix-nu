@@ -24,6 +24,9 @@
 # [√] Add ansi links to task ID
 # [√] User authentication support
 # [√] Add security code parameter for meta data import
+# [√] --install 时：模块必须指定（位置参数或 fzf 选择），空列表直接报错退出
+# [√] 非 --install + --all 时：跳过 fzf，空列表代表全量导入，提示输入安全码
+# [√] 非 --install 且没传 --all 也没传 modules 时：启动 fzf 交互选择
 # REF:
 #   https://aliyuque.antfin.com/trantor/eewi6i/zia318wmury96hqo#TRlGB
 # Usage:
@@ -79,10 +82,13 @@ const LEGACY_L1_VERSIONS = [2.5.24.0830 2.5.24.0930 2.5.24.1030]
   t msync SCM_DEL,ERP_FI,ERP_FIN --from terp-saas --tag 20260212.1730 --install --to sanlux-dev
 }
 @example '创建制品并全量导入到目标环境（SyncAllInOneTask）' {
-  t msync --from sanlux-dev --tag 20260213.0930 --to sanlux-staging
+  t msync --from sanlux-dev --tag 20260213.0930 --all --to sanlux-staging
 }
 @example '创建制品并将指定模块导入到目标环境（SyncAllInOneTask）' {
   t msync SCM_DEL,ERP_FI --from sanlux-dev --tag 20260213.0930 --to sanlux-staging
+}
+@example '创建制品并交互式选择模块导入到目标环境（SyncAllInOneTask）' {
+  t msync --from sanlux-dev --tag 20260213.0930 --to sanlux-staging
 }
 export def 'meta sync' [
   modules?: string,      # Specify the modules to sync, multiple modules separated by commas
@@ -102,7 +108,7 @@ export def 'meta sync' [
   let confMeta = load-meta-conf
   if $list { show-available-providers $confMeta; exit $ECODE.SUCCESS }
   if $snapshot { create-and-upload-snapshot --from $from --install=$install; exit $ECODE.SUCCESS }
-  if ($tag | is-not-empty) { build-tag-and-consume --from $from --to $to --tag $tag --install=$install --modules $modules; exit $ECODE.SUCCESS }
+  if ($tag | is-not-empty) { build-tag-and-consume --from $from --to $to --tag $tag --install=$install --all=$all --modules $modules; exit $ECODE.SUCCESS }
   let usedSetting = get-meta-setting --from $from --to $to
   let dest = $usedSetting.dest
   let source = $usedSetting.source
@@ -218,6 +224,7 @@ def build-tag-and-consume [
   --tag: string,
   --modules: string,    # Comma-separated module keys, e.g. 'HR_ATT,HR_PER'
   --install,
+  --all,                # Import all modules (SyncAllInOneTask only, not for --install)
 ] {
   let metaConf = $env.META_CONF
   let source = resolve-provider source $from
@@ -235,7 +242,11 @@ def build-tag-and-consume [
   if ($to | is-not-empty) {
     $dest = (resolve-provider destination $to)
     $destAuth = (get-user-auth ($metaConf.settings? | default {} | merge $dest))
-    $selectedModules = if ($modules | is-not-empty) { $modules | split row , } else {
+    $selectedModules = if ($modules | is-not-empty) {
+      $modules | split row ,
+    } else if (not $install) and $all {
+      []
+    } else {
       get-selected-modules --from $source --auth $sourceAuth
     }
     if $install and ($selectedModules | is-empty) {

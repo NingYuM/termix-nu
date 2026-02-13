@@ -1430,7 +1430,7 @@ t ta revert base-mobile -t dev -d minio
 - 支持自动登录(从 0330 版本开始要求登录后才能使用)，需要在配置文件里面配置好 Console 应用的用户名和密码 (此功能需要本机安装 `openSSL` 3.0.0 以上版本, 一般系统内置)；
 - 操作简单：在配置得当的情况下只需一条命令即可，比如 `t msync -a`;
 - 支持同步所有模块或者选择指定模块同步(指定模块同步功能以后可能会被废弃，详询元数据团队);
-- 支持通过 `--tag` 参数在源项目中为元数据创建指定版本的标签（调用 BuildTagTask API），并可搭配 `--install --to` 将标签产物直接安装到目标环境；
+- 支持通过 `--tag` 参数在源项目中为元数据创建指定版本的制品（调用 BuildTagTask API），搭配 `--to` 可将元数据制品导入目标环境（SyncAllInOneTask），搭配 `--install --to` 则将元数据制品安装到目标环境（InstallAndUpgradeAppTask）；
 - 支持通过 Cookie 进行认证：当目标环境未开启账密登录时，可在 `meta.settings` 或对应的 `source`/`destination` 配置中设置 `cookie` 字段来完成认证；
 - 对于 Trantor 2.5.24.1130 及以后版本支持按目录导入元数据：在同步源配置里面加上 `path` 配置项即可，参考示例中 `meta.source.dir-import` 的配置；
 - 同步所有模块时根据需要支持输入**安全码**(0330 版本后新特性), 同步指定模块时无需输入安全码；
@@ -1449,11 +1449,11 @@ t ta revert base-mobile -t dev -d minio
 - `modules`: 可选，需要同步元数据的模块标识，多个模块之间用英文逗号分隔
 - `-f`, `--from <String>` - 指定同步源名称，可以从配置文件的 `meta.source` Key 值中获取，不传则使用默认同步源
 - `-t`, `--to <String>` - 指定同步目标名称，可以从配置文件的 `meta.destination` Key 值中获取，不传则使用默认同步目标
-- `-a`, `--all` - 加上这个开关就表示同步所有模块
+- `-a`, `--all` - 加上这个开关就表示同步所有模块，搭配 `--tag --to` 使用时表示全量导入所有模块（SyncAllInOneTask），无需进入交互式选择
 - `-l`, `--list` - 列出所有的同步源和同步目标
 - `-i`, `--install` - 安装或者升级标准模块的元数据到目标项目，支持 Trantor 2.5.24.0930 及以后版本，表示安装为非原生模块
 - `-S`, `--snapshot` - 只创建并上传元数据的 SnapShot 不做导入元数据的操作
-- `-T`, `--tag <String>` - 在源项目中为元数据创建指定版本的标签，例如 `20260212.1730`。可搭配 `--install --to` 将标签产物安装到目标环境，搭配 `modules` 位置参数指定安装模块
+- `-T`, `--tag <String>` - 在源项目中为元数据创建指定版本的制品，例如 `20260212.1730`。搭配 `--to` 可将元数据制品导入目标环境（SyncAllInOneTask），搭配 `--all --to` 则全量导入所有模块无需交互式选择，搭配 `--install --to` 则将元数据制品安装到目标环境（InstallAndUpgradeAppTask），搭配 `modules` 位置参数指定导入或安装的模块，未指定模块且未使用 `--all` 时会进入交互式选择模式
 - `-h`, `--help` - 查看帮助信息
 - 如果在调用命令的时候没有传 `--all` 或 `modules` 参数会让你选择需要同步的模块, 如下图所示，在这个交互中可以使用的快捷键: `Tab` 选择某一项，`Ctrl+a` 选择所有, `Ctrl+d` 取消全部选择，`ESC` 取消并退出，上下箭头切换模块, `Enter` 确认选择, 也可以输入模块标识或名称进行过滤 & 模糊匹配；
 
@@ -1543,12 +1543,18 @@ t msync -a --from dev0 --to test0
 t msync --snapshot --from dev
 # 在默认源项目中为元数据创建指定版本的标签
 t msync --tag '20260202.0935'
-# 指定源项目创建元数据标签
+# 指定源项目创建元数据制品
 t msync --tag '20260202.0935' --from dev
-# 创建元数据标签并安装到目标环境，未指定模块时会进入交互式选择模式
-t msync --from terp-saas --install --to sanlux-dev --tag 20260212.1730
-# 创建标签并将指定模块安装到目标环境
-t msync SCM_DEL,ERP_FI,ERP_FIN --from terp-saas --install --to sanlux-dev --tag 20260212.1730
+# 创建元数据制品并安装到目标环境，未指定模块时会进入交互式选择模式（InstallAndUpgradeAppTask）
+t msync --from terp-saas --tag 20260212.1730 --install --to sanlux-dev
+# 创建制品并将指定模块安装到目标环境（InstallAndUpgradeAppTask）
+t msync SCM_DEL,ERP_FI,ERP_FIN --from terp-saas --tag 20260212.1730 --install --to sanlux-dev
+# 创建制品并全量导入到目标环境（SyncAllInOneTask），会提示输入安全码
+t msync --from sanlux-dev --tag 20260213.0930 --all --to sanlux-staging
+# 创建制品并将指定模块导入到目标环境（SyncAllInOneTask）
+t msync SCM_DEL,ERP_FI --from sanlux-dev --tag 20260213.0930 --to sanlux-staging
+# 创建制品并交互式选择模块导入到目标环境（SyncAllInOneTask），未指定模块且未使用 --all 时进入 fzf 选择模式
+t msync --from sanlux-dev --tag 20260213.0930 --to sanlux-staging
 ```
 
 **演示视频**:
