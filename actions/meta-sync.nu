@@ -72,11 +72,17 @@ const LEGACY_L1_VERSIONS = [2.5.24.0830 2.5.24.0930 2.5.24.1030]
 @example '指定源项目创建元数据标签' {
   t msync --tag '20260202.0935' --from dev
 }
-@example '创建元数据制品并安装到目标环境，未指定模块时会进入交互式选择模式' {
-  t msync --from terp-saas --install --to sanlux-dev --tag 20260212.1730
+@example '创建元数据制品并安装到目标环境，未指定模块时会进入交互式选择模式（InstallAndUpgradeAppTask）' {
+  t msync --from terp-saas --tag 20260212.1730 --install --to sanlux-dev
 }
-@example '创建制品并将指定模块安装到目标环境' {
-  t msync SCM_DEL,ERP_FI,ERP_FIN --from terp-saas --install --to sanlux-dev --tag 20260212.1730
+@example '创建制品并将指定模块安装到目标环境（InstallAndUpgradeAppTask）' {
+  t msync SCM_DEL,ERP_FI,ERP_FIN --from terp-saas --tag 20260212.1730 --install --to sanlux-dev
+}
+@example '创建制品并全量导入到目标环境（SyncAllInOneTask）' {
+  t msync --from sanlux-dev --tag 20260213.0930 --to sanlux-staging
+}
+@example '创建制品并将指定模块导入到目标环境（SyncAllInOneTask）' {
+  t msync SCM_DEL,ERP_FI --from sanlux-dev --tag 20260213.0930 --to sanlux-staging
 }
 export def 'meta sync' [
   modules?: string,      # Specify the modules to sync, multiple modules separated by commas
@@ -96,7 +102,7 @@ export def 'meta sync' [
   let confMeta = load-meta-conf
   if $list { show-available-providers $confMeta; exit $ECODE.SUCCESS }
   if $snapshot { create-and-upload-snapshot --from $from --install=$install; exit $ECODE.SUCCESS }
-  if ($tag | is-not-empty) { build-tag-and-install --from $from --to $to --tag $tag --install=$install --modules $modules; exit $ECODE.SUCCESS }
+  if ($tag | is-not-empty) { build-tag-and-consume --from $from --to $to --tag $tag --install=$install --modules $modules; exit $ECODE.SUCCESS }
   let usedSetting = get-meta-setting --from $from --to $to
   let dest = $usedSetting.dest
   let source = $usedSetting.source
@@ -205,8 +211,8 @@ def create-and-upload-snapshot [
   print $'Total time consumed: (ansi p)($end - $start)(ansi rst)'
 }
 
-# Build tag for meta data, optionally install to destination
-def build-tag-and-install [
+# Build tag for meta data, optionally import or install to destination
+def build-tag-and-consume [
   --from: string,
   --to: string,
   --tag: string,
@@ -215,9 +221,6 @@ def build-tag-and-install [
 ] {
   let metaConf = $env.META_CONF
   let source = resolve-provider source $from
-  if ($to | is-not-empty) and (not $install) {
-    print $'(ansi y)Warning: --to is specified but --install is not set, destination will be ignored.(ansi rst)'
-  }
   if $install and ($to | is-empty) {
     print $'(ansi y)Warning: --install is set but --to is not specified, skipping installation.(ansi rst)'
   }
@@ -227,26 +230,34 @@ def build-tag-and-install [
   # Resolve destination and select modules upfront before tag building
   mut dest = {}
   mut destAuth = {}
-  mut moduleList = []
-  if ($to | is-not-empty) and $install {
+  mut selectedModules = []
+  mut securityCode = ''
+  if ($to | is-not-empty) {
     $dest = (resolve-provider destination $to)
     $destAuth = (get-user-auth ($metaConf.settings? | default {} | merge $dest))
-    $moduleList = if ($modules | is-not-empty) { $modules | split row , } else {
+    $selectedModules = if ($modules | is-not-empty) { $modules | split row , } else {
       get-selected-modules --from $source --auth $sourceAuth
     }
-    if ($moduleList | is-empty) {
+    if $install and ($selectedModules | is-empty) {
       print -e $'(ansi r)No modules specified, please specify modules to install.(ansi rst)'
       exit $ECODE.INVALID_PARAMETER
     }
-    print $'Going to install modules: (ansi g)($moduleList | str join ",")(ansi rst)'
+    if $install {
+      print $'Going to install modules: (ansi g)($selectedModules | str join ",")(ansi rst)'
+    } else if ($selectedModules | is-empty) {
+      print $'You have selected to sync (ansi p)ALL(ansi rst) the modules...'
+      $securityCode = (input $'(ansi g)Please input the security code to continue: (ansi rst)')
+    } else {
+      print $'Going to import modules: (ansi g)($selectedModules | str join ",")(ansi rst)'
+    }
   }
 
   let metaUrl = handle-build-tag $source $sourceAuth $tag
   hr-line
   print $'Tag built successfully!'
 
-  if ($to | is-not-empty) and $install {
-    handle-import-metadata $dest '' $metaUrl $destAuth --install=$install --modules $moduleList
+  if ($to | is-not-empty) {
+    handle-import-metadata $dest '' $metaUrl $destAuth --install=$install --modules $selectedModules --code $securityCode
   }
 
   let end = date now
@@ -655,7 +666,7 @@ def import-metadata [
     resetModuleForInstall: ($dest | get -o resetModuleForInstall | default false),
   }
   if not ($modules | is-empty) {
-    $importPayload.resetModuleKeys = $modules
+    $importPayload.moduleKeys = $modules
     print $'Going to import modules: ($modules | str join ",")'
   }
   if ($path | is-not-empty) {
