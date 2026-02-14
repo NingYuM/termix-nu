@@ -560,14 +560,14 @@ def --env menv [
   --silent(-s),       # Don't print the environment variables
   --encrypted(-e),    # Load environment variables from encrypted file
 ] {
-  use std null-device
   let currentDir = (pwd)
-  z share-nu o+e> (null-device)
+  try { z share-nu }
   let envs = match $encrypted {
     true => (openssl enc -d -aes-256-cbc -a -pbkdf2 -iter 100 -in conf/sec.enc | from toml | get envs)
     _ => (open conf/sec.toml | get envs)
   }
-  if $list { $envs | columns | sort | print; return }
+  let envs = $envs | transpose k v | where { $in.v.deprecated? != true } | transpose -r -d -l
+  if $list { $envs | columns | sort | print; cd $currentDir; return }
 
   let profile = if ($profile | is-empty) {
       let profiles = $envs | columns | sort
