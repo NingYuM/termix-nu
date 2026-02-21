@@ -363,10 +363,18 @@ dir-batch-exec *OPTIONS: _setup
   @overlay use {{ join(_termix, 'actions', 'dir-batch-exec.nu') }}; \
     dir-batch-exec {{OPTIONS}}
 
-# Run the test cases locally by nutest
+# Run all test cases locally
 [private]
 test:
-  @nu -c "use $'($nu.default-config-dir)/lib/nutest' *; run-tests"
+  #!/usr/bin/env nu
+  let failed = glob tests/test-*.nu | where $it !~ 'docker' | each { |file|
+    try { nu $file; null } catch { $file }
+  } | compact
+  if ($failed | is-empty) {
+    print $"\n(ansi g)All test files passed!(ansi rst)"
+  } else {
+    print $"\n(ansi r)Some tests failed in: ($failed | path basename | str join ', ')(ansi rst)"; exit 1
+  }
 
 # Syncing trantor-artifact-transfer.sh
 [private]

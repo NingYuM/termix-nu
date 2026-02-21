@@ -45,9 +45,9 @@ export def print_summary [results: list<record<name: string, result: string>>] {
 # Run all tests and exit with appropriate code
 export def run_tests [file: string, tests: list<record<name: string, execute: closure>>] {
   $env.config.table.mode = 'psql'
-  print $'--------------------------------------------------------------------------'
-  print $'  (ansi g)Running tests of ($file) ...(ansi rst)'
-  print $'--------------------------------------------------------------------------'
+  print $'-----------------------------------------------------------------------------------'
+  print $'  (ansi g)Running tests of ($file | path relative-to $env.TERMIX_DIR) ...(ansi rst)'
+  print $'-----------------------------------------------------------------------------------'
 
   let results = $tests | each { |test| run_test $test }
 
