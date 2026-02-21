@@ -5,74 +5,20 @@
 #   nu tests/test-diff.nu
 
 use std assert
+use utils.nu [run_tests]
 use ../actions/code-review.nu [is-safe-git, generate-include-args, generate-exclude-args]
 
 # Get the unicode width of the input string
 def get-uw [] { $in | str stats | get unicode-width }
 
 def main [] {
-  $env.config.table.mode = 'psql'
-
-  let tests = [
+  run_tests $env.PROCESS_PATH [
     { name: 'is-safe-git should work as expected', execute: { test-is-safe-git } }
     { name: 'generate-include-arg should work as expected', execute: { test-generate-include-args } }
     { name: 'generate-exclude-arg should work as expected', execute: { test-generate-exclude-args } }
     { name: 'generate-exclude-arg and generate-include-arg should work as expected', execute: { test-include-exclude-combined } }
     { name: 'generate-exclude-arg and generate-include-arg should work with git show', execute: { test-include-exclude-git-show } }
   ]
-
-  let results = $tests | each { |test| run_test $test }
-
-  print -n (char nl)
-  print_results $results
-  print_summary $results
-
-  if ($results | any { |test| $test.result == 'FAIL' }) {
-    exit 1
-  }
-}
-
-# ============================================
-# Test Runner Utilities
-# ============================================
-
-def print_results [results: list<record<name: string, result: string>>] {
-  let display_table = $results | update result { |row|
-    let emoji = if ($row.result == 'PASS') { $'(ansi g)√(ansi rst)' } else { $'(ansi r)×(ansi rst)' }
-    $'($emoji) ($row.result)'
-  }
-
-  if ('GITHUB_ACTIONS' in $env) {
-    print ($display_table | to md --pretty)
-  } else {
-    print $display_table
-  }
-
-  let failed = $results | where result == 'FAIL'
-  for test in $failed {
-    print $"\n($test.name): ($test.error)"
-  }
-}
-
-def print_summary [results: list<record<name: string, result: string>>]: nothing -> bool {
-  let success = $results | where ($it.result == 'PASS') | length
-  let failure = $results | where ($it.result == 'FAIL') | length
-  let count = $results | length
-
-  if ($failure == 0) {
-    print $"\n(ansi g)Testing completed: ($success) of ($count) were successful(ansi reset)"
-  } else {
-    print $"\n(ansi r)Testing completed: ($failure) of ($count) failed(ansi reset)"
-  }
-}
-
-def run_test [test: record<name: string, execute: closure>]: nothing -> record<name: string, result: string, error: string> {
-  try {
-    do ($test.execute)
-    { result: 'PASS', name: $test.name, error: '' }
-  } catch { |error|
-    { result: 'FAIL', name: $test.name, error: $'($error.msg)' }
-  }
 }
 
 # ============================================
