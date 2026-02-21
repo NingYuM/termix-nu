@@ -36,9 +36,9 @@ export def print_summary [results: list<record<name: string, result: string>>] {
   let count = $results | length
 
   if ($failure == 0) {
-    print $"\n(ansi g)Testing completed: ($success) of ($count) were successful(ansi reset)"
+    print $"\n(ansi g)Testing completed: ($success) of ($count) were successful(ansi reset)\n"
   } else {
-    print $"\n(ansi r)Testing completed: ($failure) of ($count) failed(ansi reset)"
+    print $"\n(ansi r)Testing completed: ($failure) of ($count) failed(ansi reset)\n"
   }
 }
 
@@ -46,7 +46,8 @@ export def print_summary [results: list<record<name: string, result: string>>] {
 export def run_tests [file: string, tests: list<record<name: string, execute: closure>>] {
   $env.config.table.mode = 'psql'
   print $'-----------------------------------------------------------------------------------'
-  print $'  (ansi g)Running tests of ($file | path relative-to $env.TERMIX_DIR) ...(ansi rst)'
+  let display_file = if ('TERMIX_DIR' in $env) { $file | path relative-to $env.TERMIX_DIR } else { $file }
+  print $'  (ansi g)Running tests of ($display_file) ...(ansi rst)'
   print $'-----------------------------------------------------------------------------------'
 
   let results = $tests | each { |test| run_test $test }

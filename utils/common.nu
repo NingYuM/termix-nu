@@ -407,7 +407,7 @@ export def has-ref [
 }
 
 # A custom command to check if a string is a valid SemVer version
-def is-semver [version?: string] {
+export def is-semver [version?: string] {
   let version = if ($version | is-empty) { $in } else { $version }
   if ($version | is-empty) { return false }
   # Use regex pattern to match the SemVer version string
@@ -421,7 +421,7 @@ def is-semver [version?: string] {
 # Usage:
 #   parse-semver v1.2.3-beta+build
 #   parse-semver 2.5.8-rc.1+exp.sha.511c985
-def parse-semver [version: string] {
+export def parse-semver [version: string] {
   if not ($version | is-semver) {
     error make {
       msg: 'Invalid SemVer format',
