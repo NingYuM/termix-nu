@@ -116,3 +116,6 @@ const NU_PLUGIN_DIRS = [
 const NU_PLUGIN_DIRS = $NU_PLUGIN_DIRS ++ [($nu.default-config-dir | path join 'plugins')]
 
 # As with NU_LIB_DIRS, an $env.NU_PLUGIN_DIRS is searched after the constant version
+
+$env.PATH = $env.PATH | uniq
+
