@@ -367,7 +367,8 @@ dir-batch-exec *OPTIONS: _setup
 [private]
 test:
   #!/usr/bin/env nu
-  let failed = glob tests/test-*.nu | where $it !~ 'docker' | each { |file|
+  const IGNORE_FILES = 'docker|s5cmd'
+  let failed = glob tests/test-*.nu | where {|it| not ($it =~ $IGNORE_FILES) } | each { |file|
     try { nu $file; null } catch { $file }
   } | compact
   if ($failed | is-empty) {

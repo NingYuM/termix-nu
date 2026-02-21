@@ -1,0 +1,44 @@
+# Termix-Nu CI: Run unit tests with Nushell
+
+name: CI
+
+on:
+  push:
+    branches: [master, develop]
+  pull_request:
+    branches: [master, develop]
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+    name: Tests (${{ matrix.os }})
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Fetch full history for git diff/show tests
+          fetch-depth: 0
+
+      - name: Setup Nu
+        uses: hustcer/setup-nu@v3
+        with:
+          version: '0.110.0'
+
+      - name: Run Tests
+        shell: nu {0}
+        run: |
+          const IGNORE_FILES = 'docker|s5cmd'
+          $env.TERMIX_DIR = $env.GITHUB_WORKSPACE
+          let failed = glob tests/test-*.nu | where {|it| not ($it =~ $IGNORE_FILES) } | each { |file|
+            try { nu $file; null } catch { $file }
+          } | compact
+          if ($failed | is-empty) {
+            print $"\n(ansi g)All test files passed!(ansi rst)"
+          } else {
+            print $"\n(ansi r)Some tests failed in: ($failed | path basename | str join ', ')(ansi rst)"; exit 1
+          }
