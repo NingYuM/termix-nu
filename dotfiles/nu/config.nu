@@ -559,36 +559,84 @@ def --env menv [
   --list(-l),         # List all environment variable sets
   --silent(-s),       # Don't print the environment variables
   --encrypted(-e),    # Load environment variables from encrypted file
+  --codex(-c),        # Execute codex commands: `codex -c model_provider=fox -c model_reasoning_effort=high`
+  --reasoning(-r): string = 'medium',    # Reasoning effort for GPT: minimal, low, medium, high, xhigh
 ] {
   let currentDir = (pwd)
+  let restore_dir = {|| cd $currentDir }
+  let reasoningOptions = [minimal low medium high xhigh]
+  let formatProfile = {|name, maxLen, envs|
+    let desc = $envs | get $name | get -o description | default ''
+    $'($name | fill -w $maxLen) │ (ansi grey66)($desc)(ansi rst)'
+  }
+
   try { z share-nu }
+
   let envs = match $encrypted {
     true => (openssl enc -d -aes-256-cbc -a -pbkdf2 -iter 100 -in conf/sec.enc | from toml | get envs)
     _ => (open conf/sec.toml | get envs)
   }
   let envs = $envs | transpose k v | where { $in.v.deprecated? != true } | transpose -r -d -l
+
   if $list { $envs | columns | sort | print; cd $currentDir; return }
 
-  let profile = if ($profile | is-empty) {
-      let profiles = $envs | columns | sort
+  if $codex and not ($reasoningOptions | any {|it| $it == $reasoning }) {
+    do $restore_dir
+    error make {
+      msg: $'Invalid reasoning effort: ($reasoning). Allowed values: ($reasoningOptions | str join ", ").'
+    }
+  }
+
+  let profile = match ($profile | is-empty) {
+    true => {
+      let profiles = match $codex {
+        true => (
+          $envs | transpose k v
+            | where {|it| ($it.v.support_codex? | default false) == true }
+            | get k | sort
+        )
+        _ => ($envs | columns | sort)
+      }
+      if $codex and ($profiles | is-empty) {
+        print 'No environment profile with support_codex = true found.'
+        do $restore_dir
+        return
+      }
       let maxLen = $profiles | each { str length } | math max
       $profiles
-        | each {|name|
-            let desc = $envs | get $name | get -o description | default ''
-            $'($name | fill -w $maxLen) │ (ansi grey66)($desc)(ansi rst)'
-          }
+        | each {|name| do $formatProfile $name $maxLen $envs }
         | str join (char nl)
         | fzf --ansi --layout=reverse --height=50% --highlight-line
-        | split row ' │ '
-        | first
-        | str trim
-    } else { $profile }
-  if ($profile | is-empty) { cd $currentDir; return }
+        | split row ' │ ' | first | str trim
+    }
+    _ => $profile
+  }
+
+  if ($profile | is-empty) { do $restore_dir; return }
+
   let setting = $envs | get -o $profile
-  if ($setting | is-empty) { print $'Environment Profile (ansi r)($profile)(ansi rst) not found.'; return }
-  if not $silent { print ($setting | reject -o description) }
-  load-env ($setting | reject -o description); cd $currentDir
+  if ($setting | is-empty) { print $'Environment Profile (ansi r)($profile)(ansi rst) not found.'; do $restore_dir; return }
+
+  if $codex and (($setting.support_codex? | default false) != true) {
+    print $'Environment Profile (ansi r)($profile)(ansi rst) does not support codex.'
+    do $restore_dir
+    return
+  }
+
+  let baseSetting = $setting | reject -o description support_codex
+  let settingToLoad = match [$codex ($baseSetting | columns | any {|k| $k == 'CODEX_AUTH_TOKEN' })] {
+    [true true] => ($baseSetting | upsert ANTHROPIC_AUTH_TOKEN ($baseSetting | get CODEX_AUTH_TOKEN))
+    _ => $baseSetting
+  }
+
+  if not $silent { print $settingToLoad }
+  load-env $settingToLoad
+  do $restore_dir
   print $'Eniroment of (ansi g)($profile)(ansi rst) loaded.'
+
+  if $codex {
+    ^codex -c $'model_provider=($profile | split row - | first)' -c $'model_reasoning_effort=($reasoning)'
+  }
 }
 
 # Load environment variables from envio profile.

@@ -10,7 +10,7 @@ $env.HOMEBREW_BOTTLE_DOMAIN = 'https://mirrors.ustc.edu.cn/homebrew-bottles/bott
 
 $env.CLAUDE_CODE_SHELL = $nu.current-exe
 $env.XDG_CONFIG_HOME = $'($nu.home-dir)/.config'
-$env.CODEX_HOME = $'($nu.home-dir)/.config/codex'
+$env.CODEX_HOME = $'($nu.home-dir)/.codex'
 
 # To add entries to PATH (on Windows you might use Path), you can use the following pattern:
 # $env.PATH = ($env.PATH | split row (char esep) | prepend '/some/path')
