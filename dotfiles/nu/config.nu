@@ -563,7 +563,6 @@ def --env menv [
   --reasoning(-r): string = 'medium',    # Reasoning effort for GPT: minimal, low, medium, high, xhigh
 ] {
   let currentDir = (pwd)
-  let restore_dir = {|| cd $currentDir }
   let reasoningOptions = [minimal low medium high xhigh]
   let formatProfile = {|name, maxLen, envs|
     let desc = $envs | get $name | get -o description | default ''
@@ -581,7 +580,7 @@ def --env menv [
   if $list { $envs | columns | sort | print; cd $currentDir; return }
 
   if $codex and not ($reasoningOptions | any {|it| $it == $reasoning }) {
-    do $restore_dir
+    cd $currentDir
     error make {
       msg: $'Invalid reasoning effort: ($reasoning). Allowed values: ($reasoningOptions | str join ", ").'
     }
@@ -599,7 +598,7 @@ def --env menv [
       }
       if $codex and ($profiles | is-empty) {
         print 'No environment profile with support_codex = true found.'
-        do $restore_dir
+        cd $currentDir
         return
       }
       let maxLen = $profiles | each { str length } | math max
@@ -612,14 +611,14 @@ def --env menv [
     _ => $profile
   }
 
-  if ($profile | is-empty) { do $restore_dir; return }
+  if ($profile | is-empty) { cd $currentDir; return }
 
   let setting = $envs | get -o $profile
-  if ($setting | is-empty) { print $'Environment Profile (ansi r)($profile)(ansi rst) not found.'; do $restore_dir; return }
+  if ($setting | is-empty) { print $'Environment Profile (ansi r)($profile)(ansi rst) not found.'; cd $currentDir; return }
 
   if $codex and (($setting.support_codex? | default false) != true) {
     print $'Environment Profile (ansi r)($profile)(ansi rst) does not support codex.'
-    do $restore_dir
+    cd $currentDir
     return
   }
 
@@ -631,7 +630,7 @@ def --env menv [
 
   if not $silent { print $settingToLoad }
   load-env $settingToLoad
-  do $restore_dir
+  cd $currentDir
   print $'Eniroment of (ansi g)($profile)(ansi rst) loaded.'
 
   if $codex {
