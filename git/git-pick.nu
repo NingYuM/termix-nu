@@ -70,6 +70,7 @@ export def 'git pick' [
     exit $ECODE.CONDITION_NOT_SATISFIED
   }
 
+  let originalBranch = git branch --show-current | str trim
   git checkout $options.to --quiet
   mut pickedCount = 0
   mut skippedCount = 0
@@ -88,6 +89,9 @@ export def 'git pick' [
   }
 
   print-pick-results $pickedCount $skippedCount $failedPick $options.from $options.to $countTip
+  if $originalBranch != $options.to {
+    git checkout $originalBranch --quiet
+  }
 }
 
 # Handle lockfile conflicts automatically by regenerating the lockfile.
@@ -162,12 +166,15 @@ def try-cherry-pick-commit [
   let cherryPick = do -i { LANG=en_US git cherry-pick $sha | complete }
 
   if ($cherryPick.exit_code | into int) == 0 { return { success: true } }
-  # Try to auto-resolve lockfile conflicts
-  if (handle-lockfile-conflict $sha) { return { success: true } }
 
-  # Classify and handle error
-  do -i { LANG=en_US git cherry-pick --abort | complete }
+  # Classify error first to avoid unnecessary lockfile handling
   let error = classify-cherry-pick-error $cherryPick.stdout $cherryPick.stderr
+
+  # Only try to auto-resolve lockfile conflicts for actual merge conflicts
+  if $error == 'MERGE_CONFLICT' and (handle-lockfile-conflict $sha) { return { success: true } }
+
+  # Abort the failed cherry-pick
+  do -i { LANG=en_US git cherry-pick --abort | complete }
 
   # Filter errors based on --all flag
   if $error in [EMPTY_COMMIT MERGE_IGNORED] and (not $all) {
@@ -208,8 +215,8 @@ def get-commits [commits: list] {
 
 # Get the commit meta information from a commit SHA.
 def get-commit-meta [sha: string] {
-  git show $sha -s --format='%h---%s---%an---%ci'
-    | split column '---'
+  git show $sha -s --format='%h␞%s␞%an␞%ci'
+    | split column '␞'
     | rename sha msg author commitAt
     | first
     | update commitAt {|it| $it.commitAt | into datetime | format date '%m/%d %H:%M:%S' }
@@ -236,6 +243,10 @@ def get-valid-options [
     print -e $'Dest branch (ansi r)($to)(ansi rst) not found, make sure you have checked out it from the remote.'
     exit $ECODE.INVALID_PARAMETER
   }
+  if $from == $to {
+    print -e $'Source and target branch are the same: (ansi r)($from)(ansi rst)'
+    exit $ECODE.INVALID_PARAMETER
+  }
   # 只有输入的字符串长度大于 7 的时候才会尝试判断是不是 commit SHA
   mut matches = if ($match | str stats | get chars) >= $MIN_SHA_WIDTH { $match | split row ',' | where { has-ref $in } | wrap sha } else { [] }
   let ignore = $env.GIT_PICK_IGNORE? | default []
@@ -246,10 +257,10 @@ def get-valid-options [
   if ($matches | is-empty) {
     let sinceOption = if ($since | is-not-empty) { $'--since=($since)T00:00:00Z' }
     let untilOption = if ($until | is-not-empty) { $'--until=($until)T23:59:59Z' }
-    let sourceArgs = [$from --oneline $'--grep=($match)' --format=%H---%s---%ci $sinceOption $untilOption] | compact
-    let targetArgs = [$to --oneline $'--grep=($match)' --format=%H---%s $sinceOption $untilOption] | compact
-    let sourceMatches = git log ...$sourceArgs | lines | split column '---' | rename sha msg date
-    let targetMatches = git log ...$targetArgs | lines | split column '---' | rename sha msg
+    let sourceArgs = [$from --oneline $'--grep=($match)' '--format=%H␞%s␞%ci' $sinceOption $untilOption] | compact
+    let targetArgs = [$to --oneline $'--grep=($match)' '--format=%H␞%s' $sinceOption $untilOption] | compact
+    let sourceMatches = git log ...$sourceArgs | lines | split column '␞' | rename sha msg date
+    let targetMatches = git log ...$targetArgs | lines | split column '␞' | rename sha msg
     $matches = ($sourceMatches
       | where {|it| ($it.msg not-in $targetMatches.msg) and (($it.sha | str substring ..<8) not-in $ignore) and ($it.msg not-in $ignore) and ($it.msg !~ '^skip:') }
       | sort-by date
