@@ -33,7 +33,6 @@ use ../utils/common.nu [hr-line, has-ref, ECODE]
 export def 'git pick' [
   match: string,              # The commit SHA or the commits that contain the keyword to pick
   --all(-a),                  # Show error picks of `MERGE_IGNORED` and `EMPTY_COMMIT`
-  --verbose(-v),              # Show more picking details
   --list-only(-l),            # List the matched commits only without actually picking them.
   --from(-f): string,         # The source branch to pick from
   --to(-t): string,           # The target branch to pick to
@@ -60,11 +59,9 @@ export def 'git pick' [
     print $'No matched commits found from (ansi g)($options.from)(ansi rst) to pick to (ansi g)($options.to)(ansi rst)'
     exit $ECODE.SUCCESS
   }
-  if ($options.matches | is-empty) and $verbose {
-    print $'No. matched commits of (ansi g)($match)(ansi rst) found from (ansi g)($options.from)(ansi rst) need to be picked to (ansi g)($options.to) ($countTip)(ansi rst)'
-  }
-  if ($options.matches | is-not-empty) and $verbose {
-    print $'All matched commits of (ansi g)($match)(ansi rst) found from (ansi g)($options.from)(ansi rst) have been  picked to (ansi g)($options.to)(ansi rst)'
+  if ($options.matches | is-empty) {
+    print $'No matched commits of (ansi g)($match)(ansi rst) found from (ansi g)($options.from)(ansi rst) need to be picked to (ansi g)($options.to) ($countTip)(ansi rst)'
+    exit $ECODE.SUCCESS
   }
 
   let status = git status --porcelain
@@ -75,6 +72,7 @@ export def 'git pick' [
 
   git checkout $options.to --quiet
   mut pickedCount = 0
+  mut skippedCount = 0
   mut failedPick = []
 
   for c in $options.matches {
@@ -84,10 +82,12 @@ export def 'git pick' [
       $pickedCount += 1
     } else if ($result.error? | is-not-empty) {
       $failedPick ++= [{ sha: $c.sha, error: $result.error }]
+    } else {
+      $skippedCount += 1
     }
   }
 
-  print-pick-results $pickedCount $failedPick $options.from $options.to $countTip
+  print-pick-results $pickedCount $skippedCount $failedPick $options.from $options.to $countTip
 }
 
 # Handle lockfile conflicts automatically by regenerating the lockfile.
@@ -180,6 +180,7 @@ def try-cherry-pick-commit [
 # Print cherry-pick results summary.
 def print-pick-results [
   pickedCount: int,         # Number of successfully picked commits
+  skippedCount: int,        # Number of skipped commits (empty or merge)
   failedPick: list,         # List of failed commits with errors
   fromBranch: string,       # Source branch name
   toBranch: string,         # Target branch name
@@ -193,6 +194,10 @@ def print-pick-results [
     print $'(char nl)Failed to pick the following commits from (ansi r)($fromBranch)(ansi rst) to (ansi r)($toBranch) ($countTip)(ansi rst)'
     hr-line
     get-commits $failedPick | print
+  }
+
+  if $pickedCount == 0 and ($failedPick | is-empty) and $skippedCount > 0 {
+    print $'(char nl)Skipped (ansi y)($skippedCount)(ansi rst) commits (char lp)empty or merge(char rp) from (ansi g)($fromBranch)(ansi rst) to (ansi g)($toBranch)(ansi rst), use (ansi c)--all(ansi rst) to see details'
   }
 }
 

@@ -934,7 +934,6 @@ t git-diff-commit -f HEAD~9 -A author1,author2
 **参数说明**:
 
 - `-a`, `--all` - 显示 `MERGE_IGNORED` 和 `EMPTY_COMMIT` 类型的 pick 错误信息
-- `-v`, `--verbose` - 显示更多信息
 - `-l`, `--list-only` - 只显示匹配到的 Commit 列表，不执行 `cherry-pick` 操作
 - `-f`, `--from <String>` - 待**Pick**的源分支，默认为当前分支
 - `-t`, `--to <String>` - 待**Pick**到的目标分支，默认为当前分支
