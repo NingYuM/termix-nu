@@ -634,7 +634,7 @@ def --env menv [
   print $'Eniroment of (ansi g)($profile)(ansi rst) loaded.'
 
   if $codex {
-    ^codex -c $'model_provider=($profile | split row - | first)' -c $'model_reasoning_effort=($reasoning)'
+    ^codex -c $'model_provider=($profile | split row - | first)' -c $'model_reasoning_effort=($reasoning)' --dangerously-bypass-approvals-and-sandbox
   }
 }
 
