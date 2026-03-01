@@ -70,11 +70,13 @@ def run_test [test: record<name: string, execute: closure>]: nothing -> record<n
 }
 
 def format_error [error: string] {
-  $error
+  let parsed = $error
     # Get the value for the text key in a partly non-json error message
     | parse --regex ".+text: \"(.+)\""
-    | first
-    | get capture0
+
+  if ($parsed | is-empty) { return $error }
+
+  $parsed | first | get capture0
     | str replace --all --regex "\\\\n" " "
     | str replace --all --regex " +" " "
 }

@@ -179,4 +179,10 @@ def unzip-pkg [
   rm $pkg
 }
 
-alias main = setup-termix
+def main [
+  dest: string = $DEST_DIR,
+  --all(-a),
+  --in-place-update(-u),
+] {
+  setup-termix $dest --all=$all --in-place-update=$in_place_update
+}
