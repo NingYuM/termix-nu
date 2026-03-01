@@ -243,10 +243,6 @@ def get-valid-options [
     print -e $'Dest branch (ansi r)($to)(ansi rst) not found, make sure you have checked out it from the remote.'
     exit $ECODE.INVALID_PARAMETER
   }
-  if $from == $to {
-    print -e $'Source and target branch are the same: (ansi r)($from)(ansi rst)'
-    exit $ECODE.INVALID_PARAMETER
-  }
   # 只有输入的字符串长度大于 7 的时候才会尝试判断是不是 commit SHA
   mut matches = if ($match | str stats | get chars) >= $MIN_SHA_WIDTH { $match | split row ',' | where { has-ref $in } | wrap sha } else { [] }
   let ignore = $env.GIT_PICK_IGNORE? | default []
