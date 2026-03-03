@@ -11,7 +11,7 @@
 @example 'Convert black color with 50% opacity' {
   t rgba2h 0 0 0 0.5
 } --result '#808080'
-def rgba-to-hex [
+def main [
   r: int,   # Red (0-255)
   g: int,   # Green (0-255)
   b: int,   # Blue (0-255)
@@ -32,5 +32,3 @@ def rgba-to-hex [
 
   $'#($hex_r)($hex_g)($hex_b)' | str upcase
 }
-
-alias main = rgba-to-hex
