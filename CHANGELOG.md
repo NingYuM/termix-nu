@@ -1,6 +1,42 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.99.0 - 2026-03-03
+
+**Bug Fixes**
+
+- Fix case sensitivity and strict `Content-Type` checks in `terp-doctor`
+- Fix `t git-branch` on Nu 0.111
+- Fix `t git-remote-branch` on Nu 0.111
+- Fix `t show-env` on Nu 0.111
+- Fix various Git-related commands on Nu 0.111
+- Fix the `--all` flag for the `t msync` command
+- Fix tests for `diff` and `compare-ver`
+- Fix `tests/test-s5cmd.nu`
+- Add a CI workflow to run tests automatically
+- Attempt to fix Docker image build failures on Nu 0.111
+
+**Features**
+
+- Add `t rgba2h` command to convert RGB colors to hex
+- Add metadata tag creation, metadata installation, and cookie-based auth support to `t msync`
+- Support creating metadata tags and importing metadata across environments
+- Add `tests/test-semver.nu`
+- Remove the `--verbose` flag from the `t git-pick` command
+
+**Miscellaneous Tasks**
+
+- Use `$nu.home-dir` for Nu 0.110 compatibility
+- Refactor and add a shared `poll-task` helper
+- Update `README.md`
+- Update `tests/test-compare-ver.nu`
+- Update `tests/test-diff.nu`
+- Update `tests/test-from-env.nu`
+
+**Refactor**
+
+- Add `utils/iam.nu` and simplify IAM login logic
+
 ## v1.98.0 - 2026-01-18
 
 **Bug Fixes**
