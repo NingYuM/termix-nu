@@ -27,7 +27,7 @@ jobs:
       - name: Setup Nu
         uses: hustcer/setup-nu@v3
         with:
-          version: '0.110.0'
+          version: '0.111.0'
 
       - name: Run Tests
         shell: nu {0}

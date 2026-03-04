@@ -32,3 +32,5 @@ def main [
 
   $'#($hex_r)($hex_g)($hex_b)' | str upcase
 }
+
+alias rgba-to-hex = main
