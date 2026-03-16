@@ -214,6 +214,7 @@ def detect-multiple-assets [from: string, --stat(-s)] {
 
 # Revert frontend module to a selected version, s5cmd required
 def --env revert-module [module: string, to: string, destStore: string] {
+  check-git-user
   let ossConf = get-dest-oss $destStore
   revert-precheck $module $to $ossConf
 
@@ -429,6 +430,7 @@ def transfer [
   --quiet(-q),                # Show less info
   --dest-store(-d): string,   # Destination store, should be configured in .termixrc
 ] {
+  check-git-user
   let tmp = $'(get-tmp-path)/terp'
   if (not ($tmp | path exists)) { mkdir $tmp }
 
@@ -670,6 +672,18 @@ def do-storage-cp [source: string, dest: string] {
 # ***************************************************************************************
 # --------------------------------- General Helpers -----------------------------------
 # ***************************************************************************************
+
+# Check if git user identity is available for sync/revert metadata
+def check-git-user [] {
+  if ($env.DICE_OPERATOR_NAME? | is-not-empty) { return }
+  let user = do { git config --get user.name } | complete
+  if $user.exit_code != 0 or ($user.stdout | str trim | is-empty) {
+    print -e $'(ansi r)Error: Git user name is not configured.(ansi rst)'
+    print -e $'This is required for TERP asset operations. Please configure it by running:'
+    print -e $'  (ansi g)git config --global user.name "Your Name"(ansi rst)'
+    exit $ECODE.CONDITION_NOT_SATISFIED
+  }
+}
 
 # Decode base64 encoded string, show default as `-`
 def show [] { $in | default 'LQ==' | decode base64 | decode }
