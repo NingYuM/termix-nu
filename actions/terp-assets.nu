@@ -259,7 +259,19 @@ def init-assets [
   }
 
   # Detect addressing style before any S3 operations
-  let style = detect-addressing-style $s3_dest
+  # Available options for OSS_STYLE: virtual, path
+  # Priority: OSS_STYLE config > MinIO default (path) > auto-detect
+  let type = $ossConf.TYPE? | default 'aliyun' | str downcase
+  let configuredStyle = $ossConf.OSS_STYLE? | default '' | str downcase
+  let style = if $configuredStyle == 'virtual' {
+    [--addressing-style=virtual]
+  } else if $configuredStyle == 'path' {
+    []  # Explicitly use path-style
+  } else if $type in [minio ifly] {
+    []  # MinIO/ifly default to path-style to avoid detection issues
+  } else {
+    detect-addressing-style $s3_dest  # Auto-detect for other storage types
+  }
   if ($style | is-not-empty) { print $'(ansi grey66)Using virtual-hosted-style for S3 access(ansi rst)' }
 
   print $'Downloading assets from (ansi g)($ASSETS_URL)(ansi rst)...'
