@@ -39,7 +39,7 @@ alias tokeid = print (
     | lines
     | skip 1
     | str join "\n"
-    | detect columns
+    | detect columns --guess
     | where {|it| $it.Language !~ "=" and $it.Language !~ "-" and (not ($it.Files | is-empty)) }
     | into int Files Lines Code Comments Blanks
 )
@@ -100,21 +100,6 @@ def q-deps [] {
         | each {|r| $'($r.0)/($r.1)' }
         | print
     } | ignore
-}
-
-# Ask anything from DeepSeek R1
-def ds-ask [msg: string, --top-p(-p): float = 1.0, --temperature(-t): float = 0.8] {
-  let API_URL = 'http://aihc.hz.hustcer.com:50006/api/chat-process'
-  let message = if ($msg | is-empty) { $in } else { $msg }
-  let args = {
-      top_p: $top_p,
-      prompt: $message,
-      temperature: $temperature,
-      systemMessage: 'You are a helpful assistant.',
-    }
-  http post --content-type application/json $API_URL $args
-    | lines
-    | each {|line| $line | from json | get delta | print -n }
 }
 
 # Checkout branch by fzf
@@ -182,12 +167,13 @@ def get-ip [] {
 # Update all local branches for the specified repos
 def ua [] {
   let repos = [
+    'pptx',
     'terp-ui',
+    'setup-nu',
     'nusi-slim',
     'nusi-flex',
-    'terp-docs',
     'termix-nu',
-    'setup-nu',
+    'service-ui',
     'setup-moonbit',
   ]
   for p in $repos {
@@ -306,8 +292,6 @@ def nu-install-all [
   }
 }
 
-def cargo-ta  [] { cargo test --all --all-features }
-
 # 备份本地通过 Cargo 安装的 Nu 二进制文件到 ~/Applications/nu-main
 def nu-backup-main [] { cp -r ~/.cargo/bin/nu* ~/Applications/nu-main/ }
 # 将 ~/Applications/nu-main 中的 Nu 二进制文件恢复到本地 Cargo 安装目录
@@ -351,10 +335,6 @@ def nu-cc [] {
   let defaults = nu -n -c "$env.config = {}; $env.config | reject color_config keybindings menus | to nuon" | from nuon | transpose key default
   let current = $env.config | reject color_config keybindings menus | transpose key current
   $current | merge $defaults | where $it.current != $it.default
-}
-
-def cargo-clippy [] {
-  cargo clippy --all --all-features -- -D warnings -D clippy::unwrap_used -A clippy::needless_collect
 }
 
 # Modify the latest commit's commit date to now
@@ -553,88 +533,107 @@ export def "from env" []: string -> record {
   if ($parsed | is-empty) { {} } else { $parsed | transpose -r -d -l }
 }
 
-# Env management tool
+# Load and manage environment variable profiles
+#
+# Supports both Claude and Codex configurations with optional encryption.
+# Profiles can be selected interactively via fzf or specified directly.
 def --env menv [
-  profile?: string,   # The name of the profile to use
-  --list(-l),         # List all environment variable sets
-  --silent(-s),       # Don't print the environment variables
-  --encrypted(-e),    # Load environment variables from encrypted file
-  --codex(-c),        # Execute codex commands: `codex -c model_provider=fox -c model_reasoning_effort=high`
-  --reasoning(-r): string = 'medium',    # Reasoning effort for GPT: minimal, low, medium, high, xhigh
+  profile?: string    # Profile name to load (interactive selection if omitted)
+  --list(-l)          # List all available profiles
+  --silent(-s)        # Suppress environment variable output
+  --encrypted(-e)     # Load from encrypted file (conf/sec.enc)
+  --codex(-c)         # Launch codex after loading profile
+  --reasoning(-r): string = 'medium'  # Reasoning effort: minimal, low, medium, high, xhigh
 ] {
-  let currentDir = (pwd)
-  let reasoningOptions = [minimal low medium high xhigh]
-  let formatProfile = {|name, maxLen, envs|
+  let current_dir = pwd
+  const reasoning_options = [minimal low medium high xhigh]
+
+  # Helper: format profile for fzf display
+  let format_profile = {|name: string, max_len: int, envs: record|
     let desc = $envs | get $name | get -o description | default ''
-    $'($name | fill -w $maxLen) │ (ansi grey66)($desc)(ansi rst)'
+    $'($name | fill -w $max_len) │ (ansi grey66)($desc)(ansi rst)'
   }
 
-  try { z share-nu }
-
-  let envs = match $encrypted {
-    true => (openssl enc -d -aes-256-cbc -a -pbkdf2 -iter 100 -in conf/sec.enc | from toml | get envs)
-    _ => (open conf/sec.toml | get envs)
+  # Helper: load and filter environments
+  let load_envs = {||
+    try { z share-nu }
+    let raw_envs = if $encrypted {
+      openssl enc -d -aes-256-cbc -a -pbkdf2 -iter 100 -in conf/sec.enc | from toml | get envs
+    } else { open conf/sec.toml | get envs }
+    $raw_envs | transpose k v | where {|row| $row.v.deprecated? != true } | transpose -r -d -l
   }
-  let envs = $envs | transpose k v | where { $in.v.deprecated? != true } | transpose -r -d -l
 
-  if $list { $envs | columns | sort | print; cd $currentDir; return }
+  let envs = do $load_envs
+  # Handle --list flag
+  if $list { $envs | columns | sort; return }
 
-  if $codex and not ($reasoningOptions | any {|it| $it == $reasoning }) {
-    cd $currentDir
+  # Validate reasoning option for codex
+  if $codex and ($reasoning not-in $reasoning_options) {
     error make {
-      msg: $'Invalid reasoning effort: ($reasoning). Allowed values: ($reasoningOptions | str join ", ").'
+      msg: $'Invalid reasoning effort: ($reasoning)'
+      label: {text: $'Allowed: ($reasoning_options | str join ", ")'}
     }
   }
 
-  let profile = match ($profile | is-empty) {
-    true => {
-      let profiles = match $codex {
-        true => (
-          $envs | transpose k v
-            | where {|it| ($it.v.support_codex? | default false) == true }
-            | get k | sort
-        )
-        _ => ($envs | columns | sort)
-      }
-      if $codex and ($profiles | is-empty) {
-        print 'No environment profile with support_codex = true found.'
-        cd $currentDir
-        return
-      }
-      let maxLen = $profiles | each { str length } | math max
-      $profiles
-        | each {|name| do $formatProfile $name $maxLen $envs }
-        | str join (char nl)
-        | fzf --ansi --layout=reverse --height=50% --highlight-line
-        | split row ' │ ' | first | str trim
+  # Determine profile (interactive or direct)
+  let selected_profile = if ($profile | is-empty) {
+    let support_key = if $codex { 'support_codex' } else { 'support_claude' }
+    let profiles = (
+      $envs | transpose k v
+        | where {|row| $row.v | get -o $support_key | default false }
+        | get k | sort
+    )
+
+    if ($profiles | is-empty) {
+      print $'No profile with ($support_key) = true found.'
+      return
     }
-    _ => $profile
+
+    let max_len = $profiles | each { str length } | math max
+    $profiles
+      | each {|name| do $format_profile $name $max_len $envs }
+      | str join (char nl)
+      | fzf --ansi --layout=reverse --height=50% --highlight-line
+      | split row ' │ ' | first | str trim
+  } else {
+    $profile
   }
 
-  if ($profile | is-empty) { cd $currentDir; return }
-
-  let setting = $envs | get -o $profile
-  if ($setting | is-empty) { print $'Environment Profile (ansi r)($profile)(ansi rst) not found.'; cd $currentDir; return }
-
-  if $codex and (($setting.support_codex? | default false) != true) {
-    print $'Environment Profile (ansi r)($profile)(ansi rst) does not support codex.'
-    cd $currentDir
+  # Validate profile selection
+  if ($selected_profile | is-empty) or ($selected_profile | str trim | is-empty) {
     return
   }
 
-  let baseSetting = $setting | reject -o description support_codex
-  let settingToLoad = match [$codex ($baseSetting | columns | any {|k| $k == 'CODEX_AUTH_TOKEN' })] {
-    [true true] => ($baseSetting | upsert ANTHROPIC_AUTH_TOKEN ($baseSetting | get CODEX_AUTH_TOKEN))
-    _ => $baseSetting
+  let setting = $envs | get -o $selected_profile
+  if ($setting | is-empty) {
+    print $'Environment Profile (ansi r)($selected_profile)(ansi rst) not found.'
+    return
   }
 
-  if not $silent { print $settingToLoad }
-  load-env $settingToLoad
-  cd $currentDir
-  print $'Eniroment of (ansi g)($profile)(ansi rst) loaded.'
+  # Validate codex support
+  if $codex and (($setting.support_codex? | default false) != true) {
+    print $'Profile (ansi r)($selected_profile)(ansi rst) does not support codex.'
+    return
+  }
 
+  # Prepare environment settings
+  let base_setting = $setting | reject -o description support_codex
+  let setting_to_load = if $codex and ('CODEX_AUTH_TOKEN' in ($base_setting | columns)) {
+    $base_setting | upsert ANTHROPIC_AUTH_TOKEN ($base_setting | get CODEX_AUTH_TOKEN)
+  } else {
+    $base_setting
+  }
+
+  # Load environment
+  if not $silent { print $setting_to_load }
+  load-env $setting_to_load
+  cd $current_dir
+  print $'Environment of (ansi g)($selected_profile)(ansi rst) loaded.'
+
+  # Launch codex if requested
   if $codex {
-    ^codex -c $'model_provider=($profile | split row - | first)' -c $'model_reasoning_effort=($reasoning)' --dangerously-bypass-approvals-and-sandbox
+    let provider = $selected_profile | split row '-' | first
+    ^codex -c $'model_provider=($provider)' -c $'model_reasoning_effort=($reasoning)' --dangerously-bypass-approvals-and-sandbox
   }
 }
 
