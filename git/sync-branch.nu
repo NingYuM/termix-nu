@@ -48,7 +48,7 @@ export def 'git sync-branch' [
   if ($dests == null) { exit $ECODE.SUCCESS }
 
   let syncDests = ($dests | upsert SYNC {|d|
-      $d | get repo | par-each { |it| if ($',($ignored),' =~ $',($it),') { '   x' } else { '   √' } }
+      if ($',($ignored),' =~ $',($d.repo),') { '   x' } else { '   √' }
     } | upsert source $localBranch | move source --before dest | sort-by SYNC)
 
   # 如果没有找到对应分支的 push hook 配置则直接退出
