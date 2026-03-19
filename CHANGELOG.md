@@ -1,6 +1,17 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v1.99.1 - 2026-03-19
+
+**Bug Fixes**
+
+- Check the Git `user.name` configuration before performing `t ta` operations
+- Fix an execution error in the `git push` hook
+
+**Features**
+
+- Add `OSS_STYLE` configuration support for the `t ta init` command
+
 ## v1.99.0 - 2026-03-03
 
 **Bug Fixes**
