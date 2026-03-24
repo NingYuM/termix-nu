@@ -21,10 +21,10 @@
 # [√] 批量查询用户权限: http get -H $auth https://openapi.erda.cloud/api/permissions | table -e
 # [√] Add `--skip-member-sync` or `-M` option to skip member sync
 # [√] Add `--branches` or `-b` option to sync specified branches with git-branch-transfer
-# [ ] Show more info before transfer: Source project, Target project, Syncing contents
-# [ ] Support sync between different Orgs other than Terminus
+# [√] Show more info before transfer: Source project, Target project, Syncing contents
+# [√] Support sync between different Orgs
 # 前提：
-# 1. 源项目和目标项目必须在 Terminus 组织下，目前也只支持这个组织
+# 1. 源项目和目标项目需要通过 `<project-id>` 或 `<project-id>@<org>` 指定
 # 2. 需要有源项目和目标项目的管理员权限:
 #     - 操作者需要先有源项目里面所有应用, 或者所选择应用的访问权限
 #     - 操作者需要在目标项目里面有创建应用的权限
@@ -39,21 +39,19 @@ use ../utils/erda.nu [ERDA_HOST, check-erda-envs, get-erda-auth, renew-erda-sess
 
 const PAGE_SIZE = 9999
 # 查询、新增项目或者应用成员
-const MEMBER_API = 'https://erda.cloud/api/terminus/members'
-# 查询应用列表
-const APP_LIST_API = 'https://openapi.erda.cloud/api/applications'
+const MEMBER_API = 'https://openapi.erda.cloud/api/members'
 # 查询用户权限
 const USER_PERMS_API = 'https://openapi.erda.cloud/api/permissions'
 # 应用相关 API
-const APPLICATION_API = 'https://erda.cloud/api/terminus/applications'
+const APPLICATION_API = 'https://openapi.erda.cloud/api/applications'
 # 批量添加流水线环境变量
-const PIPELINE_ENV_ADD_API = 'https://erda.cloud/api/terminus/cicds/configs'
+const PIPELINE_ENV_ADD_API = 'https://openapi.erda.cloud/api/cicds/configs'
 # 批量添加运行时环境变量
-const RUNTIME_ENV_ADD_API = 'https://erda.cloud/api/terminus/configmanage/configs'
+const RUNTIME_ENV_ADD_API = 'https://openapi.erda.cloud/api/configmanage/configs'
 # 查询流水线环境变量
-const PIPELINE_ENV_API = 'https://erda.cloud/api/terminus/cicds/multinamespace/configs'
+const PIPELINE_ENV_API = 'https://openapi.erda.cloud/api/cicds/multinamespace/configs'
 # 查询运行时环境变量
-const RUNTIME_ENV_API = 'https://erda.cloud/api/terminus/configmanage/multinamespace/configs'
+const RUNTIME_ENV_API = 'https://openapi.erda.cloud/api/configmanage/multinamespace/configs'
 
 # 运行时环境变量后缀
 const RUNTIME_ENV_SUFFIXES = [
@@ -78,12 +76,15 @@ const PIPELINE_ENV_SUFFIXES = [
 @example '迁移应用并同步项目与应用成员' {
   t erda-transfer --from 213 --to 1000226 --sync-member
 } --result '除了默认迁移内容外，还会同步项目成员与应用成员及其权限'
+@example '迁移组织 org-a 里编号为 213 的项目里的应用到组织 org-b 编号为 1000226 的项目里，并同步项目与应用成员' {
+  t erda-transfer --from 213@org-a --to 1000226@org-b --sync-member
+} --result '跨组织应用迁移，除了默认迁移内容外，还会同步项目成员与应用成员及其权限'
 @example '仅同步指定分支（例如 `main` 与 `develop`），而非所有分支与 Tags' {
   t erda-transfer --from 213 --to 1000226 --apps termix-nu -b main,develop
 } --result '仅同步所列分支，可以重复执行用于增量同步'
 export def 'erda transfer' [
-  --from(-f): int,        # ERDA Source Project ID
-  --to(-t): int,          # ERDA Target Project ID
+  --from(-f): any,        # ERDA Source Project ID, e.g. `213` or `213@terminus`
+  --to(-t): any,          # ERDA Target Project ID, e.g. `1000226` or `1000226@org-name`
   --apps(-a): string,     # The Apps to transfer, separated by `,` or run in interactive mode if not specified
   --sync-member(-m),      # Sync project and App members
   --branches(-b): string, # The branches to transfer, separated by `,`, e.g. `main,develop`
@@ -91,24 +92,30 @@ export def 'erda transfer' [
 ] {
   if ($from | is-empty) { print $'(ansi r)ERROR: Source Project ID cannot be empty!(ansi rst)'; exit $ECODE.INVALID_PARAMETER }
   if ($to | is-empty) { print $'(ansi r)ERROR: Target Project ID cannot be empty!(ansi rst)'; exit $ECODE.INVALID_PARAMETER }
-  if $from == $to { print $'(ansi r)ERROR: Source and Target Project ID cannot be the same!(ansi rst)'; exit $ECODE.INVALID_PARAMETER }
   check-erda-envs
   renew-erda-session $ERDA_HOST
-  let auth = get-erda-auth $ERDA_HOST --type nu | append [Org terminus]
-  let source_apps = get-app-list $auth --from $from
+  let from_spec = parse-project-spec $from
+  let to_spec = parse-project-spec $to
+  if $from_spec.id == $to_spec.id and $from_spec.org == $to_spec.org {
+    print $'(ansi r)ERROR: Source and Target Project cannot be the same!(ansi rst)'; exit $ECODE.INVALID_PARAMETER
+  }
+  let base_auth = get-erda-auth $ERDA_HOST --type nu
+  let source_auth = $base_auth | append [Org $from_spec.org]
+  let dest_auth = $base_auth | append [Org $to_spec.org]
+  let source_apps = get-app-list $source_auth --from $from_spec.id
 
   let is_mirror = $branches | is-empty
   # Use fzf to select one or multiple Apps to transfer if none specified
-  let selected = if ($apps | is-empty) { get-selected-apps $auth --source-apps $source_apps } else { $apps | split row ',' }
+  let selected = if ($apps | is-empty) { get-selected-apps --source-apps $source_apps } else { $apps | split row ',' }
   # Validate the selected App names make sure they all exist in the source project
-  validate-app-names $auth --selected $selected --source-apps $source_apps
+  validate-app-names --selected $selected --source-apps $source_apps
   print $'You are going to transfer with the following config:'; hr-line 52
   let selected_branches = if $is_mirror { 'N/A' } else if ($branches !~ ',') { $branches } else { $branches | split row , }
   mut setting = {
     '所选迁移应用': $selected,
     '所选同步分支': $selected_branches,
-    '迁移源 项 目': $from,
-    '迁移目标项目': $to,
+    '迁移源 项 目': $'($from_spec.id) @ ($from_spec.org)',
+    '迁移目标项目': $'($to_spec.id) @ ($to_spec.org)',
     '代码仓库镜像': (if $is_mirror { $'是 (ansi grey66)<所有分支 & Tags>(ansi rst)' } else { '否' }),
     '迁移项目成员': $sync_member,
     '迁移应用成员': $sync_member,
@@ -126,7 +133,7 @@ export def 'erda transfer' [
   }
   print -n (char nl)
 
-  validate-app-auth $auth --selected $selected --source-apps $source_apps
+  validate-app-auth $source_auth --selected $selected --source-apps $source_apps
 
   let steps = [A B C D E F]
   mut step_idx = 0
@@ -134,31 +141,31 @@ export def 'erda transfer' [
   if $sync_member {
     let step = $steps | get $step_idx; $step_idx += 1
     print $'(char nl)(ansi pr)STEP ($step):(ansi rst) Adding Members to Target Project...'; hr-line
-    let source_members = get-members $auth project $from
-    add-members $auth project $to $source_members
+    let source_members = get-members $source_auth project $from_spec.id
+    add-members $dest_auth project $to_spec.id $source_members
   }
 
   let step = $steps | get $step_idx; $step_idx += 1
   print $'(char nl)(ansi pr)STEP ($step):(ansi rst) Creating Apps...'; hr-line
-  create-nonexistent-apps $auth --selected $selected --debug=$debug --source-apps $source_apps --to $to
+  create-nonexistent-apps $dest_auth --selected $selected --debug=$debug --source-apps $source_apps --to $to_spec.id
 
   if $sync_member {
     let step = $steps | get $step_idx; $step_idx += 1
     print $'(char nl)(ansi pr)STEP ($step):(ansi rst) Add Members to Dest Apps...'; hr-line
-    add-app-members $auth --selected $selected --debug=$debug --source-apps $source_apps --to $to
+    add-app-members $dest_auth --selected $selected --debug=$debug --source-apps $source_apps --to $to_spec.id --source-auth $source_auth
   }
 
   let step = $steps | get $step_idx; $step_idx += 1
   print $'(char nl)(ansi pr)STEP ($step):(ansi rst) Syncing Pipeline Env vars...'; hr-line
-  sync-env-vars $auth $to --selected $selected --source-apps $source_apps --debug=$debug --type pipeline
+  sync-env-vars $dest_auth $to_spec.id --selected $selected --source-apps $source_apps --debug=$debug --type pipeline --source-auth $source_auth
 
   let step = $steps | get $step_idx; $step_idx += 1
   print $'(char nl)(ansi pr)STEP ($step):(ansi rst) Syncing Runtime Env vars...'; hr-line
-  sync-env-vars $auth $to --selected $selected --source-apps $source_apps --debug=$debug --type runtime
+  sync-env-vars $dest_auth $to_spec.id --selected $selected --source-apps $source_apps --debug=$debug --type runtime --source-auth $source_auth
 
   let step = $steps | get $step_idx
   print $'(char nl)(ansi pr)STEP ($step):(ansi rst) Syncing Git Repos...'; hr-line
-  sync-git-repos $auth $to --selected $selected --source-apps $source_apps --branches $branches --debug=$debug
+  sync-git-repos $dest_auth $to_spec.id --selected $selected --source-apps $source_apps --branches $branches --debug=$debug
 }
 
 # Validate the operator has access to the selected Apps in the source project
@@ -197,7 +204,7 @@ def get-user-permissions [auth: list] {
 }
 
 # Validate the selected App names make sure they all exist in the source project
-def validate-app-names [auth: list, --selected: list, --source-apps: list] {
+def validate-app-names [--selected: list, --source-apps: list] {
   if ($selected | is-empty) { return true }
   let source_names = $source_apps | get name | str downcase
   let nonexistent_apps = $selected | where {|it| ($it | str downcase) not-in $source_names }
@@ -209,8 +216,8 @@ def validate-app-names [auth: list, --selected: list, --source-apps: list] {
 }
 
 # Sync the pipeline or runtime env vars between the source and target app
-def sync-env-vars [auth: list, tid: int, --selected: list, --debug, --type: string, --source-apps: list] {
-  let dest_apps = get-app-list $auth --from $tid
+def sync-env-vars [dest_auth: list, tid: int, --selected: list, --debug, --type: string, --source-apps: list, --source-auth: list] {
+  let dest_apps = get-app-list $dest_auth --from $tid
   let candidates = if ($selected | is-empty) { $dest_apps.name } else { $selected }
 
   # Define environment suffixes in a structured way to reduce repetition
@@ -221,8 +228,8 @@ def sync-env-vars [auth: list, tid: int, --selected: list, --debug, --type: stri
     let source_app = $source_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
     if (check-app-empty $source_app $dest_app $ap 'ENV VAR') { continue }
 
-    let dest_envs = get-env-vars $auth $dest_app --type $type
-    let source_envs = get-env-vars $auth $source_app --type $type
+    let dest_envs = get-env-vars $dest_auth $dest_app --type $type
+    let source_envs = get-env-vars $source_auth $source_app --type $type
     if $debug {
       print 'Destination App Envs:'; $dest_envs | table -e | print
       print 'Source App Envs:'; $source_envs | table -e | print
@@ -271,7 +278,7 @@ def sync-env-vars [auth: list, tid: int, --selected: list, --debug, --type: stri
       let vars_to_add_payload = $vars_to_add | select key value type encrypt comment
 
       if not ($vars_to_add_payload | is-empty) {
-        add-env-vars $auth $dest_app $dest_key $vars_to_add_payload --type $type
+        add-env-vars $dest_auth $dest_app $dest_key $vars_to_add_payload --type $type
       }
     }
   }
@@ -337,17 +344,17 @@ def sync-git-repos [auth: list, tid: int, --selected: list, --source-apps: list,
 }
 
 # Add members to the dest Apps with the same roles, support incremental addition
-def add-app-members [auth: list, --selected: list, --to: int, --source-apps: list, --debug] {
-  let dest_apps = get-app-list $auth --from $to
+def add-app-members [dest_auth: list, --selected: list, --to: int, --source-apps: list, --debug, --source-auth: list] {
+  let dest_apps = get-app-list $dest_auth --from $to
   let candidates = if ($selected | is-empty) { $dest_apps.name } else { $selected }
   if $debug { $candidates | first | table -e | print }
   for ap in $candidates {
     let dest_app = $dest_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
     let source_app = $source_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
     if (check-app-empty $source_app $dest_app $ap member) { continue }
-    let src_members = get-members $auth app $source_app.id
+    let src_members = get-members $source_auth app $source_app.id
     print $'Adding members to (ansi g)($ap)(ansi rst) ...'
-    add-members $auth app $dest_app.id $src_members --name $ap
+    add-members $dest_auth app $dest_app.id $src_members --name $ap
   }
   print $'(char nl)(ansi g)All Done!(ansi rst)'
 }
@@ -390,11 +397,11 @@ def create-nonexistent-apps [auth: list, --selected: list, --to: int, --source-a
 def get-app-list [auth: list, --from: int, --debug] {
   if $debug { print $'Getting Apps list from ($from) project...'; hr-line }
   let query = { projectId: $from, pageNo: 1, pageSize: $PAGE_SIZE } | url build-query
-  http get -H $auth $'($APP_LIST_API)?($query)' | get data.list | sort-by id
+  http get -H $auth $'($APPLICATION_API)?($query)' | get data.list | sort-by id
 }
 
 # Get selected Apps by user selection with fzf
-def get-selected-apps [auth: list, --source-apps: list] {
+def get-selected-apps [--source-apps: list] {
   if ($source_apps | is-empty) { print $'No Apps found in the source project.'; exit $ECODE.SUCCESS }
 
   const KEY_MAPPING = $"(ansi grey66)\(Tab: Select, Ctrl-a: Select All, Ctrl-d: Deselect All, ESC: Quit, Enter: Confirm\)(ansi rst)"
@@ -493,4 +500,39 @@ def create-app [auth: list, pid: int, app: record] {
   }
   print $'Failed to create App (ansi r)($payload.name)(ansi rst) with error message: (ansi r)($resp.err.msg)(ansi rst)'
   $resp | table -e | print
+}
+
+# Parse project spec into { id: int, org: string }
+# Accepts either an int/string project ID (defaults to `terminus` org) or `<id>@<org>` format
+def parse-project-spec [spec: any] {
+  let raw = $spec | into string | str trim
+  let invalid_msg = $'ERROR: Invalid project spec `(ansi r)($raw)(ansi rst)`. Expected `<project-id>` or `<project-id>@<org>`.'
+
+  if ($raw | is-empty) {
+    print $'(ansi r)ERROR: Project spec cannot be empty!(ansi rst)'
+    exit $ECODE.INVALID_PARAMETER
+  }
+
+  let parts = $raw | split row '@'
+  if ($parts | length) > 2 {
+    print -e $invalid_msg
+    exit $ECODE.INVALID_PARAMETER
+  }
+
+  let project_id = $parts | first | str trim
+  if ($project_id | is-empty) or not ($project_id =~ '^\d+$') {
+    print -e $invalid_msg
+    exit $ECODE.INVALID_PARAMETER
+  }
+
+  if ($parts | length) == 2 {
+    let org = $parts | last | str trim
+    if ($org | is-empty) {
+      print -e $invalid_msg
+      exit $ECODE.INVALID_PARAMETER
+    }
+    return { id: ($project_id | into int), org: $org }
+  }
+
+  { id: ($project_id | into int), org: 'terminus' }
 }
