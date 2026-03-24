@@ -103,10 +103,11 @@ export def 'erda transfer' [
   let source_auth = $base_auth | append [Org $from_spec.org]
   let dest_auth = $base_auth | append [Org $to_spec.org]
   let source_apps = get-app-list $source_auth --from $from_spec.id
+  let source_app_index = build-app-index $source_apps
 
   let is_mirror = $branches | is-empty
   # Use fzf to select one or multiple Apps to transfer if none specified
-  let selected = if ($apps | is-empty) { get-selected-apps --source-apps $source_apps } else { $apps | split row ',' }
+  let selected = if ($apps | is-empty) { get-selected-apps --source-apps $source_apps } else { parse-app-input $apps }
   # Validate the selected App names make sure they all exist in the source project
   validate-app-names --selected $selected --source-apps $source_apps
   print $'You are going to transfer with the following config:'; hr-line 52
@@ -133,7 +134,7 @@ export def 'erda transfer' [
   }
   print -n (char nl)
 
-  validate-app-auth $source_auth --selected $selected --source-apps $source_apps
+  validate-app-auth $source_auth --selected $selected --source-apps $source_apps --source-app-index $source_app_index
 
   let steps = [A B C D E F]
   mut step_idx = 0
@@ -147,35 +148,37 @@ export def 'erda transfer' [
 
   let step = $steps | get $step_idx; $step_idx += 1
   print $'(char nl)(ansi pr)STEP ($step):(ansi rst) Creating Apps...'; hr-line
-  create-nonexistent-apps $dest_auth --selected $selected --debug=$debug --source-apps $source_apps --to $to_spec.id
+  create-nonexistent-apps $dest_auth --selected $selected --debug=$debug --source-apps $source_apps --source-app-index $source_app_index --to $to_spec.id
 
   if $sync_member {
     let step = $steps | get $step_idx; $step_idx += 1
     print $'(char nl)(ansi pr)STEP ($step):(ansi rst) Add Members to Dest Apps...'; hr-line
-    add-app-members $dest_auth --selected $selected --debug=$debug --source-apps $source_apps --to $to_spec.id --source-auth $source_auth
+    add-app-members $dest_auth --selected $selected --debug=$debug --source-apps $source_apps --source-app-index $source_app_index --to $to_spec.id --source-auth $source_auth
   }
 
   let step = $steps | get $step_idx; $step_idx += 1
   print $'(char nl)(ansi pr)STEP ($step):(ansi rst) Syncing Pipeline Env vars...'; hr-line
-  sync-env-vars $dest_auth $to_spec.id --selected $selected --source-apps $source_apps --debug=$debug --type pipeline --source-auth $source_auth
+  sync-env-vars $dest_auth $to_spec.id --selected $selected --source-apps $source_apps --source-app-index $source_app_index --debug=$debug --type pipeline --source-auth $source_auth
 
   let step = $steps | get $step_idx; $step_idx += 1
   print $'(char nl)(ansi pr)STEP ($step):(ansi rst) Syncing Runtime Env vars...'; hr-line
-  sync-env-vars $dest_auth $to_spec.id --selected $selected --source-apps $source_apps --debug=$debug --type runtime --source-auth $source_auth
+  sync-env-vars $dest_auth $to_spec.id --selected $selected --source-apps $source_apps --source-app-index $source_app_index --debug=$debug --type runtime --source-auth $source_auth
 
   let step = $steps | get $step_idx
   print $'(char nl)(ansi pr)STEP ($step):(ansi rst) Syncing Git Repos...'; hr-line
-  sync-git-repos $dest_auth $to_spec.id --selected $selected --source-apps $source_apps --branches $branches --debug=$debug
+  sync-git-repos $dest_auth $to_spec.id --selected $selected --source-apps $source_apps --source-app-index $source_app_index --branches $branches --debug=$debug
 }
 
 # Validate the operator has access to the selected Apps in the source project
-def validate-app-auth [auth: list, --selected: list, --source-apps: list, --debug] {
+def validate-app-auth [auth: list, --selected: list, --source-apps: list, --source-app-index: record, --debug] {
   let user_perms = get-user-permissions $auth
   if $debug {
     print $'User permissions:';
     $user_perms | sort-by -c {|a, b| ($a.scope.id | into int) < ($b.scope.id | into int) } | table -e | print
   }
-  let select_ids = $source_apps | where ($it.name | str downcase) in $selected | get id
+  let select_ids = $selected | each {|name|
+    $source_app_index | get -o ($name | str downcase) | get -o id
+  } | compact
 
   let auth_results = $select_ids | par-each {|ap|
     # Check the app access by API is slow
@@ -216,16 +219,18 @@ def validate-app-names [--selected: list, --source-apps: list] {
 }
 
 # Sync the pipeline or runtime env vars between the source and target app
-def sync-env-vars [dest_auth: list, tid: int, --selected: list, --debug, --type: string, --source-apps: list, --source-auth: list] {
+def sync-env-vars [dest_auth: list, tid: int, --selected: list, --debug, --type: string, --source-apps: list, --source-app-index: record, --source-auth: list] {
   let dest_apps = get-app-list $dest_auth --from $tid
+  let dest_app_index = build-app-index $dest_apps
   let candidates = if ($selected | is-empty) { $dest_apps.name } else { $selected }
 
   # Define environment suffixes in a structured way to reduce repetition
   let env_config = if $type == 'pipeline' { $PIPELINE_ENV_SUFFIXES } else { $RUNTIME_ENV_SUFFIXES }
 
   for ap in $candidates {
-    let dest_app = $dest_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
-    let source_app = $source_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
+    let key = $ap | str downcase
+    let dest_app = $dest_app_index | get -o $key | default {}
+    let source_app = $source_app_index | get -o $key | default {}
     if (check-app-empty $source_app $dest_app $ap 'ENV VAR') { continue }
 
     let dest_envs = get-env-vars $dest_auth $dest_app --type $type
@@ -326,12 +331,14 @@ def get-env-vars [auth: list, app: record, --type: string] {
 }
 
 # Sync the git repos between the source and target app
-def sync-git-repos [auth: list, tid: int, --selected: list, --source-apps: list, --branches: string, --debug] {
+def sync-git-repos [auth: list, tid: int, --selected: list, --source-apps: list, --source-app-index: record, --branches: string, --debug] {
   let dest_apps = get-app-list $auth --from $tid
+  let dest_app_index = build-app-index $dest_apps
   let candidates = if ($selected | is-empty) { $dest_apps.name } else { $selected }
   for ap in $candidates {
-    let dest_app = $dest_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
-    let source_app = $source_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
+    let key = $ap | str downcase
+    let dest_app = $dest_app_index | get -o $key | default {}
+    let source_app = $source_app_index | get -o $key | default {}
     if (check-app-empty $source_app $dest_app $ap git) { continue }
     if ($branches | default '' | str trim | is-empty) {
       print $'Syncing git repos from (ansi g)($source_app.name)(ansi rst) to (ansi g)($dest_app.name)(ansi rst) ...'
@@ -344,13 +351,15 @@ def sync-git-repos [auth: list, tid: int, --selected: list, --source-apps: list,
 }
 
 # Add members to the dest Apps with the same roles, support incremental addition
-def add-app-members [dest_auth: list, --selected: list, --to: int, --source-apps: list, --debug, --source-auth: list] {
+def add-app-members [dest_auth: list, --selected: list, --to: int, --source-apps: list, --source-app-index: record, --debug, --source-auth: list] {
   let dest_apps = get-app-list $dest_auth --from $to
+  let dest_app_index = build-app-index $dest_apps
   let candidates = if ($selected | is-empty) { $dest_apps.name } else { $selected }
   if $debug { $candidates | first | table -e | print }
   for ap in $candidates {
-    let dest_app = $dest_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
-    let source_app = $source_apps | where ($it.name | str downcase) == ($ap | str downcase) | get 0? | default {}
+    let key = $ap | str downcase
+    let dest_app = $dest_app_index | get -o $key | default {}
+    let source_app = $source_app_index | get -o $key | default {}
     if (check-app-empty $source_app $dest_app $ap member) { continue }
     let src_members = get-members $source_auth app $source_app.id
     print $'Adding members to (ansi g)($ap)(ansi rst) ...'
@@ -374,10 +383,14 @@ def check-app-empty [source: record, dest: record, name: string, type: string] {
 }
 
 # Create the nonexistent Apps in the target project
-def create-nonexistent-apps [auth: list, --selected: list, --to: int, --source-apps: list --debug] {
+def create-nonexistent-apps [auth: list, --selected: list, --to: int, --source-apps: list, --source-app-index: record, --debug] {
   let dest_apps = get-app-list $auth --from $to
   let nonexistent_apps = get-nonexistent-apps $source_apps $dest_apps
-  let candidates = if ($selected | is-empty) { $nonexistent_apps } else { $nonexistent_apps | where $it.name in $selected }
+  let selected_keys = $selected | each {|it| $it | str downcase }
+  let candidates = if ($selected | is-empty) { $nonexistent_apps } else {
+      $selected_keys | each {|key| $source_app_index | get -o $key } | compact
+        | where {|it| ($it.name | str downcase) not-in ($dest_apps | get name | str downcase) }
+    }
 
   print $'The following Apps will be created:(char nl)'
   $candidates | select id name mode desc | print
@@ -426,8 +439,21 @@ def get-selected-apps [--source-apps: list] {
 
 # Get the Apps that do not exist in the target project
 def get-nonexistent-apps [source: list, dest: list] {
-  let dest_apps = $dest | get name
-  $source | where {|it| ($it.name | str downcase) not-in $dest_apps }
+  let dest_names = $dest | get name | str downcase
+  $source | where {|it| ($it.name | str downcase) not-in $dest_names }
+}
+
+# Parse `--apps` input into trimmed non-empty names
+def parse-app-input [apps: string] {
+  $apps | split row ',' | compact -e
+}
+
+# Build a lookup index by lowercase app name to avoid repeated table scans
+def build-app-index [apps: list] {
+  $apps
+    | reduce --fold {} {|app, acc|
+        $acc | upsert ($app.name | str downcase) $app
+      }
 }
 
 # Get all the project or App members
