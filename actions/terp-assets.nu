@@ -197,7 +197,9 @@ export def fzf-preview [revision: string, localPath: string, remoteURI: string, 
   }
 }
 
-alias main = fzf-preview
+def main [revision: string, localPath: string, remoteURI: string, destStore: string] {
+  fzf-preview $revision $localPath $remoteURI $destStore
+}
 
 # ***************************************************************************************
 # ------------------------------------- Core Logic --------------------------------------
