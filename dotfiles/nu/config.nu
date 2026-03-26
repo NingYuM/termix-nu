@@ -543,6 +543,7 @@ def --env menv [
   --silent(-s)        # Suppress environment variable output
   --encrypted(-e)     # Load from encrypted file (conf/sec.enc)
   --codex(-c)         # Launch codex after loading profile
+  --raw               # Select & Load environment variables without support_codex or support_claude fields
   --reasoning(-r): string = 'medium'  # Reasoning effort: minimal, low, medium, high, xhigh
 ] {
   let current_dir = pwd
@@ -577,15 +578,17 @@ def --env menv [
 
   # Determine profile (interactive or direct)
   let selected_profile = if ($profile | is-empty) {
-    let support_key = if $codex { 'support_codex' } else { 'support_claude' }
-    let profiles = (
+    let profiles = if $raw {
+      $envs | columns | sort
+    } else {
+      let support_key = if $codex { 'support_codex' } else { 'support_claude' }
       $envs | transpose k v
         | where {|row| $row.v | get -o $support_key | default false }
         | get k | sort
-    )
+    }
 
     if ($profiles | is-empty) {
-      print $'No profile with ($support_key) = true found.'
+      print 'No matching profile found.'
       return
     }
 
@@ -617,7 +620,7 @@ def --env menv [
   }
 
   # Prepare environment settings
-  let base_setting = $setting | reject -o description support_codex
+  let base_setting = $setting | reject -o description support_codex support_claude
   let setting_to_load = if $codex and ('CODEX_AUTH_TOKEN' in ($base_setting | columns)) {
     $base_setting | upsert ANTHROPIC_AUTH_TOKEN ($base_setting | get CODEX_AUTH_TOKEN)
   } else {
