@@ -543,6 +543,7 @@ def --env menv [
   --silent(-s)        # Suppress environment variable output
   --encrypted(-e)     # Load from encrypted file (conf/sec.enc)
   --codex(-c)         # Launch codex after loading profile
+  --resume: string    # Resume codex session with the specified session ID
   --raw               # Select & Load environment variables without support_codex or support_claude fields
   --reasoning(-r): string = 'medium'  # Reasoning effort: minimal, low, medium, high, xhigh
 ] {
@@ -636,7 +637,13 @@ def --env menv [
   # Launch codex if requested
   if $codex {
     let provider = $selected_profile | split row '-' | first
-    ^codex -c $'model_provider=($provider)' -c $'model_reasoning_effort=($reasoning)' --dangerously-bypass-approvals-and-sandbox
+    if ($resume | is-not-empty) {
+      print $'Resuming Codex session (ansi r)($resume)(ansi rst) with provider (ansi g)($provider)(ansi rst)...'
+      ^codex -c $'model_provider=($provider)' -c $'model_reasoning_effort=($reasoning)' --dangerously-bypass-approvals-and-sandbox resume $resume
+    } else {
+      print $'Launching Codex with provider (ansi g)($provider)(ansi rst) and reasoning effort (ansi y)($reasoning)(ansi rst)...'
+      ^codex -c $'model_provider=($provider)' -c $'model_reasoning_effort=($reasoning)' --dangerously-bypass-approvals-and-sandbox
+    }
   }
 }
 
