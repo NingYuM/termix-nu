@@ -32,7 +32,6 @@ const shell_configs = {
     conflict: '(?m)^alias\\s+t\\s+'
   },
   nu: {
-    file: '.config/nushell/config.nu',
     alias: 'alias t = just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .',
     conflict: '(?m)^alias\\s+t\\s*='
   },
@@ -162,9 +161,21 @@ def strip-managed-block [content: string] {
   $lines_out | str join (char nl)
 }
 
-def ensure-alias-block [shell_name: string, home_dir: string] {
+def ensure-alias-block [
+  shell_name: string,
+  home_dir: string,
+  nu_config_path?: string,
+] {
   let spec = $shell_configs | get $shell_name
-  let config_path = [$home_dir $spec.file] | path join
+  let config_path = if $shell_name == 'nu' {
+    if ($nu_config_path | is-not-empty) {
+      normalize-path $nu_config_path
+    } else {
+      [$home_dir '.config/nushell/config.nu'] | path join
+    }
+  } else {
+    [$home_dir $spec.file] | path join
+  }
   let config_dir = $config_path | path dirname
   let alias_line = $spec.alias
   let managed_block = [$alias_begin $alias_line $alias_end ''] | str join (char nl)
@@ -213,10 +224,16 @@ def detect-shells [] {
 export def run-post-setup [
   termix_dir: string = '.',
   --home-dir: string = $nu.home-dir,
+  --nu-config-path: string = $nu.config-path,
   --shells: string,
 ] {
   let termix_dir = normalize-path $termix_dir
   let home_dir = normalize-path $home_dir
+  let nu_config_path = if ($nu_config_path | is-not-empty) {
+    normalize-path $nu_config_path
+  } else {
+    ''
+  }
   let selected_shells = if ($shells | is-not-empty) {
     $shells | split row ',' | each { str trim } | compact -e
   } else {
@@ -240,7 +257,7 @@ export def run-post-setup [
   ensure-link ([$termix_dir 'Justfile'] | path join) ([$home_dir '.justfile'] | path join) $termix_dir
 
   for shell_name in $selected_shells {
-    ensure-alias-block $shell_name $home_dir
+    ensure-alias-block $shell_name $home_dir $nu_config_path
   }
 
   print $'(ansi g)Post setup completed successfully.(ansi rst)'
@@ -249,7 +266,8 @@ export def run-post-setup [
 def main [
   termix_dir: string = '.',
   --home-dir: string = $nu.home-dir,
+  --nu-config-path: string = $nu.config-path,
   --shells: string,
 ] {
-  run-post-setup $termix_dir --home-dir=$home_dir --shells=$shells
+  run-post-setup $termix_dir --home-dir=$home_dir --nu-config-path=$nu_config_path --shells=$shells
 }

@@ -50,7 +50,7 @@ def test-post-setup-initializes [] {
   let fixture = make-fixture
 
   try {
-    run-post-setup $fixture.termix_dir --home-dir $fixture.home_dir --shells 'bash,zsh,fish,nu,sh'
+    run-post-setup $fixture.termix_dir --home-dir $fixture.home_dir --nu-config-path ([$fixture.home_dir '.config/nushell/config.nu'] | path join) --shells 'bash,zsh,fish,nu,sh'
 
     let env_file = [$fixture.termix_dir '.env'] | path join
     let env_text = open $env_file --raw
@@ -88,8 +88,8 @@ def test-post-setup-idempotent [] {
   let fixture = make-fixture
 
   try {
-    run-post-setup $fixture.termix_dir --home-dir $fixture.home_dir --shells 'bash,nu'
-    run-post-setup $fixture.termix_dir --home-dir $fixture.home_dir --shells 'bash,nu'
+    run-post-setup $fixture.termix_dir --home-dir $fixture.home_dir --nu-config-path ([$fixture.home_dir '.config/nushell/config.nu'] | path join) --shells 'bash,nu'
+    run-post-setup $fixture.termix_dir --home-dir $fixture.home_dir --nu-config-path ([$fixture.home_dir '.config/nushell/config.nu'] | path join) --shells 'bash,nu'
 
     let bashrc = open ([$fixture.home_dir '.bashrc'] | path join) --raw
     let nu_conf = open ([$fixture.home_dir '.config/nushell/config.nu'] | path join) --raw
