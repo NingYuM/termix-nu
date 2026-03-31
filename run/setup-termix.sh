@@ -157,6 +157,10 @@ function main() {
   SCRIPT_DIR="$(dirname "$0")"
   # Call the nu script with the correct path
   nu "$SCRIPT_DIR/../actions/setup.nu" "$DEST_DIR" --in-place-update
+
+  if [[ "${TERMIX_SKIP_POST_SETUP:-0}" != "1" ]]; then
+    nu "$SCRIPT_DIR/post-setup.nu" "$SCRIPT_DIR/.."
+  fi
 }
 
 main

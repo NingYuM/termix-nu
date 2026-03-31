@@ -32,7 +32,7 @@ RUN apk update && apk add --no-cache git openssl \
     #  Setup termix user
     && echo '/usr/bin/nu' >> /etc/shells \
     && adduser -D -s /usr/bin/nu termix \
-    && sh ${TERMIX_HOME}/run/setup-termix.sh /usr/bin/ \
+    && TERMIX_SKIP_POST_SETUP=1 sh ${TERMIX_HOME}/run/setup-termix.sh /usr/bin/ \
     && mkdir -p ${HOME}/.config/nushell/ \
     # Setup default config file for nushell
     && cd ${HOME}/.config/nushell \

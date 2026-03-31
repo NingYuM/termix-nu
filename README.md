@@ -37,7 +37,7 @@ brew upgrade nushell just
 
 **提示：**
 
-如果由于系统版本太低的原因导致安装失败，或者 `brew` 安装太慢，或者你使用 Linux 系统，无法使用 `brew`，可以通过：`bash run/setup-termix.sh` 进行安装(需要先克隆 `termix-nu` 仓库, 参见后文说明)，该脚本会自动安装 `nushell`, `just`, `fzf` 等后续可能会用到的二进制文件到 `/usr/local/bin/` 目录（如果你想安装到其他目录，可以传参，比如：`bash run/setup-termix.sh /usr/bin/`），而且该命令直接从 OSS 上下载安装，速度非常快！
+如果由于系统版本太低的原因导致安装失败，或者 `brew` 安装太慢，或者你使用 Linux 系统，无法使用 `brew`，可以通过：`bash run/setup-termix.sh` 进行安装(需要先克隆 `termix-nu` 仓库, 参见后文说明)，该脚本会自动安装 `nushell`, `just`, `fzf` 等后续可能会用到的二进制文件到 `/usr/local/bin/` 目录（如果你想安装到其他目录，可以传参，比如：`bash run/setup-termix.sh /usr/bin/`），而且该命令直接从 OSS 上下载安装，速度非常快！安装完成后还会自动执行 `run/post-setup.nu`，完成 `.env` 初始化、`~/.env` / `~/.justfile` 软链接检查与创建，以及为当前系统已安装的 shell 写入 `t` alias（可重复执行）。
 
 ### Install nushell and just on Windows
 
@@ -75,6 +75,8 @@ winget install Nushell.Nushell
    ```
 
 2. 配置环境变量:
+
+   如果你是通过 `bash run/setup-termix.sh` 安装的，这一步通常已经由 `run/post-setup.nu` 自动完成：若仓库内不存在 `.env` 会自动从 `.env-example` 生成，并把 `TERMIX_DIR` 更新为当前仓库绝对路径。你只需要按需补充自己的账号密码等其他环境变量即可；若后续需要重新执行自动配置，直接运行：`nu run/post-setup.nu`
 
    ```bash
    cd termix-nu
@@ -137,6 +139,8 @@ winget install Nushell.Nushell
 
 4. 如果你希望在本机任意位置都可以使用`termix-nu`提供的功能，需要建立软连接（也强烈建议你这么做）:
 
+   如果你是通过 `bash run/setup-termix.sh` 安装的，这一步也会自动处理：当 `~/.env` 或 `~/.justfile` 不存在时会自动创建软链接；若已经存在且链接目标仍然位于当前 `termix-nu` 目录内则会直接复用；若它们是普通文件则不会覆盖；若它们是指向其他位置的软链接则会报错提示你手工处理冲突。
+
    ```bash
     # Mac or Linux
     ln -s /Users/path/to/termix-nu/Justfile ~/.justfile
@@ -152,6 +156,8 @@ winget install Nushell.Nushell
    ```
 
 5. 简化命令行输入（推荐）
+
+   如果你是通过 `bash run/setup-termix.sh` 安装的，会自动为系统上已安装的常见 shell（如 `bash`、`zsh`、`fish`、`nu`、`sh` 等）追加 `t` alias，并保证重复执行不重复写入；如果本机某个 shell 已经存在其他 `t` alias，为避免覆盖会直接报错提示你手工处理。
 
    完成前面四步就可以使用所有命令了，不过为了简化输入可以像下面这样建一个 alias，这样以后就直接输入`t`就可以了(Task)的简称(该操作除了简化输入外还可以跟系统其他 Just 管理的脚本进行区分，如果有的话)：
 
