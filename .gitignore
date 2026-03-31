@@ -7,5 +7,6 @@ tmp
 .snapshot
 review*.md
 *-compose.nu
+node_modules/
 .fzf-preview.nuon
 docker-compose.dev.yml
