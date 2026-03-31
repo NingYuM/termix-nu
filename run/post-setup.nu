@@ -5,6 +5,7 @@
 
 const alias_begin = '# >>> termix-nu alias >>>'
 const alias_end = '# <<< termix-nu alias <<<'
+const auto_detect_shells = [bash zsh fish nu sh]
 const shell_configs = {
   bash: {
     file: '.bashrc',
@@ -203,7 +204,6 @@ def ensure-alias-block [
 }
 
 def detect-shells [] {
-  let known_shells = [bash zsh fish nu sh ksh csh tcsh]
   let shells_from_file = if ('/etc/shells' | path exists) {
     open /etc/shells --raw
       | lines
@@ -215,7 +215,7 @@ def detect-shells [] {
   }
   let active_shell = $env | get -o SHELL | default '' | path basename
 
-  $known_shells
+  $auto_detect_shells
     | where {|shell_name|
       ($shell_name in $shells_from_file) or ($shell_name == $active_shell) or ((which $shell_name | length) > 0)
     }
