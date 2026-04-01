@@ -50,6 +50,26 @@ def read-target [path: string] {
   ls -l $path | get 0.target | path expand
 }
 
+def path-is-link [path: string] {
+  let kind = $path | path type
+  if $kind == 'symlink' { return true }
+  let target = try { ls -l $path | get 0.target } catch { null }
+  $target | is-not-empty
+}
+
+def normalize-test-path [path: string] {
+  let normalized = $path | path expand
+  if $nu.os-info.name == 'windows' {
+    $normalized | str downcase
+  } else {
+    $normalized
+  }
+}
+
+def assert-same-path [left: string, right: string] {
+  assert equal (normalize-test-path $left) (normalize-test-path $right)
+}
+
 # Run a test closure with automatic fixture setup and cleanup
 def with-fixture [test_fn: closure] {
   let fixture = make-fixture
@@ -74,10 +94,10 @@ def test-post-setup-initializes [] {
 
     let home_env = [$fixture.home_dir '.env'] | path join
     let home_justfile = [$fixture.home_dir '.justfile'] | path join
-    assert equal ($home_env | path type) 'symlink'
-    assert equal ($home_justfile | path type) 'symlink'
-    assert equal (read-target $home_env) ($env_file | path expand)
-    assert equal (read-target $home_justfile) (([$fixture.termix_dir Justfile] | path join) | path expand)
+    assert equal (path-is-link $home_env) true
+    assert equal (path-is-link $home_justfile) true
+    assert-same-path (read-target $home_env) ($env_file | path expand)
+    assert-same-path (read-target $home_justfile) (([$fixture.termix_dir Justfile] | path join) | path expand)
     assert equal (([$fixture.termix_dir '.termixrc'] | path join) | path exists) true
 
     let bashrc = [ $fixture.home_dir '.bashrc' ] | path join

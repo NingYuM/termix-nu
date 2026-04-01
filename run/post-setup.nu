@@ -53,6 +53,14 @@ def normalize-path [path: string] {
   $path | path expand
 }
 
+def absolute-path? [path: string] {
+  let is_posix_absolute = $path | str starts-with '/'
+  let is_windows_drive_absolute = $path =~ r#'^[A-Za-z]:[\\/]'#
+  let is_unc_absolute = $path | str starts-with '\\\\'
+
+  $is_posix_absolute or $is_windows_drive_absolute or $is_unc_absolute
+}
+
 def ensure-termix-root [termix_dir: string] {
   let required = [Justfile termix.toml .env-example .termixrc-example]
   let missing = $required
@@ -66,18 +74,32 @@ def ensure-termix-root [termix_dir: string] {
 def is-under-dir [candidate: string, root: string] {
   let candidate = normalize-path $candidate
   let root = normalize-path $root
-  let root_prefix = if ($root | str ends-with '/') { $root } else { $'($root)/' }
-  $candidate == $root or ($candidate | str starts-with $root_prefix)
+  try {
+    let relative = $candidate | path relative-to $root
+    let head = $relative | path split | first
+    $relative == '.' or $head != '..'
+  } catch {
+    false
+  }
 }
 
 def resolve-link-target [link_path: string] {
   let link_info = ls -l $link_path | get 0
   let raw_target = $link_info.target
-  if ($raw_target | str starts-with '/') {
+  if (absolute-path? $raw_target) {
     normalize-path $raw_target
   } else {
     normalize-path ([($link_path | path dirname) $raw_target] | path join)
   }
+}
+
+def get-path-kind [path: string] {
+  let kind = $path | path type
+  if $kind == null { return null }
+  if $kind == 'symlink' { return 'symlink' }
+
+  let target = try { ls -l $path | get 0.target } catch { null }
+  if ($target | is-not-empty) { 'symlink' } else { $kind }
 }
 
 def ensure-local-env [termix_dir: string] {
@@ -129,7 +151,7 @@ def ensure-local-termixrc [termix_dir: string] {
 
 def ensure-link [source: string, dest: string, termix_dir: string] {
   let source = normalize-path $source
-  let dest_type = $dest | path type
+  let dest_type = get-path-kind $dest
 
   match $dest_type {
     null => {
