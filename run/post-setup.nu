@@ -90,6 +90,7 @@ def ensure-local-env [termix_dir: string] {
   }
 
   let content = open $env_file --raw
+  let line_ending = if ($content | str contains "\r\n") { "\r\n" } else { (char nl) }
   let replacement = $"TERMIX_DIR='($termix_dir)'"
   let has_termix_dir = ($content | lines | any {|line|
     let trimmed = $line | str trim
@@ -104,14 +105,14 @@ def ensure-local-env [termix_dir: string] {
       } else {
         $line
       }
-    } | str join (char nl)
+    } | str join $line_ending
   } else if ($content | str trim | is-empty) {
     $replacement
   } else {
-    [($content | str replace -r r#'\n+$'# '') '' $replacement] | str join (char nl)
+    [($content | str replace -r r#'(\r?\n)+$'# '') '' $replacement] | str join $line_ending
   }
 
-  let final = if ($updated | str ends-with (char nl)) { $updated } else { $updated + (char nl) }
+  let final = if ($updated | str ends-with $line_ending) { $updated } else { $updated + $line_ending }
   $final | save -f $env_file
   print $'Updated (ansi g)TERMIX_DIR(ansi rst) in (ansi g)($env_file)(ansi rst)'
 }
@@ -143,7 +144,6 @@ def ensure-link [source: string, dest: string, termix_dir: string] {
 }
 
 def strip-managed-block [content: string] {
-  let had_trailing_nl = ($content | str ends-with (char nl))
   mut lines_out = []
   mut inside_block = false
 
@@ -161,8 +161,12 @@ def strip-managed-block [content: string] {
     }
   }
 
-  let result = $lines_out | str join (char nl)
-  if $had_trailing_nl and not ($result | is-empty) { $result + (char nl) } else { $result }
+  $lines_out | str join (char nl)
+}
+
+def build-managed-prefix [content: string] {
+  let base = $content | str replace -r r#'(\r?\n)+$'# ''
+  if ($base | str trim | is-empty) { '' } else { $base + (char nl) + (char nl) }
 }
 
 def ensure-alias-block [
@@ -190,16 +194,24 @@ def ensure-alias-block [
 
   let current = if ($config_path | path exists) { open $config_path --raw } else { '' }
   let stripped = strip-managed-block $current
+  let has_exact_alias_line = ($stripped | lines | any {|line| $line == $alias_line })
 
-  if ($stripped | str contains $alias_line) {
+  if $has_exact_alias_line {
     # Alias line already exists as bare text; move it into managed block for future management
     let cleaned = $stripped | lines | where {|l| $l != $alias_line } | str join (char nl)
-    let prefix = if ($cleaned | str trim | is-empty) { '' } else if ($cleaned | str ends-with (char nl)) { $cleaned + (char nl) } else { $cleaned + (char nl) + (char nl) }
+    let has_conflict_alias = ($cleaned | lines | any {|line|
+      let trimmed = $line | str trim
+      not ($trimmed | is-empty) and not ($trimmed | str starts-with '#') and ($trimmed | str starts-with 'alias t')
+    })
+    if $has_conflict_alias {
+      error make { msg: $'Found existing `t` alias in ($config_path), please reconcile it manually before re-running post-setup' }
+    }
+    let prefix = build-managed-prefix $cleaned
     ($prefix + $managed_block) | save -f $config_path
     print $'Configured alias for (ansi g)($shell_name)(ansi rst) in (ansi g)($config_path)(ansi rst)'
   } else if ($stripped !~ $spec.conflict) {
     # No conflicting alias found; append managed block
-    let prefix = if ($stripped | str trim | is-empty) { '' } else if ($stripped | str ends-with (char nl)) { $stripped + (char nl) } else { $stripped + (char nl) + (char nl) }
+    let prefix = build-managed-prefix $stripped
     ($prefix + $managed_block) | save -f $config_path
     print $'Configured alias for (ansi g)($shell_name)(ansi rst) in (ansi g)($config_path)(ansi rst)'
   } else {

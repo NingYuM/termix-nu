@@ -867,7 +867,6 @@ let poshTheme = if (isWindows) { $'($poshDir)/themes/' } else { $'($poshDir)/sha
 # Recommend double lines: amro/pure/spaceship
 oh-my-posh init nu --config $'($poshTheme)/zash.omp.json'
 
-
 # >>> termix-nu alias >>>
 alias t = just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .
 # <<< termix-nu alias <<<

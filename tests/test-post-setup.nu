@@ -12,7 +12,9 @@ def main [] {
   run_tests $env.PROCESS_PATH [
     { name: 'post-setup initializes env links and aliases', execute: { test-post-setup-initializes } }
     { name: 'post-setup keeps env idempotent', execute: { test-post-setup-env-idempotent } }
+    { name: 'post-setup preserves env line endings', execute: { test-post-setup-preserves-env-line-endings } }
     { name: 'post-setup is idempotent for aliases', execute: { test-post-setup-idempotent } }
+    { name: 'post-setup errors on mixed alias conflict', execute: { test-post-setup-errors-on-mixed-alias-conflict } }
     { name: 'post-setup preserves existing home files', execute: { test-post-setup-preserves-home-files } }
     { name: 'post-setup errors on foreign symlink', execute: { test-post-setup-errors-on-foreign-symlink } }
   ]
@@ -101,6 +103,7 @@ def test-post-setup-idempotent [] {
     assert equal (($bashrc | lines | where {|line| $line =~ '^alias t=' } | length)) 1
     assert equal (($nu_conf | lines | where {|line| $line == '# >>> termix-nu alias >>>' } | length)) 1
     assert equal (($nu_conf | lines | where {|line| $line == 'alias t = just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .' } | length)) 1
+    assert equal (($nu_conf | str contains "\n\n\n# >>> termix-nu alias >>>") ) false
   }
 }
 
@@ -117,6 +120,37 @@ def test-post-setup-env-idempotent [] {
     assert equal (($env_text | str contains '/tmp/wrong')) false
     assert equal (($env_text | lines | where {|line| $line | str starts-with 'TERMIX_DIR=\\' } | length)) 0
     assert str contains $env_text 'OTHER=1'
+  }
+}
+
+def test-post-setup-preserves-env-line-endings [] {
+  with-fixture {|fixture|
+    let env_file = [$fixture.termix_dir '.env'] | path join
+    "FOO=1\r\nBAR=2\r\n" | save -rf $env_file
+
+    run-post-setup $fixture.termix_dir --home-dir $fixture.home_dir --shells 'bash'
+
+    let env_hex = open $env_file --raw | encode hex
+    assert equal ($env_hex | str contains '0D0A5445524D49585F4449523D') true
+    assert equal ($env_hex | str contains '0D0A0D0A5445524D49585F4449523D') true
+    assert equal ($env_hex | str contains '0A0A5445524D49585F4449523D') false
+  }
+}
+
+def test-post-setup-errors-on-mixed-alias-conflict [] {
+  with-fixture {|fixture|
+    let bashrc = [$fixture.home_dir '.bashrc'] | path join
+    "alias t='just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .'\nalias t='other command'\n" | save $bashrc
+
+    let failed = try {
+      run-post-setup $fixture.termix_dir --home-dir $fixture.home_dir --shells 'bash'
+      false
+    } catch {
+      true
+    }
+
+    assert equal $failed true
+    assert equal ((open $bashrc --raw) | str contains "# >>> termix-nu alias >>>") false
   }
 }
 
