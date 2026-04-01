@@ -23,7 +23,6 @@ alias .. = cd ..
 # Change to parent of parent directory
 alias ... = do { cd ..; cd .. }
 # Global `just` task receipes
-alias t = just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .
 alias cr = nu /Users/hustcer/iWork/terminus/deepseek-review/cr --config /Users/hustcer/iWork/terminus/deepseek-review/config.yml
 # Show Nushell commands
 alias nuc = print (
@@ -867,3 +866,8 @@ let poshTheme = if (isWindows) { $'($poshDir)/themes/' } else { $'($poshDir)/sha
 # Recommend themes: zash*/space/robbyrussel/powerline/powerlevel10k_lean*/material/half-life/lambda
 # Recommend double lines: amro/pure/spaceship
 oh-my-posh init nu --config $'($poshTheme)/zash.omp.json'
+
+
+# >>> termix-nu alias >>>
+alias t = just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .
+# <<< termix-nu alias <<<

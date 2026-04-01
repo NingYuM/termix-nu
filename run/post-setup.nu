@@ -22,6 +22,7 @@ const shell_configs = {
     alias: "alias t='just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .'",
     conflict: '(?m)^alias\\s+t='
   },
+  # NOTE: ksh, csh, and tcsh are not auto-detected; only used when explicitly specified via --shells
   ksh: {
     file: '.kshrc',
     alias: "alias t='just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .'",
@@ -107,7 +108,7 @@ def ensure-local-env [termix_dir: string] {
   } else if ($content | str trim | is-empty) {
     $replacement
   } else {
-    [$content '' $replacement] | str join (char nl)
+    [($content | str replace -r r#'\n+$'# '') '' $replacement] | str join (char nl)
   }
 
   let final = if ($updated | str ends-with (char nl)) { $updated } else { $updated + (char nl) }
@@ -142,6 +143,7 @@ def ensure-link [source: string, dest: string, termix_dir: string] {
 }
 
 def strip-managed-block [content: string] {
+  let had_trailing_nl = ($content | str ends-with (char nl))
   mut lines_out = []
   mut inside_block = false
 
@@ -159,7 +161,8 @@ def strip-managed-block [content: string] {
     }
   }
 
-  $lines_out | str join (char nl)
+  let result = $lines_out | str join (char nl)
+  if $had_trailing_nl and not ($result | is-empty) { $result + (char nl) } else { $result }
 }
 
 def ensure-alias-block [
@@ -188,15 +191,16 @@ def ensure-alias-block [
   let current = if ($config_path | path exists) { open $config_path --raw } else { '' }
   let stripped = strip-managed-block $current
 
-  if ($stripped !~ $spec.conflict) or ($stripped | str contains $alias_line) {
-    let next = if ($stripped | str contains $alias_line) {
-      let ensured = if ($stripped | str ends-with (char nl)) { $stripped } else if ($stripped | is-empty) { '' } else { $stripped + (char nl) }
-      $ensured
-    } else {
-      let prefix = if ($stripped | str trim | is-empty) { '' } else if ($stripped | str ends-with (char nl)) { $stripped + (char nl) } else { $stripped + (char nl) + (char nl) }
-      $prefix + $managed_block
-    }
-    $next | save -f $config_path
+  if ($stripped | str contains $alias_line) {
+    # Alias line already exists as bare text; move it into managed block for future management
+    let cleaned = $stripped | lines | where {|l| $l != $alias_line } | str join (char nl)
+    let prefix = if ($cleaned | str trim | is-empty) { '' } else if ($cleaned | str ends-with (char nl)) { $cleaned + (char nl) } else { $cleaned + (char nl) + (char nl) }
+    ($prefix + $managed_block) | save -f $config_path
+    print $'Configured alias for (ansi g)($shell_name)(ansi rst) in (ansi g)($config_path)(ansi rst)'
+  } else if ($stripped !~ $spec.conflict) {
+    # No conflicting alias found; append managed block
+    let prefix = if ($stripped | str trim | is-empty) { '' } else if ($stripped | str ends-with (char nl)) { $stripped + (char nl) } else { $stripped + (char nl) + (char nl) }
+    ($prefix + $managed_block) | save -f $config_path
     print $'Configured alias for (ansi g)($shell_name)(ansi rst) in (ansi g)($config_path)(ansi rst)'
   } else {
     error make { msg: $'Found existing `t` alias in ($config_path), please reconcile it manually before re-running post-setup' }
@@ -217,7 +221,7 @@ def detect-shells [] {
 
   $auto_detect_shells
     | where {|shell_name|
-      ($shell_name in $shells_from_file) or ($shell_name == $active_shell) or ((which $shell_name | length) > 0)
+      ($shell_name in $shells_from_file) or ($shell_name == $active_shell) or ((try { which $shell_name | length } catch { 0 }) > 0)
     }
 }
 

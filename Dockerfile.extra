@@ -46,8 +46,8 @@ RUN apt-get update \
     # Add and erda user and create home dir
     && useradd -m -s /usr/local/bin/nu termix \
     && mkdir -p ${HOME}/.config/nushell/ \
-    && chown -R termix:termix ${HOME} \
     && TERMIX_SKIP_POST_SETUP=1 sh ${TERMIX_HOME}/run/setup-termix.sh /usr/local/bin/ \
+    && chown -R termix:termix ${HOME} \
     && cp ${TERMIX_HOME}/.termixrc-example ${HOME}/.termixrc \
     && cp ${TERMIX_HOME}/.env-example ${HOME}/.env \
     && ln -s ${TERMIX_HOME}/Justfile ${HOME}/.justfile \

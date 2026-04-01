@@ -46,17 +46,27 @@ def read-target [path: string] {
   ls -l $path | get 0.target | path expand
 }
 
-def test-post-setup-initializes [] {
+# Run a test closure with automatic fixture setup and cleanup
+def with-fixture [test_fn: closure] {
   let fixture = make-fixture
-
   try {
+    do $test_fn $fixture
+  } catch {|err|
+    cleanup-fixture $fixture
+    error make { msg: $err.msg }
+  }
+  cleanup-fixture $fixture
+}
+
+def test-post-setup-initializes [] {
+  with-fixture {|fixture|
     run-post-setup $fixture.termix_dir --home-dir $fixture.home_dir --nu-config-path ([$fixture.home_dir '.config/nushell/config.nu'] | path join) --shells 'bash,zsh,fish,nu,sh'
 
     let env_file = [$fixture.termix_dir '.env'] | path join
     let env_text = open $env_file --raw
     assert str contains $env_text $"TERMIX_DIR='(($fixture.termix_dir | path expand))'"
     assert equal (($env_text | lines | where {|line| $line =~ r#'^TERMIX_DIR='# } | length)) 1
-    assert equal (($env_text | lines | where {|line| $line =~ r#'^TERMIX_DIR=\\'# } | length)) 0
+    assert equal (($env_text | lines | where {|line| $line =~ r#'^TERMIX_DIR=\\\\'# } | length)) 0
 
     let home_env = [$fixture.home_dir '.env'] | path join
     let home_justfile = [$fixture.home_dir '.justfile'] | path join
@@ -76,18 +86,11 @@ def test-post-setup-initializes [] {
     assert str contains (open $fish_conf --raw) 'alias t "just --justfile ~/.justfile --dotenv-path ~/.env --working-directory ."'
     assert str contains (open $nu_conf --raw) 'alias t = just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .'
     assert str contains (open $profile --raw) "alias t='just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .'"
-  } catch {|err|
-    cleanup-fixture $fixture
-    error make { msg: $err.msg }
   }
-
-  cleanup-fixture $fixture
 }
 
 def test-post-setup-idempotent [] {
-  let fixture = make-fixture
-
-  try {
+  with-fixture {|fixture|
     run-post-setup $fixture.termix_dir --home-dir $fixture.home_dir --nu-config-path ([$fixture.home_dir '.config/nushell/config.nu'] | path join) --shells 'bash,nu'
     run-post-setup $fixture.termix_dir --home-dir $fixture.home_dir --nu-config-path ([$fixture.home_dir '.config/nushell/config.nu'] | path join) --shells 'bash,nu'
 
@@ -98,18 +101,11 @@ def test-post-setup-idempotent [] {
     assert equal (($bashrc | lines | where {|line| $line =~ '^alias t=' } | length)) 1
     assert equal (($nu_conf | lines | where {|line| $line == '# >>> termix-nu alias >>>' } | length)) 1
     assert equal (($nu_conf | lines | where {|line| $line == 'alias t = just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .' } | length)) 1
-  } catch {|err|
-    cleanup-fixture $fixture
-    error make { msg: $err.msg }
   }
-
-  cleanup-fixture $fixture
 }
 
 def test-post-setup-env-idempotent [] {
-  let fixture = make-fixture
-
-  try {
+  with-fixture {|fixture|
     "TERMIX_DIR=\"/tmp/wrong\"\nOTHER=1\n" | save -f ([$fixture.termix_dir '.env'] | path join)
 
     run-post-setup $fixture.termix_dir --home-dir $fixture.home_dir --shells 'bash'
@@ -121,18 +117,11 @@ def test-post-setup-env-idempotent [] {
     assert equal (($env_text | str contains '/tmp/wrong')) false
     assert equal (($env_text | lines | where {|line| $line | str starts-with 'TERMIX_DIR=\\' } | length)) 0
     assert str contains $env_text 'OTHER=1'
-  } catch {|err|
-    cleanup-fixture $fixture
-    error make { msg: $err.msg }
   }
-
-  cleanup-fixture $fixture
 }
 
 def test-post-setup-preserves-home-files [] {
-  let fixture = make-fixture
-
-  try {
+  with-fixture {|fixture|
     let home_env = [$fixture.home_dir '.env'] | path join
     let home_justfile = [$fixture.home_dir '.justfile'] | path join
     'CUSTOM_HOME_ENV=1\n' | save $home_env
@@ -144,18 +133,11 @@ def test-post-setup-preserves-home-files [] {
     assert equal ($home_justfile | path type) 'file'
     assert str contains (open $home_env --raw) 'CUSTOM_HOME_ENV=1'
     assert str contains (open $home_justfile --raw) '@echo home'
-  } catch {|err|
-    cleanup-fixture $fixture
-    error make { msg: $err.msg }
   }
-
-  cleanup-fixture $fixture
 }
 
 def test-post-setup-errors-on-foreign-symlink [] {
-  let fixture = make-fixture
-
-  try {
+  with-fixture {|fixture|
     let foreign_dir = [$fixture.root foreign] | path join
     mkdir $foreign_dir
     let foreign_env = [$foreign_dir '.env'] | path join
@@ -170,10 +152,5 @@ def test-post-setup-errors-on-foreign-symlink [] {
     }
 
     assert equal $failed true
-  } catch {|err|
-    cleanup-fixture $fixture
-    error make { msg: $err.msg }
   }
-
-  cleanup-fixture $fixture
 }
