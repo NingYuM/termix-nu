@@ -42,6 +42,18 @@ function is_installed() {
   command -v "$1" &> /dev/null
 }
 
+function validate_archive_entries() {
+  local pkg=$1
+  local entry
+  while IFS= read -r entry; do
+    [[ -z "$entry" ]] && continue
+    if [[ "$entry" == /* || "$entry" == ../* || "$entry" == *"/../"* || "$entry" == *"/.." ]]; then
+      echo "Error: Unsafe archive entry found in $pkg: $entry"
+      exit 1
+    fi
+  done < <(tar tzf "$pkg")
+}
+
 # Check if first version is lower than second version
 function is_lower_ver() {
   [ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" != "$2" ]
@@ -112,20 +124,31 @@ function install_or_update() {
     curl -L -o "$pkg" $BASE_URL/"$assetName"
   fi
 
+  validate_archive_entries "$pkg"
+  local stage_dir
+  stage_dir=$(mktemp -d)
+  tar xzf "$pkg" -C "$stage_dir"
+  shopt -s nullglob
+  local staged_bins=("$stage_dir"/nu-*/nu*)
+  shopt -u nullglob
+  if [ ${#staged_bins[@]} -eq 0 ]; then
+    rm -rf "$stage_dir" "$pkg"
+    echo "Error: Failed to find extracted nu binaries in $assetName"
+    exit 1
+  fi
+
   if [ -w "$DEST_DIR" ]; then
-    tar xzf "$pkg" -C "$DEST_DIR"
-    mv "$DEST_DIR"/nu-*/nu* "$DEST_DIR"/
-    rm -rf "$DEST_DIR"/nu-*
+    mv "${staged_bins[@]}" "$DEST_DIR"/
   else
     if is_installed sudo; then
-      sudo tar xzf "$pkg" -C "$DEST_DIR"
-      sudo mv "$DEST_DIR"/nu-*/nu* "$DEST_DIR"/
-      sudo rm -rf "$DEST_DIR"/nu-*
+      sudo mv "${staged_bins[@]}" "$DEST_DIR"/
     else
+      rm -rf "$stage_dir" "$pkg"
       echo "Error: No write permission for $DEST_DIR and sudo is not available."
       exit 1
     fi
   fi
+  rm -rf "$stage_dir"
   rm "$pkg"
   # 删除不需要的插件文件，忽略不存在的情况
   rm -f "$DEST_DIR"/nu_*cust* "$DEST_DIR"/nu_*exam* "$DEST_DIR"/nu_*str* 2>/dev/null || true
@@ -155,11 +178,17 @@ function main() {
 
   # Get the directory where the script is located
   SCRIPT_DIR="$(dirname "$0")"
+  local nu_cmd
+  if [[ -x "${DEST_DIR}nu" ]]; then
+    nu_cmd="${DEST_DIR}nu"
+  else
+    nu_cmd="$(command -v nu)"
+  fi
   # Call the nu script with the correct path
-  nu "$SCRIPT_DIR/../actions/setup.nu" "$DEST_DIR" --in-place-update
+  "$nu_cmd" "$SCRIPT_DIR/../actions/setup.nu" "$DEST_DIR" --in-place-update
 
   if [[ "${TERMIX_SKIP_POST_SETUP:-0}" != "1" ]]; then
-    nu "$SCRIPT_DIR/post-setup.nu" "$SCRIPT_DIR/.."
+    "$nu_cmd" "$SCRIPT_DIR/post-setup.nu" "$SCRIPT_DIR/.."
   fi
 }
 

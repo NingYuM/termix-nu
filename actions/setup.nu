@@ -90,12 +90,14 @@ export def get-versions [] {
   mut versions = {}
   for bin in ($LATEST_META | columns) {
     if not (is-installed $bin) { $versions = $versions | upsert $bin '0.0.0' } else {
-      let version = match $bin {
-        fzf => { fzf --version | split row ' ' | first }
-        just => { just --version | split row ' ' | last }
-        s5cmd => { s5cmd version | split row - | first | str trim -c v },
-        _ => { ^$'($bin)' --version }
-      }
+      let version = try {
+        match $bin {
+          fzf => { fzf --version | split row ' ' | first }
+          just => { just --version | split row ' ' | last }
+          s5cmd => { s5cmd version | split row - | first | str trim -c v },
+          _ => { ^$'($bin)' --version }
+        }
+      } catch { '0.0.0' }
       $versions = $versions | upsert $bin $version
     }
   }
@@ -133,6 +135,28 @@ export def install-or-update [
   print $'Successfully installed (ansi g)($bin)@($latest.version)(ansi rst)'
 }
 
+def validate-archive-entries [pkg: string] {
+  let entries = ^tar tzf $pkg | complete
+  if $entries.exit_code != 0 {
+    error make { msg: $'Failed to inspect archive ($pkg): ($entries.stderr | str trim)' }
+  }
+
+  let unsafe = $entries.stdout
+    | lines
+    | where {|entry|
+      ($entry | is-not-empty) and (
+          ($entry | str starts-with '/')
+          or ($entry | str starts-with '../')
+          or ($entry | str contains '/../')
+          or ($entry | str ends-with '/..')
+        )
+    }
+
+  if ($unsafe | is-not-empty) {
+    error make { msg: $'Unsafe archive entry found in ($pkg): ($unsafe | first)' }
+  }
+}
+
 # Unzip a binary package to $DEST_DIR
 def unzip-pkg [
   bin: string,          # Binary name, e.g. 'nu', 'fzf', 'just'
@@ -143,40 +167,43 @@ def unzip-pkg [
   let replace = $in_place_update and (is-installed $bin)
   let dest = if $replace { (which $bin).path.0 | path dirname } else { $dest }
   print $'Installing or updating (ansi g)($bin) to ($dest) ...(ansi rst)'
+  validate-archive-entries $pkg
+  let stage_dir = mktemp -d | str trim
+  let extract_result = ^tar xzf $pkg -C $stage_dir | complete
+  if $extract_result.exit_code != 0 {
+    rm -rf $stage_dir
+    error make { msg: $'Failed to extract ($pkg): ($extract_result.stderr | str trim)' }
+  }
+  let staged_paths = match $bin {
+    just => {
+      let staged = [$stage_dir just] | path join
+      if ($staged | path exists) { [$staged] } else { [] }
+    },
+    nu => {
+      try { ls ($'($stage_dir)/nu-*/nu*' | into glob) | get name } catch { [] }
+    },
+    _ => {
+      let staged = [$stage_dir $bin] | path join
+      if ($staged | path exists) { [$staged] } else { [] }
+    },
+  }
+  if ($staged_paths | is-empty) {
+    rm -rf $stage_dir
+    error make { msg: $'Failed to find extracted binary for ($bin) in ($pkg)' }
+  }
 
-  let action = {|bin, sudo?|
+  let action = {|sudo?|
       if $sudo == 'sudo' {
-        match $bin {
-          # Install just binary only without other assets
-          just => { sudo tar xzf $pkg -C $dest just },
-          nu => {
-            sudo tar xzf $pkg -C $dest
-            sudo mv ($'($dest)/nu-*/nu*' | into glob) $dest
-            sudo rm -rf ($'($dest)/nu-*' | into glob)
-          },
-          _ => { sudo tar xzf $pkg -C $dest },
-        }
+        sudo mv ...$staged_paths $dest
         return
       }
-      match $bin {
-        # Install just binary only without other assets
-        just => { tar xzf $pkg -C $dest just },
-        nu => {
-          tar xzf $pkg -C $dest
-          mv ($'($dest)/nu-*/nu*' | into glob) $dest
-          rm -rf ($'($dest)/nu-*' | into glob)
-        },
-        _ => { tar xzf $pkg -C $dest },
-      }
+      mv ...$staged_paths $dest
     }
 
   # Don't use sudo if write permission allowed
-  if not (can-write $dest) and (is-installed sudo) {
-    do $action $bin sudo
-  } else {
-    do $action $bin
-  }
+  if not (can-write $dest) and (is-installed sudo) { do $action sudo } else { do $action }
   rm $pkg
+  rm -rf $stage_dir
 }
 
 def main [

@@ -280,6 +280,13 @@ A successful coding agent working with this repository should:
 - Respect the established architecture and design decisions
 - When in doubt, follow existing patterns rather than introducing new approaches
 
+## Editing Guide
+
+- Always minimize git diff noise.
+- Preserve existing formatting, line order, and grouping unless a change is required.
+- Do not reorder imports, package lists, or chained shell commands unless necessary.
+- Prefer token-level edits over rewriting whole blocks.
+
 ---
 
 _This document serves as a comprehensive guide for AI coding agents to effectively contribute to the Termix-Nu project while maintaining its quality, consistency, and functionality._
