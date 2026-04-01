@@ -46,22 +46,48 @@ const LATEST_META = {
   s5cmd: 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/open-tools/s5cmd/latest.json',
 }
 
+export def normalize-setup-tool [tool?: string] {
+  if ($tool | is-empty) { return null }
+  let normalized_tool = $tool | str trim | str downcase
+  match $normalized_tool {
+    'nu' | 'nushell' => 'nu'
+    'just' | 'fzf' | 's5cmd' => $normalized_tool
+    _ => {
+      error make {
+        msg: $'Unsupported tool for setup-termix: ($tool). Supported tools: nu, just, fzf, s5cmd'
+      }
+    }
+  }
+}
+
+export def get-setup-targets [tool?: string] {
+  let normalized = normalize-setup-tool $tool
+  if ($normalized | is-empty) {
+    $LATEST_META | columns
+  } else {
+    [$normalized]
+  }
+}
+
 # Install or update nushell, fzf, and just to $DEST_DIR
 export def setup-termix [
   dest: string = $DEST_DIR,   # Installation directory, default to $DEST_DIR
+  tool?: string,              # Upgrade a single binary tool: nu, just, fzf or s5cmd
   --all(-a),                  # Upgrade all tools, including termix-nu
+  --force(-f),                # Force reinstall even if the current version is already the latest
   --in-place-update(-u),      # Replace the current binary(if installed) with the latest version
 ] {
   let platform = $'($nu.os-info.name)_($nu.os-info.arch)'
   let current = get-versions
   let latest = get-latest-versions
+  let selected = get-setup-targets $tool
   print $'(ansi g)Current version:(ansi rst)'; hr-line 35; $current | table -t psql | print
   print $'(ansi g)(char nl)Latest version:(ansi rst)'; hr-line 35; $latest | table -t psql | print
   print -n (char nl)
 
-  for bin in ($LATEST_META | columns) {
-    if (is-lower-ver ($current | get $bin) ($latest | get $bin)) {
-      install-or-update $bin $platform $dest --in-place-update=$in_place_update
+  for bin in $selected {
+    if $force or (is-lower-ver ($current | get $bin) ($latest | get $bin)) {
+      install-or-update $bin $platform $dest --force=$force --in-place-update=$in_place_update
     } else {
       print $'(ansi g)($bin) is already updated ...(ansi rst)'
     }
@@ -119,6 +145,7 @@ export def install-or-update [
   bin: string,           # Binary name, e.g. 'nu', 'fzf', 'just', 's5cmd'
   platform: string,      # Platform name, e.g. 'macos_x86_64', 'linux_aarch64'
   dest: string,          # Installation directory, default to $DEST_DIR
+  --force,               # Force reinstall even if already installed and up to date
   --in-place-update,     # Replace the current binary(if installed) with the latest version
 ] {
   let latestUrl = $LATEST_META | get $bin
@@ -132,7 +159,8 @@ export def install-or-update [
     print -e $'(ansi r)Failed to install ($bin), due to the error: ($error.msg)(ansi rst)'
     exit 1
   }
-  print $'Successfully installed (ansi g)($bin)@($latest.version)(ansi rst)'
+  let action = if $force { 'reinstalled' } else { 'installed' }
+  print $'Successfully ($action) (ansi g)($bin)@($latest.version)(ansi rst)'
 }
 
 def validate-archive-entries [pkg: string] {
@@ -209,8 +237,10 @@ def unzip-pkg [
 
 def main [
   dest: string = $DEST_DIR,
+  tool?: string,
   --all(-a),
+  --force(-f),
   --in-place-update(-u),
 ] {
-  setup-termix $dest --all=$all --in-place-update=$in_place_update
+  setup-termix $dest $tool --all=$all --force=$force --in-place-update=$in_place_update
 }

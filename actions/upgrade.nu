@@ -24,9 +24,19 @@ export def upgrade-tool [
   --all(-a),                      # Upgrade all tools: termix-nu, just and nushell
   --force(-f),                    # Force upgrade, even if the latest version is already installed
 ] {
+  let tool = $tool | str trim | str downcase
+
   # If installed by setup.nu then upgrade by the same way
   if (get-dot-conf installMethod) == 'setup' {
-    setup-termix --all=$all --in-place-update; exit $ECODE.SUCCESS
+    if $all {
+      setup-termix --all --force=$force --in-place-update
+    } else if $tool == 'termix-nu' {
+      upgrade-termix-nu
+    } else {
+      let setupTool = if $tool in ['nu', 'nushell'] { 'nu' } else { $tool }
+      setup-termix $setupTool --force=$force --in-place-update
+    }
+    exit $ECODE.SUCCESS
   }
   if $all {
     upgrade-termix-nu
@@ -39,7 +49,6 @@ export def upgrade-tool [
     exit $ECODE.SUCCESS
   }
 
-  let tool = $tool | str trim | str downcase
   if $tool not-in $VALID_TOOLS {
     print -e $'Unsupported tool upgrading, currently supported: (ansi p)($VALID_TOOLS | str join ,)(ansi rst)'
     exit $ECODE.INVALID_PARAMETER
@@ -55,4 +64,3 @@ export def upgrade-tool [
     upgrade-latest-tool $tool --no-aria2c --force=$force
   }
 }
-
