@@ -77,6 +77,7 @@ If auto-setup fails, configure manually:
 ```bash
 cd termix-nu
 cp .env-example .env
+cp .termixrc-example .termixrc
 # Edit .env: set TERMIX_DIR to absolute path of termix-nu
 
 # Create symlinks
@@ -129,8 +130,9 @@ TERMIX_DIR='/absolute/path/to/termix-nu'
 ## Platform Notes
 
 - **macOS/Linux**: Use `bash run/setup-termix.sh`
-- **Windows**: `run/setup-termix.sh` is not supported; install `nu`/`just` manually, then
-  configure `.env`, `.justfile`, and shell alias yourself
+- **Windows**: `run/setup-termix.sh` is not supported; install `nu` and `just` manually first,
+  and install `fzf` / `s5cmd` as needed, then configure `.env`, `.termixrc`, `.justfile`, and
+  shell alias yourself
 - **Docker**: `registry.erda.cloud/terp/termix:latest` (stable) or `termix:bleeding` (dev)
 
 ## Re-running Post-Setup
