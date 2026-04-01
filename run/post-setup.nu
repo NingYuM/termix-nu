@@ -54,7 +54,7 @@ def normalize-path [path: string] {
 }
 
 def ensure-termix-root [termix_dir: string] {
-  let required = [Justfile termix.toml .env-example]
+  let required = [Justfile termix.toml .env-example .termixrc-example]
   let missing = $required
     | where {|name| not (([$termix_dir $name] | path join) | path exists) }
 
@@ -115,6 +115,16 @@ def ensure-local-env [termix_dir: string] {
   let final = if ($updated | str ends-with $line_ending) { $updated } else { $updated + $line_ending }
   $final | save -f $env_file
   print $'Updated (ansi g)TERMIX_DIR(ansi rst) in (ansi g)($env_file)(ansi rst)'
+}
+
+def ensure-local-termixrc [termix_dir: string] {
+  let example_file = [$termix_dir '.termixrc-example'] | path join
+  let target_file = [$termix_dir '.termixrc'] | path join
+
+  if not ($target_file | path exists) {
+    cp $example_file $target_file
+    print $'Created (ansi g)($target_file)(ansi rst) from .termixrc-example'
+  }
 }
 
 def ensure-link [source: string, dest: string, termix_dir: string] {
@@ -269,6 +279,7 @@ export def run-post-setup [
 
   print 'Running termix-nu post setup ...'
   ensure-local-env $termix_dir
+  ensure-local-termixrc $termix_dir
   ensure-link ([$termix_dir '.env'] | path join) ([$home_dir '.env'] | path join) $termix_dir
   ensure-link ([$termix_dir 'Justfile'] | path join) ([$home_dir '.justfile'] | path join) $termix_dir
 

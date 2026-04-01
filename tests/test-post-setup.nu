@@ -11,6 +11,7 @@ use ../run/post-setup.nu [run-post-setup]
 def main [] {
   run_tests $env.PROCESS_PATH [
     { name: 'post-setup initializes env links and aliases', execute: { test-post-setup-initializes } }
+    { name: 'post-setup initializes .termixrc', execute: { test-post-setup-initializes-termixrc } }
     { name: 'post-setup keeps env idempotent', execute: { test-post-setup-env-idempotent } }
     { name: 'post-setup preserves env line endings', execute: { test-post-setup-preserves-env-line-endings } }
     { name: 'post-setup is idempotent for aliases', execute: { test-post-setup-idempotent } }
@@ -30,6 +31,7 @@ def make-fixture [] {
   'set dotenv-load := true\n' | save ([$termix_dir Justfile] | path join)
   'version = "0.0.0"\n' | save ([$termix_dir termix.toml] | path join)
   "TERMIX_DIR='/Users/terminus/termix-nu'\nDINGTALK_NOTIFY='on'\n" | save ([$termix_dir '.env-example'] | path join)
+  "[deploy]\nname = 'demo'\n" | save ([$termix_dir '.termixrc-example'] | path join)
 
   {
     root: $root
@@ -76,6 +78,7 @@ def test-post-setup-initializes [] {
     assert equal ($home_justfile | path type) 'symlink'
     assert equal (read-target $home_env) ($env_file | path expand)
     assert equal (read-target $home_justfile) (([$fixture.termix_dir Justfile] | path join) | path expand)
+    assert equal (([$fixture.termix_dir '.termixrc'] | path join) | path exists) true
 
     let bashrc = [ $fixture.home_dir '.bashrc' ] | path join
     let zshrc = [ $fixture.home_dir '.zshrc' ] | path join
@@ -88,6 +91,23 @@ def test-post-setup-initializes [] {
     assert str contains (open $fish_conf --raw) 'alias t "just --justfile ~/.justfile --dotenv-path ~/.env --working-directory ."'
     assert str contains (open $nu_conf --raw) 'alias t = just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .'
     assert str contains (open $profile --raw) "alias t='just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .'"
+  }
+}
+
+def test-post-setup-initializes-termixrc [] {
+  with-fixture {|fixture|
+    let target_file = [$fixture.termix_dir '.termixrc'] | path join
+    let example_file = [$fixture.termix_dir '.termixrc-example'] | path join
+    assert equal ($target_file | path exists) false
+
+    run-post-setup $fixture.termix_dir --home-dir $fixture.home_dir --shells 'bash'
+
+    assert equal ($target_file | path exists) true
+    assert equal (open $target_file --raw) (open $example_file --raw)
+
+    "[deploy]\nname = 'custom'\n" | save -f $target_file
+    run-post-setup $fixture.termix_dir --home-dir $fixture.home_dir --shells 'bash'
+    assert equal (open $target_file --raw) "[deploy]\nname = 'custom'\n"
   }
 }
 
