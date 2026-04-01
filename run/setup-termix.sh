@@ -2,6 +2,10 @@
 # Author: hustcer
 # Created: 2024/12/11 09:39:56
 # Description: Setup termix-nu on macOS or Linux.
+if [ -z "${BASH_VERSION:-}" ]; then
+  exec bash "$0" "$@"
+fi
+
 set -euo pipefail
 
 DEST_DIR='/usr/local/bin/'
