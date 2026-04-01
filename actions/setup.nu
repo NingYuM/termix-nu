@@ -167,6 +167,7 @@ def unzip-pkg [
   let replace = $in_place_update and (is-installed $bin)
   let dest = if $replace { (which $bin).path.0 | path dirname } else { $dest }
   print $'Installing or updating (ansi g)($bin) to ($dest) ...(ansi rst)'
+  if not ($dest | path exists) { mkdir $dest }
   validate-archive-entries $pkg
   let stage_dir = mktemp -d | str trim
   let extract_result = ^tar xzf $pkg -C $stage_dir | complete

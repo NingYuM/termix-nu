@@ -102,6 +102,7 @@ function install_or_update() {
   local platform=$2
   local version=$3
   echo "Installing or updating $bin for $platform ..."
+  mkdir -p "$DEST_DIR"
   local targetArch=$(get_target_arch "$platform")
 
   # Use wget or curl to get the latest release asset name for the specified platform
