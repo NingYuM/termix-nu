@@ -9,16 +9,26 @@ use utils.nu [run_tests]
 use ../run/post-setup.nu [run-post-setup]
 
 def main [] {
-  run_tests $env.PROCESS_PATH [
-    { name: 'post-setup initializes env links and aliases', execute: { test-post-setup-initializes } }
+  let common_tests = [
     { name: 'post-setup initializes .termixrc', execute: { test-post-setup-initializes-termixrc } }
     { name: 'post-setup keeps env idempotent', execute: { test-post-setup-env-idempotent } }
     { name: 'post-setup preserves env line endings', execute: { test-post-setup-preserves-env-line-endings } }
     { name: 'post-setup is idempotent for aliases', execute: { test-post-setup-idempotent } }
     { name: 'post-setup errors on mixed alias conflict', execute: { test-post-setup-errors-on-mixed-alias-conflict } }
     { name: 'post-setup preserves existing home files', execute: { test-post-setup-preserves-home-files } }
-    { name: 'post-setup errors on foreign symlink', execute: { test-post-setup-errors-on-foreign-symlink } }
   ]
+  let tests = if $nu.os-info.name == 'windows' {
+    print 'Skipping symlink-sensitive post-setup tests on Windows'
+    $common_tests
+  } else {
+    [
+      { name: 'post-setup initializes env links and aliases', execute: { test-post-setup-initializes } }
+      ...$common_tests
+      { name: 'post-setup errors on foreign symlink', execute: { test-post-setup-errors-on-foreign-symlink } }
+    ]
+  }
+
+  run_tests $env.PROCESS_PATH $tests
 }
 
 def make-fixture [] {
