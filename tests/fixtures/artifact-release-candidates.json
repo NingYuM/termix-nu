@@ -1,0 +1,21 @@
+{
+  "success": true,
+  "data": {
+    "list": [
+      {
+        "projectName": "TERP",
+        "projectId": 1000215,
+        "createdAt": "2026-04-01T10:00:00Z",
+        "version": "R.3.0.2506+20250721162706.810",
+        "releaseId": "rel-001"
+      },
+      {
+        "projectName": "TERP",
+        "projectId": 1000215,
+        "createdAt": "2026-03-30T10:00:00Z",
+        "version": "R.3.0.2505+20250720162706.810",
+        "releaseId": "rel-000"
+      }
+    ]
+  }
+}

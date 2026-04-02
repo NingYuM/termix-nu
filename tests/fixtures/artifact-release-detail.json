@@ -1,0 +1,32 @@
+{
+  "success": true,
+  "data": {
+    "releaseId": "rel-001",
+    "version": "R.3.0.2506+20250721162706.810",
+    "modes": {
+      "All": {
+        "applicationReleaseList": [
+          {
+            "applicationName": "Dors",
+            "releaseName": "dors-release",
+            "version": "1.0.0"
+          },
+          {
+            "applicationName": "IAM",
+            "releaseName": "iam-release",
+            "version": "1.1.0"
+          }
+        ]
+      },
+      "IAM": {
+        "applicationReleaseList": [
+          {
+            "applicationName": "IAM",
+            "releaseName": "iam-release",
+            "version": "1.1.0"
+          }
+        ]
+      }
+    }
+  }
+}
