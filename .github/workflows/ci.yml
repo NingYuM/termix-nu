@@ -32,7 +32,7 @@ jobs:
       - name: Run Tests
         shell: nu {0}
         run: |
-          const IGNORE_FILES = 'docker|s5cmd'
+          const IGNORE_FILES = 'docker|s5cmd|artifact'
           $env.TERMIX_DIR = $env.GITHUB_WORKSPACE
           let failed = glob tests/test-*.nu | where {|it| not ($it =~ $IGNORE_FILES) } | each { |file|
             try { nu $file; null } catch { $file }

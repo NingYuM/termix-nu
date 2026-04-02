@@ -27,16 +27,23 @@ def repo-root [] {
   ([$env.FILE_PWD '..'] | path join | path expand)
 }
 
+def fixture-home [] {
+  ([(repo-root) tests fixtures artifact-home] | path join)
+}
+
 def run-artifact [command: string] {
-  let root = repo-root
-  TERMIX_DIR=$root nu -c $'overlay use actions/artifact.nu; ($command)' | complete
+  let home = fixture-home
+  with-env { TERMIX_DIR: $home } {
+    nu -c $'overlay use actions/artifact.nu; ($command)' | complete
+  }
 }
 
 def run-artifact-with-fixtures [command: string] {
   let root = repo-root
+  let home = fixture-home
   let fixture_dir = [$root tests fixtures] | path join
   with-env {
-    TERMIX_DIR: $root,
+    TERMIX_DIR: $home,
     ARTIFACT_ENABLE_FIXTURES: true,
     ARTIFACT_FIXTURE_RELEASE_CANDIDATES: ([$fixture_dir artifact-release-candidates.json] | path join),
     ARTIFACT_FIXTURE_RELEASE_QUERY: ([$fixture_dir artifact-release-query.json] | path join),
