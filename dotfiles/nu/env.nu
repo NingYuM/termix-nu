@@ -34,6 +34,7 @@ $env.PATH = (
     | prepend $'($nu.home-dir)/.bun/bin'
     | prepend $'($nu.home-dir)/.moon/bin'
     | prepend $'($nu.home-dir)/.cargo/bin'
+    | prepend '/opt/homebrew/opt/rustup/bin'
     | append `/Applications/Ghostty.app/Contents/MacOS/`
     | append $'($nu.home-dir)/Library/Android/sdk/platform-tools'
 )
