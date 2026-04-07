@@ -38,6 +38,7 @@ const VALID_MODULES = [terp-mobile terp service service-mobile iam dors dors-mob
 const DEFAULT_ENDPOINT = 'https://oss-cn-hangzhou.aliyuncs.com'
 const ENDPOINT = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com'
 const ASSETS_URL = 'https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/fe-resources/assets/terp-assets.tar.gz'
+const SUPPORTED_OUTPUTS = [text json]
 
 # Don't validate module names by default
 const VALIDATE_MODULES = '0'
@@ -68,6 +69,178 @@ const TOOL_INSTALL_TIP = {
   s5cmd: 'Please install s5cmd by `brew install s5cmd` first'
 }
 # -----------------------------------------------------------------------------------------
+
+def is-agent-mode [] {
+  $env.TA_AGENT_MODE? | default false
+}
+
+def assume-yes [] {
+  $env.TA_ASSUME_YES? | default false
+}
+
+def is-json-output [] {
+  ($env.TA_OUTPUT_FORMAT? | default text) == json
+}
+
+def current-action [] {
+  $env.TA_CURRENT_ACTION? | default 'terp-assets'
+}
+
+def env-flag-enabled [name: string] {
+  let value = $env | get -o $name
+  if ($value | is-empty) { return false }
+  let kind = $value | describe
+  if $kind == bool { return $value }
+  let normalized = ($value | into string | str downcase | str trim)
+  $normalized in ['1' 'true' 'yes' 'on']
+}
+
+def read-fixture [env_key: string] {
+  if not (env-flag-enabled TERP_ASSETS_ENABLE_FIXTURES) { return null }
+  let path = $env | get -o $env_key
+  if ($path | is-empty) { return null }
+  open $path
+}
+
+def print-info [value: any] {
+  if (is-json-output) { print -e $value } else { print $value }
+}
+
+def print-info-n [value: any] {
+  if (is-json-output) { print -e -n $value } else { print -n $value }
+}
+
+def print-error [value: any] {
+  print -e $value
+}
+
+def print-divider [
+  width: int = 80,
+  --color(-c): string = grey66,
+] {
+  if not (is-json-output) { hr-line $width -c $color }
+}
+
+def print-table [value: any] {
+  print-info ($value | table -e)
+}
+
+def write-json [payload: record] {
+  print ($payload | to json -r)
+}
+
+def normalize-success-data [data: any] {
+  let data_type = $data | describe
+  let record_data = if ($data_type | str starts-with 'record') { $data } else { { raw: $data } }
+  {
+    mountpoint: ($record_data.mountpoint? | default null)
+    latestUrl: ($record_data.latestUrl? | default null)
+    modules: ($record_data.modules? | default null)
+    target: ($record_data.target? | default null)
+    targets: ($record_data.targets? | default null)
+    destStore: ($record_data.destStore? | default null)
+    destination: ($record_data.destination? | default null)
+    revision: ($record_data.revision? | default null)
+    raw: $data
+  }
+}
+
+def emit-success [
+  action: string,
+  data?: any,
+  --warnings: list<any> = [],
+] {
+  let payload = {
+    success: true
+    action: $action
+    data: (normalize-success-data ($data | default null))
+    warnings: $warnings
+  }
+  if (is-json-output) { write-json $payload }
+  $payload
+}
+
+def fail-assets [
+  exit_code: int,
+  error_code: string,
+  message: string,
+  --details: record = {},
+] {
+  let action = current-action
+  if (is-json-output) {
+    write-json {
+      success: false
+      action: $action
+      error: {
+        code: $error_code
+        message: $message
+        details: $details
+      }
+    }
+  } else {
+    print-error $message
+  }
+  exit $exit_code
+}
+
+def cancel-assets [
+  message: string,
+  --details: record = {},
+] {
+  let action = current-action
+  if (is-json-output) {
+    write-json {
+      success: true
+      action: $action
+      cancelled: true
+      message: $message
+      details: $details
+    }
+  } else {
+    print-info $message
+  }
+  exit $ECODE.SUCCESS
+}
+
+def ensure-interactive [
+  feature: string,
+  prompt: string,
+  --details: record = {},
+] {
+  if (is-agent-mode) {
+    fail-assets $ECODE.INVALID_PARAMETER INTERACTION_REQUIRED $'Interactive input is required for ($feature) in the current command.' --details ({
+      feature: $feature
+      prompt: $prompt
+      ...$details
+    })
+  }
+}
+
+def ensure-mutation-approved [action: string] {
+  if (is-agent-mode) and not (assume-yes) {
+    fail-assets $ECODE.INVALID_PARAMETER MUTATION_NOT_CONFIRMED $'Action ($action) mutates remote state. Re-run with --yes in agent mode.' --details {
+      action: $action
+      required: ['yes']
+    }
+  }
+}
+
+def check-package-tools [] {
+  if not (is-installed package-tools) {
+    fail-assets $ECODE.MISSING_BINARY MISSING_BINARY 'Please install package-tools first.' --details {
+      command: 'npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io'
+    }
+  }
+  let ver = package-tools -v
+  let minPkgToolsVer = get-conf minPkgToolVer
+  let compVer = compare-ver $ver $minPkgToolsVer
+  if $compVer < 0 {
+    fail-assets $ECODE.CONDITION_NOT_SATISFIED PACKAGE_TOOLS_TOO_OLD $'Only package-tools ($minPkgToolsVer) or above is supported.' --details {
+      current: $ver
+      minimum: $minPkgToolsVer
+    }
+  }
+}
 
 # ***************************************************************************************
 # ------------------------------------ Main Commands ------------------------------------
@@ -114,6 +287,12 @@ const TOOL_INSTALL_TIP = {
 @example '从 OSS 下载所有模块静态资源到本地临时目录' {
   t ta download all -f dev
 } --result '这个命令你一般不会用到，资源同步的时候会自动调用这个命令'
+@example '以 agent 模式读取 latest.json 并输出结构化 JSON' {
+  t ta detect -f dev --agent
+} --result '不进入交互流程，输出稳定 JSON 协议，适合给 AI/脚本消费'
+@example '以 agent 模式显式确认后同步模块' {
+  t ta transfer base,service --from dev --to terp-dev --dest-store oss --agent --yes
+} --result '不会出现确认提示，失败时返回明确错误码与 JSON 错误对象'
 export def 'terp assets' [
   action: string@$VALID_ACTIONS,  # Available actions: init, download, transfer, detect and revert
   modules?: string,               # Available values: base/base-mobile/terp/terp-mobile/iam/charts/service/all. Multiple modules separated by `,`
@@ -122,34 +301,86 @@ export def 'terp assets' [
   --quiet(-q),                    # Show less info
   --dest-store(-d): string,       # Destination store, should be configured in .termixrc
   --stat(-s),                     # Show static assets statistics info in detect action
+  --agent,                        # Agent-friendly mode: no prompts/fzf, structured failure semantics
+  --yes(-y),                      # Skip confirmation prompts in agent mode or text mode
+  --output(-o): string,           # Output format: `text` or `json`, defaults to `json` in agent mode
+  --revision(-r): string,         # Explicit revision for `revert` action in agent mode
 ] {
-  cd $env.TERMIX_DIR
-  # Handle revert action
+  cd ($env.TERMIX_DIR? | default (pwd))
+  let finalOutput = if ($output | is-empty) {
+    if $agent { 'json' } else { 'text' }
+  } else { $output }
+  if $finalOutput not-in $SUPPORTED_OUTPUTS {
+    fail-assets $ECODE.INVALID_PARAMETER INVALID_OUTPUT $'Unsupported output format: ($finalOutput), supported formats are: ($SUPPORTED_OUTPUTS | str join ", ")' --details {
+      output: $finalOutput
+      supported: $SUPPORTED_OUTPUTS
+    }
+  }
+  load-env {
+    TA_AGENT_MODE: $agent
+    TA_ASSUME_YES: $yes
+    TA_OUTPUT_FORMAT: $finalOutput
+    TA_CURRENT_ACTION: $action
+  }
+
+  mut result = null
   if $action == 'revert' {
     if ($modules | is-empty) {
-      print $'Please specify the frontend (ansi p)module(ansi rst) to revert, e.g. `(ansi p)t ta revert base(ansi rst)`'
+      fail-assets $ECODE.INVALID_PARAMETER MISSING_MODULE $'Please specify the frontend module to revert, e.g. `t ta revert base`.' --details {
+        required: ['modules']
+      }
     }
     if ($to | is-empty) {
-      print $'Please specify the destination mount point to revert by `(ansi p)-t(ansi rst)` or `(ansi p)--to(ansi rst)` option'
+      fail-assets $ECODE.INVALID_PARAMETER MISSING_TARGET 'Please specify the destination mount point to revert by `-t` or `--to`.' --details {
+        required: ['to']
+      }
     }
-    if ($dest_store | is-empty) { print $'Please specify the destination store to revert the frontend module by `(ansi p)-d(ansi rst)` option' }
-    if ([$modules $to $dest_store] | any { $in | is-empty }) { exit $ECODE.INVALID_PARAMETER }
-    revert-module $modules $to $dest_store; return
+    if ($dest_store | is-empty) {
+      fail-assets $ECODE.INVALID_PARAMETER MISSING_DEST_STORE 'Please specify the destination store to revert the frontend module by `-d` or `--dest-store`.' --details {
+        required: ['dest-store']
+      }
+    }
+    $result = revert-module $modules $to $dest_store --revision $revision
+    if (is-json-output) { emit-success $action $result | ignore; return }
+    $result | ignore
+    return
   }
 
-  if ($from | default '') =~ ',' and ($action == 'detect') { detect-multiple-assets $from --stat=$stat; return }
-  pre-check $action --to $to --dest-store $dest_store
+  if ($from | default '') =~ ',' and ($action == 'detect') {
+    $result = detect-multiple-assets $from --stat=$stat
+    if (is-json-output) { emit-success $action $result | ignore; return }
+    $result | ignore
+    return
+  }
 
-  if $action == 'init' { init-assets --dest-store $dest_store --quiet=$quiet; return }
+  if $action == 'init' {
+    pre-check $action --to $to --dest-store $dest_store
+    ensure-mutation-approved $action
+    $result = init-assets --dest-store $dest_store --quiet=$quiet
+    if (is-json-output) { emit-success $action $result | ignore; return }
+    $result | ignore
+    return
+  }
+
   let latestMeta = get-latest-meta $from
-  let modules = get-modules $modules --latest-meta $latestMeta --action $action
-  confirm-action $action $modules --to $to --dest-store $dest_store
-
-  match $action {
-    'detect' => { detect $latestMeta --stat=$stat },
-    'download' => { download $modules $latestMeta $to --quiet=$quiet },
-    'transfer' => { transfer $modules $latestMeta $to --dest-store $dest_store --quiet=$quiet },
+  if $action == 'detect' {
+    $result = detect $latestMeta --stat=$stat
+    if (is-json-output) { emit-success $action $result | ignore; return }
+    $result | ignore
+    return
   }
+
+  let selectedModules = get-modules $modules --latest-meta $latestMeta --action $action
+  if $action == 'transfer' { ensure-mutation-approved $action }
+  pre-check $action --to $to --dest-store $dest_store
+  confirm-action $action $selectedModules --to $to --dest-store $dest_store
+
+  $result = match $action {
+    'download' => { download $selectedModules $latestMeta $to --quiet=$quiet }
+    'transfer' => { transfer $selectedModules $latestMeta $to --dest-store $dest_store --quiet=$quiet }
+  }
+  if (is-json-output) { emit-success $action $result | ignore; return }
+  $result | ignore
 }
 
 # Preview the module revision metadata in fzf preview window
@@ -162,15 +393,16 @@ export def fzf-preview [revision: string, localPath: string, remoteURI: string, 
   if not ($parent | path exists) { mkdir $parent }
   let result = do-storage-cp $remoteFile $dest
   if $result.exit_code != 0 {
-    print -e $'Failed to copy namespace.json for preview'
-    print $result.stderr
+    print-error $'Failed to copy namespace.json for preview'
+    print-info $result.stderr
     exit $result.exit_code
   }
 
   let mountPoint = $remoteURI | split row '/' | last
   let module = $revision | split row '-' | drop | str join '-'
 
-  print $'You are going to revert (ansi g)($module)(ansi rst) module at mount point (ansi g)($mountPoint)(ansi rst)'; hr-line 66
+  print-info $'You are going to revert (ansi g)($module)(ansi rst) module at mount point (ansi g)($mountPoint)(ansi rst)'
+  print-divider 66
   open $dest | rename -c { namespace: 'module' }
     | merge { revision: $revision, remoteURI: $remoteURI }
     | select module revision remoteURI metadata
@@ -190,9 +422,10 @@ export def fzf-preview [revision: string, localPath: string, remoteURI: string, 
         | group-by
         | items {|k, v| { ext: $k, count: ($v | length) } }
         | sort-by -r count
-      print $'(char nl)(ansi g)Static Assets:(ansi rst)'; hr-line 30
+      print-info $'(char nl)(ansi g)Static Assets:(ansi rst)'
+      print-divider 30
       $byExt | table -t psql | print
-      print $'(char nl)(ansi g)Total: ($assets | length)(ansi rst)'
+      print-info $'(char nl)(ansi g)Total: ($assets | length)(ansi rst)'
     }
   }
 }
@@ -205,18 +438,31 @@ def main [revision: string, localPath: string, remoteURI: string, destStore: str
 # ------------------------------------- Core Logic --------------------------------------
 # ***************************************************************************************
 
+def format-meta-time [value: any, fmt: string] {
+  if ($value | is-empty) { return '-' }
+  try { $value | into datetime | format date $fmt } catch { $value | into string }
+}
+
 # Detect multiple static assets and display the metadata
 def detect-multiple-assets [from: string, --stat(-s)] {
   let mountPoints = $from | split row , | compact -e
-  for mp in $mountPoints {
-    let latestMeta = get-latest-meta $mp
-    detect $latestMeta --stat=$stat; print -n (char nl)
-  }
+  $mountPoints | enumerate | each {|item|
+      let latestMeta = get-latest-meta $item.item
+      let summary = detect $latestMeta --stat=$stat
+      if (not (is-json-output)) and ($item.index < (($mountPoints | length) - 1)) {
+        print-info-n (char nl)
+      }
+      $summary
+    }
 }
 
 # Revert frontend module to a selected version, s5cmd required
-def --env revert-module [module: string, to: string, destStore: string] {
-  check-git-user
+def --env revert-module [
+  module: string,
+  to: string,
+  destStore: string,
+  --revision(-r): string,
+] {
   let ossConf = get-dest-oss $destStore
   revert-precheck $module $to $ossConf
 
@@ -232,11 +478,12 @@ def --env revert-module [module: string, to: string, destStore: string] {
   if not ($localPath | path exists) { mkdir $localPath }
 
   # Select revision
-  let revision = select-revert-revision $module $remoteURI $localPath $destStore $ossConf
-  if ($revision | is-empty) { print $'No revision selected, bye...'; exit $ECODE.SUCCESS }
+  let selectedRevision = select-revert-revision $module $remoteURI $localPath $destStore --revision $revision
 
   # Confirm and execute revert
-  execute-revert $module $target $destStore $revision $localPath $remoteURI $ossConf
+  ensure-mutation-approved revert
+  check-git-user
+  execute-revert $module $target $destStore $selectedRevision $localPath $remoteURI $ossConf
 }
 
 # Download static assets from OSS and sync to destination store by s5cmd
@@ -257,8 +504,10 @@ def init-assets [
   let required = [OSS_AK OSS_SK OSS_BUCKET]
   let missing = $required | where {|it| $ossConf | get -o $it | is-empty }
   if ($missing | is-not-empty) {
-    print -e $'The following required config is missing: (ansi r)($missing | str join ", ")(ansi rst)'
-    exit $ECODE.INVALID_PARAMETER
+    fail-assets $ECODE.INVALID_PARAMETER MISSING_STORE_CONFIG $'The following required config is missing: ($missing | str join ", ").' --details {
+      missing: $missing
+      destStore: $dest_store
+    }
   }
 
   # Detect addressing style before any S3 operations
@@ -275,18 +524,22 @@ def init-assets [
   } else {
     detect-addressing-style $s3_dest  # Auto-detect for other storage types
   }
-  if ($style | is-not-empty) { print $'(ansi grey66)Using virtual-hosted-style for S3 access(ansi rst)' }
+  if ($style | is-not-empty) { print-info $'(ansi grey66)Using virtual-hosted-style for S3 access(ansi rst)' }
 
-  print $'Downloading assets from (ansi g)($ASSETS_URL)(ansi rst)...'
+  print-info $'Downloading assets from (ansi g)($ASSETS_URL)(ansi rst)...'
   http get $ASSETS_URL | save -rpf $'($tmp)/terp-assets.tar.gz'
   cd $tmp; tar -xzf terp-assets.tar.gz
-  print $'Assets downloaded successfully to ($tmp)!'
+  print-info $'Assets downloaded successfully to ($tmp)!'
 
   # Initial upload if bucket is empty
   let lsCheck = run-s5cmd $style '--json' ls $s3_dest
   if ($lsCheck.stderr | from json | get -o error | default '') =~ 'no object' {
-    with-progress $'Uploading assets to (ansi p)($dest_store)(ansi rst)...' {
-      sync-assets $style $ASSETS $s3_dest 'upload'
+    if (is-json-output) {
+      sync-assets $style $ASSETS $s3_dest upload
+    } else {
+      with-progress $'Uploading assets to (ansi p)($dest_store)(ansi rst)...' {
+        sync-assets $style $ASSETS $s3_dest upload
+      }
     }
   }
 
@@ -297,42 +550,66 @@ def init-assets [
   # Check for errors in dry-run
   let dry_run_errors = $dry_run_results | where exit_code != 0
   if ($dry_run_errors | is-not-empty) {
-    print -e $'(ansi r)Failed to check assets status:(ansi rst)'
-    $dry_run_errors | each {|e| print -e $e.stderr }
-    exit $ECODE.COMMAND_FAILED
+    if not (is-json-output) {
+      print-error $'(ansi r)Failed to check assets status:(ansi rst)'
+      $dry_run_errors | each {|e| print-error $e.stderr }
+    }
+    fail-assets $ECODE.COMMAND_FAILED INIT_CHECK_FAILED 'Failed to check terp-assets sync status.' --details {
+      stderr: ($dry_run_errors | get stderr)
+      destStore: $dest_store
+      s3Dest: $s3_dest
+    }
   }
 
   let dry_run = $dry_run_results | get stdout | str join "\n" | str trim
 
   if ($dry_run | is-empty) {
-    print $'(ansi g)Assets have already been uploaded to (ansi p)($dest_store)(ansi rst) (ansi g)successfully!(ansi rst)'
-    show-terp-assets-stat $style $s3_dest
-    exit $ECODE.SUCCESS
+    print-info $'(ansi g)Assets have already been uploaded to (ansi p)($dest_store)(ansi rst) (ansi g)successfully!(ansi rst)'
+    let stats = show-terp-assets-stat $style $s3_dest
+    return {
+      destStore: $dest_store
+      target: $s3_dest
+      pendingFiles: 0
+      changed: false
+      stats: $stats
+    }
   }
 
   # Show preview (max 7 lines)
   let lines = $dry_run | lines
   let preview = if ($lines | length) > 7 { $lines | take 7 | append '...' } else { $lines } | str join "\n"
-  print $'Actions to be performed:(char nl)(ansi g)($preview)(ansi rst)'
-  print $'Total files to be synced: (ansi g)($lines | length)(ansi rst)'
+  print-info $'Actions to be performed:(char nl)(ansi g)($preview)(ansi rst)'
+  print-info $'Total files to be synced: (ansi g)($lines | length)(ansi rst)'
 
   # Confirm and sync
-  let confirm = input $'Are you sure to sync the assets? (ansi g)[y/n](ansi rst) '
-  if ($confirm | str upcase) != 'Y' { exit $ECODE.SUCCESS }
-  print $'Syncing assets...'
-  sync-assets $style $ASSETS $s3_dest 'sync'
-  print $'Assets have been synced successfully!'
-  show-terp-assets-stat $style $s3_dest
+  if not (assume-yes) {
+    let confirm = input $'Are you sure to sync the assets? (ansi g)[y/n](ansi rst) '
+    if ($confirm | str upcase) != 'Y' {
+      cancel-assets 'Assets syncing cancelled, Bye...' --details { destStore: $dest_store, s3Dest: $s3_dest }
+    }
+  }
+  print-info 'Syncing assets...'
+  sync-assets $style $ASSETS $s3_dest sync
+  print-info 'Assets have been synced successfully!'
+  let stats = show-terp-assets-stat $style $s3_dest
+  {
+    destStore: $dest_store
+    target: $s3_dest
+    pendingFiles: ($lines | length)
+    changed: true
+    stats: $stats
+  }
 }
 
 # Show terp-assets statistics from cloud storage
 def show-terp-assets-stat [style: list, s3_dest: string] {
-  print $'(char nl)(ansi g)Terp Assets Statistics:(ansi rst)'; hr-line 60
+  print-info $'(char nl)(ansi g)Terp Assets Statistics:(ansi rst)'
+  print-divider 60
   # s5cmd uses glob pattern for recursive listing, not --recursive flag
   let lsResult = run-s5cmd $style ls $'($s3_dest)/**'
   if $lsResult.exit_code != 0 {
-    print -e $'Failed to list assets: ($lsResult.stderr)'
-    return
+    print-error $'Failed to list assets: ($lsResult.stderr)'
+    return { total: null, byExtension: [], byDir: [] }
   }
   # Parse s5cmd ls output: each line is like "2024/01/01 12:00:00  12345  s3://bucket/path/file.js"
   let files = $lsResult.stdout | str trim | lines
@@ -342,7 +619,10 @@ def show-terp-assets-stat [style: list, s3_dest: string] {
         { path: $parts, ext: ($parts | path parse | get -o extension | default 'other' | str downcase) }
       }
 
-  if ($files | is-empty) { print 'No assets found in cloud storage'; return }
+  if ($files | is-empty) {
+    print-info 'No assets found in cloud storage'
+    return { total: 0, byExtension: [], byDir: [] }
+  }
 
   # Group by top-level directory (js/, fonts/, monaco-editor/)
   let byDir = $files | each {|f|
@@ -367,9 +647,11 @@ def show-terp-assets-stat [style: list, s3_dest: string] {
   # Summary
   let grandTotal = $dirStats | each {|s| $s.total } | math sum
   let allExts = $files | get ext | group-by | items {|k, v| { ext: $k, count: ($v | length) } } | sort-by -r count
-  print $'(char nl)(ansi g)Summary:(ansi rst)'; hr-line 40
-  $allExts | table -t psql | print
-  print $'(char nl)(ansi g)Total files in terp-assets: ($grandTotal)(ansi rst)'
+  print-info $'(char nl)(ansi g)Summary:(ansi rst)'
+  print-divider 40
+  $allExts | table -t psql | do { |it| print-info $it }
+  print-info $'(char nl)(ansi g)Total files in terp-assets: ($grandTotal)(ansi rst)'
+  { total: $grandTotal, byExtension: $allExts, byDir: $dirStats }
 }
 
 # Download static assets from OSS to specified directory
@@ -391,13 +673,13 @@ def download [
   let entryConf = open $entry
 
   # Download assets for each end point
-  $modules | each { |e|
+  let downloads = $modules | each { |e|
     let assetsDir = $'($dest)/assets-($mount)-($e)'
     # 每次下载前先清空目录
     rm -rf $assetsDir; mkdir $'($assetsDir)/assets'
     let prefix = $entryConf | get $e | get prefix
     let dirname = $entryConf | get $e | get dirname
-    print $'Download assets from (ansi p)($mount)/($JSON_ENTRY)(ansi rst) to (ansi p)($dest)(ansi rst) for (ansi pb)($e)(ansi rst)...'
+    print-info $'Download assets from (ansi p)($mount)/($JSON_ENTRY)(ansi rst) to (ansi p)($dest)(ansi rst) for (ansi pb)($e)(ansi rst)...'
 
     # Save manifest.json for subsequent upload via package-tools
     http get -r $'($assetUrlPrefix)/($prefix)/($dirname)/manifest.json'
@@ -413,15 +695,29 @@ def download [
       if $quiet {
         http get -r $url | save -rfp $'($assetsDir)/($a)'
       } else {
-        print $'Downloading ($url | ansi link --text $assetPath)'
+        print-info $'Downloading ($url | ansi link --text $assetPath)'
         http get -r $url | save -rf $'($assetsDir)/($a)'
       }
     }
 
-    print $'(ansi p)Assets for ($e) have been downloaded successfully!(ansi rst)'
-    if not $quiet { hr-line }
+    print-info $'(ansi p)Assets for ($e) have been downloaded successfully!(ansi rst)'
+    if not $quiet { print-divider }
+    {
+      module: $e
+      directory: $assetsDir
+      manifest: $'($assetsDir)/manifest.json'
+      assetCount: ($assets | length)
+    }
   }
-  print "All downloads finished! \n"
+  print-info "All downloads finished! \n"
+  {
+    mountpoint: $mount
+    latestUrl: $fromUrl
+    destination: $dest
+    entry: $entry
+    modules: $modules
+    downloads: $downloads
+  }
 }
 
 # Transfer static assets from OSS to OSS or Minio's other path
@@ -433,12 +729,13 @@ def transfer [
   --dest-store(-d): string,   # Destination store, should be configured in .termixrc
 ] {
   check-git-user
+  check-package-tools
   let tmp = $'(get-tmp-path)/terp'
   if (not ($tmp | path exists)) { mkdir $tmp }
 
   let startTime = date now
-  download $modules $latestMeta $tmp --quiet=$quiet
-  print $'Start to transfer assets from (ansi p)($latestMeta.from) to ($dest_store) ($to)(ansi rst)'
+  let downloadSummary = download $modules $latestMeta $tmp --quiet=$quiet
+  print-info $'Start to transfer assets from (ansi p)($latestMeta.from) to ($dest_store) ($to)(ansi rst)'
 
   let ossConf = get-dest-oss $dest_store
   let type = $ossConf.TYPE? | default 'aliyun'
@@ -451,69 +748,113 @@ def transfer [
   let extra = if ($options | compact -e | is-empty) { [] } else { [-o ...$options] }
 
   let mount = $latestMeta.mountpoint
+  let targets = ($to | split row ',' | compact -e)
   for e in $modules {
     cd $'($tmp)/assets-($mount)-($e)'
     # Update namespace.json add transfer info
     update-transfer-meta $latestMeta
-    for t in ($to | split row ',' | compact -e) {
-      print $'Uploading (ansi p)($e)@($mount) to (ansi p)($t)(ansi rst) ...'
-      if ($type | str trim | str downcase) in [minio, ifly] {
-        package-tools s3 -c $ak $sk $bucket $endpoint $region -d . -m $t -s path ...$extra
+    for t in $targets {
+      print-info $'Uploading (ansi p)($e)@($mount) to (ansi p)($t)(ansi rst) ...'
+      let upload = if ($type | str trim | str downcase) in [minio, ifly] {
+        ^package-tools s3 -c $ak $sk $bucket $endpoint $region -d . -m $t -s path ...$extra | complete
       } else {
-        package-tools s3 -c $ak $sk $bucket $endpoint $region -d . -m $t ...$extra
+        ^package-tools s3 -c $ak $sk $bucket $endpoint $region -d . -m $t ...$extra | complete
+      }
+      if $upload.exit_code != 0 {
+        fail-assets $ECODE.COMMAND_FAILED TRANSFER_FAILED $'Failed to upload module ($e) to target ($t).' --details {
+          module: $e
+          target: $t
+          destStore: $dest_store
+          stderr: $upload.stderr
+        }
       }
     }
-    print $'Assets (ansi p)($e)(ansi rst) have been transferred successfully!'
+    print-info $'Assets (ansi p)($e)(ansi rst) have been transferred successfully!'
   }
 
   let endTime = date now
-  print "All transfer finished! \n"
-  print $"(ansi g)Total Time Cost: ($endTime - $startTime)(ansi rst)\n"
+  print-info "All transfer finished! \n"
+  print-info $"(ansi g)Total Time Cost: ($endTime - $startTime)(ansi rst)\n"
 
-  print $"You can visit the latest.json from: \n"
-  for t in ($to | split row ',' | compact -e) {
-    let destUrl = match $type {
-      'ifly' => $'($endpoint)/($bucket)/fe-resources/($t)/latest.json',
-      'minio' => $'($endpoint)/($bucket)/fe-resources/($t)/latest.json',
-      'volc' => $'https://($bucket).($region).volces.com/fe-resources/($t)/latest.json',
-      'aliyun' => $'https://($bucket).($region).aliyuncs.com/fe-resources/($t)/latest.json',
+  let latestUrls = $targets | each {|t|
+      match $type {
+        'ifly' => $'($endpoint)/($bucket)/fe-resources/($t)/latest.json'
+        'minio' => $'($endpoint)/($bucket)/fe-resources/($t)/latest.json'
+        'volc' => $'https://($bucket).($region).volces.com/fe-resources/($t)/latest.json'
+        'aliyun' => $'https://($bucket).($region).aliyuncs.com/fe-resources/($t)/latest.json'
+      }
     }
-    print $"(ansi g)($destUrl)(ansi rst)"
+  print-info $"You can visit the latest.json from: \n"
+  $latestUrls | each {|url| print-info $"(ansi g)($url)(ansi rst)" }
+  {
+    mountpoint: $mount
+    modules: $modules
+    destStore: $dest_store
+    targets: $targets
+    latestUrls: $latestUrls
+    elapsed: ($endTime - $startTime)
+    download: $downloadSummary
   }
 }
 
 # Display front end module meta data
 def detect [latestMeta: record, --stat(-s)] {
   const TIME_FMT = '%m/%d %H:%M:%S'
-  print $'Latest metadata of (ansi g)($latestMeta.latestUrl)(ansi rst)'; hr-line 108
   let modules = $latestMeta.latest
     | values
     | select namespace deprecated? metadata?
     | upsert branch {|it| $it.metadata?.branch? | default '-' }
     | upsert SHA {|it| $it.metadata?.commitSha? | default '-' }
-    | upsert buildAt {|it| if ($it.metadata?.buildAt? | is-empty) { '-' } else { $it.metadata.buildAt | format date $TIME_FMT } }
+    | upsert buildAt {|it| format-meta-time $it.metadata?.buildAt? $TIME_FMT }
     | upsert syncBy {|it| $it.metadata?.syncBy? | show }
     | upsert syncFrom {|it| $it.metadata?.syncFrom? | default '-' }
-    | upsert syncAt {|it| if ($it.metadata?.syncAt? | is-empty) { '-' } else { $it.metadata.syncAt | format date $TIME_FMT } }
+    | upsert syncAt {|it| format-meta-time $it.metadata?.syncAt? $TIME_FMT }
     | reject -o metadata
     | sort-by namespace
     | rename module
 
+  let reverted = $latestMeta.latest
+    | values
+    | where {|it| $it.metadata?.revertAt? | is-not-empty }
+    | select namespace metadata.revertBy metadata.revertAt metadata.revertFrom? metadata.revertTo?
+    | rename module revertBy revertAt revertFrom revertTo
+    | sort-by module
+    | upsert revertBy {|it| $it.revertBy? | show }
+    | upsert revertAt {|it| format-meta-time $it.revertAt? $TIME_FMT }
+  mut summary = {
+    latestUrl: $latestMeta.latestUrl
+    mountpoint: $latestMeta.mountpoint
+    modules: $modules
+    reverted: $reverted
+    counts: {
+      total: ($modules | length)
+      enabled: ($modules | where deprecated? != true | length)
+      deprecated: ($modules | where deprecated? | length)
+    }
+    stats: null
+  }
+
+  print-info $'Latest metadata of (ansi g)($latestMeta.latestUrl)(ansi rst)'
   if ($modules | get deprecated? | compact | length) > 0 {
-    $modules | print; hr-line -c grey30 118
+    print-divider 108
+    print-table $modules
+    print-divider 118 --color grey30
   } else {
-    $modules | reject deprecated | print; hr-line -c grey30 108
+    print-divider 108
+    print-table ($modules | reject deprecated)
+    print-divider 108 --color grey30
   }
-  print $'Total modules: (ansi g)($modules | length)(ansi rst), Enabled: (ansi g)($modules | where deprecated? != true | length)(ansi rst), Deprecated modules: (ansi r)($modules | where deprecated? | length)(ansi rst)'
-  let reverted = $latestMeta.latest | values | where {|it| $it.metadata?.revertAt? | is-not-empty }
+  print-info $'Total modules: (ansi g)($summary.counts.total)(ansi rst), Enabled: (ansi g)($summary.counts.enabled)(ansi rst), Deprecated modules: (ansi r)($summary.counts.deprecated)(ansi rst)'
   if ($reverted | length) > 0 {
-    print $'(char nl)Module Revert Found:(char nl)'
-    $reverted | select namespace metadata.revertBy metadata.revertAt metadata.revertFrom? metadata.revertTo?
-      | rename module revertBy revertAt revertFrom revertTo | sort-by module
-      | upsert revertBy {|it| $it.revertBy? | show } | print; print -n (char nl)
+    print-info $'(char nl)Module Revert Found:(char nl)'
+    print-table $reverted
+    print-info-n (char nl)
   }
-  # Show static assets statistics if --stat is provided
-  if $stat { show-assets-stat $latestMeta }
+  if $stat {
+    let statsData = show-assets-stat $latestMeta
+    $summary = ($summary | upsert stats $statsData)
+  }
+  $summary
 }
 
 # ***************************************************************************************
@@ -524,33 +865,53 @@ def detect [latestMeta: record, --stat(-s)] {
 def revert-precheck [module: string, to: string, ossConf: record] {
   let type = $ossConf.TYPE? | default 'aliyun' | str downcase
   if $type not-in $STORE_TYPES {
-    print -e $'The storage type (ansi r)($type)(ansi rst) is invalid for assets reverting. Supported types: (ansi g)($STORE_TYPES | str join ", ")(ansi rst)'
-    exit $ECODE.INVALID_PARAMETER
+    fail-assets $ECODE.INVALID_PARAMETER INVALID_STORE_TYPE $'The storage type ($type) is invalid for assets reverting.' --details {
+      type: $type
+      supported: $STORE_TYPES
+    }
   }
 
-  if $module =~ ',' { print $'Revert frontend module is not supported for multiple modules yet'; exit $ECODE.INVALID_PARAMETER }
+  if $module =~ ',' {
+    fail-assets $ECODE.INVALID_PARAMETER MULTI_MODULE_REVERT_UNSUPPORTED 'Revert frontend module is not supported for multiple modules yet.' --details {
+      module: $module
+    }
+  }
 
-  let requiredTools = [fzf s5cmd]
+  let requiredTools = if (is-agent-mode) { ['s5cmd'] } else { ['fzf' 's5cmd'] }
   let missingTips = $requiredTools | reduce --fold [] {|it, acc|
       if not (is-installed $it) { $acc | append ($TOOL_INSTALL_TIP | get $it) } else { $acc }
     }
   if ($missingTips | length) > 0 {
-    print $'The following tools are required for reverting frontend module:'; hr-line
-    $missingTips | wrap Tips | table -t psql | print
-    print -n (char nl); exit $ECODE.MISSING_BINARY
+    if not (is-json-output) {
+      print-info 'The following tools are required for reverting frontend module:'
+      print-divider
+      $missingTips | wrap Tips | table -t psql | do { |it| print-info $it }
+      print-info-n (char nl)
+    }
+    fail-assets $ECODE.MISSING_BINARY MISSING_BINARY 'Required tools for reverting frontend module are missing.' --details {
+      tools: $requiredTools
+      tips: $missingTips
+    }
   }
 }
 
 # Select the revision to revert
-def select-revert-revision [module: string, remoteURI: string, localPath: string, destStore: string, ossConf: record] {
+def list-revert-revisions [module: string, remoteURI: string] {
+  let fixture = read-fixture TERP_ASSETS_FIXTURE_REVISIONS
+  if ($fixture | is-not-empty) {
+    return ($fixture | each {|it| $it | into string } | uniq | sort -r)
+  }
   # Use s5cmd to list namespace.json under each revision directory, then extract revision names
   let pattern = $'($remoteURI)/($module)-*/namespace.json'
   let lines = s5cmd-auto ls $pattern
   if $lines.exit_code != 0 {
-    print -e $'Failed to list revisions via s5cmd:'
-    print $lines.stderr; exit $lines.exit_code
+    fail-assets $lines.exit_code REVERT_REVISION_LIST_FAILED 'Failed to list revisions via s5cmd.' --details {
+      module: $module
+      remoteURI: $remoteURI
+      stderr: $lines.stderr
+    }
   }
-  let moduleRevisions = $lines.stdout | str trim | lines
+  $lines.stdout | str trim | lines
     | where {|l| $l =~ $'($module)-\d' }
     | each {|l|
         let path = ($l | split row ' ' | last)
@@ -558,13 +919,51 @@ def select-revert-revision [module: string, remoteURI: string, localPath: string
         $rel | split row '/' | first
       }
     | uniq
+    | sort -r
+}
 
+def select-revert-revision [
+  module: string,
+  remoteURI: string,
+  localPath: string,
+  destStore: string,
+  --revision(-r): string,
+] {
+  let moduleRevisions = list-revert-revisions $module $remoteURI
+  if ($moduleRevisions | is-empty) {
+    fail-assets $ECODE.CONDITION_NOT_SATISFIED NO_REVISIONS_FOUND $'No revisions were found for module ($module).' --details {
+      module: $module
+      remoteURI: $remoteURI
+    }
+  }
+  if ($revision | is-not-empty) {
+    if $revision not-in $moduleRevisions {
+      fail-assets $ECODE.INVALID_PARAMETER INVALID_REVISION $'Revision ($revision) does not exist for module ($module).' --details {
+        module: $module
+        revision: $revision
+        availableRevisions: $moduleRevisions
+      }
+    }
+    return $revision
+  }
+  ensure-interactive 'revert-revision' 'Please choose one revision from the list.' --details {
+    module: $module
+    availableRevisions: $moduleRevisions
+    required: ['revision']
+  }
   let title = $'Select the revision to apply:'
   let PREVIEW_CMD = $"nu actions/terp-assets.nu {} ($localPath) ($remoteURI) ($destStore)"
   let FZF_PREVIEW_CONF = $'--preview "($PREVIEW_CMD)"'
   $env.FZF_DEFAULT_OPTS = $'($FZF_DEFAULT_OPTS) --header "($title)" ($FZF_PREVIEW_CONF) ($FZF_THEME)'
-  $moduleRevisions | par-each { $in | str trim -c '/' | split row '/' | last } | sort -r | str join "\n"
+  let selected = $moduleRevisions | par-each { $in | str trim -c '/' | split row '/' | last } | str join "\n"
     | fzf | complete | get stdout | str trim
+  if ($selected | is-empty) {
+    cancel-assets 'No revision selected, Bye...' --details {
+      module: $module
+      availableRevisions: $moduleRevisions
+    }
+  }
+  $selected
 }
 
 # Execute the revert operation
@@ -577,24 +976,50 @@ def execute-revert [
   remoteURI: string,  # Remote URI
   ossConf: record,    # OSS config
 ] {
-  # Are you sure to revert to revision (ansi p)($revision)(ansi rst)? (y/n)
-  print $'Attention: You are going to REVERT (ansi p)($module)(ansi rst) module to (ansi p)($revision) for ($target)@($destStore)(ansi rst)'
-  hr-line; print $'(ansi grey66)Metadata Detail:(ansi rst)'
-  mut meta = open $'($localPath)/($revision)/namespace.json' | get metadata
-  if ($meta.syncBy? | is-not-empty) { $meta = $meta | upsert syncBy {|it| $it.syncBy? | show } }
-  $meta | print; print -n (char nl)
+  let namespacePath = $'($localPath)/($revision)/namespace.json'
+  if not ($namespacePath | path exists) {
+    let parent = $namespacePath | path dirname
+    if not ($parent | path exists) { mkdir $parent }
+    let cpNamespace = do-storage-cp $'($remoteURI)/($revision)/namespace.json' $namespacePath
+    if $cpNamespace.exit_code != 0 {
+      fail-assets $cpNamespace.exit_code REVERT_NAMESPACE_FETCH_FAILED 'Failed to fetch namespace.json for the selected revision.' --details {
+        revision: $revision
+        remoteURI: $remoteURI
+        stderr: $cpNamespace.stderr
+      }
+    }
+  }
 
-  let dest = input $'Please confirm by typing (ansi r)($target)(ansi rst) to continue or (ansi p)q(ansi rst) to quit: '
-  if $dest == 'q' { print $'Revert cancelled, Bye...'; exit $ECODE.SUCCESS }
+  print-info $'Attention: You are going to REVERT (ansi p)($module)(ansi rst) module to (ansi p)($revision) for ($target)@($destStore)(ansi rst)'
+  print-divider
+  print-info $'(ansi grey66)Metadata Detail:(ansi rst)'
+  mut meta = open $namespacePath | get metadata
+  if ($meta.syncBy? | is-not-empty) { $meta = $meta | upsert syncBy {|it| $it.syncBy? | show } }
+  print-info $meta
+  print-info-n (char nl)
+
+  let dest = if (assume-yes) { $target } else { input $'Please confirm by typing (ansi r)($target)(ansi rst) to continue or (ansi p)q(ansi rst) to quit: ' }
+  if $dest == 'q' {
+    cancel-assets 'Revert cancelled, Bye...' --details {
+      module: $module
+      target: $target
+      destStore: $destStore
+      revision: $revision
+    }
+  }
   if $dest != $target {
-    print -e $'Your input (ansi p)($dest)(ansi rst) does not match (ansi p)($target)(ansi rst), bye...'; exit $ECODE.INVALID_PARAMETER
+    fail-assets $ECODE.INVALID_PARAMETER CONFIRMATION_MISMATCH $'Your input, ($dest), does not match ($target).' --details {
+      expected: $target
+      actual: $dest
+    }
   }
   # Copy remote latest.json to local at the last moment to make sure the latest version is used
   let cpLatest = do-storage-cp $'($remoteURI)/latest.json' $localPath
   if $cpLatest.exit_code != 0 {
-    print -e $'Failed to copy latest.json from remote'
-    print $cpLatest.stderr
-    exit $cpLatest.exit_code
+    fail-assets $cpLatest.exit_code REVERT_LATEST_FETCH_FAILED 'Failed to copy latest.json from remote.' --details {
+      remoteURI: $remoteURI
+      stderr: $cpLatest.stderr
+    }
   }
 
   let revertAt = date now | format date $_TIME_FMT
@@ -607,11 +1032,25 @@ def execute-revert [
   $updated | save -f $'($localPath)/latest.json'
 
   let sync = do-storage-cp $'($localPath)/latest.json' $'($remoteURI)/latest.json'
-  if $sync.exit_code == 0 {
-    print $'Revert (ansi p)($module)(ansi rst) module to (ansi p)($revision) for ($target)@($destStore)(ansi rst) successful!'; exit $ECODE.SUCCESS
+  if $sync.exit_code != 0 {
+    fail-assets $sync.exit_code REVERT_SYNC_FAILED $'Revert ($module) module to ($revision) for ($target)@($destStore) failed.' --details {
+      module: $module
+      revision: $revision
+      target: $target
+      destStore: $destStore
+      stderr: $sync.stderr
+    }
   }
-  print -e $'Revert (ansi p)($module)(ansi rst) module to (ansi p)($revision) for ($target)@($destStore)(ansi rst) failed:'
-  print $sync.stderr
+  print-info $'Revert (ansi p)($module)(ansi rst) module to (ansi p)($revision) for ($target)@($destStore)(ansi rst) successful!'
+  {
+    module: $module
+    target: $target
+    destStore: $destStore
+    revision: $revision
+    revertAt: $revertAt
+    revertFrom: $revertFrom
+    latestUrl: $'($remoteURI)/latest.json'
+  }
 }
 
 
@@ -630,13 +1069,16 @@ def needs-virtual-style [result: record] {
 def sync-assets [style: list, assets: list, s3_dest: string, action: string] {
   let results = $assets | each {|it|
     let r = run-s5cmd $style sync $it $'($s3_dest)/($it)'
-    if $r.exit_code != 0 { print -e $'Failed to ($action) ($it): ($r.stderr)' }
+    if $r.exit_code != 0 { print-error $'Failed to ($action) ($it): ($r.stderr)' }
     $r
   }
   let failed = $results | where exit_code != 0
   if ($failed | is-not-empty) {
-    print -e $'(ansi r)($failed | length) asset(s) failed to ($action)!(ansi rst)'
-    exit $ECODE.COMMAND_FAILED
+    fail-assets $ECODE.COMMAND_FAILED SYNC_FAILED $'($failed | length) asset(s) failed to ($action)!' --details {
+      action: $action
+      target: $s3_dest
+      errors: ($failed | get stderr)
+    }
   }
 }
 
@@ -665,8 +1107,11 @@ def do-storage-cp [source: string, dest: string] {
   # Use s5cmd for both upload and download; credentials must be set by caller
   let empties = get-empty-keys $env [AWS_REGION AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY S3_ENDPOINT_URL]
   if ($empties | is-not-empty) {
-    print -e $'Please set (ansi r)($empties | str join ", ")(ansi rst) in your environment first...'
-    exit $ECODE.INVALID_PARAMETER
+    fail-assets $ECODE.INVALID_PARAMETER MISSING_STORAGE_ENV $'Please set ($empties | str join ", ") in your environment first.' --details {
+      missing: $empties
+      source: $source
+      dest: $dest
+    }
   }
   s5cmd-auto cp $source $dest
 }
@@ -680,9 +1125,14 @@ def check-git-user [] {
   if ($env.DICE_OPERATOR_NAME? | is-not-empty) { return }
   let user = do { git config --get user.name } | complete
   if $user.exit_code != 0 or ($user.stdout | str trim | is-empty) {
-    print -e $'(ansi r)Error: Git user name is not configured.(ansi rst)'
-    print -e $'This is required for TERP asset operations. Please configure it by running:'
-    print -e $'  (ansi g)git config --global user.name "Your Name"(ansi rst)'
+    if (is-json-output) {
+      fail-assets $ECODE.CONDITION_NOT_SATISFIED GIT_USER_REQUIRED 'Git user name is not configured.' --details {
+        command: 'git config --global user.name "Your Name"'
+      }
+    }
+    print-error $'(ansi r)Error: Git user name is not configured.(ansi rst)'
+    print-error $'This is required for TERP asset operations. Please configure it by running:'
+    print-error $'  (ansi g)git config --global user.name "Your Name"(ansi rst)'
     exit $ECODE.CONDITION_NOT_SATISFIED
   }
 }
@@ -710,7 +1160,8 @@ def show-assets-stat [latestMeta: record] {
   let assetUrlPrefix = $fromUrl | split row '/fe-resources' | get 0
   let modules = $latestMeta.latest | transpose key val
 
-  print $'(char nl)(ansi g)Static Assets Statistics:(ansi rst)'; hr-line 88
+  print-info $'(char nl)(ansi g)Static Assets Statistics:(ansi rst)'
+  print-divider 88
 
   # Collect stats for all modules
   let allStats = $modules | each {|m|
@@ -721,7 +1172,10 @@ def show-assets-stat [latestMeta: record] {
     if ($stats | is-empty) { null } else { { module: $m.key, ...$stats } }
   } | compact
 
-  if ($allStats | is-empty) { print 'No assets found'; return }
+  if ($allStats | is-empty) {
+    print-info 'No assets found'
+    return { total: 0, rows: [] }
+  }
 
   # Get all unique extensions across all modules
   let allExts = $allStats | each {|s| $s.byExt | get ext } | flatten | uniq | sort
@@ -735,9 +1189,12 @@ def show-assets-stat [latestMeta: record] {
     $row | upsert total $s.total
   } | sort-by module
 
-  $rows | move module js css --first | table -t light | print
+  let preferred = [module js css] | where {|col| $col in ($rows | columns) }
+  let displayRows = if ($preferred | is-empty) { $rows } else { $rows | move ...$preferred --first }
+  print-info ($displayRows | table -t light)
   let grandTotal = $allStats | each {|s| $s.total } | math sum
-  print $'(char nl)(ansi g)Total static assets: ($grandTotal)(ansi rst)'
+  print-info $'(char nl)(ansi g)Total static assets: ($grandTotal)(ansi rst)'
+  { total: $grandTotal, rows: $rows }
 }
 
 # Format module descriptions for display
@@ -760,10 +1217,21 @@ def get-modules [modules?: string, --latest-meta: record, --action: string] {
     | sort-by mod
   if $action == 'detect' { return $allModules }
   if ($modules | is-empty) {
-    print $'No module specified, please select the modules manually...'; hr-line
+    ensure-interactive 'module-selection' 'Please select the modules manually.' --details {
+      action: $action
+      availableModules: ($allModules | get mod)
+      required: ['modules']
+    }
+    print-info 'No module specified, please select the modules manually...'
+    print-divider
     let tips = $"Select the modules to sync or download ($KEY_MAPPING)"
     let selected = $allModules | input list -d desc --multi $tips | default [] | get mod
-    if ($selected | is-empty) { print $'You have not selected any modules, bye...'; exit $ECODE.SUCCESS }
+    if ($selected | is-empty) {
+      cancel-assets 'You have not selected any modules, Bye...' --details {
+        action: $action
+        availableModules: ($allModules | get mod)
+      }
+    }
     return $selected
   }
 
@@ -775,8 +1243,10 @@ def get-modules [modules?: string, --latest-meta: record, --action: string] {
   if ($splits | length) > 0 {
     let inexists = $splits | where {|it| $it not-in ($allModules | get mod) }
     if ($inexists | length) > 0 {
-      print -e $'Invalid modules (ansi r)($inexists | str join ",")(ansi rst), the modules you specified do not exist in latest.json(ansi rst)'
-      exit $ECODE.INVALID_PARAMETER
+      fail-assets $ECODE.INVALID_PARAMETER INVALID_MODULES $'Invalid modules: ($inexists | str join ",").' --details {
+        invalid: $inexists
+        availableModules: ($allModules | get mod)
+      }
     }
   }
   $splits
@@ -786,7 +1256,8 @@ def get-modules [modules?: string, --latest-meta: record, --action: string] {
 def get-latest-meta [from: string] {
   let isFullUrl = $from | str ends-with $'/($JSON_ENTRY)'
   let fromUrl = if $isFullUrl { $from } else { $'($ENDPOINT)/fe-resources/($from)/($JSON_ENTRY)' }
-  let latest = http get $fromUrl
+  let fixture = read-fixture TERP_ASSETS_FIXTURE_LATEST
+  let latest = if ($fixture | is-not-empty) { $fixture } else { http get $fromUrl }
   let mount = $latest | values | first | get prefix | str replace fe-resources/ ''
   let modules = $latest | columns
   let validModules = {|mods, validMods| $mods | all {|m| $m in $validMods } }
@@ -795,9 +1266,10 @@ def get-latest-meta [from: string] {
   if (not $validateModules) or ($validateModules and $validationPassed) {
     return { from: $from, latestUrl: $fromUrl, mountpoint: $mount, latest: $latest }
   }
-  print -e $'The latest.json from (ansi p)($fromUrl)(ansi rst) contains invalid modules, module list:'
-  print -e $'($modules | str join ", ")'
-  exit $ECODE.INVALID_PARAMETER
+  fail-assets $ECODE.INVALID_PARAMETER INVALID_LATEST_JSON $'The latest.json from ($fromUrl) contains invalid modules.' --details {
+    latestUrl: $fromUrl
+    modules: $modules
+  }
 }
 
 # Add transfer metadata to namespace.json and latest.json
@@ -818,12 +1290,16 @@ def --env get-dest-oss [destStore: string] {
   let LOCAL_CONFIG = if ('.termixrc' | path exists) { '.termixrc' } else { $'($env.TERMIX_DIR)/.termixrc' }
   let ossConf = open $LOCAL_CONFIG | from toml | get -o $destStore
   if ($ossConf | is-empty) {
-    print -e $'The storage you specified (ansi p)($destStore)(ansi rst) does not exist in (ansi p)($LOCAL_CONFIG)(ansi rst).'
-    exit $ECODE.INVALID_PARAMETER
+    fail-assets $ECODE.INVALID_PARAMETER DEST_STORE_NOT_FOUND $'The storage you specified, ($destStore), does not exist in ($LOCAL_CONFIG).' --details {
+      destStore: $destStore
+      config: $LOCAL_CONFIG
+    }
   }
   if ($ossConf.TYPE? | is-not-empty) and ($ossConf.TYPE? not-in $STORE_TYPES) {
-    print -e $'The storage type (ansi r)($ossConf.TYPE)(ansi rst) is invalid. Supported types: (ansi g)($STORE_TYPES | str join ", ")(ansi rst)'
-    exit $ECODE.INVALID_PARAMETER
+    fail-assets $ECODE.INVALID_PARAMETER INVALID_STORE_TYPE $'The storage type ($ossConf.TYPE) is invalid.' --details {
+      type: $ossConf.TYPE
+      supported: $STORE_TYPES
+    }
   }
   $ossConf
 }
@@ -835,38 +1311,29 @@ def pre-check [
   --dest-store(-d): string,  # Destination store, should be configured in .termixrc
 ] {
   if $action not-in $VALID_ACTIONS {
-    print -e $'Invalid action ($action), supported actions: ($VALID_ACTIONS | str join ", ")'
-    exit $ECODE.INVALID_PARAMETER
-  }
-  if not (is-installed package-tools) {
-    print -e $'Please install package-tools by (ansi g)`npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io`(ansi rst) first.'
-    exit $ECODE.MISSING_BINARY
-  }
-  let ver = package-tools -v
-  let minPkgToolsVer = get-conf minPkgToolVer
-  let compVer = compare-ver $ver $minPkgToolsVer
-  if $compVer < 0 {
-    print -e $'Only package-tools (ansi r)($minPkgToolsVer)(ansi rst) or above is supported. Please reinstall it by:'
-    print $'(ansi g)npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io (ansi rst)(char nl)'
-    exit $ECODE.CONDITION_NOT_SATISFIED
+    fail-assets $ECODE.INVALID_PARAMETER INVALID_ACTION $'Invalid action ($action).' --details {
+      action: $action
+      supported: $VALID_ACTIONS
+    }
   }
   if $action == 'transfer' and (($to | is-empty) or ($dest_store | is-empty)) {
-    if ($to | is-empty) {
-      print -e $'Please specify the destination to transfer by (ansi p)--to(ansi rst) option.'
+    let missing = []
+      | append (if ($to | is-empty) { ['to'] } else { [] })
+      | append (if ($dest_store | is-empty) { ['dest-store'] } else { [] })
+    fail-assets $ECODE.INVALID_PARAMETER MISSING_TRANSFER_TARGET 'Please specify both `--to` and `--dest-store` for transfer.' --details {
+      required: $missing
     }
-    if ($dest_store | is-empty) {
-      print -e $'Please specify the destination store to transfer by (ansi p)--dest-store(ansi rst) option.'
-    }
-    exit $ECODE.INVALID_PARAMETER
   }
   if $action == 'init' {
     if not (is-installed s5cmd) {
-      print -e $TOOL_INSTALL_TIP.s5cmd
-      exit $ECODE.MISSING_BINARY
+      fail-assets $ECODE.MISSING_BINARY MISSING_BINARY $TOOL_INSTALL_TIP.s5cmd --details {
+        tool: 's5cmd'
+      }
     }
     if ($dest_store | is-empty) {
-      print -e $'Please specify the destination store to init static assets by (ansi p)--dest-store(ansi rst) option.'
-      exit $ECODE.INVALID_PARAMETER
+      fail-assets $ECODE.INVALID_PARAMETER MISSING_DEST_STORE 'Please specify the destination store to init static assets by `--dest-store`.' --details {
+        required: ['dest-store']
+      }
     }
   }
 }
@@ -881,10 +1348,21 @@ def confirm-action [
   if $action != 'transfer' { return }
 
   get-dest-oss $dest_store
-  print $'Attention: You are going to TRANSFER (ansi p)($modules | str join ",")(ansi rst) assets to (ansi p)($to)@($dest_store)(ansi rst)'; hr-line
+  if (assume-yes) { return }
+  print-info $'Attention: You are going to TRANSFER (ansi p)($modules | str join ",")(ansi rst) assets to (ansi p)($to)@($dest_store)(ansi rst)'
+  print-divider
   let dest = input $'Please confirm by typing (ansi r)($to)(ansi rst) to continue or (ansi p)q(ansi rst) to quit: '
-  if $dest == 'q' { print $'Transfer cancelled, Bye...'; exit $ECODE.SUCCESS }
+  if $dest == 'q' {
+    cancel-assets 'Transfer cancelled, Bye...' --details {
+      modules: $modules
+      target: $to
+      destStore: $dest_store
+    }
+  }
   if $dest != $to {
-    print -e $'Your input (ansi p)($dest)(ansi rst) does not match (ansi p)($to)(ansi rst), bye...'; exit $ECODE.INVALID_PARAMETER
+    fail-assets $ECODE.INVALID_PARAMETER CONFIRMATION_MISMATCH $'Your input, ($dest), does not match ($to).' --details {
+      expected: $to
+      actual: $dest
+    }
   }
 }

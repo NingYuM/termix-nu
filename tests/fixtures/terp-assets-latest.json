@@ -1,0 +1,26 @@
+{
+  "base": {
+    "namespace": "base",
+    "prefix": "fe-resources/dev",
+    "dirname": "base-3.0.2506",
+    "metadata": {
+      "branch": "release/3.0.2506",
+      "commitSha": "abc1234",
+      "buildAt": "2026-04-06T11:22:33+08:00",
+      "syncBy": "VGVzdGVy",
+      "syncFrom": "test",
+      "syncAt": "2026-04-06T12:00:00+08:00"
+    }
+  },
+  "service": {
+    "namespace": "service",
+    "prefix": "fe-resources/dev",
+    "dirname": "service-3.0.2506",
+    "deprecated": true,
+    "metadata": {
+      "branch": "release/3.0.2506",
+      "commitSha": "def5678",
+      "buildAt": "2026-04-06T11:25:33+08:00"
+    }
+  }
+}

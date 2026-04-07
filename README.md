@@ -1370,6 +1370,13 @@ alias main = dingtalk notify
 - 资源同步：`terp-assets transfer <modules> --from <from> --to <to> --dest-store <store>`，资源同步时会先下载然后再上传，实际同步操作的时候不需要单独执行下载操作。资源上传需要在本机安装 `@terminus/t-package-tools`, 执行 `npm i -g @terminus/t-package-tools@latest --registry https://registry.npm.terminus.io` 即可(Node.js 建议 v20 或者以上版本)，版本不低于 `0.5.5`;
 - 资源回滚：`terp-assets revert <modules> --to <to> --dest-store <store>`, TERP 静态资源回滚，每次只能针对单个模块进行操作，不支持多个模块批量回滚。另外在进行回滚操作的过程中需要选择回滚的静态资源版本所以需要依赖 `fzf` 工具。BTW, 回滚操作会留痕，会记录下执行回滚操作的人、时间及模块等信息，方便排查问题。
 
+此外 `terp-assets` 现在支持显式的 `agent` 模式，用于 AI / 脚本调用时走稳定的非交互协议层：
+
+- `--agent` - 显式开启 agent 模式，禁止进入模块选择、确认输入、`fzf` 版本选择等交互流程；缺少必要输入时会返回明确错误码和 JSON 错误对象；
+- `-o, --output <text|json>` - 输出格式；agent 模式下默认输出 `json`；
+- `-y, --yes` - 在 agent 模式下显式确认执行会修改远端状态的操作（如 `init`、`transfer`、`revert`）；
+- `-r, --revision <String>` - `revert` 在 agent 模式下使用的显式回滚版本，不再走 `fzf` 选择。
+
 **命令别名**: `terp-assets` 的别名为 `ta`
 
 **参数说明**:
@@ -1384,6 +1391,10 @@ alias main = dingtalk notify
 - `-q`, `--quiet` - 不显示资源下载明细信息
 - `-s`, `--stat` - 在 `detect` 操作中显示静态资源统计信息
 - `-d, --dest-store <String>` - 对于 `transfer` 命令必须在 `.termixrc` 里面配置对应云存储的秘钥等信息
+- `--agent` - 开启 agent 非交互模式，默认输出 JSON 并在输入不完整时返回结构化错误信息
+- `-o, --output <String>` - 输出格式，支持 `text` 和 `json`
+- `-y, --yes` - 跳过危险操作确认提示；在 agent 模式下对 `init`、`transfer`、`revert` 这类变更型操作是必需的
+- `-r, --revision <String>` - `revert` 操作指定明确版本；agent 模式下不再通过 `fzf` 选择版本
 - `-h, --help` - 显示本帮助信息
 
 **云存储配置**:
@@ -1419,6 +1430,10 @@ t ta transfer all --from http://minio.terp.terminus.com/terminus-trantor/fe-reso
 t ta revert base -t dev -d oss
 # 回滚 minio 云存储里面 dev 挂载点上的 base-mobile 前端模块
 t ta revert base-mobile -t dev -d minio
+# 以 agent 模式输出结构化 JSON，适合给 AI / 脚本消费
+t ta detect -f dev --agent
+# 以 agent 模式同步指定模块，不弹确认，失败时返回 JSON 错误对象
+t ta transfer base,service --from test --to staging --dest-store minio --agent --yes
 ```
 
 资源同步完毕后记得修改网关配置以使线上的静态资源生效。
