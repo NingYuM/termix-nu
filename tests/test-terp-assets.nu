@@ -15,6 +15,7 @@ def main [] {
     { name: 'terp-assets revert requires explicit revision in agent mode', execute: { test-revert-missing-revision } }
     { name: 'terp-assets detect text mode does not echo summary record', execute: { test-detect-text-no-summary-record } }
     { name: 'terp-assets detect text mode prints stats after module summary', execute: { test-detect-stat-order } }
+    { name: 'terp-assets detect stats support full latest.json URL sources', execute: { test-detect-stat-full-url } }
   ]
 }
 
@@ -37,6 +38,7 @@ def run-terp-assets [command: string] {
     TERMIX_DIR: (fixture-home),
     TERP_ASSETS_ENABLE_FIXTURES: true,
     TERP_ASSETS_FIXTURE_LATEST: ([ $fixtures terp-assets-latest.json ] | path join),
+    TERP_ASSETS_FIXTURE_MANIFESTS: ([ $fixtures terp-assets-manifests.json ] | path join),
     TERP_ASSETS_FIXTURE_REVISIONS: ([ $fixtures terp-assets-revisions.json ] | path join),
     DICE_OPERATOR_NAME: 'Tester',
   } {
@@ -103,4 +105,23 @@ def test-detect-stat-order [] {
   assert greater $summaryPos (-1)
   assert greater $statsPos (-1)
   assert greater $statsPos $summaryPos
+}
+
+def test-detect-stat-full-url [] {
+  let result = run-terp-assets 'terp assets detect --from https://portal-test.app.terminus.io/latest.json --stat --agent'
+  assert equal $result.exit_code 0
+  let payload = parse-json $result.stdout
+  assert equal $payload.success true
+  assert equal $payload.data.latestUrl 'https://portal-test.app.terminus.io/latest.json'
+  assert equal $payload.data.stats.total 5
+
+  let base = ($payload.data.stats.rows | where module == 'base' | first)
+  let service = ($payload.data.stats.rows | where module == 'service' | first)
+  assert equal $base.total 3
+  assert equal $base.js 1
+  assert equal $base.css 1
+  assert equal $base.svg 1
+  assert equal $service.total 2
+  assert equal $service.js 1
+  assert equal $service.json 1
 }

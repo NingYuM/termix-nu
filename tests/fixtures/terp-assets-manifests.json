@@ -1,0 +1,15 @@
+{
+  "https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/fe-resources/dev/base-3.0.2506/manifest.json": {
+    "assets": [
+      "assets/base-runtime.js",
+      "assets/base-runtime.css",
+      "assets/base-logo.svg"
+    ]
+  },
+  "https://terminus-new-trantor.oss-cn-hangzhou.aliyuncs.com/fe-resources/dev/service-3.0.2506/manifest.json": {
+    "assets": [
+      "assets/service-runtime.js",
+      "assets/service-data.json"
+    ]
+  }
+}

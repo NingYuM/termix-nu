@@ -84,8 +84,10 @@ def is-under-dir [candidate: string, root: string] {
 }
 
 def resolve-link-target [link_path: string] {
-  let link_info = ls -l $link_path | get 0
-  let raw_target = $link_info.target
+  let raw_target = try { ls -l $link_path | get 0.target } catch { null }
+  if ($raw_target | is-empty) {
+    return (normalize-path $link_path)
+  }
   if (absolute-path? $raw_target) {
     normalize-path $raw_target
   } else {
@@ -171,6 +173,59 @@ def ensure-link [source: string, dest: string, termix_dir: string] {
     }
     _ => {
       error make { msg: $'Unsupported existing path type at ($dest): ($dest_type)' }
+    }
+  }
+}
+
+def ensure-exact-link [source: string, dest: string] {
+  let source = normalize-path $source
+  let dest_type = get-path-kind $dest
+
+  match $dest_type {
+    null => {
+      ln -s $source $dest
+      print $'Created symlink (ansi g)($dest)(ansi rst) -> (ansi g)($source)(ansi rst)'
+    }
+    symlink => {
+      let target = resolve-link-target $dest
+      if (normalize-path $target) == $source {
+        print $'Reusing existing symlink (ansi g)($dest)(ansi rst) -> (ansi g)($target)(ansi rst)'
+      } else {
+        error make { msg: $'Refusing to overwrite symlink ($dest) -> ($target), expected ($source)' }
+      }
+    }
+    _ => {
+      error make { msg: $'Refusing to overwrite existing path at ($dest): expected symlink to ($source)' }
+    }
+  }
+}
+
+def ensure-skill-links [termix_dir: string, home_dir: string] {
+  let skills_dir = [$termix_dir skills] | path join
+  if not ($skills_dir | path exists) {
+    print $'No local skills directory found at (ansi y)($skills_dir)(ansi rst), skip skill installation'
+    return
+  }
+
+  let skill_dirs = ls $skills_dir
+    | where type == dir
+    | get name
+    | each {|path| $path | path expand }
+  let install_roots = [
+    ([$home_dir '.agents/skills'] | path join)
+    ([$home_dir '.claude/skills'] | path join)
+  ]
+
+  for install_root in $install_roots {
+    if not ($install_root | path exists) {
+      mkdir $install_root
+    }
+  }
+
+  for skill_dir in $skill_dirs {
+    let skill_name = $skill_dir | path basename
+    for install_root in $install_roots {
+      ensure-exact-link $skill_dir ([$install_root $skill_name] | path join)
     }
   }
 }
@@ -304,6 +359,7 @@ export def run-post-setup [
   ensure-local-termixrc $termix_dir
   ensure-link ([$termix_dir '.env'] | path join) ([$home_dir '.env'] | path join) $termix_dir
   ensure-link ([$termix_dir 'Justfile'] | path join) ([$home_dir '.justfile'] | path join) $termix_dir
+  ensure-skill-links $termix_dir $home_dir
 
   for shell_name in $selected_shells {
     ensure-alias-block $shell_name $home_dir $nu_config_path

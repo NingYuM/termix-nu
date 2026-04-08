@@ -35,29 +35,41 @@ def make-fixture [] {
   let root = (mktemp -d | path expand)
   let termix_dir = [$root termix-nu] | path join
   let home_dir = [$root home] | path join
+  let skills_dir = [$termix_dir skills] | path join
 
   mkdir $termix_dir
   mkdir $home_dir
+  mkdir $skills_dir
   'set dotenv-load := true\n' | save ([$termix_dir Justfile] | path join)
   'version = "0.0.0"\n' | save ([$termix_dir termix.toml] | path join)
   "TERMIX_DIR='/Users/terminus/termix-nu'\nDINGTALK_NOTIFY='on'\n" | save ([$termix_dir '.env-example'] | path join)
   "[deploy]\nname = 'demo'\n" | save ([$termix_dir '.termixrc-example'] | path join)
+  mkdir ([$skills_dir setup-termix] | path join)
+  mkdir ([$skills_dir terp-assets] | path join)
+  '# setup-termix\n' | save ([$skills_dir setup-termix SKILL.md] | path join)
+  '# terp-assets\n' | save ([$skills_dir terp-assets SKILL.md] | path join)
 
   {
     root: $root
     termix_dir: $termix_dir
     home_dir: $home_dir
+    skills_dir: $skills_dir
   }
 }
 
-def cleanup-fixture [fixture: record<root: string, termix_dir: string, home_dir: string>] {
+def cleanup-fixture [fixture: record<root: string, termix_dir: string, home_dir: string, skills_dir: string>] {
   if ($fixture.root | path exists) {
     rm -rf $fixture.root
   }
 }
 
 def read-target [path: string] {
-  ls -l $path | get 0.target | path expand
+  let raw_target = try { ls -l $path | get 0.target } catch { null }
+  if ($raw_target | is-empty) {
+    $path | path expand
+  } else {
+    $raw_target | path expand
+  }
 }
 
 def path-is-link [path: string] {
@@ -110,6 +122,17 @@ def test-post-setup-initializes [] {
     assert-same-path (read-target $home_justfile) (([$fixture.termix_dir Justfile] | path join) | path expand)
     assert equal (([$fixture.termix_dir '.termixrc'] | path join) | path exists) true
 
+    for skill_name in [setup-termix terp-assets] {
+      let source = [$fixture.skills_dir $skill_name] | path join | path expand
+      let agents_dest = [$fixture.home_dir '.agents/skills' $skill_name] | path join
+      let claude_dest = [$fixture.home_dir '.claude/skills' $skill_name] | path join
+
+      assert equal (path-is-link $agents_dest) true
+      assert equal (path-is-link $claude_dest) true
+      assert-same-path (read-target $agents_dest) $source
+      assert-same-path (read-target $claude_dest) $source
+    }
+
     let bashrc = [ $fixture.home_dir '.bashrc' ] | path join
     let zshrc = [ $fixture.home_dir '.zshrc' ] | path join
     let fish_conf = [ $fixture.home_dir '.config/fish/config.fish' ] | path join
@@ -154,6 +177,17 @@ def test-post-setup-idempotent [] {
     assert equal (($nu_conf | lines | where {|line| $line == '# >>> termix-nu alias >>>' } | length)) 1
     assert equal (($nu_conf | lines | where {|line| $line == 'alias t = just --justfile ~/.justfile --dotenv-path ~/.env --working-directory .' } | length)) 1
     assert equal (($nu_conf | str contains "\n\n\n# >>> termix-nu alias >>>") ) false
+
+    for skill_name in [setup-termix terp-assets] {
+      let source = [$fixture.skills_dir $skill_name] | path join | path expand
+      let agents_dest = [$fixture.home_dir '.agents/skills' $skill_name] | path join
+      let claude_dest = [$fixture.home_dir '.claude/skills' $skill_name] | path join
+
+      assert equal (path-is-link $agents_dest) true
+      assert equal (path-is-link $claude_dest) true
+      assert-same-path (read-target $agents_dest) $source
+      assert-same-path (read-target $claude_dest) $source
+    }
   }
 }
 

@@ -136,6 +136,9 @@ def normalize-success-data [data: any] {
     mountpoint: ($record_data.mountpoint? | default null)
     latestUrl: ($record_data.latestUrl? | default null)
     modules: ($record_data.modules? | default null)
+    reverted: ($record_data.reverted? | default null)
+    counts: ($record_data.counts? | default null)
+    stats: ($record_data.stats? | default null)
     target: ($record_data.target? | default null)
     targets: ($record_data.targets? | default null)
     destStore: ($record_data.destStore? | default null)
@@ -667,7 +670,6 @@ def download [
   let dest = if ($to | is-empty) or (not ($to | path exists)) { $tmp } else { ($to | path expand) }
   let mount = $latestMeta.mountpoint
   let fromUrl = $latestMeta.latestUrl
-  let assetUrlPrefix = $fromUrl | split row '/fe-resources' | get 0
   let entry = $'($dest)/latest-($mount).json'
   $latestMeta.latest | save -f $entry
   let entryConf = open $entry
@@ -677,18 +679,26 @@ def download [
     let assetsDir = $'($dest)/assets-($mount)-($e)'
     # 每次下载前先清空目录
     rm -rf $assetsDir; mkdir $'($assetsDir)/assets'
-    let prefix = $entryConf | get $e | get prefix
-    let dirname = $entryConf | get $e | get dirname
+    let moduleMeta = $entryConf | get $e
+    let prefix = $moduleMeta | get prefix
+    let dirname = $moduleMeta | get dirname
+    let resolved = resolve-module-manifest $latestMeta $moduleMeta
     print-info $'Download assets from (ansi p)($mount)/($JSON_ENTRY)(ansi rst) to (ansi p)($dest)(ansi rst) for (ansi pb)($e)(ansi rst)...'
 
     # Save manifest.json for subsequent upload via package-tools
-    http get -r $'($assetUrlPrefix)/($prefix)/($dirname)/manifest.json'
-      | save -rf $'($assetsDir)/manifest.json'
+    if ($resolved | is-empty) {
+      fail-assets $ECODE.COMMAND_FAILED MANIFEST_FETCH_FAILED $'Failed to fetch manifest.json for module ($e).' --details {
+        module: $e
+        latestUrl: $fromUrl
+        attempted: (resolve-asset-roots $fromUrl $prefix | each {|root| $'($root)/($prefix)/($dirname)/manifest.json' })
+      }
+    }
+    $resolved.manifest | to json -r | save -f $'($assetsDir)/manifest.json'
 
     let assets = open $'($assetsDir)/manifest.json' | get assets
 
     for a in $assets {
-      let url = $'($assetUrlPrefix)/($prefix)/($dirname)/($a)'
+      let url = $'($resolved.root)/($prefix)/($dirname)/($a)'
       let assetPath = $'/($prefix)/($dirname)/($a)'
       let dir = $'($assetsDir)/($a)' | path dirname
       if not ($dir | path exists) { mkdir $dir }
@@ -1140,9 +1150,67 @@ def check-git-user [] {
 # Decode base64 encoded string, show default as `-`
 def show [] { $in | default 'LQ==' | decode base64 | decode }
 
+# Read manifest fixture by manifest URL
+def read-manifest-fixture [manifestUrl: string] {
+  let fixtures = read-fixture TERP_ASSETS_FIXTURE_MANIFESTS
+  if ($fixtures | is-empty) { return null }
+  $fixtures | get -o $manifestUrl
+}
+
+# Normalize a manifest payload from HTTP or fixtures into a record
+def normalize-manifest [] {
+  let payload = $in
+  if ($payload | is-empty) { return null }
+  let kind = $payload | describe
+  if ($kind | str starts-with 'record') { return $payload }
+  if $kind == 'string' {
+    return (try { $payload | from json } catch { null })
+  }
+  null
+}
+
+# Resolve candidate asset roots from latest.json URL and module prefix
+def resolve-asset-roots [latestUrl: string, prefix: string] {
+  mut roots = []
+  if ($latestUrl | str contains '/fe-resources/') {
+    $roots = ($roots | append ($latestUrl | split row '/fe-resources' | get 0))
+  } else if ($latestUrl | str ends-with $'/($JSON_ENTRY)') {
+    $roots = ($roots | append ($latestUrl | str replace -r '/latest\.json$' ''))
+  }
+  if ($prefix | str starts-with 'fe-resources/') {
+    $roots = ($roots | append $ENDPOINT)
+  }
+  $roots | where {|root| $root | is-not-empty } | uniq
+}
+
+# Resolve manifest URL for a module and return parsed manifest data
+def resolve-module-manifest [latestMeta: record, moduleMeta: record] {
+  let prefix = $moduleMeta.prefix
+  let dirname = $moduleMeta.dirname
+  let candidates = resolve-asset-roots $latestMeta.latestUrl $prefix
+  for root in $candidates {
+    let manifestUrl = $'($root)/($prefix)/($dirname)/manifest.json'
+    let manifest = if (env-flag-enabled TERP_ASSETS_ENABLE_FIXTURES) {
+      read-manifest-fixture $manifestUrl
+    } else {
+      try { http get $manifestUrl } catch { null }
+    } | normalize-manifest
+    if ($manifest | is-not-empty) {
+      return {
+        root: $root
+        manifestUrl: $manifestUrl
+        manifest: $manifest
+      }
+    }
+  }
+  null
+}
+
 # Count static assets from manifest.json URL and return statistics by extension
-def count-module-assets [manifestUrl: string] {
-  let manifest = try { http get $manifestUrl } catch { return null }
+def count-module-assets [latestMeta: record, moduleMeta: record] {
+  let resolved = resolve-module-manifest $latestMeta $moduleMeta
+  if ($resolved | is-empty) { return null }
+  let manifest = $resolved.manifest
   let assets = $manifest | get -o assets | default []
   if ($assets | is-empty) { return null }
   # Count by extension and calculate total
@@ -1151,13 +1219,11 @@ def count-module-assets [manifestUrl: string] {
     | group-by
     | items {|k, v| { ext: $k, count: ($v | length) } }
     | sort-by -r count
-  { total: ($assets | length), byExt: $byExt }
+  { total: ($assets | length), byExt: $byExt, manifestUrl: $resolved.manifestUrl }
 }
 
 # Aggregate and display assets statistics for all modules
 def show-assets-stat [latestMeta: record] {
-  let fromUrl = $latestMeta.latestUrl
-  let assetUrlPrefix = $fromUrl | split row '/fe-resources' | get 0
   let modules = $latestMeta.latest | transpose key val
 
   print-info $'(char nl)(ansi g)Static Assets Statistics:(ansi rst)'
@@ -1165,10 +1231,7 @@ def show-assets-stat [latestMeta: record] {
 
   # Collect stats for all modules
   let allStats = $modules | each {|m|
-    let prefix = $m.val | get prefix
-    let dirname = $m.val | get dirname
-    let manifestUrl = $'($assetUrlPrefix)/($prefix)/($dirname)/manifest.json'
-    let stats = count-module-assets $manifestUrl
+    let stats = count-module-assets $latestMeta $m.val
     if ($stats | is-empty) { null } else { { module: $m.key, ...$stats } }
   } | compact
 
