@@ -55,7 +55,7 @@ export def termix-ver [] {
     }
     # Quit command right now if it's a force upgrade
     if $forceUpgrade {
-      print $'(ansi r)很抱歉，为了更好地为您提供服务请先执行 `just upgrade -a` 更新 termix-nu 并重试...(ansi rst)(char nl)(char nl)'
+      print $'(ansi r)很抱歉，为了更好地为您提供服务请先执行 `t upgrade -a` 更新 termix-nu 并重试...(ansi rst)(char nl)(char nl)'
       (query-ver $confName | ignore); exit $ECODE.OUTDATED    # Query and update latest version again.
     }
     # Trigger query-ver for old configs without forceUpgradeVer field
