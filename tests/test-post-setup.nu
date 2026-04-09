@@ -6,10 +6,13 @@
 
 use std assert
 use utils.nu [run_tests]
-use ../run/post-setup.nu [run-post-setup]
+use ../run/post-setup.nu [install-local-skills, run-post-setup]
 
 def main [] {
   let common_tests = [
+    { name: 'install-local-skills is idempotent', execute: { test-install-local-skills-idempotent } }
+    { name: 'install-local-skills removes stale managed links', execute: { test-install-local-skills-removes-stale-managed-links } }
+    { name: 'install-local-skills keeps foreign links', execute: { test-install-local-skills-keeps-foreign-links } }
     { name: 'post-setup initializes .termixrc', execute: { test-post-setup-initializes-termixrc } }
     { name: 'post-setup keeps env idempotent', execute: { test-post-setup-env-idempotent } }
     { name: 'post-setup preserves env line endings', execute: { test-post-setup-preserves-env-line-endings } }
@@ -161,6 +164,67 @@ def test-post-setup-initializes-termixrc [] {
     "[deploy]\nname = 'custom'\n" | save -f $target_file
     run-post-setup $fixture.termix_dir --home-dir $fixture.home_dir --shells 'bash'
     assert equal (open $target_file --raw) "[deploy]\nname = 'custom'\n"
+  }
+}
+
+def test-install-local-skills-idempotent [] {
+  with-fixture {|fixture|
+    install-local-skills $fixture.termix_dir --home-dir=$fixture.home_dir
+    install-local-skills $fixture.termix_dir --home-dir=$fixture.home_dir
+
+    for skill_name in [setup-termix terp-assets] {
+      let source = [$fixture.skills_dir $skill_name] | path join | path expand
+      let agents_dest = [$fixture.home_dir '.agents/skills' $skill_name] | path join
+      let claude_dest = [$fixture.home_dir '.claude/skills' $skill_name] | path join
+
+      assert equal (path-is-link $agents_dest) true
+      assert equal (path-is-link $claude_dest) true
+      assert-same-path (read-target $agents_dest) $source
+      assert-same-path (read-target $claude_dest) $source
+    }
+  }
+}
+
+def test-install-local-skills-removes-stale-managed-links [] {
+  with-fixture {|fixture|
+    install-local-skills $fixture.termix_dir --home-dir=$fixture.home_dir
+
+    rm -rf ([$fixture.skills_dir setup-termix] | path join)
+    install-local-skills $fixture.termix_dir --home-dir=$fixture.home_dir
+
+    let removed_agents = [$fixture.home_dir '.agents/skills/setup-termix'] | path join
+    let removed_claude = [$fixture.home_dir '.claude/skills/setup-termix'] | path join
+    let kept_source = [$fixture.skills_dir terp-assets] | path join | path expand
+    let kept_agents = [$fixture.home_dir '.agents/skills/terp-assets'] | path join
+    let kept_claude = [$fixture.home_dir '.claude/skills/terp-assets'] | path join
+
+    assert equal ($removed_agents | path exists) false
+    assert equal ($removed_claude | path exists) false
+    assert equal (path-is-link $kept_agents) true
+    assert equal (path-is-link $kept_claude) true
+    assert-same-path (read-target $kept_agents) $kept_source
+    assert-same-path (read-target $kept_claude) $kept_source
+  }
+}
+
+def test-install-local-skills-keeps-foreign-links [] {
+  with-fixture {|fixture|
+    install-local-skills $fixture.termix_dir --home-dir=$fixture.home_dir
+
+    let foreign_dir = [$fixture.root foreign-skills legacy] | path join
+    mkdir $foreign_dir
+    let foreign_agents = [$fixture.home_dir '.agents/skills/legacy'] | path join
+    let foreign_claude = [$fixture.home_dir '.claude/skills/legacy'] | path join
+    ln -s $foreign_dir $foreign_agents
+    ln -s $foreign_dir $foreign_claude
+
+    rm -rf ([$fixture.skills_dir setup-termix] | path join)
+    install-local-skills $fixture.termix_dir --home-dir=$fixture.home_dir
+
+    assert equal (path-is-link $foreign_agents) true
+    assert equal (path-is-link $foreign_claude) true
+    assert-same-path (read-target $foreign_agents) ($foreign_dir | path expand)
+    assert-same-path (read-target $foreign_claude) ($foreign_dir | path expand)
   }
 }
 

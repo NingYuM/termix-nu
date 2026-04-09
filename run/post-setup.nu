@@ -200,21 +200,62 @@ def ensure-exact-link [source: string, dest: string] {
   }
 }
 
-def ensure-skill-links [termix_dir: string, home_dir: string] {
-  let skills_dir = [$termix_dir skills] | path join
-  if not ($skills_dir | path exists) {
-    print $'No local skills directory found at (ansi y)($skills_dir)(ansi rst), skip skill installation'
-    return
-  }
-
-  let skill_dirs = ls $skills_dir
-    | where type == dir
-    | get name
-    | each {|path| $path | path expand }
-  let install_roots = [
+def get-skill-install-roots [home_dir: string] {
+  [
     ([$home_dir '.agents/skills'] | path join)
     ([$home_dir '.claude/skills'] | path join)
   ]
+}
+
+def get-local-skill-dirs [skills_dir: string] {
+  if not ($skills_dir | path exists) {
+    []
+  } else {
+    ls $skills_dir
+      | where type == dir
+      | get name
+      | each {|path| $path | path expand }
+  }
+}
+
+def cleanup-stale-skill-links [skills_dir: string, home_dir: string] {
+  let skills_dir = normalize-path $skills_dir
+  let active_skill_names = get-local-skill-dirs $skills_dir | each {|path| $path | path basename }
+
+  for install_root in (get-skill-install-roots $home_dir) {
+    if not ($install_root | path exists) {
+      continue
+    }
+
+    for entry in (try { ls -la $install_root } catch { [] }) {
+      if (get-path-kind $entry.name) != 'symlink' {
+        continue
+      }
+
+      let target = resolve-link-target $entry.name
+      let link_name = $entry.name | path basename
+      let managed_link = is-under-dir $target $skills_dir
+      let stale_link = $link_name not-in $active_skill_names
+
+      if $managed_link and $stale_link {
+        rm $entry.name
+        print $'Removed stale skill link (ansi y)($entry.name)(ansi rst)'
+      }
+    }
+  }
+}
+
+def ensure-skill-links [termix_dir: string, home_dir: string] {
+  let skills_dir = [$termix_dir skills] | path join
+  let skill_dirs = get-local-skill-dirs $skills_dir
+  let install_roots = get-skill-install-roots $home_dir
+
+  cleanup-stale-skill-links $skills_dir $home_dir
+
+  if ($skill_dirs | is-empty) {
+    print $'No local skills directory found at (ansi y)($skills_dir)(ansi rst), skip skill installation'
+    return
+  }
 
   for install_root in $install_roots {
     if not ($install_root | path exists) {
@@ -228,6 +269,22 @@ def ensure-skill-links [termix_dir: string, home_dir: string] {
       ensure-exact-link $skill_dir ([$install_root $skill_name] | path join)
     }
   }
+}
+
+export def install-local-skills [
+  termix_dir: string = '.',
+  --home-dir: string = $nu.home-dir,
+] {
+  let termix_dir = normalize-path $termix_dir
+  let home_dir = normalize-path $home_dir
+
+  ensure-termix-root $termix_dir
+  if not ($home_dir | path exists) {
+    mkdir $home_dir
+  }
+
+  print $'Installing local skills from (ansi g)($termix_dir)(ansi rst) ...'
+  ensure-skill-links $termix_dir $home_dir
 }
 
 def strip-managed-block [content: string] {
@@ -359,7 +416,7 @@ export def run-post-setup [
   ensure-local-termixrc $termix_dir
   ensure-link ([$termix_dir '.env'] | path join) ([$home_dir '.env'] | path join) $termix_dir
   ensure-link ([$termix_dir 'Justfile'] | path join) ([$home_dir '.justfile'] | path join) $termix_dir
-  ensure-skill-links $termix_dir $home_dir
+  install-local-skills $termix_dir --home-dir=$home_dir
 
   for shell_name in $selected_shells {
     ensure-alias-block $shell_name $home_dir $nu_config_path
