@@ -1,6 +1,43 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v2.0.0 - 2026-04-09
+
+**Bug Fixes**
+
+- Fix the empty fzf preview panel for static assets in the `t ta revert` command
+- Improve the post-setup script for Nushell
+- Improve post-setup alias management and shell detection
+- Fix alias conflict bypass and CRLF handling in post-setup
+- Improve cross-platform robustness in post-setup link handling
+
+**Documentation**
+
+- Update SKILL.md to align with source implementation
+
+**Features**
+
+- Support cross-org app transfer with separate auth
+- Add the `run/post-setup.nu` script to set up Termix config quickly
+- Do not set up aliases for ksh, csh, and tcsh by default
+- Auto-initialize .termixrc from .termixrc-example in post-setup
+- Add the `setup-termix` SKILL
+- Support single-tool targeting and --force reinstall for setup script
+- Add the `upgrade-termix` SKILL
+- Make the `t art` command agent-friendly and add more tests
+- Update the `terp-assets` action to support agent mode
+- Add `terp-assets/SKILL.md`
+- Automatically install and clean up skills after upgrading Termix
+
+**Miscellaneous Tasks**
+
+- Create the directory if it does not exist for the setup action
+- Use bash to run `setup-termix.sh` by default
+
+**Refactor**
+
+- Use index-based app lookup to replace repeated table scans
+
 ## v1.99.1 - 2026-03-19
 
 **Bug Fixes**
