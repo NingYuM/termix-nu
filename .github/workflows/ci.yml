@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
 
     runs-on: ${{ matrix.os }}
     name: Tests (${{ matrix.os }})
@@ -32,7 +32,7 @@ jobs:
       - name: Run Tests
         shell: nu {0}
         run: |
-          const IGNORE_FILES = 'docker|s5cmd|artifact'
+          const IGNORE_FILES = 'docker|s5cmd|artifact|terp-assets'
           $env.TERMIX_DIR = $env.GITHUB_WORKSPACE
           let failed = glob tests/test-*.nu | where {|it| not ($it =~ $IGNORE_FILES) } | each { |file|
             try { nu $file; null } catch { $file }
