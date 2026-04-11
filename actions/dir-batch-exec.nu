@@ -10,15 +10,34 @@
 use ../utils/common.nu [hr-line]
 use ../utils/compose-cmd.nu [compose-command]
 
-# 在指定目录或者当前目录的所有子目录里执行指定命令,多个目录用`,`分隔
+# Run a command in specified directories or in all subdirectories of the current directory
+@example '在当前目录的所有子目录中执行命令' {
+  t dir-batch-exec 'ls'
+} --result '遍历当前目录下的所有子目录，并在每个子目录中执行 `ls`'
+@example '在指定的多个目录中批量执行命令' {
+  t dir-batch-exec 'git status' 'repo-a,repo-b'
+} --result '仅在 `repo-a` 与 `repo-b` 这两个目录中执行 `git status`'
+@example '指定父目录后，在其所有子目录中执行命令' {
+  t dir-batch-exec 'pnpm test' --parent ~/iWork/refs
+} --result '以 `~/iWork/refs` 作为父目录，遍历其下所有子目录执行测试命令'
+@example '执行包含 `&` 等 shell 操作符的复合命令' {
+  t dir-batch-exec 'ls & git pull'
+} --result '将整个复合命令作为一个字符串传入，并在每个目标目录中交给 shell 执行'
 export def main [
-  cmd: string,           # The command to execute in directories
-  dirs?: string,         # The directories to execute the command
-  --parent(-p): string,  # If no dirs specified, run the command in all subdirs of specified parent dir
+  cmd: string,           # The command to run in each target directory
+  dirs?: string,         # Target directories separated by commas, such as `repo-a,repo-b`
+  --parent(-p): string,  # Parent directory whose subdirectories will be used when `dirs` is omitted
 ] {
 
+  let wrapped = $cmd | parse --regex '^"\\\"(?P<inner>.*)\\\""$'
+  let cmd = if ($wrapped | is-not-empty) {
+    $wrapped | get 0.inner
+  } else { $cmd }
+  let cmd = if (($cmd =~ '^".*"$') or ($cmd =~ "^'.*'$")) {
+    $cmd | str substring 1..-2
+  } else { $cmd }
   let parent = if ($parent | is-empty) { $env.JUST_INVOKE_DIR } else { $parent }
-  let dest = $dirs | str trim | split row ','| compact | par-each -k { |it| [$parent $it] | path join }
+  let dest = $dirs | default '' | str trim | split row ',' | compact | par-each -k { |it| [$parent $it] | path join }
   let children = ls $parent | where type == dir | get name
   let destDirs = if ($dirs | is-empty) { $children } else { $dest }
   let cmdToExec = compose-command $cmd

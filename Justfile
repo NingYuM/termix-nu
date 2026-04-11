@@ -360,8 +360,19 @@ git-batch-reset n +branches=(''): _setup
 # 在指定目录(支持'*'通配符)或者当前目录的所有子目录里执行指定命令, cmd为待执行命令字符串
 [group('-- Common  --')]
 dir-batch-exec *OPTIONS: _setup
-  @overlay use {{ join(_termix, 'actions', 'dir-batch-exec.nu') }}; \
-    dir-batch-exec {{OPTIONS}}
+  #!/usr/bin/env nu
+  def --wrapped main [...args: string] {
+    if (['-h' '--help'] | any {|it| $it in $args }) {
+      let text = (
+        ^nu {{ join(_termix, 'actions', 'dir-batch-exec.nu') }} -h
+          | str replace -a 'dir-batch-exec.nu' 'dir-batch-exec'
+      )
+      $env.config.color_config.shape_garbage = { fg: default attr: n }
+      $text | nu-highlight
+    } else {
+      ^nu {{ join(_termix, 'actions', 'dir-batch-exec.nu') }} ...$args
+    }
+  }
 
 # Run all test cases locally
 [private]
