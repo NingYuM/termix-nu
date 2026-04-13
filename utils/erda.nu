@@ -2,13 +2,39 @@
 # Author: hustcer
 # Created: 2023/01/02 13:55:20
 
-use ../utils/common.nu [ECODE, HTTP_HEADERS, get-tmp-path]
+use ../utils/common.nu [ECODE, HTTP_HEADERS, get-tmp-path, 'from env']
 
 export const ERDA_HOST = 'https://erda.cloud'
 export const VALID_ENV = [DEV TEST STAGING PROD]
 
+def --env load-erda-envs-from-dotenv [] {
+  let termix_dir = $env.TERMIX_DIR? | default ''
+  if ($termix_dir | is-empty) { return }
+
+  let env_file = [$termix_dir '.env'] | path join
+  if not ($env_file | path exists) { return }
+
+  let dotenv = open --raw $env_file | from env
+  mut loaded = {}
+
+  let username = $dotenv.ERDA_USERNAME? | default ''
+  if (($env.ERDA_USERNAME? | default '') | is-empty) and ($username | is-not-empty) {
+    $loaded = ($loaded | upsert ERDA_USERNAME $username)
+  }
+
+  let password = $dotenv.ERDA_PASSWORD? | default ''
+  if (($env.ERDA_PASSWORD? | default '') | is-empty) and ($password | is-not-empty) {
+    $loaded = ($loaded | upsert ERDA_PASSWORD $password)
+  }
+
+  if ($loaded | columns | is-not-empty) {
+    load-env $loaded
+  }
+}
+
 # Check if the required environment variable was set, quit if not
-export def check-erda-envs [] {
+export def --env check-erda-envs [] {
+  load-erda-envs-from-dotenv
   # 部署/查询 Pipeline 操作需要先配置 ERDA_USERNAME & ERDA_PASSWORD
   let envs = ['ERDA_USERNAME' 'ERDA_PASSWORD']
   let empties = ($envs | where {|it| $env | get -o $it | is-empty })
@@ -33,7 +59,8 @@ export def get-erda-auth [host: string = $ERDA_HOST, --type: string = 'curl'] {
 }
 
 # Renew Erda auth token by username and password if expired
-export def renew-erda-session [host: string = $ERDA_HOST, --get-uid] {
+export def --env renew-erda-session [host: string = $ERDA_HOST, --get-uid] {
+  load-erda-envs-from-dotenv
   if not $get_uid { print 'Renewing Erda auth token...' }
   let TERMIX_CONF = $'(get-tmp-path)/.termix-conf'
   let tokenKey = if $host == $ERDA_HOST { 'erdaToken' } else { $'($host | encode base64)_token' }
