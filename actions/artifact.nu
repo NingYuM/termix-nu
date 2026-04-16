@@ -896,7 +896,7 @@ def resolve-produced-artifact-version [
 ] {
   let version = (
     $meta
-      | where {|row| (($row.Name? | default '' | into string | str downcase) == 'version') }
+      | where {|row| (($row.Name? | default '' | into string | str downcase) =~ 'version') }
       | get Value?.0?
   )
   if ($version | is-empty) {
