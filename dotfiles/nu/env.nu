@@ -30,6 +30,7 @@ $env.PATH = (
     | prepend '/opt/homebrew/bin'
     | prepend '/Library/TeX/texbin'
     | prepend '/usr/local/opt/ruby/bin'
+    | prepend '/opt/nanobrew/prefix/bin'
     | prepend '/opt/zerobrew/prefix/bin'
     | prepend $'($nu.home-dir)/.bun/bin'
     | prepend $'($nu.home-dir)/.moon/bin'
