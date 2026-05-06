@@ -1,6 +1,22 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v2.0.1 - 2026-05-06
+
+**Bug Fixes**
+
+- Fix `t dir-batch-exec` command
+- Try to fix artifact deploy
+
+**Documentation**
+
+- Update docs for `t pnpm-add`, `t pnpm-why` & `t pnpm-patch`
+
+**Features**
+
+- Add `trantor-artifact` SKILL
+- Add `t pnpm-add`, `t pnpm-why` & `t pnpm-patch` for DaQiHui
+
 ## v2.0.0 - 2026-04-09
 
 **Bug Fixes**
