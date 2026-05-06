@@ -2131,3 +2131,193 @@ t query-deps vite -d -b develop,feature/latest,master
 **输出样例**:
 
 ![Query Node Deps Output](https://img.alicdn.com/imgextra/i3/O1CN018vHMfQ1XYHNPsRY9L_!!6000000002935-0-tps-1345-426.jpg)
+
+---
+
+### 37. 离线查询 workspace lockfile 中的依赖版本分布{#pnpm-why}
+
+**使用场景**:
+
+**该功能主要服务于大企汇迁移过来的前端应用**
+
+在一个 pnpm workspace 项目里，同一个 npm 包可能被多个子包引用，且各子包锁定的版本不尽相同。当你需要为某个子包新增依赖时，首先要弄清楚这个依赖在整个 workspace 里已经有哪些版本，各版本被哪些子包引用，以便复用已有版本、避免引入重复安装。官方的 `pnpm why` 命令需要访问 `node_modules`，在 CI 或者离线环境下可能无法使用，也无法直接告诉你 lockfile 里的版本分布情况。
+
+`t pnpm-why` 直接读取 `pnpm-lock.yaml`，不调用 `pnpm why`，无需网络，快速输出：
+- 当前 workspace 中所有引用该依赖的 importer（子包）及其 specifier/version；
+- 各版本的引用次数排序（选版本策略：最常用 `most-common` 或最高 `highest`）；
+- 当前策略下"推荐复用"的版本以及对应的 `package.json` specifier；
+
+该命令的主要用途是在执行 `t pnpm-add` 之前做版本决策，也可以单独使用。
+
+**命令格式**: `t pnpm-why <dep[@version]> {flags}`
+
+**参数说明**:
+
+- `dependency_spec` - 依赖名称，支持普通包 `dayjs`、scoped 包 `@alife/hooks`，以及带版本过滤器 `dayjs@1.11.10` 或 `got@13`；仅支持普通 npm 包规范，不支持 alias/git/url 协议；
+- `-r`, `--project-root <String>` - workspace 根目录（需同时包含 `pnpm-workspace.yaml` 和 `pnpm-lock.yaml`），默认从当前目录向上自动查找；
+- `--version-strategy <String>` - 版本优选策略：`most-common`（默认，优先引用次数最多的版本）或 `highest`（优先最高版本）；
+- `--json` - 以 JSON 格式输出完整的候选版本列表及各 importer 的使用情况，便于脚本集成；
+
+**使用举例**:
+
+```bash
+# 查看 dayjs 在当前 workspace 中的版本分布及推荐复用版本
+t pnpm-why dayjs
+
+# 查看 @alife/hooks 版本 1.1.1 的 lockfile 解析情况
+t pnpm-why @alife/hooks@1.1.1
+
+# 查看 got@13 的版本分布，输出机器可读 JSON
+t pnpm-why got@13 --json
+
+# 在指定 workspace 根目录下查询，使用最高版本策略
+t pnpm-why dayjs --project-root /path/to/project --version-strategy highest
+```
+
+:::info 提示
+
+`t pnpm-why` 的输出包含两张表：**Version candidates**（版本候选列表，带 `*` 标记为当前策略选中版本）和 **Selected version is currently used by**（哪些 importer 正在使用选中版本）。
+
+该命令不会修改任何文件，可以随时安全地执行。
+
+:::
+
+---
+
+### 38. 离线为 workspace 子包新增依赖{#pnpm-add}
+
+**使用场景**:
+
+**该功能主要服务于大企汇迁移过来的前端应用**
+
+在大型 pnpm monorepo 项目里，每次 `pnpm add` 都会触发对整个 workspace 的依赖重新解析，耗时较长，且在**离线**或**受限网络**环境中无法执行。如果要添加的依赖版本在 workspace 的 `pnpm-lock.yaml` 里已经存在，完全没有必要重新联网解析。
+
+`t pnpm-add` 采用 **lockfile 优先** 策略：
+1. 优先从 `pnpm-lock.yaml` 的已有 importer 条目中复用版本，同时更新目标子包的 `package.json` 和 lockfile 的 importer section，不触动 `packages`/`snapshots` section；
+2. 如果依赖在整个 workspace lockfile 中均不存在，才会在一个**隔离的临时项目**里执行 `pnpm add --lockfile-only` 解析，然后仅将本次依赖所需的条目合并进 `pnpm-lock.yaml`；
+3. 整个过程不会重新解析 workspace 其他子包，最大程度保证 lockfile 稳定。
+
+:::info 推荐运行时环境
+
+脚本推荐 **Node.js 20 + pnpm 9** 的运行时组合。如果当前 shell 中的版本不符，会输出警告但不会中断执行。
+
+:::
+
+**命令格式**: `t pnpm-add <dep[@version]> {flags}`
+
+**参数说明**:
+
+- `dependency_spec` - 依赖规范，支持 `dayjs`（自动选版本）或 `dayjs@1.11.10`（指定版本）；仅支持普通 npm 包规范；
+- `-p`, `--package-dir <String>` - 目标子包目录（含 `package.json` 的目录）或其父模块目录，默认为当前工作目录；工具会从该目录向上查找直到 workspace 根目录，优先匹配直接含有 `package.json` 的目录，其次尝试 `resources/` 子目录；
+- `-r`, `--project-root <String>` - workspace 根目录，默认从 `JUST_INVOKE_DIR` 或当前目录向上自动查找含 `pnpm-workspace.yaml` 的祖先目录；
+- `-f`, `--field <String>` - 写入 `package.json` 的依赖分类：`dependencies`（默认）、`optionalDependencies` 或 `devDependencies`；
+- `--version-strategy <String>` - 当 lockfile 中存在多个候选版本时的优选策略：`most-common`（默认）或 `highest`；
+- `--dry-run` - 仅预览将要发生的变更（输出目标包路径、依赖字段、版本信息），不写入任何文件；
+
+**使用举例**:
+
+```bash
+# 将 dayjs 添加到 pkgs/b_order_detail 子包，自动复用 workspace 中最常见的版本
+t pnpm-add dayjs --package-dir pkgs/b_order_detail
+
+# 指定版本 1.11.10，写入 pkgs/b_order_detail/resources 子包
+t pnpm-add dayjs@1.11.10 --package-dir pkgs/b_order_detail/resources
+
+# 添加 got@13，workspace lockfile 中不存在时自动通过隔离项目解析
+t pnpm-add got@13 --package-dir pkgs/p_slc_supplier_inspect_create/resources
+
+# 添加到 devDependencies，先预览变更
+t pnpm-add vite@5 --package-dir pkgs/my-pkg --field devDependencies --dry-run
+
+# 在当前目录所在子包中添加依赖（t pnpm-add 支持从当前目录自动解析目标子包）
+cd pkgs/my-pkg/resources
+t pnpm-add lodash
+```
+
+:::caution 注意事项
+
+- 执行前请确保已在 workspace 根目录执行过 `pnpm install`，lockfile 处于最新状态；
+- 如果在 fallback 隔离解析模式下 pnpm 无法解析指定版本（比如该版本对 Node.js 版本有要求），可尝试显式指定主版本号，如 `got@13`；
+- 本工具只更新目标子包的 importer 条目，不会运行 `pnpm install`；添加完成后如需让 `node_modules` 同步最新依赖，仍需执行 `pnpm install --offline`；
+
+:::
+
+---
+
+### 39. 离线为 npm 包创建 pnpm patch{#pnpm-patch}
+
+**使用场景**:
+
+**该功能主要服务于大企汇迁移过来的前端应用**
+
+在日常前端开发中，有时需要临时修改某个 `node_modules` 里的第三方包源码（比如修复 bug、适配特殊需求），这时可以使用 pnpm 的 patch 机制将修改固化下来。官方流程（`pnpm patch` + `pnpm patch-commit`）依赖网络和完整的 pnpm CLI 交互，在**离线**或**受限网络**环境中使用不够方便，而且对 `pnpm-lock.yaml` 中的 patch hash 更新不够透明。
+
+`t pnpm-patch` 提供一套完全**离线**的 patch 工作流：
+1. 从 `node_modules/.pnpm` 中定位目标包，并优先从 **pnpm store** 中还原未打过补丁的原始版本作为对比基准；
+2. 交互式地让你在临时目录（`modified/`）中编辑文件，按 Enter 确认或按 Esc 取消；
+3. 使用 `git diff` 生成标准 unified diff 格式的 patch 文件，保存到项目根目录的 `patches/` 目录；
+4. 自动根据当前 pnpm 版本选择哈希算法（pnpm 9.x 使用 MD5，pnpm 10.x 使用 SHA256），计算 patch hash 并更新 `pnpm-lock.yaml` 和根目录 `package.json` 中的 `pnpm.patchedDependencies` 配置；
+5. 支持**累积模式**：若该包已存在 patch，会自动以当前 patch 为基础累积新的修改，生成包含所有变更的新 patch。
+
+**前置条件**: 本机需安装 `git` 和 `patch` 命令，且项目已执行过 `pnpm install`（`node_modules/.pnpm` 需存在）。
+
+**命令格式**: `t pnpm-patch <package@version> {flags}`
+
+**参数说明**:
+
+- `package_spec` - 目标包规范，支持 scoped 包 `@scope/name@version` 和普通包 `name@version`；建议始终带上版本号以精准匹配；
+- `-p`, `--project-root <String>` - 项目根目录，默认为当前工作目录；
+
+**使用举例**:
+
+```bash
+# 为 scoped 包 @alife/stage-supplier-selector 版本 2.5.0 创建 patch
+t pnpm-patch @alife/stage-supplier-selector@2.5.0
+
+# 为普通包 lodash 版本 4.17.21 创建 patch
+t pnpm-patch lodash@4.17.21
+
+# 指定项目根目录创建 patch
+t pnpm-patch moment@2.30.1 --project-root /path/to/project
+
+# 为已有 patch 的包添加新修改（累积模式，自动识别）
+t pnpm-patch @ali/u-touch@2.1.5
+```
+
+**典型工作流**:
+
+```bash
+# 1. 执行命令，工具会打印临时目录路径并等待你编辑
+t pnpm-patch @alife/my-pkg@1.2.3
+# => 工具输出 modified/ 目录路径，等待按键
+
+# 2. 在另一个终端窗口编辑 modified/ 目录中的文件
+vim .pnpm-patch-tmp/modified/my-pkg/src/index.js
+
+# 3. 回到运行命令的终端，按 Enter 确认
+# => 工具自动生成 patches/@alife__my-pkg@1.2.3.patch
+# => 自动更新 pnpm-lock.yaml 和 package.json
+
+# 4. 应用 patch 到 node_modules
+pnpm install --offline
+```
+
+:::info Patch 文件命名规则
+
+生成的 patch 文件保存在项目根目录的 `patches/` 目录下，命名规则为：
+- scoped 包：`@scope__name@version.patch`（`/` 替换为 `__`，`@` 前缀保留）
+- 普通包：`name@version.patch`
+
+例如：`@alife/stage-supplier-selector@2.5.0` 对应 `patches/@alife__stage-supplier-selector@2.5.0.patch`。
+
+:::
+
+:::caution 注意事项
+
+- 执行命令前请确保 `node_modules/.pnpm` 已存在（即已执行过 `pnpm install`）；
+- 推荐带版本号执行，否则工具会匹配到第一个符合包名前缀的目录，可能不是预期版本；
+- 生成 patch 后需执行 `pnpm install --offline` 才能将 patch 应用到 `node_modules`；
+- 累积模式下，工具会优先从 pnpm store 还原原始文件；若 store 不可用，则通过 `patch -R` 回滚现有 patch 获取原始版本。若回滚失败，请确保安装包与 patch 版本一致；
+
+:::
+
