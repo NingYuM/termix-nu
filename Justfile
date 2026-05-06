@@ -165,6 +165,21 @@ query-deps *OPTIONS: _setup
     overlay use {{ join(_termix, 'actions', 'query-deps.nu') }}; \
     git-check --check-repo=1 {{JUST_INVOKE_DIR}}; query deps {{OPTIONS}}
 
+# Create pnpm patches in offline mode
+[group('-- Frontend --')]
+pnpm-patch *OPTIONS: _setup
+  @nu {{ join(_termix, 'actions', 'pnpm-patch.nu') }} {{OPTIONS}}
+
+# Add an already-installed pnpm dependency in offline mode
+[group('-- Frontend --')]
+pnpm-add *OPTIONS: _setup
+  @nu {{ join(_termix, 'actions', 'pnpm-add.nu') }} {{OPTIONS}}
+
+# Inspect workspace lockfile entries for a dependency
+[group('-- Frontend --')]
+pnpm-why *OPTIONS: _setup
+  @nu {{ join(_termix, 'actions', 'pnpm-why.nu') }} {{OPTIONS}}
+
 # Listing the branches of a git repo and the time of the last commit
 [group('-- Git --')]
 git-branch *OPTIONS: _setup
