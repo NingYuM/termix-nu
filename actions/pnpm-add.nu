@@ -32,6 +32,7 @@ use ./pnpm-why.nu [
   strip-lock-version-suffix
   version-satisfies-request
 ]
+use ../utils/common.nu [is-lower-ver]
 
 def err [msg: string] { print -e $'(ansi r)($msg)(ansi rst)' }
 def warn [msg: string] { print $'(ansi y)($msg)(ansi rst)' }
@@ -40,6 +41,16 @@ def success [msg: string] { print $'(ansi g)($msg)(ansi rst)' }
 
 const DEP_FIELDS = ['dependencies' 'optionalDependencies' 'devDependencies']
 const DEP_FIELD_ORDER = ['dependencies' 'optionalDependencies' 'devDependencies']
+const MIN_PNPM_VERSION = '9.13.0'
+const PNPM_UPGRADE_COMMAND = 'npm i -g pnpm@9'
+
+def assert-min-pnpm-version [pnpm_version: string] {
+  if (is-lower-ver $pnpm_version $MIN_PNPM_VERSION) {
+    err $'Error: pnpm ($pnpm_version) is lower than the required version ($MIN_PNPM_VERSION).'
+    err $'Please upgrade pnpm with `($PNPM_UPGRADE_COMMAND)` to use the latest pnpm 9 version.'
+    exit 1
+  }
+}
 
 def assert-runtime [] {
   let node_version = try { ^node --version | str trim } catch { '' }
@@ -54,6 +65,8 @@ def assert-runtime [] {
     err 'Error: `pnpm` is not available in the current shell.'
     exit 1
   }
+
+  assert-min-pnpm-version $pnpm_version
 
   let pnpm_major = $pnpm_version | split row '.' | first | into int
 

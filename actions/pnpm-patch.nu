@@ -11,6 +11,7 @@
 # No other dependencies - this script is self-contained and can run standalone.
 
 use ../utils/pnpm-lock.nu [upsert-root-patched-dependency-record, write-lockfile-via-pnpm-bundle]
+use ../utils/common.nu [is-lower-ver]
 
 # ============================================
 # Color helpers for consistent output
@@ -24,6 +25,8 @@ def separator [] { success '============================================' }
 
 const IMPORTER_DEP_FIELDS = ['dependencies' 'optionalDependencies' 'devDependencies']
 const LOCKFILE_DEP_FIELDS = ['dependencies' 'optionalDependencies']
+const MIN_PNPM_VERSION = '9.13.0'
+const PNPM_UPGRADE_COMMAND = 'npm i -g pnpm@9'
 
 # ============================================
 # Pure utility functions (exported for testing)
@@ -768,6 +771,14 @@ export def restore-from-store [
 # Side-effect functions (file operations)
 # ============================================
 
+def assert-min-pnpm-version [pnpm_version: string] {
+  if (is-lower-ver $pnpm_version $MIN_PNPM_VERSION) {
+    err $'Error: pnpm ($pnpm_version) is lower than the required version ($MIN_PNPM_VERSION).'
+    err $'Please upgrade pnpm with `($PNPM_UPGRADE_COMMAND)` to use the latest pnpm 9 version.'
+    exit 1
+  }
+}
+
 # Check if required tools are installed
 def check-dependencies [] {
   for tool in [git patch] {
@@ -779,6 +790,14 @@ def check-dependencies [] {
 
   let node_version = try { ^node --version | str trim } catch { '' }
   let pnpm_version = try { ^pnpm --version | str trim } catch { '' }
+
+  if ($pnpm_version | is-empty) {
+    err 'Error: `pnpm` is not available in the current shell.'
+    exit 1
+  }
+
+  assert-min-pnpm-version $pnpm_version
+
   let pnpm_major = if ($pnpm_version | is-not-empty) { $pnpm_version | split row '.' | first | into int } else { 0 }
 
   print $'Current node version: (ansi g)($node_version)(ansi rst)'
