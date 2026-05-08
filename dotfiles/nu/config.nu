@@ -138,6 +138,20 @@ def 'get help' [] {
   }
 }
 
+# Show statistics for Moonbit modules
+def mstat [
+  user: string = 'hustcer'   # The user for whom to show module statistics
+] {
+  http get https://mooncakes.io/api/v0/user/($user)
+    | get modules.name
+    | each {|it|
+        http get https://mooncakes.io/api/v0/manifest/($it)
+          | select name version downloads
+      }
+    | collect
+    | sort-by -r downloads
+}
+
 # Print a horizontal line
 export def hr-line [
   width?: int = 90,
