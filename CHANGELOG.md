@@ -1,6 +1,12 @@
 # CHANGELOG
 All notable changes to this project will be documented in this file.
 
+## v2.1.1 - 2026-05-12
+
+**Bug Fixes**
+
+- Add min pnpm version warning for `t pnpm-add` & `t pnpm-patch` command
+
 ## v2.0.1 - 2026-05-06
 
 **Bug Fixes**
